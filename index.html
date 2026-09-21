@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f6f2" />
+    <meta name="color-scheme" content="light" />
+    <title>CHECKNI — Соберите корзину</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">К основному содержимому</a>
+
+    <header class="app-header">
+      <a class="brand" href="#shop" aria-label="CHECKNI — на главную">
+        <span class="brand-mark" aria-hidden="true">C</span>
+        <span class="brand-word">CHECKNI</span>
+      </a>
+      <span class="demo-badge">DEMO · MOCK</span>
+    </header>
+
+    <main id="main" class="app-shell">
+      <section id="shop-view" class="view" aria-labelledby="shop-title">
+        <div class="hero">
+          <p class="eyebrow">Соберите корзину</p>
+          <h1 id="shop-title" tabindex="-1">Что нужно купить?</h1>
+          <p class="hero-copy">
+            Найдите тестовый товар и добавьте его в корзину. Цены магазинов появятся только после явного сравнения.
+          </p>
+
+          <form id="search-form" class="search-form" role="search">
+            <label class="search-box" for="product-search">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+                <path d="m21 21-4.35-4.35m2.35-5.15a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              <input
+                id="product-search"
+                name="q"
+                type="search"
+                inputmode="search"
+                autocomplete="off"
+                placeholder="Например, молоко"
+                aria-describedby="search-help search-status"
+              />
+              <button id="clear-search" class="icon-button clear-button" type="button" aria-label="Очистить поиск" hidden>
+                <span aria-hidden="true">×</span>
+              </button>
+            </label>
+            <p id="search-help" class="field-help">Поиск работает по демонстрационному каталогу.</p>
+          </form>
+        </div>
+
+        <section class="catalog-section" aria-labelledby="catalog-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Демо-каталог</p>
+              <h2 id="catalog-title">Товары</h2>
+            </div>
+            <span id="result-count" class="result-count" aria-hidden="true"></span>
+          </div>
+          <p id="search-status" class="sr-only" aria-live="polite"></p>
+          <div id="product-grid" class="product-grid"></div>
+          <div id="empty-search" class="empty-state" hidden>
+            <div class="empty-icon" aria-hidden="true">⌕</div>
+            <h3>Ничего не нашли</h3>
+            <p>Попробуйте более короткий запрос — например «сыр» или «хлеб».</p>
+          </div>
+        </section>
+      </section>
+
+      <section id="basket-view" class="view basket-view" aria-labelledby="basket-title" hidden>
+        <button id="back-to-shop" class="back-button" type="button">
+          <span aria-hidden="true">←</span>
+          К товарам
+        </button>
+
+        <div class="basket-heading">
+          <p class="eyebrow">Ваша корзина</p>
+          <h1 id="basket-title" tabindex="-1">Проверьте количество</h1>
+          <p class="hero-copy">Проверьте состав и запустите сравнение по трём демонстрационным магазинам.</p>
+        </div>
+
+        <div id="basket-content"></div>
+      </section>
+    </main>
+
+    <aside id="basket-dock" class="basket-dock" aria-live="polite">
+      <button id="open-basket" class="basket-dock-button" type="button">
+        <span>
+          <strong>Корзина</strong>
+          <small id="basket-dock-copy">Пока пусто</small>
+        </span>
+        <span class="dock-arrow" aria-hidden="true">→</span>
+      </button>
+    </aside>
+
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script type="module" src="./src/app.mjs"></script>
+  </body>
+</html>
