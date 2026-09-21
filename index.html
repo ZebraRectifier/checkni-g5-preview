@@ -28,6 +28,39 @@
             Найдите тестовый товар и добавьте его в корзину. Цены магазинов появятся только после явного сравнения.
           </p>
 
+          <section id="basket-proposal-section" class="phrase-entry" aria-labelledby="phrase-entry-title" hidden>
+            <div class="phrase-entry-heading">
+              <p class="eyebrow">Быстрый ввод</p>
+              <h2 id="phrase-entry-title">Можно написать списком</h2>
+            </div>
+            <form id="basket-proposal-form" class="proposal-form">
+              <label class="proposal-box" for="basket-proposal-input">
+                <span class="sr-only">Список продуктов одной фразой</span>
+                <input
+                  id="basket-proposal-input"
+                  name="basket-proposal"
+                  type="text"
+                  autocomplete="off"
+                  maxlength="300"
+                  placeholder="Например: два молока, яйца и яблоки"
+                  aria-describedby="basket-proposal-help basket-proposal-status"
+                />
+                <button id="basket-proposal-submit" class="proposal-submit" type="submit">
+                  Добавить из фразы
+                </button>
+              </label>
+              <p id="basket-proposal-help" class="field-help">
+                Предложение сначала проверяется детерминированным Core. Не распознанные позиции не добавляются.
+              </p>
+              <div id="basket-proposal-status" class="proposal-status" aria-live="polite"></div>
+              <button id="basket-proposal-fallback" class="text-button" type="button" hidden>
+                Искать вручную
+              </button>
+            </form>
+          </section>
+
+          <div id="manual-divider" class="manual-divider" aria-hidden="true" hidden><span>или вручную</span></div>
+
           <form id="search-form" class="search-form" role="search">
             <label class="search-box" for="product-search">
               <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">

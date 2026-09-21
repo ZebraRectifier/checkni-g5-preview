@@ -1,5 +1,11 @@
 const DEFAULT_STORAGE_KEY = "checkni.surface.basket.v1";
 export const MAX_QUANTITY = 99;
+export const VALIDATED_MERGE_REASON = Object.freeze({
+  INVALID_ITEM: "invalid_item",
+  DUPLICATE_ITEM: "duplicate_item",
+  METADATA_CONFLICT: "metadata_conflict",
+  QUANTITY_LIMIT: "quantity_limit"
+});
 
 function clampQuantity(value) {
   const parsed = Number.parseInt(value, 10);
@@ -28,6 +34,18 @@ function normalizeStoredItem(item) {
     unit: item.unit.trim(),
     quantity: item.quantity
   };
+}
+
+function normalizeValidatedBasketItem(item) {
+  if (!item || typeof item !== "object") return null;
+  if (!item.product || typeof item.product !== "object") return null;
+
+  return normalizeStoredItem({
+    id: item.product.id,
+    name: item.product.name,
+    unit: item.product.unit,
+    quantity: item.quantity
+  });
 }
 
 function normalizeStoredBasket(items) {
@@ -170,6 +188,85 @@ export function createBasketStore(options = {}) {
     return getSnapshot();
   };
 
+  const mergeValidatedBasket = (validatedItems) => {
+    if (!Array.isArray(validatedItems) || validatedItems.length === 0) {
+      return { snapshot: getSnapshot(), rejectedRows: [] };
+    }
+
+    const nextItems = items.map((item) => ({ ...item }));
+    const seen = new Set();
+    const rejectedRows = [];
+    let changed = false;
+
+    validatedItems.forEach((item, index) => {
+      const normalized = normalizeValidatedBasketItem(item);
+      const productId = typeof item?.product?.id === "string"
+        ? item.product.id
+        : null;
+
+      if (!normalized) {
+        rejectedRows.push({
+          index,
+          productId,
+          reason: VALIDATED_MERGE_REASON.INVALID_ITEM
+        });
+        return;
+      }
+
+      if (seen.has(normalized.id)) {
+        rejectedRows.push({
+          index,
+          productId: normalized.id,
+          reason: VALIDATED_MERGE_REASON.DUPLICATE_ITEM
+        });
+        return;
+      }
+      seen.add(normalized.id);
+
+      const existing = nextItems.find((candidate) => candidate.id === normalized.id);
+      if (!existing) {
+        nextItems.push(normalized);
+        changed = true;
+        return;
+      }
+
+      if (
+        existing.name !== normalized.name
+        || existing.unit !== normalized.unit
+      ) {
+        rejectedRows.push({
+          index,
+          productId: normalized.id,
+          reason: VALIDATED_MERGE_REASON.METADATA_CONFLICT
+        });
+        return;
+      }
+
+      const quantity = existing.quantity + normalized.quantity;
+      if (!Number.isSafeInteger(quantity) || quantity > MAX_QUANTITY) {
+        rejectedRows.push({
+          index,
+          productId: normalized.id,
+          reason: VALIDATED_MERGE_REASON.QUANTITY_LIMIT
+        });
+        return;
+      }
+
+      existing.quantity = quantity;
+      changed = true;
+    });
+
+    if (changed) {
+      items = nextItems;
+      notify();
+    }
+
+    return {
+      snapshot: getSnapshot(),
+      rejectedRows
+    };
+  };
+
   const subscribe = (listener) => {
     listeners.add(listener);
     return () => listeners.delete(listener);
@@ -183,6 +280,7 @@ export function createBasketStore(options = {}) {
     decrement,
     remove,
     clear,
+    mergeValidatedBasket,
     subscribe
   };
 }

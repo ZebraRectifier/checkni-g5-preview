@@ -1,5 +1,5 @@
 import { MOCK_CATALOG, searchMockCatalog } from "./data/mockCatalog.mjs";
-import { createBasketStore, countBasketUnits } from "./state/basketStore.mjs";
+import { VALIDATED_MERGE_REASON, createBasketStore, countBasketUnits } from "./state/basketStore.mjs";
 import { createProductCard } from "./components/ProductCard.mjs";
 import { renderBasketView } from "./components/BasketView.mjs";
 import { createComparisonResult } from "./components/ComparisonResult.mjs";
@@ -9,6 +9,11 @@ import {
   COMPARISON_STATUS,
   createComparisonFlow
 } from "./runtime/comparisonFlow.mjs";
+import {
+  BASKET_PROPOSAL_STATUS,
+  createBasketProposalFlow
+} from "./runtime/basketProposalFlow.mjs";
+import { isBasketProposalConfigured, requestBasketProposal } from "./ports/basketProposalPort.mjs";
 import {
   FOCUS_MODE,
   VIEW,
@@ -24,6 +29,13 @@ const elements = {
   brandHome: document.querySelector(".brand"),
   shopView: document.querySelector("#shop-view"),
   basketView: document.querySelector("#basket-view"),
+  proposalSection: document.querySelector("#basket-proposal-section"),
+  manualDivider: document.querySelector("#manual-divider"),
+  proposalForm: document.querySelector("#basket-proposal-form"),
+  proposalInput: document.querySelector("#basket-proposal-input"),
+  proposalSubmit: document.querySelector("#basket-proposal-submit"),
+  proposalStatus: document.querySelector("#basket-proposal-status"),
+  proposalFallback: document.querySelector("#basket-proposal-fallback"),
   searchForm: document.querySelector("#search-form"),
   searchInput: document.querySelector("#product-search"),
   clearSearch: document.querySelector("#clear-search"),
@@ -43,9 +55,17 @@ const basket = createBasketStore();
 const comparisonFlow = createComparisonFlow((surfaceBasket) =>
   comparisonPort.compare(surfaceBasket)
 );
+const basketProposalFlow = createBasketProposalFlow(
+  requestBasketProposal,
+  (validatedBasket) => basket.mergeValidatedBasket(validatedBasket)
+);
 let activeQuery = "";
 let currentView = viewFromHash(location.hash);
 let toastTimer;
+
+const proposalTransportConfigured = isBasketProposalConfigured();
+elements.proposalSection.hidden = !proposalTransportConfigured;
+elements.manualDivider.hidden = !proposalTransportConfigured;
 
 function basketQuantityFor(productId) {
   return basket.getSnapshot().find((item) => item.id === productId)?.quantity ?? 0;
@@ -74,6 +94,121 @@ function renderCatalog() {
   elements.searchStatus.textContent = hasResults
     ? `Найдено товаров: ${results.length}`
     : "По вашему запросу ничего не найдено";
+}
+
+function proposalProblemCopy(row) {
+  const id = typeof row?.productId === "string" && row.productId
+    ? ` «${row.productId}»`
+    : "";
+
+  if (row?.reason === "unknown_product_id") {
+    return `Не нашли товар${id} в демо-каталоге.`;
+  }
+  if (row?.reason === "invalid_quantity") {
+    return `Некорректное количество для позиции${id}.`;
+  }
+  if (row?.reason === "extra_row_fields") {
+    return `Позиция${id} отклонена: источник прислал лишние поля.`;
+  }
+  if (row?.reason === VALIDATED_MERGE_REASON.QUANTITY_LIMIT) {
+    return `Позиция${id} не добавлена: достигнут лимит количества.`;
+  }
+  if (row?.reason === VALIDATED_MERGE_REASON.METADATA_CONFLICT) {
+    return `Позиция${id} не добавлена из-за конфликта данных.`;
+  }
+
+  return `Позиция${id || ""} не добавлена.`;
+}
+
+function renderProposalProblems(state) {
+  const validation = state.validation;
+  if (!validation) return null;
+
+  const problems = [
+    ...validation.unresolvedRows,
+    ...validation.rejectedRows,
+    ...state.mergeRejectedRows
+  ];
+
+  if (problems.length === 0) return null;
+
+  const list = document.createElement("ul");
+  list.className = "proposal-problems";
+  problems.forEach((row) => {
+    const item = document.createElement("li");
+    item.textContent = proposalProblemCopy(row);
+    list.append(item);
+  });
+  return list;
+}
+
+function renderBasketProposalState() {
+  const state = basketProposalFlow.getState();
+  const isLoading = state.status === BASKET_PROPOSAL_STATUS.LOADING;
+
+  elements.proposalSubmit.disabled = isLoading;
+  elements.proposalSubmit.textContent = isLoading
+    ? "Разбираем…"
+    : "Добавить из фразы";
+  elements.proposalStatus.replaceChildren();
+  elements.proposalFallback.hidden = true;
+
+  if (state.status === BASKET_PROPOSAL_STATUS.IDLE) return;
+
+  const message = document.createElement("p");
+  message.className = "proposal-message";
+
+  if (state.status === BASKET_PROPOSAL_STATUS.LOADING) {
+    message.textContent = "Разбираем список. Ручной поиск остаётся доступен.";
+  } else if (state.status === BASKET_PROPOSAL_STATUS.SUCCESS) {
+    const count = state.validation?.basket.length ?? 0;
+    message.classList.add("is-success");
+    message.textContent = `Добавлено из фразы: ${count} поз.`;
+  } else if (state.status === BASKET_PROPOSAL_STATUS.PARTIAL) {
+    const accepted = Math.max(
+      0,
+      (state.validation?.basket.length ?? 0) - state.mergeRejectedRows.length
+    );
+    message.textContent =
+      `Добавили ${accepted} поз. Остальное не добавляли без подтверждения.`;
+    elements.proposalFallback.hidden = false;
+  } else if (state.status === BASKET_PROPOSAL_STATUS.UNAVAILABLE) {
+    message.textContent =
+      "Быстрый ввод сейчас недоступен. Корзину можно собрать обычным поиском.";
+    elements.proposalFallback.hidden = false;
+  } else if (state.status === BASKET_PROPOSAL_STATUS.ERROR) {
+    message.textContent =
+      "Не удалось разобрать список. Корзина не изменилась — используйте ручной поиск.";
+    elements.proposalFallback.hidden = false;
+  } else if (state.inputReason === "empty") {
+    message.textContent = "Введите продукты одной фразой.";
+  } else if (state.inputReason === "too_long") {
+    message.textContent = "Список слишком длинный. Сократите его и попробуйте снова.";
+    elements.proposalFallback.hidden = false;
+  } else {
+    message.textContent =
+      "Не удалось безопасно разобрать список. Ничего неподтверждённого не добавлено.";
+    elements.proposalFallback.hidden = false;
+  }
+
+  elements.proposalStatus.append(message);
+  const problems = renderProposalProblems(state);
+  if (problems) elements.proposalStatus.append(problems);
+}
+
+async function handleBasketProposal() {
+  const pending = basketProposalFlow.run(elements.proposalInput.value);
+  renderBasketProposalState();
+
+  const state = await pending;
+  renderBasketProposalState();
+
+  if (state.status === BASKET_PROPOSAL_STATUS.SUCCESS) {
+    elements.proposalInput.value = "";
+    showToast("Корзина обновлена");
+  } else if (state.status === BASKET_PROPOSAL_STATUS.PARTIAL) {
+    showToast("Добавили только подтверждённые позиции");
+  }
 }
 
 function returnToShop() {
@@ -282,6 +417,16 @@ function syncSearch() {
   renderCatalog();
 }
 
+elements.proposalForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  void handleBasketProposal();
+});
+
+elements.proposalFallback.addEventListener("click", () => {
+  elements.searchInput.focus({ preventScroll: true });
+  elements.searchInput.scrollIntoView({ block: "center", behavior: "auto" });
+});
+
 elements.searchForm.addEventListener("submit", (event) => {
   event.preventDefault();
   syncSearch();
@@ -328,4 +473,5 @@ history.replaceState(
 renderCatalog();
 renderBasket();
 renderDock();
+renderBasketProposalState();
 renderView({ scrollY: scrollYFromState(history.state) });

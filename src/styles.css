@@ -231,6 +231,141 @@ h1 {
   font-size: 13px;
 }
 
+.phrase-entry {
+  margin-top: 34px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.phrase-entry-heading .eyebrow {
+  margin-bottom: 6px;
+}
+
+.phrase-entry-heading h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.025em;
+}
+
+.proposal-form {
+  margin-top: 14px;
+}
+
+.proposal-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.proposal-box input {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  outline: 0;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.proposal-box input:focus {
+  border-color: rgba(20, 92, 57, 0.45);
+}
+
+.proposal-submit {
+  min-height: var(--tap);
+  padding: 0 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ink);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.proposal-submit:disabled {
+  opacity: 0.62;
+  cursor: progress;
+}
+
+.proposal-status:empty {
+  display: none;
+}
+
+.proposal-status {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.proposal-message {
+  margin: 0;
+}
+
+.proposal-message.is-success {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.proposal-problems {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.proposal-problems li + li {
+  margin-top: 4px;
+}
+
+.text-button {
+  min-height: var(--tap);
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-strong);
+  cursor: pointer;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.text-button[hidden] {
+  display: none !important;
+}
+
+.manual-divider[hidden] {
+  display: none !important;
+}
+
+.manual-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 18px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.manual-divider::before,
+.manual-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--line);
+}
+
+.manual-divider + .search-form {
+  margin-top: 0;
+}
+
 .section-heading {
   margin-bottom: 18px;
   display: flex;
@@ -716,6 +851,24 @@ h1 {
 
   .search-form {
     margin-top: 26px;
+  }
+
+  .phrase-entry {
+    margin-top: 26px;
+    padding: 14px;
+    border-radius: 17px;
+  }
+
+  .proposal-box {
+    grid-template-columns: 1fr;
+  }
+
+  .proposal-submit {
+    width: 100%;
+  }
+
+  .manual-divider + .search-form {
+    margin-top: 0;
   }
 
   .search-box {
