@@ -1,0 +1,114 @@
+name: Retail Source Smoke
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - ".github/workflows/retail-source-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Probe ordinary public retailer pages
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          urls=(
+            "https://myspar.ru/catalog/detskie-napitki/"
+            "https://myspar.ru/catalog/detskie-napitki/?PAGEN_1=2"
+            "https://www.perekrestok.ru/cat/276/p/voda-frutonana-pitevaa-negazirovannaa-0-33l-3060608"
+            "https://www.perekrestok.ru/cat/276/p/sok-frutonana-multifruktovyj-s-makotu-vosstanovlennyj-bez-sahara-6-mesacev-200ml-3493713"
+          )
+
+          : > retail-smoke.txt
+          index=0
+          for url in "${urls[@]}"; do
+            index=$((index + 1))
+            body="body-$index.html"
+            headers="headers-$index.txt"
+            code="$(curl               --silent --show-error               --location --max-redirs 1               --connect-timeout 10 --max-time 25               --user-agent "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/147 Safari/537.36"               --dump-header "$headers"               --output "$body"               --write-out "%{http_code}"               "$url" || true)"
+
+            bytes="$(wc -c < "$body" 2>/dev/null || echo 0)"
+            echo "URL[$index]=$url" >> retail-smoke.txt
+            echo "HTTP[$index]=$code" >> retail-smoke.txt
+            echo "BYTES[$index]=$bytes" >> retail-smoke.txt
+
+            python3 - "$body" "$index" >> retail-smoke.txt <<'PY'
+          import re, sys
+          p, i = sys.argv[1], sys.argv[2]
+          try:
+              raw = open(p, "r", encoding="utf-8", errors="ignore").read()
+          except FileNotFoundError:
+              raw = ""
+          compact = re.sub(r"\s+", " ", raw)
+          checks = {
+              "moscow": "Москва" in compact,
+              "frutonyanya": "ФрутоНя" in compact,
+              "water330": ("330мл" in compact or "0.33л" in compact or "0,33л" in compact),
+              "juice200": "200мл" in compact,
+              "soldout": "Товар раскупили" in compact,
+              "captcha": bool(re.search(r"captcha|qrator|challenge", compact, re.I)),
+              "rub": "₽" in compact or "руб" in compact,
+          }
+          print(f"CHECKS[{i}]=" + ",".join(f"{k}:{str(v).lower()}" for k,v in checks.items()))
+          PY
+            echo >> retail-smoke.txt
+          done
+
+          cat retail-smoke.txt
+
+      - name: Browser-render Perekrestok when Chrome is available
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v google-chrome >/dev/null 2>&1; then
+            echo "CHROME=unavailable" >> retail-smoke.txt
+            exit 0
+          fi
+
+          echo "CHROME=$(google-chrome --version)" >> retail-smoke.txt
+          urls=(
+            "https://www.perekrestok.ru/cat/276/p/voda-frutonana-pitevaa-negazirovannaa-0-33l-3060608"
+            "https://www.perekrestok.ru/cat/276/p/sok-frutonana-multifruktovyj-s-makotu-vosstanovlennyj-bez-sahara-6-mesacev-200ml-3493713"
+          )
+          n=0
+          for url in "${urls[@]}"; do
+            n=$((n + 1))
+            out="chrome-$n.html"
+            timeout 35s google-chrome               --headless=new --no-sandbox --disable-dev-shm-usage               --disable-background-networking --disable-sync               --virtual-time-budget=12000               --dump-dom "$url" > "$out" 2>/dev/null || true
+            python3 - "$out" "$n" >> retail-smoke.txt <<'PY'
+          import re, sys
+          p, i = sys.argv[1], sys.argv[2]
+          try:
+              raw = open(p, "r", encoding="utf-8", errors="ignore").read()
+          except FileNotFoundError:
+              raw = ""
+          compact = re.sub(r"\s+", " ", raw)
+          checks = {
+              "bytes": len(raw),
+              "moscow": "Москва" in compact,
+              "frutonyanya": "ФрутоНя" in compact,
+              "soldout": "Товар раскупили" in compact,
+              "captcha": bool(re.search(r"captcha|qrator|challenge|Access denied", compact, re.I)),
+              "rub": "₽" in compact or "руб" in compact,
+          }
+          print(f"CHROME_CHECKS[{i}]=" + ",".join(f"{k}:{str(v).lower()}" for k,v in checks.items()))
+          PY
+          done
+
+          cat retail-smoke.txt
+
+      - name: Upload sanitized smoke report
+        uses: actions/upload-artifact@v4
+        with:
+          name: retail-source-smoke
+          path: retail-smoke.txt
+          if-no-files-found: error
+          retention-days: 2
