@@ -884,6 +884,40 @@ h1 {
   color: var(--accent-strong);
 }
 
+
+.beta-live-card {
+  max-width: 760px;
+  margin: -20px 0 48px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow);
+}
+
+.beta-live-card[hidden] {
+  display: none !important;
+}
+
+.beta-live-card h2 {
+  margin: 0;
+  font-size: clamp(24px, 4vw, 34px);
+  letter-spacing: -0.035em;
+}
+
+.beta-live-card > p:not(.eyebrow) {
+  max-width: 650px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.beta-live-card .primary-button {
+  width: auto;
+  margin-top: 18px;
+  padding-inline: 20px;
+}
+
 @media (max-width: 900px) {
   .product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
