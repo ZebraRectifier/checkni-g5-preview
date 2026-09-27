@@ -1,4 +1,5 @@
 import { MOCK_CATALOG, searchMockCatalog } from "./data/mockCatalog.mjs";
+import { BETA_REAL_BASKET } from "./data/betaRealBasket.mjs";
 import { VALIDATED_MERGE_REASON, createBasketStore, countBasketUnits } from "./state/basketStore.mjs";
 import { createProductCard } from "./components/ProductCard.mjs";
 import { BASKET_COMPARE_LABEL, renderBasketView } from "./components/BasketView.mjs";
@@ -74,7 +75,10 @@ const elements = {
   backToShop: document.querySelector("#back-to-shop"),
   toastRegion: document.querySelector("#toast-region"),
   comparisonModeBadge: document.querySelector("#comparison-mode-badge"),
-  basketModeCopy: document.querySelector("#basket-mode-copy")
+  basketModeCopy: document.querySelector("#basket-mode-copy"),
+  betaLiveSection: document.querySelector("#beta-live-section"),
+  betaLiveButton: document.querySelector("#beta-live-button"),
+  betaLiveStatus: document.querySelector("#beta-live-status")
 };
 
 const basket = createBasketStore();
@@ -132,6 +136,14 @@ if (elements.basketModeCopy) {
 
 function basketQuantityFor(productId) {
   return basket.getSnapshot().find((item) => item.id === productId)?.quantity ?? 0;
+}
+
+function renderBetaLiveSection() {
+  if (!elements.betaLiveSection) return;
+  elements.betaLiveSection.hidden = !(
+    comparisonMode === COMPARISON_MODE.OBSERVED
+    && basket.getSnapshot().length === 0
+  );
 }
 
 function invalidateHybridForManualTakeover() {
@@ -619,6 +631,44 @@ async function handleCompare() {
   });
 }
 
+async function handleBetaLiveExample() {
+  if (
+    comparisonMode !== COMPARISON_MODE.OBSERVED
+    || basket.getSnapshot().length !== 0
+    || !elements.betaLiveButton
+  ) {
+    return;
+  }
+
+  elements.betaLiveButton.disabled = true;
+  if (elements.betaLiveStatus) {
+    elements.betaLiveStatus.textContent =
+      "Собираем две позиции и обновляем публичные цены…";
+  }
+
+  const merged = basket.mergeValidatedBasket(BETA_REAL_BASKET);
+  if (merged.rejectedRows.length > 0) {
+    elements.betaLiveButton.disabled = false;
+    if (elements.betaLiveStatus) {
+      elements.betaLiveStatus.textContent =
+        "Не удалось безопасно собрать живой пример.";
+    }
+    return;
+  }
+
+  navigate(VIEW.BASKET, {
+    focusMode: FOCUS_MODE.HEADING
+  });
+  await handleCompare();
+
+  const state = comparisonFlow.getState();
+  showToast(
+    state.status === COMPARISON_STATUS.SUCCESS
+      ? "Свежие реальные цены проверены"
+      : "Показали только подтверждённые свежие данные"
+  );
+}
+
 function renderBasket() {
   const items = basket.getSnapshot();
   renderBasketView(elements.basketContent, items, {
@@ -867,6 +917,10 @@ elements.proposalFallback.addEventListener("click", () => {
   elements.searchInput.scrollIntoView({ block: "center", behavior: "auto" });
 });
 
+elements.betaLiveButton?.addEventListener("click", () => {
+  void handleBetaLiveExample();
+});
+
 elements.searchForm.addEventListener("submit", (event) => {
   event.preventDefault();
   invalidateHybridForManualTakeover();
@@ -915,6 +969,7 @@ basket.subscribe(() => {
   renderCatalog();
   renderBasket();
   renderDock();
+  renderBetaLiveSection();
 });
 
 history.replaceState(
@@ -926,5 +981,6 @@ history.replaceState(
 renderCatalog();
 renderBasket();
 renderDock();
+renderBetaLiveSection();
 renderBasketProposalState();
 renderView({ scrollY: scrollYFromState(history.state) });
