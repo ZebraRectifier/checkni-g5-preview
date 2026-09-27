@@ -14,6 +14,7 @@ export const BASKET_PROPOSAL_STATUS = Object.freeze({
 });
 
 export const MAX_NATURAL_LANGUAGE_LENGTH = 300;
+export const MAX_RUNTIME_PROPOSAL_CATALOG_ITEMS = 50;
 
 function freezeState(status, details = {}) {
   return Object.freeze({
@@ -22,6 +23,18 @@ function freezeState(status, details = {}) {
     mergeRejectedRows: details.mergeRejectedRows ?? [],
     inputReason: details.inputReason ?? null
   });
+}
+
+function isAsyncFunction(value) {
+  return value?.constructor?.name === "AsyncFunction";
+}
+
+function isThenable(value) {
+  return Boolean(
+    value
+    && (typeof value === "object" || typeof value === "function")
+    && typeof value.then === "function"
+  );
 }
 
 function isTypedProviderResult(value, type) {
@@ -33,14 +46,58 @@ function isTypedProviderResult(value, type) {
   );
 }
 
-export function createBasketProposalFlow(propose, applyValidatedBasket) {
+function snapshotRuntimeCatalog(catalog) {
+  if (
+    !Array.isArray(catalog)
+    || catalog.length === 0
+    || catalog.length > MAX_RUNTIME_PROPOSAL_CATALOG_ITEMS
+  ) {
+    throw new TypeError("runtime proposal catalog is invalid");
+  }
+
+  const seen = new Set();
+  const snapshot = catalog.map((product) => {
+    if (!product || typeof product !== "object" || Array.isArray(product)) {
+      throw new TypeError("runtime proposal catalog product is invalid");
+    }
+
+    const { id, name, unit } = product;
+    if (
+      ![id, name, unit].every((value) => (
+        typeof value === "string"
+        && value.length > 0
+        && value.trim() === value
+      ))
+      || seen.has(id)
+    ) {
+      throw new TypeError("runtime proposal catalog product is invalid");
+    }
+
+    seen.add(id);
+    return Object.freeze({ id, name, unit });
+  });
+
+  return Object.freeze(snapshot);
+}
+
+export function createBasketProposalFlow(propose, applyValidatedBasket, options = {}) {
   if (typeof propose !== "function") {
     throw new TypeError("basket proposal flow requires a proposal function");
   }
   if (typeof applyValidatedBasket !== "function") {
     throw new TypeError("basket proposal flow requires an apply function");
   }
+  if (isAsyncFunction(applyValidatedBasket)) {
+    throw new TypeError("basket proposal mutation must be synchronous");
+  }
+  if (
+    options.resolveCatalog != null
+    && typeof options.resolveCatalog !== "function"
+  ) {
+    throw new TypeError("basket proposal flow catalog resolver must be a function");
+  }
 
+  const resolveCatalog = options.resolveCatalog ?? null;
   let requestVersion = 0;
   let state = freezeState(BASKET_PROPOSAL_STATUS.IDLE);
 
@@ -75,7 +132,20 @@ export function createBasketProposalFlow(propose, applyValidatedBasket) {
     state = freezeState(BASKET_PROPOSAL_STATUS.LOADING);
 
     try {
-      const providerResult = await propose(normalizedText);
+      let runtimeCatalog = null;
+      if (resolveCatalog) {
+        runtimeCatalog = snapshotRuntimeCatalog(
+          await resolveCatalog(normalizedText)
+        );
+
+        if (requestId !== requestVersion) {
+          return state;
+        }
+      }
+
+      const providerResult = runtimeCatalog
+        ? await propose(normalizedText, runtimeCatalog)
+        : await propose(normalizedText);
 
       if (requestId !== requestVersion) {
         return state;
@@ -94,14 +164,36 @@ export function createBasketProposalFlow(propose, applyValidatedBasket) {
       const proposalPayload = isTypedProviderResult(providerResult, "proposal")
         ? providerResult.proposal
         : providerResult;
-      const validation = validateBasketProposal(proposalPayload);
+      const validation = validateBasketProposal(
+        proposalPayload,
+        runtimeCatalog ? { catalog: runtimeCatalog } : undefined
+      );
 
       if (validation.status === PROPOSAL_STATUS.REJECTED) {
         state = freezeState(BASKET_PROPOSAL_STATUS.REJECTED, { validation });
         return state;
       }
 
-      const mergeResult = applyValidatedBasket(validation.basket) ?? {};
+      let mergeResult;
+      try {
+        const applied = applyValidatedBasket(validation.basket);
+        if (isThenable(applied)) {
+          state = freezeState(BASKET_PROPOSAL_STATUS.ERROR);
+          return state;
+        }
+        mergeResult = applied ?? {};
+      } catch {
+        if (requestId !== requestVersion) {
+          return state;
+        }
+        state = freezeState(BASKET_PROPOSAL_STATUS.ERROR);
+        return state;
+      }
+
+      if (requestId !== requestVersion) {
+        return state;
+      }
+
       const mergeRejectedRows = Array.isArray(mergeResult.rejectedRows)
         ? mergeResult.rejectedRows
         : [];

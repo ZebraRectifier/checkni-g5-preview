@@ -1,19 +1,40 @@
 import { MOCK_CATALOG, searchMockCatalog } from "./data/mockCatalog.mjs";
 import { VALIDATED_MERGE_REASON, createBasketStore, countBasketUnits } from "./state/basketStore.mjs";
 import { createProductCard } from "./components/ProductCard.mjs";
-import { renderBasketView } from "./components/BasketView.mjs";
-import { createComparisonResult } from "./components/ComparisonResult.mjs";
+import { BASKET_COMPARE_LABEL, renderBasketView } from "./components/BasketView.mjs";
+import {
+  createComparisonResult,
+  createObservedComparisonResult
+} from "./components/ComparisonResult.mjs";
 import { revealWinningBasketList } from "./runtime/listInspection.mjs";
-import { comparisonPort } from "./ports/comparisonPort.mjs";
+import {
+  COMPARISON_MODE,
+  comparisonPort
+} from "./ports/comparisonPort.mjs";
 import {
   COMPARISON_STATUS,
   createComparisonFlow
 } from "./runtime/comparisonFlow.mjs";
 import {
-  BASKET_PROPOSAL_STATUS,
-  createBasketProposalFlow
-} from "./runtime/basketProposalFlow.mjs";
-import { isBasketProposalConfigured, requestBasketProposal } from "./ports/basketProposalPort.mjs";
+  HYBRID_BASKET_FLOW_STATUS,
+  createHybridBasketFlow
+} from "./runtime/hybridBasketFlow.mjs";
+import {
+  createHybridBasketInterpreterLoader
+} from "./runtime/hybridBasketLoader.mjs";
+import {
+  createHybridBetaMetricsStore
+} from "./runtime/hybridBasketBetaMetrics.mjs";
+import {
+  HYBRID_DRAFT_CONFIRMATION,
+  canConfirmHybridBasketDraft
+} from "./intelligence/hybridBasketConfirmation.mjs";
+import { requestBasketProposal } from "./ports/basketProposalPort.mjs";
+import { requestCatalogSearch } from "./ports/catalogGatewayPort.mjs";
+import {
+  createAiCatalogResolver,
+  surfaceProductsFromCatalog
+} from "./runtime/liveCatalog.mjs";
 import {
   FOCUS_MODE,
   VIEW,
@@ -41,6 +62,9 @@ const elements = {
   clearSearch: document.querySelector("#clear-search"),
   productGrid: document.querySelector("#product-grid"),
   emptySearch: document.querySelector("#empty-search"),
+  emptySearchCopy: document.querySelector("#empty-search-copy"),
+  catalogEyebrow: document.querySelector("#catalog-eyebrow"),
+  catalogNote: document.querySelector("#catalog-note"),
   resultCount: document.querySelector("#result-count"),
   searchStatus: document.querySelector("#search-status"),
   basketContent: document.querySelector("#basket-content"),
@@ -48,31 +72,100 @@ const elements = {
   basketDockCopy: document.querySelector("#basket-dock-copy"),
   openBasket: document.querySelector("#open-basket"),
   backToShop: document.querySelector("#back-to-shop"),
-  toastRegion: document.querySelector("#toast-region")
+  toastRegion: document.querySelector("#toast-region"),
+  comparisonModeBadge: document.querySelector("#comparison-mode-badge"),
+  basketModeCopy: document.querySelector("#basket-mode-copy")
 };
 
 const basket = createBasketStore();
+const comparisonMode = comparisonPort.mode === COMPARISON_MODE.OBSERVED
+  ? COMPARISON_MODE.OBSERVED
+  : COMPARISON_MODE.DEMO;
 const comparisonFlow = createComparisonFlow((surfaceBasket) =>
   comparisonPort.compare(surfaceBasket)
 );
-const basketProposalFlow = createBasketProposalFlow(
-  requestBasketProposal,
-  (validatedBasket) => basket.mergeValidatedBasket(validatedBasket)
+const resolveAiCatalog = createAiCatalogResolver(
+  requestCatalogSearch,
+  { fallbackCatalog: [] }
 );
+const hybridInterpreterLoader = createHybridBasketInterpreterLoader();
+const hybridBetaMetrics = createHybridBetaMetricsStore();
+const basketProposalFlow = createHybridBasketFlow({
+  loader: hybridInterpreterLoader,
+  localCatalog: MOCK_CATALOG,
+  resolveLiveCatalog: resolveAiCatalog,
+  requestAiProposal: requestBasketProposal,
+  applyValidatedBasket: (validatedBasket) => (
+    basket.mergeValidatedBasket(validatedBasket)
+  ),
+  onMetric: (event) => {
+    hybridBetaMetrics.record(event);
+  }
+});
 let activeQuery = "";
+let catalogRequestVersion = 0;
+let pendingCatalogSearch = null;
+let catalogSearchState = {
+  status: "demo",
+  query: "",
+  products: [],
+  discoveredCount: 0
+};
 let currentView = viewFromHash(location.hash);
 let toastTimer;
+let proposalInputRevision = 0;
 
-const proposalTransportConfigured = isBasketProposalConfigured();
-elements.proposalSection.hidden = !proposalTransportConfigured;
-elements.manualDivider.hidden = !proposalTransportConfigured;
+elements.proposalSection.hidden = false;
+elements.manualDivider.hidden = false;
+
+if (elements.comparisonModeBadge) {
+  elements.comparisonModeBadge.textContent = comparisonMode === COMPARISON_MODE.OBSERVED
+    ? "OBSERVED · REAL"
+    : "DEMO · MOCK";
+}
+
+if (elements.basketModeCopy) {
+  elements.basketModeCopy.textContent = comparisonMode === COMPARISON_MODE.OBSERVED
+    ? "Проверьте состав и запустите сравнение по доверенным наблюдениям реальных цен."
+    : "Проверьте состав и запустите сравнение по трём демонстрационным магазинам.";
+}
 
 function basketQuantityFor(productId) {
   return basket.getSnapshot().find((item) => item.id === productId)?.quantity ?? 0;
 }
 
+function invalidateHybridForManualTakeover() {
+  const proposalState = basketProposalFlow.getState();
+  if (
+    proposalState.status !== HYBRID_BASKET_FLOW_STATUS.LOADING
+    && proposalState.status !== HYBRID_BASKET_FLOW_STATUS.CLARIFICATION
+  ) {
+    return;
+  }
+
+  hybridBetaMetrics.recordAction("manual_fallback");
+  basketProposalFlow.invalidate();
+  renderBasketProposalState();
+}
+
 function renderCatalog() {
-  const results = searchMockCatalog(activeQuery, MOCK_CATALOG);
+  const normalizedQuery = activeQuery.trim();
+  const loading = catalogSearchState.status === "loading";
+  const live = (
+    catalogSearchState.status === "live"
+    && catalogSearchState.query === normalizedQuery
+  );
+  const fallback = (
+    catalogSearchState.status === "fallback"
+    && catalogSearchState.query === normalizedQuery
+  );
+
+  const results = live
+    ? catalogSearchState.products
+    : loading
+      ? []
+      : searchMockCatalog(normalizedQuery, MOCK_CATALOG);
+
   elements.productGrid.replaceChildren();
 
   results.forEach((product) => {
@@ -80,6 +173,7 @@ function renderCatalog() {
       createProductCard(product, {
         quantity: basketQuantityFor(product.id),
         onAdd: (selectedProduct) => {
+          invalidateHybridForManualTakeover();
           basket.add(selectedProduct);
           showToast(`${selectedProduct.name} добавлено`);
         }
@@ -87,10 +181,44 @@ function renderCatalog() {
     );
   });
 
+  if (loading) {
+    elements.catalogEyebrow.textContent = "Живой каталог";
+    elements.catalogNote.textContent = "Ищем товары в Open Food Facts…";
+  } else if (live) {
+    elements.catalogEyebrow.textContent = "Живой каталог · Open Food Facts";
+    elements.catalogNote.textContent =
+      "Каталог помогает идентифицировать товар. Он не подтверждает цену или наличие в магазине.";
+  } else if (fallback) {
+    elements.catalogEyebrow.textContent = "Демо-каталог";
+    elements.catalogNote.textContent =
+      "Live-каталог временно недоступен. Показан DEMO · MOCK fallback.";
+  } else {
+    elements.catalogEyebrow.textContent = "Демо-каталог";
+    elements.catalogNote.textContent = normalizedQuery
+      ? "Нажмите Enter, чтобы искать в живом каталоге. Пока показаны демо-подсказки."
+      : "Тестовые позиции для резервного режима.";
+  }
+
   const hasResults = results.length > 0;
   elements.productGrid.hidden = !hasResults;
-  elements.emptySearch.hidden = hasResults;
-  elements.resultCount.textContent = String(results.length);
+  elements.emptySearch.hidden = loading || hasResults;
+  elements.resultCount.textContent = loading ? "…" : String(results.length);
+
+  if (loading) {
+    elements.searchStatus.textContent = "Ищем товары в живом каталоге";
+    return;
+  }
+
+  if (live && !hasResults) {
+    elements.emptySearchCopy.textContent = catalogSearchState.discoveredCount > 0
+      ? "Нашлись позиции, но без подтверждённого штрихкода и размера упаковки. Попробуйте уточнить запрос."
+      : "В живом каталоге по этому запросу ничего не найдено.";
+    elements.searchStatus.textContent = "Подтверждённых товаров не найдено";
+    return;
+  }
+
+  elements.emptySearchCopy.textContent =
+    "Попробуйте более короткий запрос — например «сыр» или «хлеб».";
   elements.searchStatus.textContent = hasResults
     ? `Найдено товаров: ${results.length}`
     : "По вашему запросу ничего не найдено";
@@ -102,7 +230,7 @@ function proposalProblemCopy(row) {
     : "";
 
   if (row?.reason === "unknown_product_id") {
-    return `Не нашли товар${id} в демо-каталоге.`;
+    return `Не нашли товар${id} в текущем каталоге.`;
   }
   if (row?.reason === "invalid_quantity") {
     return `Некорректное количество для позиции${id}.`;
@@ -142,71 +270,230 @@ function renderProposalProblems(state) {
   return list;
 }
 
+function appendProposalItems(items) {
+  if (!Array.isArray(items) || items.length === 0) return;
+
+  const list = document.createElement("ul");
+  list.className = "proposal-preview-list";
+
+  items.forEach((row) => {
+    const item = document.createElement("li");
+    item.textContent = `${row.name} · ${row.unit} ×${row.quantity}`;
+    list.append(item);
+  });
+
+  elements.proposalStatus.append(list);
+}
+
+function appendProposalAction(label, onClick, {
+  secondary = false
+} = {}) {
+  if (!label || typeof onClick !== "function") return;
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = secondary
+    ? "text-button proposal-inline-action"
+    : "proposal-submit proposal-inline-action";
+  button.textContent = label;
+  button.addEventListener("click", onClick);
+  elements.proposalStatus.append(button);
+}
+
+function focusProposalInput() {
+  elements.proposalInput.focus({ preventScroll: true });
+  elements.proposalInput.scrollIntoView({
+    block: "center",
+    behavior: "auto"
+  });
+}
+
+function applyClarificationAction(mode) {
+  const state = basketProposalFlow.confirm(mode);
+
+  if (state.status === HYBRID_BASKET_FLOW_STATUS.SUCCESS) {
+    hybridBetaMetrics.recordAction(
+      mode === HYBRID_DRAFT_CONFIRMATION.ADD_FOUND_ONLY
+        ? "partial_found_only"
+        : "draft_confirmed"
+    );
+
+    if (mode === HYBRID_DRAFT_CONFIRMATION.CONFIRM_ALL) {
+      elements.proposalInput.value = "";
+      proposalInputRevision += 1;
+    }
+  }
+  renderBasketProposalState();
+
+  if (state.status === HYBRID_BASKET_FLOW_STATUS.SUCCESS) {
+    showToast("Корзина обновлена");
+  } else if (state.status === HYBRID_BASKET_FLOW_STATUS.PARTIAL) {
+    showToast("Добавили только подтверждённые позиции");
+  }
+}
+
 function renderBasketProposalState() {
   const state = basketProposalFlow.getState();
-  const isLoading = state.status === BASKET_PROPOSAL_STATUS.LOADING;
+  const isLoading = state.status === HYBRID_BASKET_FLOW_STATUS.LOADING;
 
-  elements.proposalSubmit.disabled = isLoading;
+  elements.proposalSubmit.disabled = false;
   elements.proposalSubmit.textContent = isLoading
-    ? "Разбираем…"
-    : "Добавить из фразы";
+    ? "Обновить запрос"
+    : "Собрать корзину";
   elements.proposalStatus.replaceChildren();
   elements.proposalFallback.hidden = true;
 
-  if (state.status === BASKET_PROPOSAL_STATUS.IDLE) return;
+  if (state.status === HYBRID_BASKET_FLOW_STATUS.IDLE) return;
 
   const message = document.createElement("p");
   message.className = "proposal-message";
 
-  if (state.status === BASKET_PROPOSAL_STATUS.LOADING) {
-    message.textContent = "Разбираем список. Ручной поиск остаётся доступен.";
-  } else if (state.status === BASKET_PROPOSAL_STATUS.SUCCESS) {
+  if (state.status === HYBRID_BASKET_FLOW_STATUS.LOADING) {
+    message.textContent =
+      "Разбираю запрос. Ручной поиск остаётся доступен.";
+    elements.proposalStatus.append(message);
+    return;
+  }
+
+  if (state.status === HYBRID_BASKET_FLOW_STATUS.SUCCESS) {
     const count = state.validation?.basket.length ?? 0;
     message.classList.add("is-success");
-    message.textContent = `Добавлено из фразы: ${count} поз.`;
-  } else if (state.status === BASKET_PROPOSAL_STATUS.PARTIAL) {
+    message.textContent = state.presentation?.headline
+      || `Корзина обновлена · ${count} поз.`;
+    elements.proposalStatus.append(message);
+    return;
+  }
+
+  if (state.status === HYBRID_BASKET_FLOW_STATUS.PARTIAL) {
     const accepted = Math.max(
       0,
-      (state.validation?.basket.length ?? 0) - state.mergeRejectedRows.length
+      (state.validation?.basket.length ?? 0)
+        - state.mergeRejectedRows.length
     );
     message.textContent =
-      `Добавили ${accepted} поз. Остальное не добавляли без подтверждения.`;
+      `Добавили ${accepted} поз. Остальное не подтвердилось — проверьте вручную.`;
+    elements.proposalStatus.append(message);
     elements.proposalFallback.hidden = false;
-  } else if (state.status === BASKET_PROPOSAL_STATUS.UNAVAILABLE) {
-    message.textContent =
-      "Быстрый ввод сейчас недоступен. Корзину можно собрать обычным поиском.";
+    return;
+  }
+
+  if (state.status === HYBRID_BASKET_FLOW_STATUS.CLARIFICATION) {
+    const view = state.presentation;
+    message.textContent = view?.headline || "Нужно уточнение.";
+    elements.proposalStatus.append(message);
+
+    if (view?.message) {
+      const detail = document.createElement("p");
+      detail.className = "proposal-detail";
+      detail.textContent = view.message;
+      elements.proposalStatus.append(detail);
+    }
+
+    appendProposalItems(view?.items);
+
+    const triggerReason = state.result?.triggerReason;
+    const reason = state.result?.reason;
+
+    const canAddFoundOnly = canConfirmHybridBasketDraft(
+      state.result,
+      HYBRID_DRAFT_CONFIRMATION.ADD_FOUND_ONLY
+    );
+
+    if (
+      reason === "partial_validation"
+      && (state.validation?.acceptedRows.length ?? 0) > 0
+      && canAddFoundOnly
+    ) {
+      appendProposalAction(
+        "Добавить только найденное",
+        () => applyClarificationAction(
+          HYBRID_DRAFT_CONFIRMATION.ADD_FOUND_ONLY
+        )
+      );
+      appendProposalAction(
+        "Уточнить запрос",
+        focusProposalInput,
+        { secondary: true }
+      );
+    } else if (reason === "partial_validation") {
+      appendProposalAction(
+        view?.primaryAction || "Уточнить запрос",
+        focusProposalInput
+      );
+    } else if (triggerReason === "quantity_out_of_range") {
+      appendProposalAction(
+        "Уточнить количество",
+        focusProposalInput
+      );
+    } else if (triggerReason === "commercial_constraint") {
+      appendProposalAction(
+        view?.primaryAction || "Уточнить товар",
+        focusProposalInput
+      );
+    } else {
+      appendProposalAction(
+        view?.primaryAction || "Добавить предложенное",
+        () => applyClarificationAction(
+          HYBRID_DRAFT_CONFIRMATION.CONFIRM_ALL
+        )
+      );
+      appendProposalAction(
+        view?.secondaryAction || "Уточнить запрос",
+        focusProposalInput,
+        { secondary: true }
+      );
+    }
+
     elements.proposalFallback.hidden = false;
-  } else if (state.status === BASKET_PROPOSAL_STATUS.ERROR) {
-    message.textContent =
-      "Не удалось разобрать список. Корзина не изменилась — используйте ручной поиск.";
-    elements.proposalFallback.hidden = false;
-  } else if (state.inputReason === "empty") {
+    return;
+  }
+
+  if (state.inputReason === "empty") {
     message.textContent = "Введите продукты одной фразой.";
   } else if (state.inputReason === "too_long") {
-    message.textContent = "Список слишком длинный. Сократите его и попробуйте снова.";
+    message.textContent =
+      "Список слишком длинный. Сократите его и попробуйте снова.";
+    elements.proposalFallback.hidden = false;
+  } else if (state.status === HYBRID_BASKET_FLOW_STATUS.UNAVAILABLE) {
+    message.textContent = state.presentation?.headline
+      || "Не получилось разобрать автоматически.";
+    elements.proposalFallback.hidden = false;
+  } else if (state.status === HYBRID_BASKET_FLOW_STATUS.ERROR) {
+    message.textContent = state.presentation?.headline
+      || "Не удалось собрать черновик. Корзина не изменилась.";
     elements.proposalFallback.hidden = false;
   } else {
-    message.textContent =
-      "Не удалось безопасно разобрать список. Ничего неподтверждённого не добавлено.";
+    message.textContent = state.presentation?.headline
+      || "Не удалось безопасно собрать корзину.";
     elements.proposalFallback.hidden = false;
   }
 
   elements.proposalStatus.append(message);
+
+  if (state.presentation?.message) {
+    const detail = document.createElement("p");
+    detail.className = "proposal-detail";
+    detail.textContent = state.presentation.message;
+    elements.proposalStatus.append(detail);
+  }
+
   const problems = renderProposalProblems(state);
   if (problems) elements.proposalStatus.append(problems);
 }
-
 async function handleBasketProposal() {
+  const submittedRevision = proposalInputRevision;
   const pending = basketProposalFlow.run(elements.proposalInput.value);
   renderBasketProposalState();
 
   const state = await pending;
   renderBasketProposalState();
 
-  if (state.status === BASKET_PROPOSAL_STATUS.SUCCESS) {
-    elements.proposalInput.value = "";
+  if (state.status === HYBRID_BASKET_FLOW_STATUS.SUCCESS) {
+    if (proposalInputRevision === submittedRevision) {
+      elements.proposalInput.value = "";
+    }
     showToast("Корзина обновлена");
-  } else if (state.status === BASKET_PROPOSAL_STATUS.PARTIAL) {
+  } else if (state.status === HYBRID_BASKET_FLOW_STATUS.PARTIAL) {
     showToast("Добавили только подтверждённые позиции");
   }
 }
@@ -261,7 +548,10 @@ function renderComparisonState({ focusResult = false } = {}) {
   const isLoading = state.status === COMPARISON_STATUS.LOADING;
 
   compareButton.disabled = isLoading;
-  compareButton.textContent = isLoading ? "Сравниваем…" : "Сравнить магазины";
+  compareButton.setAttribute("aria-busy", isLoading ? "true" : "false");
+  compareButton.textContent = isLoading
+    ? "Сравниваем…"
+    : BASKET_COMPARE_LABEL;
   output.replaceChildren();
 
   let resultNode = null;
@@ -269,15 +559,19 @@ function renderComparisonState({ focusResult = false } = {}) {
   if (state.status === COMPARISON_STATUS.LOADING) {
     const progress = document.createElement("p");
     progress.className = "comparison-progress";
-    progress.textContent = "Проверяем одну и ту же корзину по тестовым магазинам…";
+    progress.textContent = comparisonMode === COMPARISON_MODE.OBSERVED
+      ? "Проверяем доверенные наблюдения цен без подстановки MOCK…"
+      : "Проверяем одну и ту же корзину по тестовым магазинам…";
     output.append(progress);
     return;
   }
 
   if (state.status === COMPARISON_STATUS.SUCCESS) {
-    resultNode = createComparisonResult(state.result, {
-      onInspectStore: inspectWinningStore
-    });
+    resultNode = comparisonMode === COMPARISON_MODE.OBSERVED
+      ? createObservedComparisonResult(state.result)
+      : createComparisonResult(state.result, {
+          onInspectStore: inspectWinningStore
+        });
 
     if (!resultNode) {
       resultNode = createComparisonMessage(
@@ -286,14 +580,19 @@ function renderComparisonState({ focusResult = false } = {}) {
       );
     }
   } else if (state.status === COMPARISON_STATUS.NO_WINNER) {
-    resultNode = createComparisonMessage(
-      "Полного варианта нет",
-      "В тестовых данных нет магазина с подтверждённым полным покрытием этой корзины. Итог и экономию не показываем."
-    );
+    resultNode = comparisonMode === COMPARISON_MODE.OBSERVED
+      ? createComparisonMessage(
+          "Недостаточно реальных данных",
+          "Реальный результат не содержит авторитетного заключения Core. MOCK-данные сюда не подставляем."
+        )
+      : createComparisonMessage(
+          "Полного варианта нет",
+          "В тестовых данных нет магазина с подтверждённым полным покрытием этой корзины. Итог и экономию не показываем."
+        );
   } else if (state.status === COMPARISON_STATUS.ERROR) {
     resultNode = createComparisonMessage(
       "Не удалось сравнить",
-      "Корзина сохранена, а старый результат очищен. Нажмите «Сравнить магазины» ещё раз."
+      `Корзина сохранена, а старый результат очищен. Нажмите «${BASKET_COMPARE_LABEL}» ещё раз.`
     );
   }
 
@@ -323,11 +622,22 @@ async function handleCompare() {
 function renderBasket() {
   const items = basket.getSnapshot();
   renderBasketView(elements.basketContent, items, {
-    onIncrement: (id) => basket.increment(id),
-    onDecrement: (id) => basket.decrement(id),
-    onRemove: (id) => basket.remove(id),
+    onIncrement: (id) => {
+      invalidateHybridForManualTakeover();
+      basket.increment(id);
+    },
+    onDecrement: (id) => {
+      invalidateHybridForManualTakeover();
+      basket.decrement(id);
+    },
+    onRemove: (id) => {
+      invalidateHybridForManualTakeover();
+      basket.remove(id);
+    },
     onBackToShop: returnToShop,
+    comparisonMode,
     onCompare: () => {
+      invalidateHybridForManualTakeover();
       void handleCompare();
     }
   });
@@ -411,11 +721,132 @@ function showToast(message) {
   }, 1600);
 }
 
-function syncSearch() {
+function syncSearchDraft() {
+  catalogRequestVersion += 1;
+  pendingCatalogSearch = null;
   activeQuery = elements.searchInput.value;
-  elements.clearSearch.hidden = activeQuery.length === 0;
+  elements.clearSearch.hidden = activeQuery.trim().length === 0;
+  catalogSearchState = {
+    status: "demo",
+    query: activeQuery.trim(),
+    products: [],
+    discoveredCount: 0
+  };
   renderCatalog();
 }
+
+function handleManualSearch() {
+  activeQuery = elements.searchInput.value.trim();
+  elements.clearSearch.hidden = activeQuery.length === 0;
+
+  if (!activeQuery) {
+    catalogRequestVersion += 1;
+    pendingCatalogSearch = null;
+    catalogSearchState = {
+      status: "demo",
+      query: "",
+      products: [],
+      discoveredCount: 0
+    };
+    renderCatalog();
+    return Promise.resolve();
+  }
+
+  if (
+    pendingCatalogSearch
+    && pendingCatalogSearch.query === activeQuery
+    && pendingCatalogSearch.requestId === catalogRequestVersion
+    && pendingCatalogSearch.promise
+  ) {
+    return pendingCatalogSearch.promise;
+  }
+
+  const requestId = ++catalogRequestVersion;
+  const query = activeQuery;
+  const pendingToken = {
+    query,
+    requestId,
+    promise: null
+  };
+  pendingCatalogSearch = pendingToken;
+
+  catalogSearchState = {
+    status: "loading",
+    query,
+    products: [],
+    discoveredCount: 0
+  };
+  renderCatalog();
+
+  const executionPromise = (async () => {
+    try {
+      const result = await requestCatalogSearch([query], { limitPerQuery: 8 });
+      if (requestId !== catalogRequestVersion) return;
+
+      if (result.kind === "catalog") {
+        const products = surfaceProductsFromCatalog(result.products);
+        catalogSearchState = {
+          status: "live",
+          query,
+          products,
+          discoveredCount: result.products.length + (result.rejectedCount ?? 0)
+        };
+      } else {
+        catalogSearchState = {
+          status: "fallback",
+          query,
+          products: [],
+          discoveredCount: 0
+        };
+      }
+
+      renderCatalog();
+    } finally {
+      if (pendingCatalogSearch === pendingToken) {
+        pendingCatalogSearch = null;
+      }
+    }
+  })();
+
+  pendingToken.promise = executionPromise;
+  return executionPromise;
+}
+
+const preloadHybridInterpreter = () => {
+  void basketProposalFlow.preload().catch(() => {});
+};
+
+elements.proposalInput.addEventListener("pointerdown", preloadHybridInterpreter, {
+  once: true
+});
+elements.proposalInput.addEventListener("focus", preloadHybridInterpreter, {
+  once: true
+});
+
+elements.proposalInput.addEventListener("input", () => {
+  proposalInputRevision += 1;
+
+  const proposalState = basketProposalFlow.getState();
+
+  if (
+    proposalState.status
+    === HYBRID_BASKET_FLOW_STATUS.LOADING
+  ) {
+    hybridBetaMetrics.recordAction("pending_edit_cancelled");
+    basketProposalFlow.invalidate();
+    renderBasketProposalState();
+    return;
+  }
+
+  if (
+    proposalState.status
+    === HYBRID_BASKET_FLOW_STATUS.CLARIFICATION
+  ) {
+    hybridBetaMetrics.recordAction("clarification_edit");
+    basketProposalFlow.invalidate();
+    renderBasketProposalState();
+  }
+});
 
 elements.proposalForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -423,20 +854,42 @@ elements.proposalForm.addEventListener("submit", (event) => {
 });
 
 elements.proposalFallback.addEventListener("click", () => {
+  const proposalState = basketProposalFlow.getState();
+  const activeHybrid = (
+    proposalState.status === HYBRID_BASKET_FLOW_STATUS.LOADING
+    || proposalState.status === HYBRID_BASKET_FLOW_STATUS.CLARIFICATION
+  );
+  invalidateHybridForManualTakeover();
+  if (!activeHybrid) {
+    hybridBetaMetrics.recordAction("manual_fallback");
+  }
   elements.searchInput.focus({ preventScroll: true });
   elements.searchInput.scrollIntoView({ block: "center", behavior: "auto" });
 });
 
 elements.searchForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  syncSearch();
+  invalidateHybridForManualTakeover();
+  void handleManualSearch();
 });
 
-elements.searchInput.addEventListener("input", syncSearch);
+elements.searchInput.addEventListener("input", () => {
+  invalidateHybridForManualTakeover();
+  syncSearchDraft();
+});
 
 elements.clearSearch.addEventListener("click", () => {
+  invalidateHybridForManualTakeover();
+  catalogRequestVersion += 1;
+  pendingCatalogSearch = null;
   elements.searchInput.value = "";
   activeQuery = "";
+  catalogSearchState = {
+    status: "demo",
+    query: "",
+    products: [],
+    discoveredCount: 0
+  };
   elements.clearSearch.hidden = true;
   renderCatalog();
   elements.searchInput.focus();

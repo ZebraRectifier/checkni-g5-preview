@@ -29,10 +29,20 @@ export function createProductCard(product, { quantity = 0, onAdd }) {
 
   const meta = document.createElement("div");
   meta.className = "product-meta";
-  meta.innerHTML = `
-    <span class="mock-chip">Тестовый товар</span>
-    <span class="product-category">${product.category}</span>
-  `;
+
+  const badge = document.createElement("span");
+  badge.className = "mock-chip";
+  badge.textContent = product.catalogSource === "open-food-facts"
+    ? "Каталог · не наличие"
+    : "Тестовый товар";
+
+  const category = document.createElement("span");
+  category.className = "product-category";
+  category.textContent = typeof product.category === "string" && product.category.trim()
+    ? product.category.trim()
+    : "Товар";
+
+  meta.append(badge, category);
 
   const heading = document.createElement("h3");
   heading.textContent = product.name;

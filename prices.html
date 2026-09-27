@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f6f2" />
+    <meta name="color-scheme" content="light" />
+    <title>CHECKNI — Подтвердить реальные цены</title>
+    <link rel="stylesheet" href="./src/priceCapture.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <div class="topbar">
+        <a class="brand" href="./index.html">
+          <span class="brand-mark" aria-hidden="true">C</span>
+          <span>CHECKNI</span>
+        </a>
+        <a class="back" href="./index.html?comparison=observed#basket">← Корзина</a>
+      </div>
+
+      <section class="hero">
+        <p class="eyebrow">REAL · USER CONFIRMED</p>
+        <h1>Подтвердить цены</h1>
+        <p class="lead">
+          Укажите цену, которую видите сейчас в конкретном магазине.
+          CHECKNI использует такое подтверждение как свежую ценовую точку
+          только ограниченное время.
+        </p>
+        <p class="truth-note">
+          Цена ≠ наличие. Мы не предполагаем остаток товара и не выдаём
+          старый чек или Open Prices за текущий ценник.
+        </p>
+      </section>
+
+      <section id="price-empty" class="panel" hidden>
+        <h2>Корзина пустая</h2>
+        <p class="lead">Сначала добавьте товары, затем вернитесь сюда.</p>
+        <div class="actions">
+          <a class="primary" href="./index.html">К товарам</a>
+        </div>
+      </section>
+
+      <form id="price-capture-form" class="panel">
+        <div class="grid">
+          <label class="field">
+            Регион
+            <input name="region" required maxlength="240" placeholder="Республика Башкортостан" />
+          </label>
+
+          <label class="field">
+            Город
+            <input name="city" required maxlength="240" placeholder="Уфа" />
+          </label>
+
+          <label class="field field-wide">
+            Магазин и адрес
+            <input name="store" required maxlength="240" placeholder="Лента · ул. Менделеева, 205А" />
+          </label>
+
+          <label class="field field-wide">
+            Ссылка Яндекс Карт <span aria-hidden="true">·</span> для автоподхвата
+            <input
+              name="yandexUrl"
+              type="url"
+              inputmode="url"
+              autocomplete="url"
+              maxlength="700"
+              placeholder="https://yandex.ru/maps/org/.../123456789/"
+            />
+          </label>
+
+          <label class="field field-wide">
+            Сеть для автоматических цен
+            <select id="yandex-retailer" name="yandexRetailer">
+              <option value="">Выберите сеть…</option>
+            </select>
+          </label>
+
+          <label class="consent field-wide">
+            <input
+              id="yandex-context-confirmed"
+              name="yandexContextConfirmed"
+              type="checkbox"
+            />
+            <span>
+              Подтверждаю, что эта карточка Яндекс Карт относится к выбранной
+              сети именно в указанном городе. Без этого автоматическая цена
+              не станет ценовой точкой для сравнения.
+            </span>
+          </label>
+
+          <div class="field-wide yandex-fetch">
+            <button id="load-yandex-prices" class="secondary" type="button">
+              Подтянуть из Яндекс Карт
+            </button>
+            <span id="yandex-status" class="status" aria-live="polite">
+              Если карточка публикует цены, CHECKNI покажет их здесь. Наличие не предполагается.
+            </span>
+          </div>
+
+          <label class="field">
+            Тип цены
+            <select id="price-condition" name="condition" required>
+              <option value="" selected>Выберите тип цены…</option>
+              <option value="regular">Обычная</option>
+              <option value="loyalty">По карте магазина</option>
+              <option value="promo">Акционная</option>
+            </select>
+          </label>
+
+          <label id="condition-note-wrap" class="field" hidden>
+            Условие
+            <input
+              id="condition-note"
+              name="conditionNote"
+              maxlength="500"
+              placeholder="Например: по карте Лента"
+            />
+          </label>
+        </div>
+
+        <section id="yandex-prices-panel" class="yandex-panel" hidden>
+          <p class="eyebrow">YANDEX · PUBLIC PRICE</p>
+          <h2 class="section-title">Связать с корзиной</h2>
+          <p class="mapping-help">
+            Яндекс не гарантирует, что его внутренний ID товара совпадает с нашим.
+            Укажите соответствие вручную — CHECKNI сможет обновлять эту цену
+            при следующих сравнениях ограниченное время, после чего попросит
+            подтвердить связь заново. Автоматическая цена считается ценой
+            сети в указанном городе, а не доказанной ценой
+            конкретного филиала; наличие остаётся неизвестным.
+          </p>
+          <div id="yandex-price-items" class="yandex-price-list"></div>
+        </section>
+
+        <h2 class="section-title">Цена за одну упаковку</h2>
+        <div id="price-items" class="price-list"></div>
+
+        <label class="consent">
+          <input name="consent" type="checkbox" required />
+          <span>
+            Я подтверждаю, что вижу эти цены сам, и разрешаю CHECKNI сохранить
+            подтверждение локально на этом устройстве для сравнения корзины.
+          </span>
+        </label>
+
+        <div class="actions">
+          <button id="save-prices" class="primary" type="submit">
+            Сохранить свежие цены
+          </button>
+          <a
+            id="compare-real-prices"
+            class="secondary"
+            href="./index.html?comparison=observed#basket"
+            hidden
+          >
+            Сравнить корзину
+          </a>
+        </div>
+
+        <p id="capture-status" class="status" aria-live="polite"></p>
+      </form>
+
+      <section class="panel">
+        <p class="eyebrow">На этом устройстве</p>
+        <h2 class="section-title">Свежие подтверждения</h2>
+        <div id="saved-evidence" class="saved"></div>
+        <div class="footer-actions">
+          <span class="status">
+            Для текущего сравнения принимаются подтверждения не старше 60 минут.
+          </span>
+          <button id="clear-evidence" class="danger" type="button">
+            Очистить
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./src/priceCapture.mjs"></script>
+  </body>
+</html>

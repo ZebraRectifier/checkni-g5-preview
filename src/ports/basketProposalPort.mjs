@@ -1,4 +1,4 @@
-import { MOCK_CATALOG } from "../data/mockCatalog.mjs";
+import { CANONICAL_PRODUCTS } from "../data/canonicalProductRegistry.mjs";
 
 export const BASKET_PROPOSAL_ENDPOINT = "https://cxpneczhczashanbetgj.supabase.co/functions/v1/ai-basket-proposal";
 export const BASKET_PROPOSAL_PUBLISHABLE_KEY = "sb_publishable_yyIT9Clu4jTphSdVLCVWFA_KQsZZ2rt";
@@ -173,7 +173,7 @@ export function createBasketProposalClient(options = {}) {
   const endpoint = options.endpoint ?? BASKET_PROPOSAL_ENDPOINT;
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const timeoutMs = options.timeoutMs ?? BASKET_PROPOSAL_TIMEOUT_MS;
-  const catalog = options.catalog ?? MOCK_CATALOG;
+  const catalog = options.catalog ?? CANONICAL_PRODUCTS;
   const publishableKey = options.publishableKey ?? BASKET_PROPOSAL_PUBLISHABLE_KEY;
 
   const isConfigured = () => (
@@ -182,12 +182,12 @@ export function createBasketProposalClient(options = {}) {
     && typeof fetchImpl === "function"
   );
 
-  const request = async (text) => {
+  const request = async (text, requestCatalog = catalog) => {
     if (!isConfigured()) {
       return result("unavailable", "transport_unconfigured");
     }
 
-    const body = normalizeRequest(text, catalog);
+    const body = normalizeRequest(text, requestCatalog);
     if (!body) return result("error", "invalid_request");
 
     const controller = new AbortController();
@@ -239,8 +239,8 @@ export function isBasketProposalConfigured() {
   return defaultClient.isConfigured();
 }
 
-export async function requestBasketProposal(text) {
-  return defaultClient.request(text);
+export async function requestBasketProposal(text, catalog) {
+  return defaultClient.request(text, catalog);
 }
 
 export {

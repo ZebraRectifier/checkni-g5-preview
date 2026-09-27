@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#f4f6f2" />
     <meta name="color-scheme" content="light" />
-    <title>CHECKNI — Соберите корзину</title>
+    <title>CHECKNI — Где корзина дешевле?</title>
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
@@ -16,22 +16,22 @@
         <span class="brand-mark" aria-hidden="true">C</span>
         <span class="brand-word">CHECKNI</span>
       </a>
-      <span class="demo-badge">DEMO · MOCK</span>
+      <span id="comparison-mode-badge" class="demo-badge">CHECKNI</span>
     </header>
 
     <main id="main" class="app-shell">
       <section id="shop-view" class="view" aria-labelledby="shop-title">
         <div class="hero">
-          <p class="eyebrow">Соберите корзину</p>
-          <h1 id="shop-title" tabindex="-1">Что нужно купить?</h1>
+          <p class="eyebrow">Умная корзина</p>
+          <h1 id="shop-title" tabindex="-1">Скажи или напиши, что нужно купить</h1>
           <p class="hero-copy">
-            Найдите тестовый товар и добавьте его в корзину. Цены магазинов появятся только после явного сравнения.
+            CHECKNI соберёт черновик корзины, Core проверит товары, а цены и победителя определит только детерминированное сравнение.
           </p>
 
-          <section id="basket-proposal-section" class="phrase-entry" aria-labelledby="phrase-entry-title" hidden>
+          <section id="basket-proposal-section" class="phrase-entry phrase-entry-primary" aria-labelledby="phrase-entry-title" hidden>
             <div class="phrase-entry-heading">
-              <p class="eyebrow">Быстрый ввод</p>
-              <h2 id="phrase-entry-title">Можно написать списком</h2>
+              <p class="eyebrow">Главное действие</p>
+              <h2 id="phrase-entry-title">Собрать корзину одной фразой</h2>
             </div>
             <form id="basket-proposal-form" class="proposal-form">
               <label class="proposal-box" for="basket-proposal-input">
@@ -43,14 +43,15 @@
                   autocomplete="off"
                   maxlength="300"
                   placeholder="Например: два молока, яйца и яблоки"
+                  enterkeyhint="send"
                   aria-describedby="basket-proposal-help basket-proposal-status"
                 />
                 <button id="basket-proposal-submit" class="proposal-submit" type="submit">
-                  Добавить из фразы
+                  Собрать корзину
                 </button>
               </label>
               <p id="basket-proposal-help" class="field-help">
-                Предложение сначала проверяется детерминированным Core. Не распознанные позиции не добавляются.
+                Простой список CHECKNI разбирает локально. Если запрос сложный, подключается AI. Core всё равно проверяет товары перед добавлением.
               </p>
               <div id="basket-proposal-status" class="proposal-status" aria-live="polite"></div>
               <button id="basket-proposal-fallback" class="text-button" type="button" hidden>
@@ -59,7 +60,7 @@
             </form>
           </section>
 
-          <div id="manual-divider" class="manual-divider" aria-hidden="true" hidden><span>или вручную</span></div>
+          <div id="manual-divider" class="manual-divider" aria-hidden="true" hidden><span>или найти товар вручную</span></div>
 
           <form id="search-form" class="search-form" role="search">
             <label class="search-box" for="product-search">
@@ -79,24 +80,25 @@
                 <span aria-hidden="true">×</span>
               </button>
             </label>
-            <p id="search-help" class="field-help">Поиск работает по демонстрационному каталогу.</p>
+            <p id="search-help" class="field-help">Ручной поиск всегда доступен, даже если AI временно не отвечает.</p>
           </form>
         </div>
 
         <section class="catalog-section" aria-labelledby="catalog-title">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Демо-каталог</p>
+              <p id="catalog-eyebrow" class="eyebrow">Демо-каталог</p>
               <h2 id="catalog-title">Товары</h2>
             </div>
             <span id="result-count" class="result-count" aria-hidden="true"></span>
           </div>
+          <p id="catalog-note" class="field-help">Тестовые позиции для резервного режима.</p>
           <p id="search-status" class="sr-only" aria-live="polite"></p>
           <div id="product-grid" class="product-grid"></div>
           <div id="empty-search" class="empty-state" hidden>
             <div class="empty-icon" aria-hidden="true">⌕</div>
             <h3>Ничего не нашли</h3>
-            <p>Попробуйте более короткий запрос — например «сыр» или «хлеб».</p>
+            <p id="empty-search-copy">Попробуйте более короткий запрос — например «сыр» или «хлеб».</p>
           </div>
         </section>
       </section>
@@ -110,7 +112,7 @@
         <div class="basket-heading">
           <p class="eyebrow">Ваша корзина</p>
           <h1 id="basket-title" tabindex="-1">Проверьте количество</h1>
-          <p class="hero-copy">Проверьте состав и запустите сравнение по трём демонстрационным магазинам.</p>
+          <p id="basket-mode-copy" class="hero-copy">Проверьте состав и запустите сравнение.</p>
         </div>
 
         <div id="basket-content"></div>

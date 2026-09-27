@@ -1,8 +1,76 @@
-import { MAX_QUANTITY } from "../state/basketStore.mjs";
+import { MAX_QUANTITY, countBasketUnits } from "../state/basketStore.mjs";
+import { createAggregatorChecks } from "./AggregatorChecks.mjs";
 import {
   basketControlFocusKey,
   focusByKey
 } from "../runtime/focusRecovery.mjs";
+
+export const BASKET_COMPARE_LABEL = "Где дешевле?";
+
+const REMOVE_RETARGET_WINDOW_MS = 600;
+const REMOVE_RETARGET_RADIUS_PX = 24;
+const removeRetargetGuards = new WeakMap();
+
+export function createRemoveRetargetGuard({
+  windowMs = REMOVE_RETARGET_WINDOW_MS,
+  radiusPx = REMOVE_RETARGET_RADIUS_PX
+} = {}) {
+  let previous = null;
+
+  const reset = () => {
+    previous = null;
+  };
+
+  const admit = (event) => {
+    const pointerActivation = Number(event?.detail) > 0;
+    const clientX = Number(event?.clientX);
+    const clientY = Number(event?.clientY);
+    const timeStamp = Number(event?.timeStamp);
+
+    if (
+      !pointerActivation
+      || !Number.isFinite(clientX)
+      || !Number.isFinite(clientY)
+      || !Number.isFinite(timeStamp)
+    ) {
+      reset();
+      return true;
+    }
+
+    const current = { clientX, clientY, timeStamp };
+
+    if (previous) {
+      const elapsed = current.timeStamp - previous.timeStamp;
+      const distance = Math.hypot(
+        current.clientX - previous.clientX,
+        current.clientY - previous.clientY
+      );
+
+      if (
+        elapsed >= 0
+        && elapsed <= windowMs
+        && distance <= radiusPx
+      ) {
+        previous = null;
+        return false;
+      }
+    }
+
+    previous = current;
+    return true;
+  };
+
+  return Object.freeze({ admit, reset });
+}
+
+function removeRetargetGuardFor(container) {
+  let guard = removeRetargetGuards.get(container);
+  if (!guard) {
+    guard = createRemoveRetargetGuard();
+    removeRetargetGuards.set(container, guard);
+  }
+  return guard;
+}
 
 function pluralizeProducts(count) {
   const mod10 = count % 10;
@@ -12,8 +80,15 @@ function pluralizeProducts(count) {
   return "позиций";
 }
 
+export function basketSummaryText(items) {
+  const units = countBasketUnits(items);
+  return `${units} шт. · ${items.length} ${pluralizeProducts(items.length)}`;
+}
+
 export function renderBasketView(container, items, actions) {
   container.replaceChildren();
+  const isObservedMode = actions?.comparisonMode === "observed";
+  const removeRetargetGuard = removeRetargetGuardFor(container);
 
   if (items.length === 0) {
     const empty = document.createElement("div");
@@ -37,8 +112,8 @@ export function renderBasketView(container, items, actions) {
   const summary = document.createElement("div");
   summary.className = "basket-summary";
   summary.innerHTML = `
-    <span>${items.length} ${pluralizeProducts(items.length)}</span>
-    <span class="mock-chip">Тестовые цены · MOCK</span>
+    <span>${basketSummaryText(items)}</span>
+    <span class="mock-chip">${isObservedMode ? "OBSERVED · REAL" : "Тестовые цены · MOCK"}</span>
   `;
 
   const list = document.createElement("div");
@@ -111,7 +186,14 @@ export function renderBasketView(container, items, actions) {
     remove.dataset.focusKey = removeFocusKey;
     remove.textContent = "Удалить";
     remove.setAttribute("aria-label", `Удалить ${item.name} из корзины`);
-    remove.addEventListener("click", () => {
+    remove.addEventListener("click", (event) => {
+      if (!removeRetargetGuard.admit(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      remove.disabled = true;
       actions.onRemove(item.id);
 
       if (nextItem) {
@@ -140,17 +222,41 @@ export function renderBasketView(container, items, actions) {
 
   const help = document.createElement("p");
   help.id = "compare-help";
-  help.textContent = "Сравним эту же корзину по трём демонстрационным магазинам. Все цены и наличие здесь тестовые.";
+  help.textContent = isObservedMode
+    ? "Используем только свежие доверенные наблюдения реальных цен. Если данных недостаточно, MOCK сюда не подставляется."
+    : "Сравним эту же корзину по трём демонстрационным магазинам. Все цены и наличие здесь тестовые.";
 
   const compareButton = document.createElement("button");
   compareButton.id = "compare-basket";
   compareButton.type = "button";
   compareButton.className = "primary-button";
-  compareButton.textContent = "Сравнить магазины";
+  compareButton.textContent = BASKET_COMPARE_LABEL;
   compareButton.setAttribute("aria-describedby", "compare-help");
-  compareButton.addEventListener("click", actions.onCompare);
+  compareButton.setAttribute("aria-busy", "false");
+  compareButton.addEventListener("click", (event) => {
+    if (compareButton.disabled) {
+      event.preventDefault();
+      return;
+    }
 
-  compareStep.append(eyebrow, heading, help, compareButton);
+    compareButton.disabled = true;
+    compareButton.setAttribute("aria-busy", "true");
+    compareButton.textContent = "Сравниваем…";
+    actions.onCompare(event);
+  });
+
+  const captureLink = document.createElement("a");
+  captureLink.className = "text-button";
+  captureLink.href = "./prices.html";
+  captureLink.textContent = isObservedMode
+    ? "Добавить реальные цены"
+    : "Проверить реальные цены · beta";
+  captureLink.setAttribute(
+    "aria-label",
+    "Подтвердить свежие реальные цены для этой корзины"
+  );
+
+  compareStep.append(eyebrow, heading, help, captureLink, compareButton);
 
   const comparisonOutput = document.createElement("div");
   comparisonOutput.id = "comparison-output";
@@ -158,5 +264,7 @@ export function renderBasketView(container, items, actions) {
   comparisonOutput.setAttribute("aria-live", "polite");
   comparisonOutput.setAttribute("aria-atomic", "true");
 
-  container.append(summary, list, compareStep, comparisonOutput);
+  const aggregatorChecks = createAggregatorChecks();
+
+  container.append(summary, list, compareStep, comparisonOutput, aggregatorChecks);
 }
