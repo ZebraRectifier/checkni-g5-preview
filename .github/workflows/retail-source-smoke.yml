@@ -39,6 +39,8 @@ jobs:
             echo "URL[$index]=$url" >> retail-smoke.txt
             echo "HTTP[$index]=$code" >> retail-smoke.txt
             echo "BYTES[$index]=$bytes" >> retail-smoke.txt
+            location="$(awk 'BEGIN{IGNORECASE=1} /^location:/{sub(/^[^:]+:[[:space:]]*/, ""); gsub(/\r/, ""); print; exit}' "$headers" || true)"
+            echo "LOCATION[$index]=$location" >> retail-smoke.txt
 
             python3 - "$body" "$index" >> retail-smoke.txt <<'PY'
           import re, sys
@@ -100,6 +102,50 @@ jobs:
               "rub": "₽" in compact or "руб" in compact,
           }
           print(f"CHROME_CHECKS[{i}]=" + ",".join(f"{k}:{str(v).lower()}" for k,v in checks.items()))
+          PY
+          done
+
+          cat retail-smoke.txt
+
+      - name: Browser-render SPAR and Magnit exact basket candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v google-chrome >/dev/null 2>&1; then
+            echo "CANDIDATE_CHROME=unavailable" >> retail-smoke.txt
+            exit 0
+          fi
+
+          declare -a urls=(
+            "https://myspar.ru/catalog/detskie-napitki/f/brand-is-frutonyanya/"
+            "https://magnit.ru/product/1518500040-sok_frutonyanya_yablochnyy_osvetlennyy_bez_sakhara_200ml?shopCode=614817&shopType=1"
+            "https://magnit.ru/product/1000169145-sok_frutonyanya_multifrukt_200ml?shopCode=614817&shopType=1"
+          )
+
+          i=0
+          for url in "${urls[@]}"; do
+            i=$((i + 1))
+            out="candidate-$i.html"
+            timeout 40s google-chrome               --headless=new --no-sandbox --disable-dev-shm-usage               --disable-background-networking --disable-sync               --virtual-time-budget=15000               --dump-dom "$url" > "$out" 2>/dev/null || true
+
+            python3 - "$out" "$i" >> retail-smoke.txt <<'PY'
+          import re, sys
+          p, i = sys.argv[1], sys.argv[2]
+          try:
+              raw = open(p, "r", encoding="utf-8", errors="ignore").read()
+          except FileNotFoundError:
+              raw = ""
+          compact = re.sub(r"\s+", " ", raw)
+          prices = sorted(set(re.findall(r"(?<!\d)(\d{1,4}[.,]\d{2})\s*₽", compact)))
+          checks = {
+              "bytes": len(raw),
+              "moscow": "Москва" in compact,
+              "apple200": "Сок ФрутоНяня Яблоко 200мл" in compact or "Яблочный сок без сахара с 4 месяцев Фрутоняня 200мл" in compact,
+              "multi200": "Сок ФрутоНяня Мультифрукт 200мл" in compact or "Мультифруктовый сок с 6 месяцев Фрутоняня 200мл" in compact,
+              "captcha": bool(re.search(r"captcha|qrator|challenge|Access denied", compact, re.I)),
+              "prices": "|".join(prices[:20]),
+          }
+          print(f"CANDIDATE[{i}]=" + ",".join(f"{k}:{str(v).lower()}" for k,v in checks.items()))
           PY
           done
 
