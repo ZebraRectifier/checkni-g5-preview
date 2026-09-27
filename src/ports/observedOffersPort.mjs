@@ -27,6 +27,10 @@ import {
 import {
   requestYandexPublicPrices
 } from "./yandexPublicPricesPort.mjs";
+import {
+  requestBetaRetailPrices
+} from "./betaRetailPricesPort.mjs";
+import { BETA_REAL_PRODUCT_IDS } from "../data/betaRealBasket.mjs";
 
 export const LOCAL_OBSERVED_PRICE_MAX_AGE_MS = 60 * 60 * 1000;
 export const YANDEX_OBSERVED_PRICE_MAX_AGE_MS = 15 * 60 * 1000;
@@ -35,6 +39,7 @@ export const MAX_YANDEX_ORGANIZATIONS_PER_COMPARISON = 3;
 export const YANDEX_PUBLIC_SOURCE_ID = "yandex-business-public";
 export const YANDEX_PUBLIC_SOURCE_NAME =
   "Яндекс Карты · публичные прайс-листы";
+export const BETA_RETAIL_PRICE_MAX_AGE_MS = 5 * 60 * 1000;
 
 function isCoreBasketItem(item) {
   return Boolean(
@@ -585,20 +590,64 @@ export async function loadMappedYandexObservedOffers(
   return collapseYandexRetailerCityOffers(offers);
 }
 
+export async function loadBetaRetailObservedOffers(coreBasket, options = {}) {
+  requireCoreBasket(coreBasket);
+
+  const wantedIds = new Set(coreBasket.map((item) => item.product.id));
+  if (!BETA_REAL_PRODUCT_IDS.some((id) => wantedIds.has(id))) return [];
+
+  const requestPrices =
+    options.requestBetaRetailPrices ?? requestBetaRetailPrices;
+  if (typeof requestPrices !== "function") {
+    throw new TypeError("beta retail price requester must be a function");
+  }
+
+  const nowMs = options.nowMs ?? Date.now();
+  const maxAgeMs =
+    options.betaRetailMaxAgeMs ?? BETA_RETAIL_PRICE_MAX_AGE_MS;
+
+  let response;
+  try {
+    response = await requestPrices();
+  } catch {
+    return [];
+  }
+
+  if (
+    !response
+    || !["prices", "insufficient"].includes(response.kind)
+    || !Array.isArray(response.offers)
+  ) {
+    return [];
+  }
+
+  return sortOffers(response.offers.filter((offer) => (
+    wantedIds.has(offer.canonicalProductId)
+    && isCurrentObservedAt(offer.observedAt, nowMs, maxAgeMs)
+  )));
+}
+
 export async function loadObservedOffers(coreBasket, options = {}) {
   requireCoreBasket(coreBasket);
 
   const local = await loadLocalObservedOffers(coreBasket, options);
 
+  let betaRetail = [];
+  try {
+    betaRetail = await loadBetaRetailObservedOffers(coreBasket, options);
+  } catch {
+    betaRetail = [];
+  }
+
   let yandex = [];
   try {
     yandex = await loadMappedYandexObservedOffers(coreBasket, options);
   } catch {
-    // The external source must never break the manual observed-price path.
+    // External sources must never break the manual observed-price path.
     yandex = [];
   }
 
-  return sortOffers([...local, ...yandex]);
+  return sortOffers([...local, ...betaRetail, ...yandex]);
 }
 
 export function createObservedOffersPort(loadOffers) {
