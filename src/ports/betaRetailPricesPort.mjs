@@ -2,17 +2,34 @@ export const BETA_RETAIL_PRICES_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/functions/v1/beta-retail-prices";
 export const BETA_RETAIL_PRICES_PUBLISHABLE_KEY =
   "sb_publishable_yyIT9Clu4jTphSdVLCVWFA_KQsZZ2rt";
-export const BETA_RETAIL_PRICES_TIMEOUT_MS = 16_000;
+export const BETA_RETAIL_PRICES_TIMEOUT_MS = 20_000;
 export const BETA_RETAIL_PRICES_MAX_RESPONSE_BYTES = 65_536;
+export const BETA_RETAIL_IDENTITY_CONFIRMATION =
+  "dobry-1l-globus-metro-v1";
 
-const ALLOWED_SOURCE_IDS = new Set([
-  "spar-public-live",
-  "perekrestok-public-live"
-]);
+const SOURCE_CONTRACTS = Object.freeze({
+  "globus-public-live": Object.freeze({
+    sourceName: "Глобус · публичный каталог",
+    retailerId: "globus",
+    hosts: Object.freeze(["globus.ru", "www.globus.ru"]),
+    locationPrefix: "globus:",
+    storePrefix: "globus-pvz-"
+  }),
+  "metro-public-live": Object.freeze({
+    sourceName: "METRO · публичный каталог",
+    retailerId: "metro",
+    hosts: Object.freeze(["online.metro-cc.ru"]),
+    locationPrefix: "metro:",
+    storePrefix: "metro-address-"
+  })
+});
+
 const ALLOWED_PRODUCT_IDS = new Set([
-  "frutonyanya-water-330",
-  "frutonyanya-multifruct-200"
+  "dobry-cola-1l",
+  "dobry-lemon-lime-1l"
 ]);
+
+let identityConfirmed = false;
 
 function result(kind, code) {
   return Object.freeze(code ? { kind, code } : { kind });
@@ -71,7 +88,7 @@ function normalizeOffer(value) {
     "sourceId", "sourceName", "sourceUrl", "observedAt",
     "granularity", "locationTruthLevel", "locationId",
     "countryCode", "regionId", "regionName", "localityId",
-    "localityName", "canonicalProductId", "sourceProductId",
+    "localityName", "retailerId", "canonicalProductId", "sourceProductId",
     "sourceProductName", "unitPriceMinor", "currency",
     "priceCondition", "salesChannel", "minimumQuantity",
     "storeId", "storeName", "locationLabel", "availability"
@@ -79,23 +96,33 @@ function normalizeOffer(value) {
   if (Object.keys(value).some((key) => !allowed.has(key))) return null;
 
   const sourceId = cleanString(value.sourceId, 80);
+  const contract = sourceId ? SOURCE_CONTRACTS[sourceId] : null;
   const sourceName = cleanString(value.sourceName, 120);
   const sourceUrl = cleanString(value.sourceUrl, 1000);
   const observedAtMs = Date.parse(value.observedAt);
+  const locationId = cleanString(value.locationId, 180);
+  const retailerId = cleanString(value.retailerId, 80);
   const productId = cleanString(value.canonicalProductId, 120);
-  const sourceProductId = cleanString(value.sourceProductId, 120);
+  const sourceProductId = cleanString(value.sourceProductId, 180);
   const sourceProductName = cleanString(value.sourceProductName, 300);
+  const storeId = cleanString(value.storeId, 180);
+  const storeName = cleanString(value.storeName, 240);
+  const locationLabel = cleanString(value.locationLabel, 300);
 
   if (
-    !sourceId || !ALLOWED_SOURCE_IDS.has(sourceId)
-    || !sourceName || !sourceUrl || !Number.isFinite(observedAtMs)
-    || value.granularity !== "city"
-    || value.locationTruthLevel !== "city"
+    !contract
+    || sourceName !== contract.sourceName
+    || !sourceUrl
+    || !Number.isFinite(observedAtMs)
+    || value.granularity !== "exact-store"
+    || value.locationTruthLevel !== "store"
+    || !locationId || !locationId.startsWith(contract.locationPrefix)
     || value.countryCode !== "RU"
     || value.regionId !== "77"
     || value.regionName !== "Москва"
     || value.localityId !== "moscow"
     || value.localityName !== "Москва"
+    || retailerId !== contract.retailerId
     || !productId || !ALLOWED_PRODUCT_IDS.has(productId)
     || !sourceProductId || !sourceProductName
     || !Number.isSafeInteger(value.unitPriceMinor)
@@ -104,10 +131,10 @@ function normalizeOffer(value) {
     || value.priceCondition !== "regular"
     || value.salesChannel !== "online"
     || value.minimumQuantity !== 1
-    || value.storeId !== null
-    || value.storeName !== null
-    || value.locationLabel !== "Москва"
-    || !["unknown", "unavailable"].includes(value.availability)
+    || !storeId || !storeId.startsWith(contract.storePrefix)
+    || locationId !== `${retailerId}:${storeId}`
+    || !storeName || !locationLabel || !/Москва/u.test(locationLabel)
+    || value.availability !== "unknown"
   ) {
     return null;
   }
@@ -120,7 +147,7 @@ function normalizeOffer(value) {
   }
   if (
     parsed.protocol !== "https:"
-    || !["myspar.ru", "www.myspar.ru", "perekrestok.ru", "www.perekrestok.ru"].includes(parsed.hostname)
+    || !contract.hosts.includes(parsed.hostname)
   ) {
     return null;
   }
@@ -162,13 +189,24 @@ export function normalizeBetaRetailPricesResponse(value) {
   });
 }
 
+export function confirmBetaRetailIdentity() {
+  identityConfirmed = true;
+}
+
+export function clearBetaRetailIdentityConfirmation() {
+  identityConfirmed = false;
+}
+
 export function createBetaRetailPricesClient(options = {}) {
   const endpoint = options.endpoint ?? BETA_RETAIL_PRICES_ENDPOINT;
   const publishableKey = options.publishableKey ?? BETA_RETAIL_PRICES_PUBLISHABLE_KEY;
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const timeoutMs = options.timeoutMs ?? BETA_RETAIL_PRICES_TIMEOUT_MS;
 
-  const request = async () => {
+  const request = async (identityConfirmation = options.identityConfirmation) => {
+    if (identityConfirmation !== BETA_RETAIL_IDENTITY_CONFIRMATION) {
+      return result("unavailable", "identity_confirmation_required");
+    }
     if (typeof fetchImpl !== "function") return result("unavailable", "transport_unconfigured");
 
     const controller = new AbortController();
@@ -180,7 +218,7 @@ export function createBetaRetailPricesClient(options = {}) {
           "Content-Type": "application/json",
           apikey: publishableKey
         },
-        body: "{}",
+        body: JSON.stringify({ identityConfirmation }),
         signal: controller.signal,
         credentials: "omit",
         cache: "no-store"
@@ -201,5 +239,8 @@ export function createBetaRetailPricesClient(options = {}) {
 const defaultClient = createBetaRetailPricesClient();
 
 export async function requestBetaRetailPrices() {
-  return defaultClient.request();
+  if (!identityConfirmed) {
+    return result("unavailable", "identity_confirmation_required");
+  }
+  return defaultClient.request(BETA_RETAIL_IDENTITY_CONFIRMATION);
 }
