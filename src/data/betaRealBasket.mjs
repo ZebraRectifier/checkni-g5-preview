@@ -1,15 +1,15 @@
 export const BETA_REAL_PRODUCTS = Object.freeze([
   Object.freeze({
-    id: "frutonyanya-water-330",
-    name: "Вода ФрутоНяня артезианская детская",
-    unit: "330 мл",
-    category: "Детские напитки"
+    id: "dobry-cola-1l",
+    name: "Напиток Добрый Cola",
+    unit: "1 л",
+    category: "Газированные напитки"
   }),
   Object.freeze({
-    id: "frutonyanya-multifruct-200",
-    name: "Сок ФрутоНяня Мультифрукт",
-    unit: "200 мл",
-    category: "Детские напитки"
+    id: "dobry-lemon-lime-1l",
+    name: "Напиток Добрый Лимон-Лайм",
+    unit: "1 л",
+    category: "Газированные напитки"
   })
 ]);
 
