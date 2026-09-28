@@ -1,5 +1,6 @@
 import { MOCK_CATALOG, searchMockCatalog } from "./data/mockCatalog.mjs";
 import { BETA_REAL_BASKET } from "./data/betaRealBasket.mjs";
+import { confirmBetaRetailIdentity } from "./ports/betaRetailPricesPort.mjs";
 import { VALIDATED_MERGE_REASON, createBasketStore, countBasketUnits } from "./state/basketStore.mjs";
 import { createProductCard } from "./components/ProductCard.mjs";
 import { BASKET_COMPARE_LABEL, renderBasketView } from "./components/BasketView.mjs";
@@ -643,7 +644,7 @@ async function handleBetaLiveExample() {
   elements.betaLiveButton.disabled = true;
   if (elements.betaLiveStatus) {
     elements.betaLiveStatus.textContent =
-      "Собираем две позиции и обновляем публичные цены…";
+      "Товары подтверждены. Собираем две позиции и обновляем публичные цены…";
   }
 
   const merged = basket.mergeValidatedBasket(BETA_REAL_BASKET);
@@ -655,6 +656,10 @@ async function handleBetaLiveExample() {
     }
     return;
   }
+
+  // The button is an explicit, price-blind identity confirmation. No retailer
+  // price is requested before this user action.
+  confirmBetaRetailIdentity();
 
   navigate(VIEW.BASKET, {
     focusMode: FOCUS_MODE.HEADING
