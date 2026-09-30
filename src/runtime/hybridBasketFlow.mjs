@@ -354,6 +354,10 @@ export function createHybridBasketFlow(options = {}) {
       return state;
     }
 
+    if (pendingClarification.result?.triggerReason === "smalltalk") {
+      return state;
+    }
+
     const confirmed = confirmHybridBasketDraft(
       pendingClarification.result,
       mode

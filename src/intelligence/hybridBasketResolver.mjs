@@ -5,6 +5,10 @@ import {
 import { planLocalSegments } from "./localIntentPlanner.mjs";
 import { planBudgetBasket } from "./budgetBasketPlanner.mjs";
 import {
+  resolveLocalAssistantDialogue,
+  stripAssistantGreetingPrefix
+} from "./localAssistantDialogue.mjs";
+import {
   LOCAL_BASKET_DECISION,
   parseLocalBasketText
 } from "./localBasketParser.mjs";
@@ -207,7 +211,19 @@ export async function resolveHybridBasketProposal(
   options = {}
 ) {
   const catalogSnapshot = snapshotHybridCatalog(catalog);
-  const localDecision = parseLocalBasketText(text, catalogSnapshot);
+  const assistantReply = resolveLocalAssistantDialogue(text);
+
+  if (assistantReply) {
+    return typedResult(HYBRID_BASKET_RESULT.CLARIFICATION, {
+      source: HYBRID_BASKET_SOURCE.LOCAL,
+      reason: "conversation",
+      triggerReason: "smalltalk",
+      assistantReply
+    });
+  }
+
+  const shoppingText = stripAssistantGreetingPrefix(text);
+  const localDecision = parseLocalBasketText(shoppingText, catalogSnapshot);
 
   if (localDecision.kind === LOCAL_BASKET_DECISION.REJECT) {
     return typedResult(HYBRID_BASKET_RESULT.REJECTED, {
@@ -243,7 +259,7 @@ export async function resolveHybridBasketProposal(
   // planner only proposes catalogue ids that fit the stated budget.
   if (options.priceHints instanceof Map) {
     const budget = planBudgetBasket(
-      text,
+      shoppingText,
       catalogSnapshot,
       options.priceHints,
       (segment) => parseLocalBasketText(segment, catalogSnapshot)
@@ -278,7 +294,7 @@ export async function resolveHybridBasketProposal(
   // that route cannot answer.
   const planned = LOCAL_INTENT_TRIGGER_REASONS.has(triggerReason)
     ? planLocalSegments(
-        text,
+        shoppingText,
         catalogSnapshot,
         (segment) => parseLocalBasketText(segment, catalogSnapshot)
       )
@@ -332,8 +348,8 @@ export async function resolveHybridBasketProposal(
   let providerResult;
   try {
     providerResult = await requestAiProposal(
-      text,
-      selectAiCatalogHints(text, catalogSnapshot)
+      shoppingText,
+      selectAiCatalogHints(shoppingText, catalogSnapshot)
     );
   } catch {
     return orLocalDraft(typedResult(HYBRID_BASKET_RESULT.ERROR, {

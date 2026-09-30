@@ -6,7 +6,14 @@ import { BETA_REAL_PRODUCTS } from "./betaRealBasket.mjs";
 // the original 12 items, extended everyday products and the fixed live-proof products.
 const COMMON_INPUT_ALIASES = Object.freeze({
   "milk-25-900": Object.freeze(["малако"]),
-  "apples-1kg": Object.freeze(["яблаки"])
+  "eggs-c1-10": Object.freeze(["яйцо", "яйки", "яички"]),
+  "chicken-fillet-600": Object.freeze(["куриное филе", "филе курицы", "филешка"]),
+  "bread-wheat-400": Object.freeze(["хлебушек"]),
+  "apples-1kg": Object.freeze(["яблаки"]),
+  "buckwheat-800": Object.freeze(["греча"]),
+  "tomatoes-600": Object.freeze(["помидоры", "помидор"]),
+  "pasta-450": Object.freeze(["макарошки"]),
+  "water-15": Object.freeze(["водичка"])
 });
 
 const LIVE_PROOF_ALIASES = Object.freeze({

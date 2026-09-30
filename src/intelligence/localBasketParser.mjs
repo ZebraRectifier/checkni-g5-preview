@@ -32,7 +32,8 @@ const FILLER_WORDS = new Set([
   "добавь", "добавить", "возьми", "взять", "мне", "нужно", "надо",
   "хочу", "пожалуйста", "еще", "ещё", "и", "плюс", "давай", "купить",
   "купи", "беру", "берем", "берём", "пж", "плиз", "короче", "кароч",
-  "эээ", "эм", "ну", "бля", "потом"
+  "эээ", "эм", "ну", "бля", "потом", "слушай", "смотри", "короч",
+  "вообще", "типа", "ага"
 ]);
 
 const PACKAGE_WORDS = new Set([
@@ -149,6 +150,35 @@ function wholeCatalogUnitQuantity(segment, candidate) {
   return quantity;
 }
 
+const CYRILLIC_TO_LATIN = Object.freeze({
+  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ж: "zh", з: "z",
+  и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p",
+  р: "r", с: "s", т: "t", у: "u", ф: "f", х: "h", ц: "ts", ч: "ch",
+  ш: "sh", щ: "shch", ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya"
+});
+
+const CYRILLIC_TO_ENGLISH_KEY = Object.freeze({
+  й: "q", ц: "w", у: "e", к: "r", е: "t", н: "y", г: "u", ш: "i",
+  щ: "o", з: "p", х: "[", ъ: "]", ф: "a", ы: "s", в: "d", а: "f",
+  п: "g", р: "h", о: "j", л: "k", д: "l", ж: ";", э: "'", я: "z",
+  ч: "x", с: "c", м: "v", и: "b", т: "n", ь: "m", б: ",", ю: "."
+});
+
+function mapRussianCharacters(value, table) {
+  return normalizeText(value)
+    .split("")
+    .map((char) => table[char] ?? char)
+    .join("");
+}
+
+function transliterateRussian(value) {
+  return mapRussianCharacters(value, CYRILLIC_TO_LATIN);
+}
+
+function russianTypedOnEnglishKeyboard(value) {
+  return mapRussianCharacters(value, CYRILLIC_TO_ENGLISH_KEY);
+}
+
 function catalogNameStems(name) {
   return new Set(
     normalizeText(name)
@@ -197,7 +227,14 @@ function normalizeCatalog(catalog) {
     }
 
     seen.add(product.id);
-    const termValues = [product.name, ...normalizeAliases(product)];
+    const baseTermValues = [product.name, ...normalizeAliases(product)];
+    const termValues = [...new Set(
+      baseTermValues.flatMap((term) => [
+        term,
+        transliterateRussian(term),
+        russianTypedOnEnglishKeyboard(term)
+      ])
+    )];
     const terms = termValues
       .map(catalogNameStems)
       .filter((stems) => stems.size > 0);
@@ -332,8 +369,22 @@ function meaningfulStems(segment) {
   };
 }
 
-function oneInsertionOrDeletionApart(left, right) {
-  if (Math.abs(left.length - right.length) !== 1) return false;
+function oneEditOrTranspositionApart(left, right) {
+  if (left === right) return true;
+  if (Math.abs(left.length - right.length) > 1) return false;
+
+  if (left.length === right.length) {
+    const mismatches = [];
+    for (let index = 0; index < left.length; index += 1) {
+      if (left[index] !== right[index]) mismatches.push(index);
+      if (mismatches.length > 2) return false;
+    }
+    if (mismatches.length === 1) return true;
+    return mismatches.length === 2
+      && mismatches[1] === mismatches[0] + 1
+      && left[mismatches[0]] === right[mismatches[1]]
+      && left[mismatches[1]] === right[mismatches[0]];
+  }
 
   const shorter = left.length < right.length ? left : right;
   const longer = left.length < right.length ? right : left;
@@ -364,9 +415,11 @@ function stemMatchesExact(queryStem, productStem) {
 }
 
 function stemMatchesSingleTokenTypo(queryStem, productStem) {
-  if (queryStem === productStem) return true;
-  if (queryStem.length < 3 || productStem.length < 3) return false;
-  return oneInsertionOrDeletionApart(queryStem, productStem);
+  const query = normalizeIrregularStem(queryStem);
+  const product = normalizeIrregularStem(productStem);
+  if (query === product) return true;
+  if (query.length < 3 || product.length < 3) return false;
+  return oneEditOrTranspositionApart(query, product);
 }
 
 function productMatchesExactStems(product, stems) {
@@ -406,6 +459,40 @@ function productMatchesAnchoredAbbreviation(product, stems) {
   });
 }
 
+function productMatchesOneTypoWithAnchor(product, stems) {
+  if (stems.length < 2) return false;
+
+  return product.terms.some((term) => {
+    const productStems = [...term];
+    const used = new Set();
+    let exactCount = 0;
+    let typoCount = 0;
+
+    for (const queryStem of stems) {
+      let matchIndex = productStems.findIndex((productStem, index) => (
+        !used.has(index) && stemMatchesExact(queryStem, productStem)
+      ));
+
+      if (matchIndex >= 0) {
+        used.add(matchIndex);
+        exactCount += 1;
+        continue;
+      }
+
+      matchIndex = productStems.findIndex((productStem, index) => (
+        !used.has(index) && stemMatchesSingleTokenTypo(queryStem, productStem)
+      ));
+
+      if (matchIndex < 0) return false;
+      used.add(matchIndex);
+      typoCount += 1;
+      if (typoCount > 1) return false;
+    }
+
+    return exactCount >= 1 && typoCount <= 1;
+  });
+}
+
 function candidatesForSegment(segment, catalog) {
   const parsed = meaningfulStems(segment);
   const identitySpecification = hasExplicitIdentitySpecification(segment);
@@ -430,7 +517,61 @@ function candidatesForSegment(segment, catalog) {
     ));
   }
 
+  if (candidates.length === 0 && parsed.stems.length >= 2) {
+    candidates = catalog.filter((product) => (
+      productMatchesOneTypoWithAnchor(product, parsed.stems)
+    ));
+  }
+
   return { ...parsed, identitySpecification, candidates };
+}
+
+function parseUniqueWhitespaceList(text, catalog) {
+  if (/[;,\n]/.test(text) || /\d/.test(text)) return null;
+
+  const tokens = normalizeText(text).split(/\s+/).filter(Boolean);
+  if (tokens.length < 2 || tokens.length > 10) return null;
+
+  const solutions = [];
+  const walk = (index, parts) => {
+    if (solutions.length > 4) return;
+    if (index === tokens.length) {
+      if (parts.length >= 2) solutions.push(parts);
+      return;
+    }
+
+    const maxEnd = Math.min(tokens.length, index + 4);
+    for (let end = index + 1; end <= maxEnd; end += 1) {
+      const phrase = tokens.slice(index, end).join(" ");
+      const match = candidatesForSegment(phrase, catalog);
+      if (
+        match.identitySpecification
+        || match.invalidQuantity
+        || match.explicitQuantity
+        || match.candidates.length !== 1
+        || hasAmbiguousUnitQuantity(phrase, match)
+      ) {
+        continue;
+      }
+
+      walk(end, [...parts, match.candidates[0].id]);
+    }
+  };
+
+  walk(0, []);
+
+  const unique = new Map();
+  for (const ids of solutions) unique.set(ids.join("\u0000"), ids);
+  if (unique.size !== 1) return null;
+
+  const [ids] = unique.values();
+  const totals = new Map();
+  for (const productId of ids) {
+    const quantity = (totals.get(productId) ?? 0) + 1;
+    if (quantity > 99) return null;
+    totals.set(productId, quantity);
+  }
+  return totals;
 }
 
 function hasAmbiguousUnitQuantity(segment, match) {
@@ -758,6 +899,13 @@ export function parseLocalBasketText(text, catalog) {
     }
 
     if (match.candidates.length === 0) {
+      if (segments.length === 1 && segmentIndex === 0) {
+        const whitespaceTotals = parseUniqueWhitespaceList(
+          segment,
+          normalizedCatalog
+        );
+        if (whitespaceTotals) return proposalFromTotals(whitespaceTotals);
+      }
       return fallback("unresolved_segment", { segmentIndex });
     }
     if (match.candidates.length > 1) {

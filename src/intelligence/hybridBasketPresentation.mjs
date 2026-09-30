@@ -81,6 +81,22 @@ export function presentHybridBasketResult(result) {
   if (result.kind === HYBRID_BASKET_RESULT.CLARIFICATION) {
     const items = identityItems(result.validation);
 
+    if (
+      result.triggerReason === "smalltalk"
+      && result.assistantReply
+      && typeof result.assistantReply.headline === "string"
+      && typeof result.assistantReply.message === "string"
+    ) {
+      return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+        headline: result.assistantReply.headline,
+        message: result.assistantReply.message,
+        items,
+        primaryAction: result.assistantReply.actionLabel || "Написать покупки",
+        secondaryAction: null,
+        focusClarification: true
+      });
+    }
+
     if (result.triggerReason === "budget_request" && result.budget) {
       const budgetLabel = formatRubMinor(result.budget.budgetMinor);
       const estimateLabel = formatRubMinor(result.budget.estimateMinor);
@@ -112,6 +128,21 @@ export function presentHybridBasketResult(result) {
         items,
         primaryAction: "Добавить предложенное",
         secondaryAction: "Уточнить запрос",
+        focusClarification: true
+      });
+    }
+
+    if (
+      result.source === "ai"
+      && result.reason === "confirmation_required"
+      && result.triggerReason === "unresolved_segment"
+    ) {
+      return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+        headline: "Поняла не всё.",
+        message: "Показываю только то, что смогла уверенно сопоставить. Непонятную часть лучше уточнить, чтобы не положить в корзину не тот товар.",
+        items,
+        primaryAction: items.length > 0 ? "Добавить найденное" : "Уточнить запрос",
+        secondaryAction: items.length > 0 ? "Уточнить запрос" : "Искать вручную",
         focusClarification: true
       });
     }

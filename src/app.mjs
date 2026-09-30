@@ -591,9 +591,26 @@ function renderBasketProposalState() {
   message.className = "proposal-message";
 
   if (state.status === HYBRID_BASKET_FLOW_STATUS.LOADING) {
-    message.textContent =
-      "Разбираю запрос. Ручной поиск остаётся доступен.";
+    message.textContent = "Сейчас подумаю…";
     elements.proposalStatus.append(message);
+
+    const thinkingMessage = message;
+    setTimeout(() => {
+      if (
+        thinkingMessage.isConnected
+        && basketProposalFlow.getState().status === HYBRID_BASKET_FLOW_STATUS.LOADING
+      ) {
+        thinkingMessage.textContent = "Проверяю товары и количество…";
+      }
+    }, 700);
+    setTimeout(() => {
+      if (
+        thinkingMessage.isConnected
+        && basketProposalFlow.getState().status === HYBRID_BASKET_FLOW_STATUS.LOADING
+      ) {
+        thinkingMessage.textContent = "Ещё секунду — сверяю варианты…";
+      }
+    }, 1800);
     return;
   }
 
@@ -670,6 +687,11 @@ function renderBasketProposalState() {
     } else if (triggerReason === "commercial_constraint") {
       appendProposalAction(
         view?.primaryAction || "Уточнить товар",
+        focusProposalInput
+      );
+    } else if (triggerReason === "smalltalk") {
+      appendProposalAction(
+        view?.primaryAction || "Написать покупки",
         focusProposalInput
       );
     } else {
