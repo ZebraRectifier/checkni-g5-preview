@@ -1,6 +1,14 @@
-import { MOCK_CATALOG, searchMockCatalog } from "./data/mockCatalog.mjs";
-import { BETA_REAL_BASKET } from "./data/betaRealBasket.mjs";
-import { confirmBetaRetailIdentity } from "./ports/betaRetailPricesPort.mjs";
+import { searchMockCatalog } from "./data/mockCatalog.mjs";
+import { SHOP_CATALOG } from "./data/shopCatalog.mjs";
+import {
+  BETA_LIVE_PROOF_BASKET,
+  BETA_LIVE_PROFILE_BINDINGS,
+  BETA_LIVE_PROFILE_PRODUCT_IDS
+} from "./data/betaRealBasket.mjs";
+import {
+  confirmBetaRetailIdentity,
+  isBetaRetailIdentityConfirmed
+} from "./ports/betaRetailPricesPort.mjs";
 import { VALIDATED_MERGE_REASON, createBasketStore, countBasketUnits } from "./state/basketStore.mjs";
 import { createProductCard } from "./components/ProductCard.mjs";
 import { BASKET_COMPARE_LABEL, renderBasketView } from "./components/BasketView.mjs";
@@ -8,7 +16,21 @@ import {
   createComparisonResult,
   createObservedComparisonResult
 } from "./components/ComparisonResult.mjs";
+import { createWebSnapshotResult } from "./components/WebSnapshotResult.mjs";
+import { formatRubMinor } from "./components/ComparisonResult.mjs";
+import { WEB_SNAPSHOT_META } from "./data/webPriceSnapshot.mjs";
+import { compareWebSnapshot } from "./core/web-snapshot-comparison.mjs";
+import { PIXEL_ICONS } from "./components/pixelIcons.mjs";
 import { revealWinningBasketList } from "./runtime/listInspection.mjs";
+import { createProductPhotoLoader } from "./runtime/productPhotos.mjs";
+import { requestCatalogPhotos } from "./ports/catalogPhotosPort.mjs";
+import { createStoresSection } from "./components/StoresMap.mjs";
+import {
+  CATALOG_SORT,
+  buildSnapshotPriceHints,
+  dockPriceSuffix,
+  sortCatalogProducts
+} from "./runtime/priceHints.mjs";
 import {
   COMPARISON_MODE,
   comparisonPort
@@ -95,11 +117,16 @@ const resolveAiCatalog = createAiCatalogResolver(
 );
 const hybridInterpreterLoader = createHybridBasketInterpreterLoader();
 const hybridBetaMetrics = createHybridBetaMetricsStore();
+// Budget drafts ("корзина на 600 рублей") always plan against the dated
+// snapshot hints: the draft text carries its own source/region label, so
+// this map stays mode-independent, unlike the catalogue card hints below.
+const budgetPlannerHints = buildSnapshotPriceHints();
 const basketProposalFlow = createHybridBasketFlow({
   loader: hybridInterpreterLoader,
-  localCatalog: MOCK_CATALOG,
+  localCatalog: SHOP_CATALOG,
   resolveLiveCatalog: resolveAiCatalog,
   requestAiProposal: requestBasketProposal,
+  priceHints: budgetPlannerHints,
   applyValidatedBasket: (validatedBasket) => (
     basket.mergeValidatedBasket(validatedBasket)
   ),
@@ -108,6 +135,30 @@ const basketProposalFlow = createHybridBasketFlow({
   }
 });
 let activeQuery = "";
+let catalogSort = CATALOG_SORT.DEFAULT;
+const snapshotPriceHints = comparisonMode === COMPARISON_MODE.OBSERVED
+  ? new Map()
+  : buildSnapshotPriceHints();
+
+// Real product photos from Open Food Facts: exact by barcode for live
+// results, "пример товара" by name for the demo catalogue. Decoration
+// only — every failure silently keeps the pixel icon.
+const productPhotoLoader = createProductPhotoLoader({
+  requestPhotos: (requests) => requestCatalogPhotos(requests),
+  storage: (() => {
+    try {
+      return window.localStorage;
+    } catch {
+      return null;
+    }
+  })()
+});
+function loadProductPhoto(product) {
+  if (product?.sourceBarcode) {
+    return productPhotoLoader.load({ code: product.sourceBarcode });
+  }
+  return productPhotoLoader.load({ name: product?.name });
+}
 let catalogRequestVersion = 0;
 let pendingCatalogSearch = null;
 let catalogSearchState = {
@@ -139,6 +190,112 @@ function basketQuantityFor(productId) {
   return basket.getSnapshot().find((item) => item.id === productId)?.quantity ?? 0;
 }
 
+// Home "Пример сравнения": a real snapshot comparison of an everyday demo
+// basket, so a fresh visitor sees the product answer before typing anything.
+const HOME_EXAMPLE_BASKET = Object.freeze([
+  Object.freeze({ id: "milk-25-900", name: "Молоко 2,5%", quantity: 1 }),
+  Object.freeze({ id: "eggs-c1-10", name: "Яйца C1", quantity: 1 }),
+  Object.freeze({ id: "bread-wheat-400", name: "Хлеб пшеничный", quantity: 1 }),
+  Object.freeze({ id: "apples-1kg", name: "Яблоки", quantity: 1 })
+]);
+
+const HOME_EXAMPLE_SWATCHES = Object.freeze({
+  perekrestok: "#2f7d32",
+  vkusvill: "#e8743b",
+  chizhik: "#f4c430"
+});
+
+function renderHomeExample() {
+  const section = document.querySelector("#home-example");
+  const rowsHost = document.querySelector("#home-example-rows");
+  const note = document.querySelector("#home-example-note");
+  if (!section || !rowsHost) return;
+
+  if (comparisonMode === COMPARISON_MODE.OBSERVED) {
+    section.hidden = true;
+    return;
+  }
+
+  let result = null;
+  try {
+    result = compareWebSnapshot(HOME_EXAMPLE_BASKET);
+  } catch {
+    return;
+  }
+  if (!result || result.conclusion.kind !== "cheapest") return;
+
+  const complete = result.stores.filter((store) => store.complete);
+  if (complete.length < 2) return;
+
+  rowsHost.replaceChildren();
+  const winnerMinor = complete[0].totalMinor;
+
+  for (const store of complete) {
+    const row = document.createElement("div");
+    row.className = "home-example-row";
+
+    const swatch = document.createElement("span");
+    swatch.className = "hx-swatch";
+    swatch.setAttribute("aria-hidden", "true");
+    swatch.style.background = HOME_EXAMPLE_SWATCHES[store.retailerId] ?? "#9a6a3e";
+
+    const name = document.createElement("span");
+    name.className = "hx-name";
+    name.textContent = store.name;
+
+    const icons = document.createElement("span");
+    icons.className = "hx-icons";
+    icons.setAttribute("aria-hidden", "true");
+    icons.innerHTML = [
+      PIXEL_ICONS.milk,
+      PIXEL_ICONS.eggs,
+      PIXEL_ICONS.bread,
+      PIXEL_ICONS.apple
+    ].join("");
+
+    const total = document.createElement("span");
+    total.className = "hx-total";
+    total.textContent = formatRubMinor(store.totalMinor);
+
+    const badge = document.createElement("span");
+    badge.className = "hx-badge";
+    if (store.totalMinor === winnerMinor) {
+      row.classList.add("is-winner");
+      badge.textContent = "Выгоднее!";
+    } else {
+      badge.textContent = `+${formatRubMinor(store.totalMinor - winnerMinor)}`;
+    }
+
+    const main = document.createElement("span");
+    main.className = "hx-main";
+    const info = document.createElement("span");
+    info.className = "hx-info";
+    info.append(name, icons);
+    main.append(swatch, info);
+
+    const stub = document.createElement("span");
+    stub.className = "hx-stub";
+    stub.append(total, badge);
+
+    if (store.totalMinor === winnerMinor) {
+      const flag = document.createElement("span");
+      flag.className = "hx-flag";
+      flag.textContent = "Самый дешёвый";
+      rowsHost.append(flag);
+    }
+
+    row.append(main, stub);
+    rowsHost.append(row);
+  }
+
+  if (note) {
+    note.textContent =
+      `Корзина: молоко, яйца, хлеб, яблоки. Цены с сайтов магазинов, `
+      + `${WEB_SNAPSHOT_META.observedDateLabel}. Регион не подтверждён.`;
+  }
+  section.hidden = false;
+}
+
 function renderBetaLiveSection() {
   if (!elements.betaLiveSection) return;
   elements.betaLiveSection.hidden = !(
@@ -161,6 +318,72 @@ function invalidateHybridForManualTakeover() {
   renderBasketProposalState();
 }
 
+function setupSkyControls() {
+  const proposalInput = document.querySelector("#basket-proposal-input");
+  const search = document.querySelector("#product-search");
+
+  document.querySelector("#basket-cta-card")?.addEventListener("click", () => {
+    elements.openBasket?.click();
+  });
+
+  const focusProposal = () => {
+    proposalInput?.scrollIntoView({ behavior: "smooth", block: "center" });
+    proposalInput?.focus({ preventScroll: true });
+  };
+
+  document.querySelector("#mascot-ask")?.addEventListener("click", focusProposal);
+  document.querySelector("#ask-banner")?.addEventListener("click", focusProposal);
+
+  document.querySelector("#tab-home")?.addEventListener("click", () => {
+    if (typeof navigate === "function") navigate(VIEW.SHOP, { replace: true });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  for (const chip of document.querySelectorAll(".cat-chip")) {
+    chip.addEventListener("click", () => {
+      if (!search) return;
+      invalidateHybridForManualTakeover();
+      search.value = chip.dataset.query ?? "";
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      document.querySelector(".catalog-section")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    });
+  }
+}
+
+function setupCatalogSort() {
+  const heading = document.querySelector(".catalog-section .section-heading");
+  if (!heading || document.querySelector("#catalog-sort")) return;
+
+  const label = document.createElement("label");
+  label.className = "catalog-sort";
+  const caption = document.createElement("span");
+  caption.className = "sr-only";
+  caption.textContent = "Порядок товаров";
+
+  const select = document.createElement("select");
+  select.id = "catalog-sort";
+  for (const [value, text] of [
+    [CATALOG_SORT.DEFAULT, "По каталогу"],
+    [CATALOG_SORT.CHEAPEST, "Сначала дешевле"],
+    [CATALOG_SORT.PER_UNIT, "Выгоднее за кг/л"]
+  ]) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = text;
+    select.append(option);
+  }
+  select.addEventListener("change", () => {
+    catalogSort = select.value;
+    renderCatalog();
+  });
+
+  label.append(caption, select);
+  heading.append(label);
+}
+
 function renderCatalog() {
   const normalizedQuery = activeQuery.trim();
   const loading = catalogSearchState.status === "loading";
@@ -177,7 +400,11 @@ function renderCatalog() {
     ? catalogSearchState.products
     : loading
       ? []
-      : searchMockCatalog(normalizedQuery, MOCK_CATALOG);
+      : sortCatalogProducts(
+          searchMockCatalog(normalizedQuery, SHOP_CATALOG),
+          catalogSort,
+          snapshotPriceHints
+        );
 
   elements.productGrid.replaceChildren();
 
@@ -185,6 +412,8 @@ function renderCatalog() {
     elements.productGrid.append(
       createProductCard(product, {
         quantity: basketQuantityFor(product.id),
+        priceHint: live ? null : snapshotPriceHints.get(product.id),
+        loadPhoto: loadProductPhoto,
         onAdd: (selectedProduct) => {
           invalidateHybridForManualTakeover();
           basket.add(selectedProduct);
@@ -552,6 +781,72 @@ function inspectWinningStore(storeId) {
   );
 }
 
+
+// Before any live retailer read the user sees which exact items stand
+// for the basket products and confirms every matching live profile.
+function createBetaIdentityPrompt() {
+  if (comparisonMode !== COMPARISON_MODE.OBSERVED) return null;
+
+  const basketIds = new Set(basket.getSnapshot().map((item) => item.id));
+  const matchingProfileIds = Object.entries(BETA_LIVE_PROFILE_PRODUCT_IDS)
+    .filter(([, productIds]) => productIds.some((id) => basketIds.has(id)))
+    .map(([profileId]) => profileId);
+  const unconfirmedProfileIds = matchingProfileIds.filter(
+    (profileId) => !isBetaRetailIdentityConfirmed(profileId)
+  );
+  if (unconfirmedProfileIds.length === 0) return null;
+
+  const bindings = unconfirmedProfileIds.flatMap((profileId) => (
+    (BETA_LIVE_PROFILE_BINDINGS[profileId] ?? []).filter((binding) => (
+      basketIds.has(binding.canonicalProductId)
+    ))
+  ));
+  if (bindings.length === 0) return null;
+
+  const section = document.createElement("section");
+  section.className = "future-step comparison-result real-identity-prompt";
+  section.setAttribute("aria-label", "Проверка реальных цен в Москве");
+
+  const eyebrow = document.createElement("p");
+  eyebrow.className = "eyebrow";
+  eyebrow.textContent = "Реальные цены · Москва";
+
+  const heading = document.createElement("h2");
+  heading.textContent = "Проверить в METRO и Магните";
+
+  const intro = document.createElement("p");
+  intro.textContent = "Сравним одинаковые товары в обоих магазинах:";
+
+  const list = document.createElement("ul");
+  list.className = "real-identity-list";
+  for (const binding of bindings) {
+    const item = document.createElement("li");
+    item.textContent = binding.displayName;
+    list.append(item);
+  }
+
+  const note = document.createElement("p");
+  note.className = "comparison-provenance";
+  note.textContent = bindings.length < basketIds.size
+    ? "Остальные товары корзины пока без живых цен — «дешевле» назовём, только если цены будут на всю корзину."
+    : "Цены загрузятся только после подтверждения. Если условия цены неоднозначны, «дешевле» не назовём.";
+
+  const action = document.createElement("button");
+  action.type = "button";
+  action.className = "primary-button";
+  action.textContent = "Подтвердить товары и сравнить";
+  action.addEventListener("click", async () => {
+    action.disabled = true;
+    for (const profileId of unconfirmedProfileIds) {
+      confirmBetaRetailIdentity(profileId);
+    }
+    await handleCompare();
+  });
+
+  section.append(eyebrow, heading, intro, list, note, action);
+  return section;
+}
+
 function renderComparisonState({ focusResult = false } = {}) {
   const compareButton = document.querySelector("#compare-basket");
   const output = document.querySelector("#comparison-output");
@@ -612,10 +907,48 @@ function renderComparisonState({ focusResult = false } = {}) {
   if (!resultNode) return;
 
   resultNode.tabIndex = -1;
-  output.append(resultNode);
+  // Snapshot and OBSERVED truth stay separated, never mixed:
+  // - DEMO: the dated snapshot answer is the primary block, as before.
+  // - OBSERVED: the live Core result comes first and keeps focus; the
+  //   snapshot block is appended below it only when it actually answers
+  //   (cheapest/tie), as a clearly labelled dated reference — otherwise a
+  //   normal basket on the public host gets no "where is it cheaper"
+  //   answer at all while live coverage is still 2–3 proof products.
+  let snapshotResult = null;
+  try {
+    snapshotResult = compareWebSnapshot(basket.getSnapshot());
+  } catch {
+    snapshotResult = null;
+  }
+  const snapshotAnswers = snapshotResult !== null && (
+    snapshotResult.conclusion.kind === "cheapest"
+    || snapshotResult.conclusion.kind === "tie"
+  );
+  const snapshotNode = comparisonMode === COMPARISON_MODE.DEMO
+    ? createWebSnapshotResult(snapshotResult)
+    : snapshotAnswers
+      ? createWebSnapshotResult(snapshotResult)
+      : null;
 
+  const identityPrompt = createBetaIdentityPrompt();
+  if (identityPrompt) output.append(identityPrompt);
+
+  if (snapshotNode) {
+    snapshotNode.tabIndex = -1;
+    if (comparisonMode === COMPARISON_MODE.DEMO) {
+      output.append(snapshotNode, resultNode);
+    } else {
+      output.append(resultNode, snapshotNode);
+    }
+  } else {
+    output.append(resultNode);
+  }
+
+  const focusNode = comparisonMode === COMPARISON_MODE.DEMO
+    ? snapshotNode ?? resultNode
+    : resultNode;
   if (focusResult) {
-    resultNode.focus({ preventScroll: true });
+    focusNode.focus({ preventScroll: true });
   }
 }
 
@@ -632,6 +965,9 @@ async function handleCompare() {
   });
 }
 
+// The live example uses only products that currently pass the strict
+// regular-price contract in both retailers.
+
 async function handleBetaLiveExample() {
   if (
     comparisonMode !== COMPARISON_MODE.OBSERVED
@@ -644,10 +980,11 @@ async function handleBetaLiveExample() {
   elements.betaLiveButton.disabled = true;
   if (elements.betaLiveStatus) {
     elements.betaLiveStatus.textContent =
-      "Товары подтверждены. Собираем две позиции и обновляем публичные цены…";
+      "Товары подтверждены. Собираем корзину и обновляем публичные цены…";
   }
 
-  const merged = basket.mergeValidatedBasket(BETA_REAL_BASKET);
+  const exampleBasket = BETA_LIVE_PROOF_BASKET;
+  const merged = basket.mergeValidatedBasket(exampleBasket);
   if (merged.rejectedRows.length > 0) {
     elements.betaLiveButton.disabled = false;
     if (elements.betaLiveStatus) {
@@ -659,7 +996,12 @@ async function handleBetaLiveExample() {
 
   // The button is an explicit, price-blind identity confirmation. No retailer
   // price is requested before this user action.
-  confirmBetaRetailIdentity();
+  const exampleIds = new Set(exampleBasket.map((item) => item.product.id));
+  for (const [profileId, productIds] of Object.entries(BETA_LIVE_PROFILE_PRODUCT_IDS)) {
+    if (productIds.some((id) => exampleIds.has(id))) {
+      confirmBetaRetailIdentity(profileId);
+    }
+  }
 
   navigate(VIEW.BASKET, {
     focusMode: FOCUS_MODE.HEADING
@@ -703,9 +1045,13 @@ function renderDock() {
   const items = basket.getSnapshot();
   const units = countBasketUnits(items);
 
+  const priceSuffix = comparisonMode === COMPARISON_MODE.DEMO
+    ? dockPriceSuffix(items)
+    : "";
+
   elements.basketDockCopy.textContent = units === 0
     ? "Пока пусто"
-    : `${units} шт. · ${items.length} поз.`;
+    : `${units} шт. · ${items.length} поз.${priceSuffix}`;
 
   elements.openBasket.classList.toggle("has-items", units > 0);
   elements.openBasket.setAttribute(
@@ -985,6 +1331,15 @@ history.replaceState(
 
 renderCatalog();
 renderBasket();
+renderHomeExample();
+setupCatalogSort();
+setupSkyControls();
+// "Магазины": honest store map + list, mounted after the catalogue.
+try {
+  document.querySelector(".catalog-section")?.after(createStoresSection());
+} catch {
+  // The map is decoration; the shop must render without it.
+}
 renderDock();
 renderBetaLiveSection();
 renderBasketProposalState();

@@ -30,7 +30,7 @@ import {
 import {
   requestBetaRetailPrices
 } from "./betaRetailPricesPort.mjs";
-import { BETA_REAL_PRODUCT_IDS } from "../data/betaRealBasket.mjs";
+import { BETA_LIVE_PROFILE_PRODUCT_IDS } from "../data/betaRealBasket.mjs";
 
 export const LOCAL_OBSERVED_PRICE_MAX_AGE_MS = 60 * 60 * 1000;
 export const YANDEX_OBSERVED_PRICE_MAX_AGE_MS = 15 * 60 * 1000;
@@ -594,7 +594,10 @@ export async function loadBetaRetailObservedOffers(coreBasket, options = {}) {
   requireCoreBasket(coreBasket);
 
   const wantedIds = new Set(coreBasket.map((item) => item.product.id));
-  if (!BETA_REAL_PRODUCT_IDS.some((id) => wantedIds.has(id))) return [];
+  const profiles = Object.entries(BETA_LIVE_PROFILE_PRODUCT_IDS)
+    .filter(([, ids]) => ids.some((id) => wantedIds.has(id)))
+    .map(([profileId]) => profileId);
+  if (profiles.length === 0) return [];
 
   const requestPrices =
     options.requestBetaRetailPrices ?? requestBetaRetailPrices;
@@ -606,25 +609,30 @@ export async function loadBetaRetailObservedOffers(coreBasket, options = {}) {
   const maxAgeMs =
     options.betaRetailMaxAgeMs ?? BETA_RETAIL_PRICE_MAX_AGE_MS;
 
-  let response;
-  try {
-    response = await requestPrices();
-  } catch {
-    return [];
+  const responses = await Promise.all(profiles.map(async (profileId) => {
+    try {
+      return await requestPrices(profileId);
+    } catch {
+      return null;
+    }
+  }));
+
+  const offers = [];
+  for (const response of responses) {
+    if (
+      !response
+      || !["prices", "insufficient"].includes(response.kind)
+      || !Array.isArray(response.offers)
+    ) {
+      continue;
+    }
+    offers.push(...response.offers.filter((offer) => (
+      wantedIds.has(offer.canonicalProductId)
+      && isCurrentObservedAt(offer.observedAt, nowMs, maxAgeMs)
+    )));
   }
 
-  if (
-    !response
-    || !["prices", "insufficient"].includes(response.kind)
-    || !Array.isArray(response.offers)
-  ) {
-    return [];
-  }
-
-  return sortOffers(response.offers.filter((offer) => (
-    wantedIds.has(offer.canonicalProductId)
-    && isCurrentObservedAt(offer.observedAt, nowMs, maxAgeMs)
-  )));
+  return sortOffers(offers);
 }
 
 export async function loadObservedOffers(coreBasket, options = {}) {

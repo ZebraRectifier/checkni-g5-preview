@@ -98,6 +98,7 @@ export function createHybridBasketFlow(options = {}) {
     localCatalog,
     resolveLiveCatalog,
     requestAiProposal,
+    priceHints,
     applyValidatedBasket,
     onMetric,
     now = defaultNow
@@ -251,7 +252,8 @@ export function createHybridBasketFlow(options = {}) {
         localCatalog,
         {
           resolveLiveCatalog,
-          requestAiProposal
+          requestAiProposal,
+          ...(priceHints instanceof Map ? { priceHints } : {})
         }
       );
 

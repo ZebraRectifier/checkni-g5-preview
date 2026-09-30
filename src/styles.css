@@ -1128,3 +1128,97 @@ h1 {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Real product photos (Open Food Facts) inside the visual slot. */
+.product-visual.has-photo {
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.product-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+/* ---------- Stores + map ---------- */
+.stores-section { display: grid; gap: 12px; }
+
+.stores-copy { margin: 0; color: rgba(21, 32, 25, 0.72); }
+
+.stores-map {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(21, 32, 25, 0.12);
+  background: #e8ecef;
+}
+
+.stores-map-canvas,
+.stores-map-canvas img {
+  position: absolute;
+  display: block;
+}
+
+.stores-map-canvas {
+  inset: 0;
+}
+
+.stores-pin {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50% 50% 50% 0;
+  transform: translate(-50%, -100%) rotate(-45deg);
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.stores-pin-label {
+  position: absolute;
+  left: 16px;
+  top: -4px;
+  transform: rotate(45deg);
+  font-size: 11px;
+  font-weight: 800;
+  color: #152019;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 6px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+.stores-map-attribution {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(21, 32, 25, 0.55);
+}
+
+.stores-map-attribution a { color: inherit; }
+
+.stores-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.stores-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stores-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+.stores-list-note { color: rgba(21, 32, 25, 0.62); }

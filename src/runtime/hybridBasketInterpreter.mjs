@@ -29,6 +29,11 @@ function isLocalTerminal(result) {
   ) || (
     result.kind === HYBRID_BASKET_RESULT.ERROR
       && result.source === HYBRID_BASKET_SOURCE.LOCAL
+  ) || (
+    // Local intent drafts ("на завтрак", "для борща") wait for the user's
+    // confirmation; they do not need the live catalogue or AI.
+    result.kind === HYBRID_BASKET_RESULT.CLARIFICATION
+      && result.source === HYBRID_BASKET_SOURCE.LOCAL
   );
 }
 
@@ -40,11 +45,11 @@ function isLocalFallbackWithoutAi(result) {
   );
 }
 
-async function localOnly(text, catalogSnapshot) {
+async function localOnly(text, catalogSnapshot, priceHints) {
   return resolveHybridBasketProposal(
     text,
     catalogSnapshot,
-    {}
+    priceHints instanceof Map ? { priceHints } : {}
   );
 }
 
@@ -62,7 +67,7 @@ export async function interpretHybridBasketText(
   options = {}
 ) {
   const localSnapshot = snapshotHybridCatalog(localCatalog);
-  const localResult = await localOnly(text, localSnapshot);
+  const localResult = await localOnly(text, localSnapshot, options.priceHints);
 
   if (isLocalTerminal(localResult)) {
     return decorate(localResult, localSnapshot);
@@ -98,7 +103,8 @@ export async function interpretHybridBasketText(
 
         const liveLocalResult = await localOnly(
           text,
-          selectedSnapshot
+          selectedSnapshot,
+          options.priceHints
         );
 
         if (isLocalTerminal(liveLocalResult)) {
@@ -137,7 +143,10 @@ export async function interpretHybridBasketText(
     text,
     selectedSnapshot,
     {
-      requestAiProposal: options.requestAiProposal
+      requestAiProposal: options.requestAiProposal,
+      ...(options.priceHints instanceof Map
+        ? { priceHints: options.priceHints }
+        : {})
     }
   );
 

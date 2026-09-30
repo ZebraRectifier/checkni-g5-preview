@@ -2,6 +2,7 @@ import {
   HYBRID_DRAFT_CONFIRMATION,
   canConfirmHybridBasketDraft
 } from "./hybridBasketConfirmation.mjs";
+import { formatRubMinor } from "../components/ComparisonResult.mjs";
 
 const HYBRID_BASKET_RESULT = Object.freeze({
   PROPOSAL: "proposal",
@@ -34,6 +35,15 @@ function itemSummary(items) {
   return items
     .map((item) => `${item.name} ×${item.quantity}`)
     .join(" · ");
+}
+
+function listTerms(terms) {
+  if (!Array.isArray(terms)) return "";
+  return terms
+    .filter((term) => typeof term === "string" && term.trim() !== "")
+    .slice(0, 5)
+    .map((term) => `«${term.trim()}»`)
+    .join(", ");
 }
 
 function freezeView(state, details = {}) {
@@ -71,6 +81,41 @@ export function presentHybridBasketResult(result) {
   if (result.kind === HYBRID_BASKET_RESULT.CLARIFICATION) {
     const items = identityItems(result.validation);
 
+    if (result.triggerReason === "budget_request" && result.budget) {
+      const budgetLabel = formatRubMinor(result.budget.budgetMinor);
+      const estimateLabel = formatRubMinor(result.budget.estimateMinor);
+
+      if (result.budget.overBudget) {
+        return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+          headline: "В такой бюджет не уложиться.",
+          message: `Даже самое дешёвое из базовых продуктов стоит от ${estimateLabel} — `
+            + `это больше ${budgetLabel}. Предложила его, реши, подходит ли. `
+            + "Цены — с сайтов магазинов, регион не подтверждён.",
+          items,
+          primaryAction: "Добавить предложенное",
+          secondaryAction: "Уточнить запрос",
+          focusClarification: true
+        });
+      }
+
+      const richer = result.budget.style === "richer";
+      return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+        headline: richer
+          ? "Собрала корзину под бюджет — вариант посытнее."
+          : "Собрала корзину под бюджет.",
+        message: `Выйдет примерно ${estimateLabel} из ${budgetLabel} по лучшим ценам `
+          + "с сайтов магазинов (регион не подтверждён). Где вся корзина дешевле — "
+          + "покажет сравнение. Проверь и добавь."
+          + (richer
+            ? " Хочешь дешевле — напиши «подешевле»."
+            : " Хочешь разнообразнее — напиши «получше»."),
+        items,
+        primaryAction: "Добавить предложенное",
+        secondaryAction: "Уточнить запрос",
+        focusClarification: true
+      });
+    }
+
     if (result.triggerReason === "quantity_out_of_range") {
       return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
         headline: "Уточни количество.",
@@ -107,6 +152,38 @@ export function presentHybridBasketResult(result) {
         secondaryAction: items.length > 0 && canAddFoundOnly
           ? "Добавить только найденное"
           : "Искать вручную",
+        focusClarification: true
+      });
+    }
+
+    if (
+      result.reason === "confirmation_required"
+      && (
+        result.unresolvedTerms?.length > 0
+        || result.ambiguousChoices?.length > 0
+        || result.packNotes?.length > 0
+      )
+    ) {
+      const notes = [];
+      const terms = listTerms(result.unresolvedTerms);
+      if (terms) notes.push(`Не нашла: ${terms}.`);
+      for (const choice of result.ambiguousChoices ?? []) {
+        const others = choice.otherNames?.length
+          ? ` Есть ещё: ${choice.otherNames.join(", ")}.`
+          : "";
+        notes.push(`«${choice.term}» — взяла ${choice.chosenName}.${others}`);
+      }
+      for (const note of result.packNotes ?? []) {
+        notes.push(`«${note.term}» — продаётся упаковкой, добавила 1 × ${note.productName} (${note.unit}).`);
+      }
+      notes.push("Проверь и добавь.");
+
+      return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+        headline: terms ? "Нашла не всё." : "Уточнила вариант.",
+        message: notes.join(" "),
+        items,
+        primaryAction: "Добавить предложенное",
+        secondaryAction: "Уточнить запрос",
         focusClarification: true
       });
     }

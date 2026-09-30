@@ -5,7 +5,8 @@ export const CATALOG_SEARCH_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/functions/v1/catalog-search";
 export const CATALOG_SEARCH_PUBLISHABLE_KEY =
   "sb_publishable_yyIT9Clu4jTphSdVLCVWFA_KQsZZ2rt";
-export const CATALOG_SEARCH_TIMEOUT_MS = 7_000;
+// Live catalogue lookup only refines the local catalogue; do not make the user wait.
+export const CATALOG_SEARCH_TIMEOUT_MS = 2_500;
 export const MAX_CATALOG_GATEWAY_RESPONSE_BYTES = 131_072;
 export const MAX_CATALOG_GATEWAY_QUERIES = 5;
 export const MAX_CATALOG_GATEWAY_PRODUCTS = 40;

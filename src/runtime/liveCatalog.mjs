@@ -33,7 +33,13 @@ export function surfaceProductsFromCatalog(products) {
       category: typeof product.category === "string" && product.category.trim()
         ? product.category.trim()
         : "Каталог",
-      catalogSource: "open-food-facts"
+      catalogSource: "open-food-facts",
+      // OFF barcode: lets the card load the exact product photo. Identity
+      // and comparison never depend on it.
+      ...(typeof product.sourceProductId === "string"
+        && /^\d{8,14}$/.test(product.sourceProductId)
+        ? { sourceBarcode: product.sourceProductId }
+        : {})
     });
 
     if (byId.has(id)) {

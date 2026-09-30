@@ -2,6 +2,8 @@ import {
   PROPOSAL_STATUS,
   validateBasketProposal
 } from "../core/ai-basket-proposal.mjs";
+import { planLocalSegments } from "./localIntentPlanner.mjs";
+import { planBudgetBasket } from "./budgetBasketPlanner.mjs";
 import {
   LOCAL_BASKET_DECISION,
   parseLocalBasketText
@@ -20,7 +22,15 @@ export const HYBRID_BASKET_SOURCE = Object.freeze({
   AI: "ai"
 });
 
-export const MAX_HYBRID_CATALOG_ITEMS = 50;
+export const MAX_HYBRID_CATALOG_ITEMS = 200;
+const LOCAL_INTENT_TRIGGER_REASONS = new Set([
+  "semantic_intent",
+  "unresolved_segment",
+  "ambiguous_segment",
+  "unit_quantity_ambiguous"
+]);
+// The AI endpoint (browser port and Edge function) accepts at most 50 hints.
+export const MAX_AI_CATALOG_HINTS = 50;
 export const MAX_HYBRID_ALIASES_PER_PRODUCT = 16;
 export const MAX_HYBRID_ALIAS_LENGTH = 80;
 
@@ -60,6 +70,32 @@ function normalizeAliases(value) {
   )]
     .sort((left, right) => left.localeCompare(right))
     .slice(0, MAX_HYBRID_ALIASES_PER_PRODUCT);
+}
+
+function hintStems(value) {
+  return String(value ?? "")
+    .normalize("NFKC")
+    .toLocaleLowerCase("ru-RU")
+    .replaceAll("ё", "е")
+    .split(/[^a-zа-я0-9]+/i)
+    .filter((token) => token.length >= 3)
+    .map((token) => token.slice(0, Math.max(3, Math.min(5, token.length - 1))));
+}
+
+// Deterministic subset for the AI request: products whose name or alias
+// stems appear in the text come first, then the rest in catalogue order.
+export function selectAiCatalogHints(text, catalogSnapshot) {
+  if (catalogSnapshot.length <= MAX_AI_CATALOG_HINTS) return catalogSnapshot;
+
+  const textStems = hintStems(text);
+  const mentions = (product) => [product.name, ...(product.aliases ?? [])]
+    .some((term) => hintStems(term).some((stem) => (
+      textStems.some((candidate) => candidate.startsWith(stem) || stem.startsWith(candidate))
+    )));
+
+  const matched = catalogSnapshot.filter(mentions);
+  const rest = catalogSnapshot.filter((product) => !matched.includes(product));
+  return Object.freeze([...matched, ...rest].slice(0, MAX_AI_CATALOG_HINTS));
 }
 
 export function snapshotHybridCatalog(catalog) {
@@ -201,6 +237,84 @@ export async function resolveHybridBasketProposal(
   }
 
   const triggerReason = localDecision.reason ?? "local_fallback";
+
+  // "Корзина на 600 рублей": a deterministic local draft from the dated
+  // snapshot price hints. Confirm-first, prices never invented — the
+  // planner only proposes catalogue ids that fit the stated budget.
+  if (options.priceHints instanceof Map) {
+    const budget = planBudgetBasket(
+      text,
+      catalogSnapshot,
+      options.priceHints,
+      (segment) => parseLocalBasketText(segment, catalogSnapshot)
+    );
+    if (budget) {
+      const budgetValidation = validateFinalProposal(
+        budget.proposal,
+        catalogSnapshot
+      );
+      if (budgetValidation.status === PROPOSAL_STATUS.ACCEPTED) {
+        return typedResult(HYBRID_BASKET_RESULT.CLARIFICATION, {
+          source: HYBRID_BASKET_SOURCE.LOCAL,
+          reason: "confirmation_required",
+          triggerReason: "budget_request",
+          draftProposal: budget.proposal,
+          validation: budgetValidation,
+          budget: Object.freeze({
+            budgetMinor: budget.budgetMinor,
+            estimateMinor: budget.estimateMinor,
+            overBudget: budget.overBudget,
+            style: budget.style
+          })
+        });
+      }
+    }
+  }
+
+  // Mixed and meal phrases are planned locally, segment by segment:
+  // instant, free and deterministic. Drafts always need the user's
+  // confirmation. Phrases with unknown products keep the existing
+  // live-catalogue → AI route; the local draft is only a fallback when
+  // that route cannot answer.
+  const planned = LOCAL_INTENT_TRIGGER_REASONS.has(triggerReason)
+    ? planLocalSegments(
+        text,
+        catalogSnapshot,
+        (segment) => parseLocalBasketText(segment, catalogSnapshot)
+      )
+    : null;
+  const localDraft = () => {
+    if (!planned || planned.needsAi || planned.proposal.items.length === 0) {
+      return null;
+    }
+    const validation = validateFinalProposal(planned.proposal, catalogSnapshot);
+    if (validation.status !== PROPOSAL_STATUS.ACCEPTED) return null;
+
+    return typedResult(HYBRID_BASKET_RESULT.CLARIFICATION, {
+      source: HYBRID_BASKET_SOURCE.LOCAL,
+      reason: "confirmation_required",
+      triggerReason: planned.intents.length > 0
+        ? "semantic_intent"
+        : planned.unresolvedTerms.length > 0
+          ? "unresolved_segment"
+          : planned.ambiguous.length > 0
+            ? "ambiguous_segment"
+            : planned.packNotes.length > 0
+              ? "unit_quantity_ambiguous"
+              : "unresolved_segment",
+      draftProposal: planned.proposal,
+      validation,
+      unresolvedTerms: planned.unresolvedTerms,
+      ambiguousChoices: planned.ambiguous,
+      packNotes: planned.packNotes
+    });
+  };
+
+  if (planned && !planned.needsAi && planned.unresolvedTerms.length === 0) {
+    const instant = localDraft();
+    if (instant) return instant;
+  }
+
   const requestAiProposal = options.requestAiProposal;
 
   if (typeof requestAiProposal !== "function") {
@@ -211,40 +325,47 @@ export async function resolveHybridBasketProposal(
     });
   }
 
+  // When the AI route cannot answer, offer what was found locally
+  // ("молоко" from "молоко и йогурт") instead of failing the whole phrase.
+  const orLocalDraft = (failure) => localDraft() ?? failure;
+
   let providerResult;
   try {
-    providerResult = await requestAiProposal(text, catalogSnapshot);
+    providerResult = await requestAiProposal(
+      text,
+      selectAiCatalogHints(text, catalogSnapshot)
+    );
   } catch {
-    return typedResult(HYBRID_BASKET_RESULT.ERROR, {
+    return orLocalDraft(typedResult(HYBRID_BASKET_RESULT.ERROR, {
       source: HYBRID_BASKET_SOURCE.AI,
       code: "ai_request_failed",
       triggerReason
-    });
+    }));
   }
 
   const normalizedProviderResult = normalizeProviderResult(providerResult);
   if (normalizedProviderResult === null) {
-    return typedResult(HYBRID_BASKET_RESULT.ERROR, {
+    return orLocalDraft(typedResult(HYBRID_BASKET_RESULT.ERROR, {
       source: HYBRID_BASKET_SOURCE.AI,
       code: "malformed_ai_result",
       triggerReason
-    });
+    }));
   }
 
   if (normalizedProviderResult.kind === "unavailable") {
-    return typedResult(HYBRID_BASKET_RESULT.UNAVAILABLE, {
+    return orLocalDraft(typedResult(HYBRID_BASKET_RESULT.UNAVAILABLE, {
       source: HYBRID_BASKET_SOURCE.AI,
       code: normalizedProviderResult.code ?? "ai_unavailable",
       triggerReason
-    });
+    }));
   }
 
   if (normalizedProviderResult.kind === "error") {
-    return typedResult(HYBRID_BASKET_RESULT.ERROR, {
+    return orLocalDraft(typedResult(HYBRID_BASKET_RESULT.ERROR, {
       source: HYBRID_BASKET_SOURCE.AI,
       code: normalizedProviderResult.code ?? "ai_error",
       triggerReason
-    });
+    }));
   }
 
   const validation = validateFinalProposal(

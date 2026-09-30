@@ -255,6 +255,12 @@ function requireObservedOffer(offer) {
       ?? offer.provenance?.proof?.conditionNote
       ?? offer.provenance?.conditionNote
   );
+  const priceConditionComparable =
+    priceCondition === OBSERVED_PRICE_CONDITION.REGULAR
+    || (
+      priceCondition === OBSERVED_PRICE_CONDITION.PROMO
+      && offer.priceConditionComparable === true
+    );
 
   return Object.freeze({
     sourceId: offer.sourceId,
@@ -277,6 +283,7 @@ function requireObservedOffer(offer) {
     unitPriceMinor: offer.unitPriceMinor,
     currency: "RUB",
     priceCondition,
+    priceConditionComparable,
     conditionNote,
     salesChannel,
     minimumQuantity,
@@ -312,6 +319,7 @@ function stableOfferKey(offer) {
     offer.locationLabel ?? "",
     offer.unitPriceMinor,
     offer.priceCondition ?? "",
+    offer.priceConditionComparable === true ? "comparable" : "not-comparable",
     offer.conditionNote ?? "",
     offer.salesChannel ?? "",
     offer.minimumQuantity ?? "",
@@ -329,6 +337,7 @@ function hasEqualTimeTruthConflict(a, b) {
     "retailerId",
     "storeId",
     "priceCondition",
+    "priceConditionComparable",
     "conditionNote",
     "salesChannel",
     "minimumQuantity"
@@ -561,6 +570,7 @@ function buildCandidateBasket(basket, group) {
         unitPriceMinor: null,
         lineTotalMinor: null,
         priceCondition: null,
+        priceConditionComparable: false,
         salesChannel: OBSERVED_SALES_CHANNEL.UNKNOWN,
         availability: OBSERVATION_AVAILABILITY.UNKNOWN,
         observedAt: null,
@@ -579,6 +589,7 @@ function buildCandidateBasket(basket, group) {
         unitPriceMinor: null,
         lineTotalMinor: null,
         priceCondition: null,
+        priceConditionComparable: false,
         salesChannel: OBSERVED_SALES_CHANNEL.UNKNOWN,
         availability: OBSERVATION_AVAILABILITY.UNKNOWN,
         observedAt: selected.observedAt,
@@ -604,6 +615,7 @@ function buildCandidateBasket(basket, group) {
         unitPriceMinor: null,
         lineTotalMinor: null,
         priceCondition: observed.priceCondition,
+        priceConditionComparable: observed.priceConditionComparable,
         conditionNote: observed.conditionNote,
         salesChannel: observed.salesChannel,
         minimumQuantity,
@@ -623,6 +635,7 @@ function buildCandidateBasket(basket, group) {
       unitPriceMinor: observed.unitPriceMinor,
       lineTotalMinor: lineTotal(observed.unitPriceMinor, item.quantity),
       priceCondition: observed.priceCondition,
+      priceConditionComparable: observed.priceConditionComparable,
       conditionNote: observed.conditionNote,
       salesChannel: observed.salesChannel,
       minimumQuantity,
@@ -850,9 +863,18 @@ export function compareObservedBasket({ basket, offers } = {}) {
   const firstScope = completeScopes[0] ?? null;
   const hasConditionalPriceContext = complete.some((candidate) => (
     candidate.priceConditions.length > 1
-    || candidate.priceConditions.some((condition) => (
-      NON_COMPARABLE_PRICE_CONDITIONS.has(condition)
-    ))
+    || candidate.lines.some((line) => {
+      if (line.status !== OBSERVED_LINE_STATUS.PRICED) return false;
+      const condition =
+        line.priceCondition ?? OBSERVED_PRICE_CONDITION.UNKNOWN;
+      return (
+        NON_COMPARABLE_PRICE_CONDITIONS.has(condition)
+        && !(
+          condition === OBSERVED_PRICE_CONDITION.PROMO
+          && line.priceConditionComparable === true
+        )
+      );
+    })
   ));
   const hasMixedSalesChannel = complete.some((candidate) => (
     candidate.salesChannels.length > 1

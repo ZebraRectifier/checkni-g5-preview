@@ -1,35 +1,55 @@
+import {
+  BETA_METRO_MAGNIT_PROOF_PROFILE_ID,
+  BETA_LIVE_PROFILE_PRODUCT_IDS,
+  BETA_PROFILE_PRODUCT_IDS
+} from "../data/betaRealBasket.mjs";
+
 export const BETA_RETAIL_PRICES_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/functions/v1/beta-retail-prices";
 export const BETA_RETAIL_PRICES_PUBLISHABLE_KEY =
   "sb_publishable_yyIT9Clu4jTphSdVLCVWFA_KQsZZ2rt";
 export const BETA_RETAIL_PRICES_TIMEOUT_MS = 20_000;
 export const BETA_RETAIL_PRICES_MAX_RESPONSE_BYTES = 65_536;
-export const BETA_RETAIL_IDENTITY_CONFIRMATION =
-  "dobry-1l-globus-metro-v1";
+export const BETA_RETAIL_IDENTITY_CONFIRMATION = BETA_METRO_MAGNIT_PROOF_PROFILE_ID;
+export const BETA_RETAIL_PROFILE_IDS = Object.freeze(
+  Object.keys(BETA_LIVE_PROFILE_PRODUCT_IDS)
+);
+export const MAX_BETA_RETAIL_OFFERS = 24;
 
 const SOURCE_CONTRACTS = Object.freeze({
   "globus-public-live": Object.freeze({
     sourceName: "Глобус · публичный каталог",
     retailerId: "globus",
-    hosts: Object.freeze(["globus.ru", "www.globus.ru"]),
+    hosts: Object.freeze(["globus.ru", "www.globus.ru", "online.globus.ru"]),
     locationPrefix: "globus:",
-    storePrefix: "globus-pvz-"
+    storePrefix: "globus-pvz-",
+    allowedConditions: Object.freeze(["regular"])
   }),
   "metro-public-live": Object.freeze({
     sourceName: "METRO · публичный каталог",
     retailerId: "metro",
     hosts: Object.freeze(["online.metro-cc.ru"]),
     locationPrefix: "metro:",
-    storePrefix: "metro-address-"
+    storePrefix: "metro-address-",
+    allowedConditions: Object.freeze(["regular"])
+  }),
+  "magnit-public-live": Object.freeze({
+    sourceName: "Магнит · публичная карточка товара",
+    retailerId: "magnit",
+    hosts: Object.freeze(["magnit.ru", "www.magnit.ru"]),
+    locationPrefix: "magnit:",
+    storePrefix: "magnit-shop-",
+    allowedConditions: Object.freeze(["promo"])
   })
 });
 
-const ALLOWED_PRODUCT_IDS = new Set([
-  "dobry-cola-1l",
-  "dobry-lemon-lime-1l"
-]);
+const ALLOWED_PRODUCT_IDS = new Set(
+  Object.values(BETA_PROFILE_PRODUCT_IDS).flat()
+);
 
-let identityConfirmed = false;
+// Identity is confirmed per profile: the user saw which exact items stand
+// for the basket products before any live retailer read.
+const confirmedProfiles = new Set();
 
 function result(kind, code) {
   return Object.freeze(code ? { kind, code } : { kind });
@@ -90,7 +110,8 @@ function normalizeOffer(value) {
     "countryCode", "regionId", "regionName", "localityId",
     "localityName", "retailerId", "canonicalProductId", "sourceProductId",
     "sourceProductName", "unitPriceMinor", "currency",
-    "priceCondition", "salesChannel", "minimumQuantity",
+    "priceCondition", "priceConditionComparable", "conditionNote",
+    "salesChannel", "minimumQuantity",
     "storeId", "storeName", "locationLabel", "availability"
   ]);
   if (Object.keys(value).some((key) => !allowed.has(key))) return null;
@@ -128,7 +149,14 @@ function normalizeOffer(value) {
     || !Number.isSafeInteger(value.unitPriceMinor)
     || value.unitPriceMinor <= 0
     || value.currency !== "RUB"
-    || value.priceCondition !== "regular"
+    || !contract.allowedConditions.includes(value.priceCondition)
+    || (
+      value.priceCondition === "promo"
+      && (
+        value.priceConditionComparable !== true
+        || cleanString(value.conditionNote, 300) === null
+      )
+    )
     || value.salesChannel !== "online"
     || value.minimumQuantity !== 1
     || !storeId || !storeId.startsWith(contract.storePrefix)
@@ -173,7 +201,7 @@ export function normalizeBetaRetailPricesResponse(value) {
   }
 
   const refreshedAtMs = Date.parse(value.refreshedAt);
-  if (!Number.isFinite(refreshedAtMs) || !Array.isArray(value.offers) || value.offers.length > 6) {
+  if (!Number.isFinite(refreshedAtMs) || !Array.isArray(value.offers) || value.offers.length > MAX_BETA_RETAIL_OFFERS) {
     return result("error", "malformed_transport_response");
   }
 
@@ -189,12 +217,17 @@ export function normalizeBetaRetailPricesResponse(value) {
   });
 }
 
-export function confirmBetaRetailIdentity() {
-  identityConfirmed = true;
+export function confirmBetaRetailIdentity(profileId = BETA_RETAIL_IDENTITY_CONFIRMATION) {
+  if (BETA_RETAIL_PROFILE_IDS.includes(profileId)) confirmedProfiles.add(profileId);
 }
 
-export function clearBetaRetailIdentityConfirmation() {
-  identityConfirmed = false;
+export function isBetaRetailIdentityConfirmed(profileId = BETA_RETAIL_IDENTITY_CONFIRMATION) {
+  return confirmedProfiles.has(profileId);
+}
+
+export function clearBetaRetailIdentityConfirmation(profileId) {
+  if (profileId === undefined) confirmedProfiles.clear();
+  else confirmedProfiles.delete(profileId);
 }
 
 export function createBetaRetailPricesClient(options = {}) {
@@ -204,7 +237,7 @@ export function createBetaRetailPricesClient(options = {}) {
   const timeoutMs = options.timeoutMs ?? BETA_RETAIL_PRICES_TIMEOUT_MS;
 
   const request = async (identityConfirmation = options.identityConfirmation) => {
-    if (identityConfirmation !== BETA_RETAIL_IDENTITY_CONFIRMATION) {
+    if (!BETA_RETAIL_PROFILE_IDS.includes(identityConfirmation)) {
       return result("unavailable", "identity_confirmation_required");
     }
     if (typeof fetchImpl !== "function") return result("unavailable", "transport_unconfigured");
@@ -238,9 +271,9 @@ export function createBetaRetailPricesClient(options = {}) {
 
 const defaultClient = createBetaRetailPricesClient();
 
-export async function requestBetaRetailPrices() {
-  if (!identityConfirmed) {
+export async function requestBetaRetailPrices(profileId = BETA_RETAIL_IDENTITY_CONFIRMATION) {
+  if (!confirmedProfiles.has(profileId)) {
     return result("unavailable", "identity_confirmation_required");
   }
-  return defaultClient.request(BETA_RETAIL_IDENTITY_CONFIRMATION);
+  return defaultClient.request(profileId);
 }

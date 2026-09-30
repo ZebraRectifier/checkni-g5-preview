@@ -141,6 +141,22 @@ function observedCandidateName(candidate) {
   );
 }
 
+function confirmedObservedPrices(candidate) {
+  if (!Array.isArray(candidate?.lines)) return Object.freeze([]);
+
+  return Object.freeze(candidate.lines
+    .filter((line) => (
+      line?.status === "priced-observation"
+      && Number.isSafeInteger(line?.unitPriceMinor)
+      && line.unitPriceMinor > 0
+    ))
+    .map((line) => Object.freeze({
+      productId: typeof line.productId === "string" ? line.productId : null,
+      priceLabel: formatRubMinor(line.unitPriceMinor)
+    }))
+    .filter((line) => line.priceLabel !== null));
+}
+
 export function buildWinnerResultModel(result) {
   const winner = result?.winner;
   if (!winner) return null;
@@ -176,6 +192,15 @@ export function buildObservedResultModel(result) {
   }
 
   if (conclusion.kind === OBSERVED_COMPARISON_CONCLUSION.INSUFFICIENT_COVERAGE) {
+    const confirmedCandidates = Array.isArray(result?.candidates)
+      ? result.candidates
+          .map((candidate) => Object.freeze({
+            title: observedCandidateName(candidate),
+            prices: confirmedObservedPrices(candidate)
+          }))
+          .filter((candidate) => candidate.prices.length > 0)
+      : [];
+
     return Object.freeze({
       kind: conclusion.kind,
       title: "Недостаточно данных для «дешевле»",
@@ -185,7 +210,8 @@ export function buildObservedResultModel(result) {
           ? "Есть полные суммы, но часть цен зависит от акции или программы лояльности. CHECKNI не называет один вариант дешевле, пока условия цены не сопоставимы."
           : conclusion.reason === "mixed_sales_channel"
             ? "Есть полные суммы, но часть цен относится к онлайн-заказу, а часть — к покупке в магазине. CHECKNI не сравнивает их как один ценовой режим."
-            : "Пока нет полного реального покрытия корзины. MOCK-цены сюда не подставляем."
+            : "Пока нет полного реального покрытия корзины. MOCK-цены сюда не подставляем.",
+      confirmedCandidates: Object.freeze(confirmedCandidates)
     });
   }
 
@@ -365,6 +391,23 @@ export function createObservedComparisonResult(result) {
     const note = document.createElement("p");
     note.textContent = model.note;
     section.append(note);
+
+    for (const candidate of model.confirmedCandidates ?? []) {
+      const prices = candidate.prices
+        .map((price, index) => (
+          price.productId
+            ? `${price.productId}: ${price.priceLabel}`
+            : `Позиция ${index + 1}: ${price.priceLabel}`
+        ))
+        .join(" · ");
+
+      if (!prices) continue;
+      const confirmed = document.createElement("p");
+      confirmed.className = "comparison-provenance";
+      confirmed.textContent = `Подтверждённые цены · ${candidate.title}: ${prices}`;
+      section.append(confirmed);
+    }
+
     return section;
   }
 

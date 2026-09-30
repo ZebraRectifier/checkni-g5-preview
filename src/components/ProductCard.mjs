@@ -1,4 +1,7 @@
 import { MAX_QUANTITY } from "../state/basketStore.mjs";
+import { categoryPixelIcon } from "./pixelIcons.mjs";
+import { formatRubMinor } from "./ComparisonResult.mjs";
+import { formatPerUnit, priceHintTitle } from "../runtime/priceHints.mjs";
 import { focusByKey, productAddFocusKey } from "../runtime/focusRecovery.mjs";
 
 function initials(name) {
@@ -14,7 +17,12 @@ export function isAddLimitReached(quantity) {
   return Number.isFinite(quantity) && quantity >= MAX_QUANTITY;
 }
 
-export function createProductCard(product, { quantity = 0, onAdd }) {
+export function createProductCard(product, {
+  quantity = 0,
+  onAdd,
+  priceHint = null,
+  loadPhoto = null
+}) {
   const article = document.createElement("article");
   article.className = "product-card";
   article.dataset.productId = product.id;
@@ -22,7 +30,36 @@ export function createProductCard(product, { quantity = 0, onAdd }) {
   const visual = document.createElement("div");
   visual.className = "product-visual";
   visual.setAttribute("aria-hidden", "true");
-  visual.textContent = initials(product.name);
+  visual.innerHTML = categoryPixelIcon(product.category);
+  visual.dataset.fallback = initials(product.name);
+
+  // Real photo from Open Food Facts, when one resolves. Decoration only:
+  // the pixel icon stays until then, and any failure leaves it in place.
+  if (typeof loadPhoto === "function") {
+    Promise.resolve()
+      .then(() => loadPhoto(product))
+      .then((photoUrl) => {
+        if (typeof photoUrl !== "string" || !photoUrl || !article.isConnected) {
+          return;
+        }
+        const image = document.createElement("img");
+        image.className = "product-photo";
+        image.alt = "";
+        image.loading = "lazy";
+        image.decoding = "async";
+        image.referrerPolicy = "no-referrer";
+        image.src = photoUrl;
+        image.title = product.catalogSource === "open-food-facts"
+          ? "Фото: Open Food Facts"
+          : "Фото: Open Food Facts · пример похожего товара";
+        image.addEventListener("error", () => image.remove());
+        image.addEventListener("load", () => {
+          visual.replaceChildren(image);
+          visual.classList.add("has-photo");
+        });
+      })
+      .catch(() => {});
+  }
 
   const body = document.createElement("div");
   body.className = "product-body";
@@ -50,6 +87,19 @@ export function createProductCard(product, { quantity = 0, onAdd }) {
   const unit = document.createElement("p");
   unit.className = "product-unit";
   unit.textContent = product.unit;
+
+  let price = null;
+  if (priceHint) {
+    price = document.createElement("p");
+    price.className = "product-price";
+    price.title = priceHintTitle(priceHint);
+    const amount = document.createElement("strong");
+    amount.textContent = `от ${formatRubMinor(priceHint.minMinor)}`;
+    const perUnit = document.createElement("span");
+    perUnit.className = "product-price-unit";
+    perUnit.textContent = ` · ${formatPerUnit(priceHint)}`;
+    price.append(amount, perUnit);
+  }
 
   const button = document.createElement("button");
   const focusKey = productAddFocusKey(product.id);
@@ -84,7 +134,9 @@ export function createProductCard(product, { quantity = 0, onAdd }) {
     focusByKey(document, focusKey);
   });
 
-  body.append(meta, heading, unit, button);
+  body.append(meta, heading, unit);
+  if (price) body.append(price);
+  body.append(button);
   article.append(visual, body);
 
   return article;
