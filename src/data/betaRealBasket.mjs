@@ -49,6 +49,8 @@ export const BETA_EGGS_PROOF_PROFILE_ID =
   "proof-eggs-c1-globus-metro-v1";
 export const BETA_METRO_MAGNIT_PROOF_PROFILE_ID =
   "proof-dobry-metro-magnit-v1";
+export const BETA_METRO_MAGNIT_EVERYDAY_PROOF_PROFILE_ID =
+  "proof-everyday-metro-magnit-v1";
 
 export const BETA_EVERYDAY_BINDINGS = Object.freeze([
   Object.freeze({ canonicalProductId: "milk-25-900", displayName: "Молоко Простоквашино пастеризованное 2,5%, 930 мл" }),
@@ -61,6 +63,46 @@ export const BETA_EVERYDAY_BINDINGS = Object.freeze([
 
 export const BETA_EVERYDAY_PRODUCT_IDS = Object.freeze(
   BETA_EVERYDAY_BINDINGS.map((binding) => binding.canonicalProductId)
+);
+
+export const BETA_EVERYDAY_PROOF_BINDINGS = Object.freeze(
+  BETA_EVERYDAY_BINDINGS.slice(0, 3)
+);
+
+export const BETA_EVERYDAY_PROOF_PRODUCTS = Object.freeze([
+  Object.freeze({
+    id: "milk-25-900",
+    name: "Молоко Простоквашино",
+    unit: "930 мл",
+    category: "Молочные продукты"
+  }),
+  Object.freeze({
+    id: "kefir-1l",
+    name: "Кефир Простоквашино 2,5%",
+    unit: "930 г",
+    category: "Молочные продукты"
+  }),
+  Object.freeze({
+    id: "butter-825-180",
+    name: "Масло сливочное Брест-Литовск 82,5%",
+    unit: "180 г",
+    category: "Молочные продукты"
+  })
+]);
+
+export const BETA_EVERYDAY_PROOF_PRODUCT_IDS = Object.freeze(
+  BETA_EVERYDAY_PROOF_PRODUCTS.map((product) => product.id)
+);
+
+export const BETA_EVERYDAY_PROOF_BASKET = Object.freeze(
+  BETA_EVERYDAY_PROOF_PRODUCTS.map((product) => Object.freeze({
+    product: Object.freeze({
+      id: product.id,
+      name: product.name,
+      unit: product.unit
+    }),
+    quantity: 1
+  }))
 );
 
 export const BETA_PROFILE_PRODUCT_IDS = Object.freeze({
@@ -76,14 +118,20 @@ export const BETA_PROFILE_BINDINGS = Object.freeze({
 
 
 export const BETA_LIVE_PROFILE_PRODUCT_IDS = Object.freeze({
-  [BETA_METRO_MAGNIT_PROOF_PROFILE_ID]: BETA_REAL_PRODUCT_IDS
+  [BETA_METRO_MAGNIT_EVERYDAY_PROOF_PROFILE_ID]:
+    BETA_EVERYDAY_PROOF_PRODUCT_IDS,
+  [BETA_METRO_MAGNIT_PROOF_PROFILE_ID]:
+    BETA_REAL_PRODUCT_IDS
 });
 
 export const BETA_LIVE_PROFILE_BINDINGS = Object.freeze({
-  [BETA_METRO_MAGNIT_PROOF_PROFILE_ID]: BETA_DOBRY_BINDINGS
+  [BETA_METRO_MAGNIT_EVERYDAY_PROOF_PROFILE_ID]:
+    BETA_EVERYDAY_PROOF_BINDINGS,
+  [BETA_METRO_MAGNIT_PROOF_PROFILE_ID]:
+    BETA_DOBRY_BINDINGS
 });
 
-// Owner-test live proof: two exact 1L Dobry products observed in METRO and
-// Magnit at explicit Moscow store/city scope. Current Magnit prices may be
-// unconditional public promos; the condition remains visible and typed.
-export const BETA_LIVE_PROOF_BASKET = BETA_REAL_BASKET;
+// Owner-test live proof: three ordinary grocery products observed in METRO
+// and Magnit at explicit Moscow store/city scope. Magnit prices may be public
+// promos; the condition remains visible and typed.
+export const BETA_LIVE_PROOF_BASKET = BETA_EVERYDAY_PROOF_BASKET;
