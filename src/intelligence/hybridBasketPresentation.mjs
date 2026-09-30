@@ -166,20 +166,42 @@ export function presentHybridBasketResult(result) {
     ) {
       const notes = [];
       const terms = listTerms(result.unresolvedTerms);
+      const packNotes = result.packNotes ?? [];
+      const ambiguousChoices = result.ambiguousChoices ?? [];
+
+      if (
+        !terms
+        && ambiguousChoices.length === 0
+        && packNotes.length === 1
+      ) {
+        const note = packNotes[0];
+        const rest = items.length > 1
+          ? " Остальные товары тоже распознаны."
+          : "";
+        return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+          headline: "Нужно уточнить количество.",
+          message: `Ты написал «${note.term}». В каталоге ${note.productName} — упаковка ${note.unit}. Взять 1 упаковку?${rest}`,
+          items,
+          primaryAction: "Взять 1 упаковку",
+          secondaryAction: "Изменить количество",
+          focusClarification: true
+        });
+      }
+
       if (terms) notes.push(`Не нашла: ${terms}.`);
-      for (const choice of result.ambiguousChoices ?? []) {
+      for (const choice of ambiguousChoices) {
         const others = choice.otherNames?.length
           ? ` Есть ещё: ${choice.otherNames.join(", ")}.`
           : "";
         notes.push(`«${choice.term}» — взяла ${choice.chosenName}.${others}`);
       }
-      for (const note of result.packNotes ?? []) {
-        notes.push(`«${note.term}» — продаётся упаковкой, добавила 1 × ${note.productName} (${note.unit}).`);
+      for (const note of packNotes) {
+        notes.push(`«${note.term}» — в каталоге упаковка ${note.unit}; предлагаю 1 × ${note.productName}.`);
       }
       notes.push("Проверь и добавь.");
 
       return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
-        headline: terms ? "Нашла не всё." : "Уточнила вариант.",
+        headline: terms ? "Нашла не всё." : "Нужно уточнение.",
         message: notes.join(" "),
         items,
         primaryAction: "Добавить предложенное",
