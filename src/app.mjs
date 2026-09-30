@@ -56,6 +56,9 @@ import {
 import { requestBasketProposal } from "./ports/basketProposalPort.mjs";
 import { requestCatalogSearch } from "./ports/catalogGatewayPort.mjs";
 import {
+  requestRetailCatalogSearch
+} from "./ports/retailCatalogPort.mjs";
+import {
   createAiCatalogResolver,
   surfaceProductsFromCatalog
 } from "./runtime/liveCatalog.mjs";
@@ -154,6 +157,9 @@ const productPhotoLoader = createProductPhotoLoader({
   })()
 });
 function loadProductPhoto(product) {
+  if (typeof product?.imageUrl === "string" && product.imageUrl) {
+    return Promise.resolve(product.imageUrl);
+  }
   if (product?.sourceBarcode) {
     return productPhotoLoader.load({ code: product.sourceBarcode });
   }
@@ -427,9 +433,12 @@ function renderCatalog() {
     elements.catalogEyebrow.textContent = "Живой каталог";
     elements.catalogNote.textContent = "Ищем товары в Open Food Facts…";
   } else if (live) {
-    elements.catalogEyebrow.textContent = "Живой каталог · Open Food Facts";
-    elements.catalogNote.textContent =
-      "Каталог помогает идентифицировать товар. Он не подтверждает цену или наличие в магазине.";
+    elements.catalogEyebrow.textContent = catalogSearchState.retailCount > 0
+      ? "Живой каталог · Глобус + Open Food Facts"
+      : "Живой каталог · Open Food Facts";
+    elements.catalogNote.textContent = catalogSearchState.retailCount > 0
+      ? "Цена Глобус показана с источником и временем наблюдения. Наличие остаётся неизвестным; карточку можно сравнивать только после подтверждения общей товарной идентичности."
+      : "Каталог помогает идентифицировать товар. Он не подтверждает цену или наличие в магазине.";
   } else if (fallback) {
     elements.catalogEyebrow.textContent = "Демо-каталог";
     elements.catalogNote.textContent =
@@ -1203,22 +1212,38 @@ function handleManualSearch() {
 
   const executionPromise = (async () => {
     try {
-      const result = await requestCatalogSearch([query], { limitPerQuery: 8 });
+      const [catalogResult, retailResult] = await Promise.all([
+        requestCatalogSearch([query], { limitPerQuery: 8 }),
+        requestRetailCatalogSearch(query, { limit: 24 })
+      ]);
       if (requestId !== catalogRequestVersion) return;
 
-      if (result.kind === "catalog") {
-        const products = surfaceProductsFromCatalog(result.products);
+      if (
+        catalogResult.kind === "catalog"
+        || retailResult.kind === "catalog"
+      ) {
+        const canonicalProducts = catalogResult.kind === "catalog"
+          ? surfaceProductsFromCatalog(catalogResult.products)
+          : [];
+        const retailProducts = retailResult.kind === "catalog"
+          ? retailResult.products
+          : [];
         catalogSearchState = {
           status: "live",
           query,
-          products,
-          discoveredCount: result.products.length + (result.rejectedCount ?? 0)
+          products: [...retailProducts, ...canonicalProducts],
+          retailCount: retailProducts.length,
+          discoveredCount:
+            (catalogResult.products?.length ?? 0)
+            + (catalogResult.rejectedCount ?? 0)
+            + retailProducts.length
         };
       } else {
         catalogSearchState = {
           status: "fallback",
           query,
           products: [],
+          retailCount: 0,
           discoveredCount: 0
         };
       }
