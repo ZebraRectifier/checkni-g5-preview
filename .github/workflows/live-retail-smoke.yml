@@ -85,11 +85,51 @@ jobs:
 
             await lenta.click();
 
+            const categoryButtons = page.locator(
+              "#retail-category-grid .retail-category-button:not(.is-loading)"
+            );
+            await page.waitForFunction(() => (
+              document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length === 22
+            ), null, { timeout: 15000 });
+            assert(
+              await categoryButtons.count() === 22,
+              "Published Lenta root must expose exactly 22 categories"
+            );
+
+            for (const expectedRoot of [
+              "Молочные продукты, яйцо",
+              "Мясо и птица",
+              "Овощи, фрукты",
+              "Хлеб и выпечка",
+              "Напитки",
+              "Бытовая химия"
+            ]) {
+              assert(
+                (await categoryButtons.allTextContents())
+                  .some((text) => text.includes(expectedRoot)),
+                `Published Lenta root is missing category: ${expectedRoot}`
+              );
+            }
+
             const root = page.getByRole("button", {
               name: /Макароны, крупы, мука/
             });
             await root.waitFor({ state: "visible", timeout: 15000 });
             await root.click();
+
+            await page.waitForFunction(() => (
+              document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length === 8
+            ), null, { timeout: 15000 });
+            assert(
+              await page.locator(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).count() === 8,
+              "Published grocery root must expose exactly 8 Lenta subcategories"
+            );
 
             const subcategory = page.getByRole("button", {
               name: /Каши, хлопья, мюсли/
