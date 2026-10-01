@@ -1222,3 +1222,232 @@ h1 {
 }
 
 .stores-list-note { color: rgba(21, 32, 25, 0.62); }
+
+
+/* ---------- Live retailer catalogue ---------- */
+.retail-browser {
+  margin: 0 0 28px;
+  display: grid;
+  gap: 14px;
+}
+
+.retail-browser[hidden] {
+  display: none !important;
+}
+
+.retail-store-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.retail-store-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 84px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: #ffffff;
+  color: var(--ink);
+  box-shadow: 0 12px 34px rgba(24, 42, 31, 0.07);
+  text-align: left;
+  cursor: pointer;
+}
+
+.retail-store-card.is-selected {
+  border-color: rgba(11, 107, 58, 0.42);
+  box-shadow: 0 12px 34px rgba(24, 42, 31, 0.10);
+}
+
+.retail-store-card[data-retailer-id="lenta"] .retail-store-logo {
+  background: #174c91;
+}
+
+.retail-store-logo {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #0b6b3a;
+  color: #ffffff;
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.retail-store-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.retail-store-kicker {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.retail-store-copy strong {
+  font-size: 20px;
+  letter-spacing: -0.025em;
+}
+
+.retail-store-copy > span:last-child {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.retail-store-total {
+  color: #0b6b3a;
+  font-size: 13px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.retail-catalog-nav {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.retail-browser-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.retail-browser-head h2 {
+  margin: 0;
+  font-size: clamp(24px, 4vw, 32px);
+  letter-spacing: -0.035em;
+}
+
+.retail-browser-head .field-help {
+  margin: 6px 0 0;
+}
+
+.retail-category-back {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #ffffff;
+  color: var(--ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.retail-breadcrumbs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.retail-breadcrumbs button {
+  min-height: 34px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 10px;
+  background: #eef3ef;
+  color: #28533c;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.retail-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.retail-category-button {
+  min-height: 72px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #ffffff;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.retail-category-button:hover,
+.retail-category-button:focus-visible {
+  border-color: rgba(11, 107, 58, 0.34);
+  background: #f2f8f4;
+}
+
+.retail-category-button strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.retail-category-button span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.retail-category-button.is-loading {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+.product-visual.retail-photo-fallback {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  background: #f4f6f2;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .retail-store-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .retail-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .retail-store-card {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .retail-store-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .retail-store-total {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 420px) {
+  .retail-category-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .retail-catalog-nav {
+    padding: 14px;
+  }
+}

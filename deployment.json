@@ -2,7 +2,11 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "c6b2eeddac3df24c27c9a0819306e799ea2bb580",
+  "sourceCommit": "bf8b2715b43966e204d5f79b5ad086167141ffe3",
   "comparisonDefault": "observed",
-  "demoOptIn": "?comparison=demo"
+  "demoOptIn": "?comparison=demo",
+  "retailers": [
+    "globus",
+    "lenta"
+  ]
 }

@@ -56,7 +56,9 @@ import {
 import { requestBasketProposal } from "./ports/basketProposalPort.mjs";
 import { requestCatalogSearch } from "./ports/catalogGatewayPort.mjs";
 import {
-  requestRetailCatalogSearch
+  RETAIL_CATALOG_IDS,
+  createRetailCatalogClient,
+  getRetailCatalogDefinition
 } from "./ports/retailCatalogPort.mjs";
 import {
   createAiCatalogResolver,
@@ -104,13 +106,44 @@ const elements = {
   basketModeCopy: document.querySelector("#basket-mode-copy"),
   betaLiveSection: document.querySelector("#beta-live-section"),
   betaLiveButton: document.querySelector("#beta-live-button"),
-  betaLiveStatus: document.querySelector("#beta-live-status")
+  betaLiveStatus: document.querySelector("#beta-live-status"),
+  retailBrowser: document.querySelector("#retail-browser"),
+  retailStoreGrid: document.querySelector("#retail-store-grid"),
+  retailCatalogNav: document.querySelector("#retail-catalog-nav"),
+  retailCategoryBack: document.querySelector("#retail-category-back"),
+  retailCategoryTitle: document.querySelector("#retail-category-title"),
+  retailCategoryNote: document.querySelector("#retail-category-note"),
+  retailBreadcrumbs: document.querySelector("#retail-breadcrumbs"),
+  retailCategoryGrid: document.querySelector("#retail-category-grid"),
+  retailCategoryStatus: document.querySelector("#retail-category-status")
 };
 
 const basket = createBasketStore();
 const comparisonMode = comparisonPort.mode === COMPARISON_MODE.OBSERVED
   ? COMPARISON_MODE.OBSERVED
   : COMPARISON_MODE.DEMO;
+const runtimeHostname = typeof location?.hostname === "string"
+  ? location.hostname.trim().toLowerCase()
+  : "";
+const isPublicBetaHost = (
+  runtimeHostname === "checkni.vercel.app"
+  || runtimeHostname.endsWith(".vercel.app")
+  || runtimeHostname === "zebrarectifier.github.io"
+);
+const publicRetailCatalogMode = (
+  comparisonMode === COMPARISON_MODE.OBSERVED
+  && (
+    isPublicBetaHost
+    || new URLSearchParams(location.search).get("catalog") === "retail"
+  )
+);
+const DEFAULT_RETAILER_ID = "globus";
+const retailCatalogClients = new Map(
+  RETAIL_CATALOG_IDS.map((retailerId) => [
+    retailerId,
+    createRetailCatalogClient({ retailerId })
+  ])
+);
 const comparisonFlow = createComparisonFlow((surfaceBasket) =>
   comparisonPort.compare(surfaceBasket)
 );
@@ -166,13 +199,39 @@ function loadProductPhoto(product) {
   return productPhotoLoader.load({ name: product?.name });
 }
 let catalogRequestVersion = 0;
+let retailBrowserRequestVersion = 0;
 let pendingCatalogSearch = null;
 let catalogSearchState = {
-  status: "demo",
+  status: publicRetailCatalogMode ? "loading" : "demo",
   query: "",
   products: [],
+  retailCount: 0,
   discoveredCount: 0
 };
+let retailBrowserState = {
+  retailerId: DEFAULT_RETAILER_ID,
+  status: "idle",
+  path: [],
+  categories: [],
+  rootProductCount:
+    getRetailCatalogDefinition(DEFAULT_RETAILER_ID)?.defaultProductCount ?? 0
+};
+
+function currentRetailDefinition() {
+  return getRetailCatalogDefinition(retailBrowserState.retailerId)
+    ?? getRetailCatalogDefinition(DEFAULT_RETAILER_ID);
+}
+
+function currentRetailClient() {
+  return retailCatalogClients.get(retailBrowserState.retailerId)
+    ?? retailCatalogClients.get(DEFAULT_RETAILER_ID);
+}
+
+function validRetailerId(value) {
+  return typeof value === "string" && getRetailCatalogDefinition(value)
+    ? value
+    : DEFAULT_RETAILER_ID;
+}
 let currentView = viewFromHash(location.hash);
 let toastTimer;
 let proposalInputRevision = 0;
@@ -351,12 +410,576 @@ function setupSkyControls() {
       invalidateHybridForManualTakeover();
       search.value = chip.dataset.query ?? "";
       search.dispatchEvent(new Event("input", { bubbles: true }));
+      if (publicRetailCatalogMode) {
+        void handleManualSearch();
+      }
       document.querySelector(".catalog-section")?.scrollIntoView({
         behavior: "smooth",
         block: "start"
       });
     });
   }
+}
+
+function formatCatalogCount(value) {
+  return new Intl.NumberFormat("ru-RU").format(
+    Number.isSafeInteger(value) && value >= 0 ? value : 0
+  );
+}
+
+
+function renderRetailStoreButtons() {
+  if (!elements.retailStoreGrid) return;
+
+  elements.retailStoreGrid.replaceChildren();
+  for (const retailerId of RETAIL_CATALOG_IDS) {
+    const definition = getRetailCatalogDefinition(retailerId);
+    if (!definition) continue;
+
+    const selected = retailerId === retailBrowserState.retailerId;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.id = retailerId === DEFAULT_RETAILER_ID
+      ? "retail-store-card"
+      : `retail-store-card-${retailerId}`;
+    button.className = selected
+      ? "retail-store-card is-selected"
+      : "retail-store-card";
+    button.dataset.retailerId = retailerId;
+    button.setAttribute("aria-pressed", selected ? "true" : "false");
+
+    const logo = document.createElement("span");
+    logo.className = "retail-store-logo";
+    logo.setAttribute("aria-hidden", "true");
+    logo.textContent = definition.logo;
+
+    const copy = document.createElement("span");
+    copy.className = "retail-store-copy";
+    const kicker = document.createElement("span");
+    kicker.className = "retail-store-kicker";
+    kicker.textContent = "Магазин";
+    const name = document.createElement("strong");
+    name.textContent = definition.storeName;
+    const scope = document.createElement("span");
+    scope.textContent = definition.scopeLabel;
+    copy.append(kicker, name, scope);
+
+    const total = document.createElement("span");
+    total.className = "retail-store-total";
+    const count = selected
+      ? retailBrowserState.rootProductCount
+      : definition.defaultProductCount;
+    total.textContent = `${formatCatalogCount(count)} товаров`;
+
+    button.append(logo, copy, total);
+    button.addEventListener("click", () => {
+      if (selected) {
+        elements.retailCatalogNav?.scrollIntoView?.({
+          behavior: "smooth",
+          block: "start"
+        });
+        return;
+      }
+      void selectRetailer(retailerId);
+    });
+    elements.retailStoreGrid.append(button);
+  }
+}
+
+function renderRetailBrowser() {
+  if (!elements.retailBrowser) return;
+
+  if (!publicRetailCatalogMode) {
+    elements.retailBrowser.hidden = true;
+    return;
+  }
+
+  const definition = currentRetailDefinition();
+  elements.retailBrowser.hidden = false;
+  renderRetailStoreButtons();
+  elements.retailCategoryGrid.replaceChildren();
+
+  const current = retailBrowserState.path.at(-1) ?? null;
+  elements.retailCategoryTitle.textContent = current?.name ?? "Категории";
+  elements.retailCategoryNote.textContent = current
+    ? retailBrowserState.status === "loading"
+      ? "Загружаем раздел каталога…"
+      : retailBrowserState.status === "error"
+        ? "Раздел временно не загрузился. Можно повторить."
+        : retailBrowserState.categories.length > 0
+          ? "Выберите подкатегорию. Если раздел конечный — ниже сразу появятся товары."
+          : "Конечный раздел. Товары показаны ниже."
+    : "Выберите раздел, затем подкатегорию — товары появятся ниже.";
+  elements.retailCategoryBack.hidden = retailBrowserState.path.length === 0;
+
+  elements.retailBreadcrumbs.replaceChildren();
+  if (retailBrowserState.path.length > 0) {
+    const rootButton = document.createElement("button");
+    rootButton.type = "button";
+    rootButton.textContent = "Категории";
+    rootButton.addEventListener("click", () => {
+      void navigateRetailPath([]);
+    });
+    elements.retailBreadcrumbs.append(rootButton);
+
+    for (let index = 0; index < retailBrowserState.path.length; index += 1) {
+      const category = retailBrowserState.path[index];
+      const separator = document.createElement("span");
+      separator.textContent = "›";
+      separator.setAttribute("aria-hidden", "true");
+      elements.retailBreadcrumbs.append(separator);
+
+      const crumb = document.createElement("button");
+      crumb.type = "button";
+      crumb.textContent = category.name;
+      crumb.addEventListener("click", () => {
+        void navigateRetailPath(
+          retailBrowserState.path.slice(0, index + 1)
+        );
+      });
+      elements.retailBreadcrumbs.append(crumb);
+    }
+  }
+  elements.retailBreadcrumbs.hidden = retailBrowserState.path.length === 0;
+
+  if (retailBrowserState.status === "loading") {
+    const loading = document.createElement("button");
+    loading.type = "button";
+    loading.className = "retail-category-button is-loading";
+    loading.disabled = true;
+    const title = document.createElement("strong");
+    title.textContent = "Загружаем каталог…";
+    loading.append(title);
+    elements.retailCategoryGrid.append(loading);
+    elements.retailCategoryStatus.textContent =
+      `Загружаем категории ${definition.displayName}`;
+    return;
+  }
+
+  if (retailBrowserState.status === "error") {
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "retail-category-button";
+    const title = document.createElement("strong");
+    title.textContent = "Повторить загрузку";
+    const note = document.createElement("span");
+    note.textContent = "Категории временно не загрузились";
+    retry.append(title, note);
+    retry.addEventListener("click", () => {
+      const parent = retailBrowserState.path.at(-1);
+      if (parent) {
+        void loadRetailChildren(parent, retailBrowserState.path);
+      } else {
+        void loadRetailRoots();
+      }
+    });
+    elements.retailCategoryGrid.append(retry);
+    elements.retailCategoryStatus.textContent =
+      `Категории ${definition.displayName} временно недоступны`;
+    return;
+  }
+
+  for (const category of retailBrowserState.categories) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "retail-category-button";
+    button.dataset.categoryId = String(category.categoryId);
+
+    const title = document.createElement("strong");
+    title.textContent = category.name;
+    const count = document.createElement("span");
+    count.textContent = category.productCount > 0
+      ? `${formatCatalogCount(category.productCount)} товаров`
+      : "Открыть раздел";
+
+    button.append(title, count);
+    button.addEventListener("click", () => {
+      void openRetailCategory(category);
+    });
+    elements.retailCategoryGrid.append(button);
+  }
+
+  elements.retailCategoryStatus.textContent = retailBrowserState.categories.length > 0
+    ? `Разделов: ${retailBrowserState.categories.length}`
+    : "Подкатегорий нет";
+}
+
+function normalizeRetailHistoryPath(path) {
+  if (!Array.isArray(path) || path.length > 7) return null;
+
+  const normalized = [];
+  for (const category of path) {
+    const categoryId = Number(category?.categoryId);
+    const name = typeof category?.name === "string"
+      ? category.name.trim()
+      : "";
+
+    if (
+      !Number.isSafeInteger(categoryId)
+      || categoryId <= 0
+      || !name
+      || name.length > 180
+    ) {
+      return null;
+    }
+
+    normalized.push({ categoryId, name });
+  }
+
+  return normalized;
+}
+
+function retailPathForHistory(path = retailBrowserState.path) {
+  return normalizeRetailHistoryPath(path) ?? [];
+}
+
+function createAppRouteState(
+  view,
+  fromView = null,
+  scrollY = 0,
+  retailPath = retailBrowserState.path,
+  retailerId = retailBrowserState.retailerId
+) {
+  const state = createRouteState(view, fromView, scrollY);
+
+  if (publicRetailCatalogMode && view === VIEW.SHOP) {
+    state.checkniRetailNavigation = true;
+    state.checkniRetailPath = retailPathForHistory(retailPath);
+    state.checkniRetailerId = validRetailerId(retailerId);
+  }
+
+  return state;
+}
+
+function updateRetailHistory(path, {
+  replace = false,
+  retailerId = retailBrowserState.retailerId
+} = {}) {
+  if (!publicRetailCatalogMode || currentView !== VIEW.SHOP) return;
+
+  const nextPath = retailPathForHistory(path);
+  const nextState = {
+    ...history.state,
+    ...createAppRouteState(
+      VIEW.SHOP,
+      history.state?.checkniSurfaceFrom ?? null,
+      window.scrollY,
+      nextPath,
+      retailerId
+    )
+  };
+
+  if (replace) {
+    history.replaceState(nextState, "", hashForView(VIEW.SHOP));
+  } else {
+    history.pushState(nextState, "", hashForView(VIEW.SHOP));
+  }
+}
+
+function resetCatalogForRetailNavigation(categoryName = "") {
+  catalogRequestVersion += 1;
+  pendingCatalogSearch = null;
+  activeQuery = "";
+  elements.searchInput.value = "";
+  elements.clearSearch.hidden = true;
+  catalogSearchState = {
+    status: "category",
+    query: "",
+    products: [],
+    retailCount: 0,
+    discoveredCount: 0,
+    categoryName
+  };
+  renderCatalog();
+}
+
+function beginRetailNavigation(path, { clearCatalog = true } = {}) {
+  const requestId = ++retailBrowserRequestVersion;
+  const current = path.at(-1) ?? null;
+
+  if (clearCatalog) {
+    resetCatalogForRetailNavigation(current?.name ?? "");
+  }
+
+  retailBrowserState = {
+    ...retailBrowserState,
+    status: "loading",
+    path,
+    categories: []
+  };
+  renderRetailBrowser();
+
+  return requestId;
+}
+
+async function selectRetailer(retailerId, {
+  replaceHistory = false
+} = {}) {
+  const definition = getRetailCatalogDefinition(retailerId);
+  if (!publicRetailCatalogMode || !definition) return;
+
+  retailBrowserRequestVersion += 1;
+  catalogRequestVersion += 1;
+  pendingCatalogSearch = null;
+  activeQuery = "";
+  elements.searchInput.value = "";
+  elements.clearSearch.hidden = true;
+  retailBrowserState = {
+    retailerId,
+    status: "idle",
+    path: [],
+    categories: [],
+    rootProductCount: definition.defaultProductCount
+  };
+  updateRetailHistory([], { replace: replaceHistory, retailerId });
+  renderRetailBrowser();
+
+  await Promise.all([
+    loadRetailRoots({ clearCatalog: false }),
+    loadInitialRetailCatalog()
+  ]);
+}
+
+async function loadRetailRoots({ clearCatalog = true } = {}) {
+  if (!publicRetailCatalogMode) return;
+
+  const retailerId = retailBrowserState.retailerId;
+  const client = currentRetailClient();
+  const requestId = beginRetailNavigation([], { clearCatalog });
+  const result = await client.rootCategories({ limit: 40 });
+  if (
+    requestId !== retailBrowserRequestVersion
+    || retailerId !== retailBrowserState.retailerId
+  ) return;
+
+  if (result.kind !== "categories") {
+    retailBrowserState = {
+      ...retailBrowserState,
+      status: "error",
+      path: [],
+      categories: []
+    };
+    renderRetailBrowser();
+    return;
+  }
+
+  const total = result.categories.reduce(
+    (sum, category) => sum + category.productCount,
+    0
+  );
+  retailBrowserState = {
+    ...retailBrowserState,
+    status: "ready",
+    path: [],
+    categories: result.categories,
+    rootProductCount: total > 0 ? total : retailBrowserState.rootProductCount
+  };
+  renderRetailBrowser();
+}
+
+async function loadRetailChildren(category, path, {
+  clearCatalog = true,
+  scrollToProducts = true
+} = {}) {
+  if (!publicRetailCatalogMode || !category) return;
+
+  const normalizedPath = normalizeRetailHistoryPath(path);
+  if (!normalizedPath) return;
+
+  const retailerId = retailBrowserState.retailerId;
+  const client = currentRetailClient();
+  const requestId = beginRetailNavigation(normalizedPath, { clearCatalog });
+  const result = await client.subcategories(category.categoryId, {
+    limit: 160
+  });
+  if (
+    requestId !== retailBrowserRequestVersion
+    || retailerId !== retailBrowserState.retailerId
+  ) return;
+
+  if (result.kind !== "categories") {
+    retailBrowserState = {
+      ...retailBrowserState,
+      status: "error",
+      path: normalizedPath,
+      categories: []
+    };
+    renderRetailBrowser();
+    return;
+  }
+
+  if (result.categories.length === 0) {
+    retailBrowserState = {
+      ...retailBrowserState,
+      status: "ready",
+      path: normalizedPath,
+      categories: []
+    };
+    renderRetailBrowser();
+    await loadRetailCategoryProducts(category, {
+      navigationRequestId: requestId,
+      scrollToProducts
+    });
+    return;
+  }
+
+  retailBrowserState = {
+    ...retailBrowserState,
+    status: "ready",
+    path: normalizedPath,
+    categories: result.categories
+  };
+  renderRetailBrowser();
+}
+
+async function navigateRetailPath(path, {
+  replaceHistory = false,
+  scrollToProducts = true
+} = {}) {
+  if (!publicRetailCatalogMode) return;
+
+  const normalizedPath = normalizeRetailHistoryPath(path);
+  if (!normalizedPath) return;
+
+  updateRetailHistory(normalizedPath, { replace: replaceHistory });
+
+  if (normalizedPath.length === 0) {
+    await loadRetailRoots();
+    return;
+  }
+
+  const category = normalizedPath.at(-1);
+  await loadRetailChildren(category, normalizedPath, {
+    scrollToProducts
+  });
+}
+
+async function openRetailCategory(category) {
+  if (retailBrowserState.status === "loading") return;
+
+  const nextPath = [...retailBrowserState.path, category];
+  await navigateRetailPath(nextPath);
+}
+
+async function loadRetailCategoryProducts(category, {
+  navigationRequestId = retailBrowserRequestVersion,
+  scrollToProducts = true
+} = {}) {
+  if (
+    !publicRetailCatalogMode
+    || !category
+    || navigationRequestId !== retailBrowserRequestVersion
+  ) {
+    return;
+  }
+
+  const retailerId = retailBrowserState.retailerId;
+  const client = currentRetailClient();
+  const requestId = ++catalogRequestVersion;
+  pendingCatalogSearch = null;
+  activeQuery = "";
+  elements.searchInput.value = "";
+  elements.clearSearch.hidden = true;
+  catalogSearchState = {
+    status: "loading",
+    query: "",
+    products: [],
+    retailCount: 0,
+    discoveredCount: 0,
+    categoryName: category.name
+  };
+  renderCatalog();
+
+  const result = await client.browseCategory(category.categoryId, {
+    limit: 40
+  });
+  if (
+    requestId !== catalogRequestVersion
+    || navigationRequestId !== retailBrowserRequestVersion
+    || retailerId !== retailBrowserState.retailerId
+  ) {
+    return;
+  }
+
+  if (result.kind === "catalog") {
+    catalogSearchState = {
+      status: "live",
+      query: "",
+      products: result.products,
+      retailCount: result.products.length,
+      discoveredCount: result.products.length,
+      categoryName: category.name
+    };
+  } else {
+    catalogSearchState = {
+      status: "fallback",
+      query: "",
+      products: [],
+      retailCount: 0,
+      discoveredCount: 0,
+      categoryName: category.name
+    };
+  }
+  renderCatalog();
+
+  if (scrollToProducts) {
+    document.querySelector(".catalog-section")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+function restoreRetailNavigationFromHistory({ initial = false } = {}) {
+  const retailerId = validRetailerId(history.state?.checkniRetailerId);
+  const restoredPath = normalizeRetailHistoryPath(
+    history.state?.checkniRetailPath
+  ) ?? [];
+  const definition = getRetailCatalogDefinition(retailerId);
+
+  if (!definition) return;
+
+  if (retailerId !== retailBrowserState.retailerId) {
+    retailBrowserRequestVersion += 1;
+    catalogRequestVersion += 1;
+    pendingCatalogSearch = null;
+    retailBrowserState = {
+      retailerId,
+      status: "idle",
+      path: [],
+      categories: [],
+      rootProductCount: definition.defaultProductCount
+    };
+  }
+
+  if (restoredPath.length === 0) {
+    if (initial) {
+      void Promise.all([
+        loadRetailRoots({ clearCatalog: false }),
+        loadInitialRetailCatalog()
+      ]);
+    } else {
+      void loadRetailRoots();
+    }
+    return;
+  }
+
+  void loadRetailChildren(restoredPath.at(-1), restoredPath, {
+    clearCatalog: true,
+    scrollToProducts: false
+  });
+}
+
+function setupRetailBrowser() {
+  renderRetailBrowser();
+  if (!publicRetailCatalogMode) return;
+
+  elements.retailCategoryBack?.addEventListener("click", () => {
+    const nextPath = retailBrowserState.path.slice(0, -1);
+    void navigateRetailPath(nextPath);
+  });
+
+  restoreRetailNavigationFromHistory({ initial: true });
 }
 
 function setupCatalogSort() {
@@ -392,6 +1015,8 @@ function setupCatalogSort() {
 
 function renderCatalog() {
   const normalizedQuery = activeQuery.trim();
+  const retailDefinition = currentRetailDefinition();
+  const retailName = retailDefinition?.displayName ?? "магазина";
   const loading = catalogSearchState.status === "loading";
   const live = (
     catalogSearchState.status === "live"
@@ -401,16 +1026,22 @@ function renderCatalog() {
     catalogSearchState.status === "fallback"
     && catalogSearchState.query === normalizedQuery
   );
+  const categoryBrowsing = (
+    publicRetailCatalogMode
+    && catalogSearchState.status === "category"
+  );
 
   const results = live
     ? catalogSearchState.products
     : loading
       ? []
-      : sortCatalogProducts(
-          searchMockCatalog(normalizedQuery, SHOP_CATALOG),
-          catalogSort,
-          snapshotPriceHints
-        );
+      : publicRetailCatalogMode
+        ? []
+        : sortCatalogProducts(
+            searchMockCatalog(normalizedQuery, SHOP_CATALOG),
+            catalogSort,
+            snapshotPriceHints
+          );
 
   elements.productGrid.replaceChildren();
 
@@ -431,32 +1062,62 @@ function renderCatalog() {
 
   if (loading) {
     elements.catalogEyebrow.textContent = "Живой каталог";
-    elements.catalogNote.textContent = "Ищем товары в Open Food Facts…";
+    elements.catalogNote.textContent = normalizedQuery
+      ? "Ищем реальные товары…"
+      : `Загружаем реальные товары ${retailName}…`;
   } else if (live) {
     elements.catalogEyebrow.textContent = catalogSearchState.retailCount > 0
-      ? "Живой каталог · Глобус + Open Food Facts"
+      ? normalizedQuery
+        ? `Живой каталог · ${retailName} + Open Food Facts`
+        : `Живой каталог · ${retailName}`
       : "Живой каталог · Open Food Facts";
     elements.catalogNote.textContent = catalogSearchState.retailCount > 0
-      ? "Цена Глобус показана с источником и временем наблюдения. Наличие остаётся неизвестным; карточку можно сравнивать только после подтверждения общей товарной идентичности."
+      ? catalogSearchState.categoryName
+        ? `${catalogSearchState.categoryName}: реальные товары ${retailName} с фото и наблюдаемыми ценами.`
+        : normalizedQuery
+          ? `Цена ${retailName} показана с источником и временем наблюдения. Наличие остаётся неизвестным; карточку можно сравнивать только после подтверждения общей товарной идентичности.`
+          : `Реальные товары ${retailName}: фото, наблюдаемая цена, источник и время проверки. Наличие не выдумываем.`
       : "Каталог помогает идентифицировать товар. Он не подтверждает цену или наличие в магазине.";
   } else if (fallback) {
-    elements.catalogEyebrow.textContent = "Демо-каталог";
-    elements.catalogNote.textContent =
-      "Live-каталог временно недоступен. Показан DEMO · MOCK fallback.";
+    elements.catalogEyebrow.textContent = publicRetailCatalogMode
+      ? "Живой каталог недоступен"
+      : "Демо-каталог";
+    elements.catalogNote.textContent = publicRetailCatalogMode
+      ? `Не удалось загрузить каталог ${retailName}. Тестовые товары не подставляем.`
+      : "Live-каталог временно недоступен. Показан DEMO · MOCK fallback.";
   } else {
-    elements.catalogEyebrow.textContent = "Демо-каталог";
-    elements.catalogNote.textContent = normalizedQuery
-      ? "Нажмите Enter, чтобы искать в живом каталоге. Пока показаны демо-подсказки."
-      : "Тестовые позиции для резервного режима.";
+    elements.catalogEyebrow.textContent = publicRetailCatalogMode
+      ? `Живой каталог · ${retailName}`
+      : "Демо-каталог";
+    elements.catalogNote.textContent = publicRetailCatalogMode
+      ? categoryBrowsing
+        ? catalogSearchState.categoryName
+          ? `${catalogSearchState.categoryName}: выберите подкатегорию — товары появятся после конечного раздела.`
+          : `Выберите категорию ${retailName} — товары появятся после конечного раздела.`
+        : normalizedQuery
+          ? `Нажмите Enter, чтобы искать реальные товары ${retailName}.`
+          : `Загружаем реальные товары ${retailName} с наблюдаемыми ценами.`
+      : normalizedQuery
+        ? "Нажмите Enter, чтобы искать в живом каталоге. Пока показаны демо-подсказки."
+        : "Тестовые позиции для резервного режима.";
   }
 
   const hasResults = results.length > 0;
   elements.productGrid.hidden = !hasResults;
-  elements.emptySearch.hidden = loading || hasResults;
-  elements.resultCount.textContent = loading ? "…" : String(results.length);
+  elements.emptySearch.hidden = loading || hasResults || categoryBrowsing;
+  elements.resultCount.textContent = loading
+    ? "…"
+    : categoryBrowsing
+      ? "—"
+      : String(results.length);
 
   if (loading) {
     elements.searchStatus.textContent = "Ищем товары в живом каталоге";
+    return;
+  }
+
+  if (categoryBrowsing) {
+    elements.searchStatus.textContent = "Выберите конечную категорию";
     return;
   }
 
@@ -468,11 +1129,14 @@ function renderCatalog() {
     return;
   }
 
-  elements.emptySearchCopy.textContent =
-    "Попробуйте более короткий запрос — например «сыр» или «хлеб».";
+  elements.emptySearchCopy.textContent = fallback
+    ? "Живой каталог сейчас не загрузился. Попробуйте ещё раз."
+    : "Попробуйте более короткий запрос — например «сыр» или «хлеб».";
   elements.searchStatus.textContent = hasResults
     ? `Найдено товаров: ${results.length}`
-    : "По вашему запросу ничего не найдено";
+    : fallback
+      ? "Живой каталог временно недоступен"
+      : "По вашему запросу ничего не найдено";
 }
 
 function proposalProblemCopy(row) {
@@ -1127,17 +1791,17 @@ function navigate(view, {
   const hash = hashForView(view);
 
   if (replace) {
-    history.replaceState(createRouteState(view), "", hash);
+    history.replaceState(createAppRouteState(view), "", hash);
   } else if (location.hash !== hash) {
     history.replaceState(
-      createRouteState(
+      createAppRouteState(
         previousView,
         history.state?.checkniSurfaceFrom ?? null,
         window.scrollY
       ),
       ""
     );
-    history.pushState(createRouteState(view, previousView), "", hash);
+    history.pushState(createAppRouteState(view, previousView), "", hash);
   }
 
   renderView({ focusMode });
@@ -1159,9 +1823,10 @@ function syncSearchDraft() {
   activeQuery = elements.searchInput.value;
   elements.clearSearch.hidden = activeQuery.trim().length === 0;
   catalogSearchState = {
-    status: "demo",
+    status: publicRetailCatalogMode ? "idle" : "demo",
     query: activeQuery.trim(),
     products: [],
+    retailCount: 0,
     discoveredCount: 0
   };
   renderCatalog();
@@ -1172,12 +1837,16 @@ function handleManualSearch() {
   elements.clearSearch.hidden = activeQuery.length === 0;
 
   if (!activeQuery) {
+    if (publicRetailCatalogMode) {
+      return loadInitialRetailCatalog();
+    }
     catalogRequestVersion += 1;
     pendingCatalogSearch = null;
     catalogSearchState = {
       status: "demo",
       query: "",
       products: [],
+      retailCount: 0,
       discoveredCount: 0
     };
     renderCatalog();
@@ -1214,7 +1883,7 @@ function handleManualSearch() {
     try {
       const [catalogResult, retailResult] = await Promise.all([
         requestCatalogSearch([query], { limitPerQuery: 8 }),
-        requestRetailCatalogSearch(query, { limit: 24 })
+        currentRetailClient().search(query, { limit: 24 })
       ]);
       if (requestId !== catalogRequestVersion) return;
 
@@ -1258,6 +1927,51 @@ function handleManualSearch() {
 
   pendingToken.promise = executionPromise;
   return executionPromise;
+}
+
+async function loadInitialRetailCatalog() {
+  if (!publicRetailCatalogMode) {
+    renderCatalog();
+    return;
+  }
+
+  const requestId = ++catalogRequestVersion;
+  pendingCatalogSearch = null;
+  activeQuery = "";
+  catalogSearchState = {
+    status: "loading",
+    query: "",
+    products: [],
+    retailCount: 0,
+    discoveredCount: 0
+  };
+  renderCatalog();
+
+  const retailerId = retailBrowserState.retailerId;
+  const retailResult = await currentRetailClient().browse({ limit: 24 });
+  if (
+    requestId !== catalogRequestVersion
+    || retailerId !== retailBrowserState.retailerId
+  ) return;
+
+  if (retailResult.kind === "catalog") {
+    catalogSearchState = {
+      status: "live",
+      query: "",
+      products: retailResult.products,
+      retailCount: retailResult.products.length,
+      discoveredCount: retailResult.products.length
+    };
+  } else {
+    catalogSearchState = {
+      status: "fallback",
+      query: "",
+      products: [],
+      retailCount: 0,
+      discoveredCount: 0
+    };
+  }
+  renderCatalog();
 }
 
 const preloadHybridInterpreter = () => {
@@ -1337,13 +2051,18 @@ elements.clearSearch.addEventListener("click", () => {
   elements.searchInput.value = "";
   activeQuery = "";
   catalogSearchState = {
-    status: "demo",
+    status: publicRetailCatalogMode ? "loading" : "demo",
     query: "",
     products: [],
+    retailCount: 0,
     discoveredCount: 0
   };
   elements.clearSearch.hidden = true;
-  renderCatalog();
+  if (publicRetailCatalogMode) {
+    void loadInitialRetailCatalog();
+  } else {
+    renderCatalog();
+  }
   elements.searchInput.focus();
 });
 
@@ -1355,11 +2074,20 @@ elements.openBasket.addEventListener("click", () => navigate(VIEW.BASKET));
 elements.backToShop.addEventListener("click", returnToShop);
 
 window.addEventListener("popstate", () => {
+  const previousView = currentView;
   currentView = viewFromHash(location.hash);
   renderView({
     focusMode: FOCUS_MODE.HEADING,
     scrollY: scrollYFromState(history.state)
   });
+
+  if (
+    publicRetailCatalogMode
+    && previousView === VIEW.SHOP
+    && currentView === VIEW.SHOP
+  ) {
+    restoreRetailNavigationFromHistory();
+  }
 });
 
 basket.subscribe(() => {
@@ -1370,17 +2098,33 @@ basket.subscribe(() => {
   renderBetaLiveSection();
 });
 
+const restoredRetailPath = publicRetailCatalogMode
+  ? normalizeRetailHistoryPath(history.state?.checkniRetailPath)
+  : null;
+const restoredRetailerId = publicRetailCatalogMode
+  ? validRetailerId(history.state?.checkniRetailerId)
+  : DEFAULT_RETAILER_ID;
+
 history.replaceState(
-  createRouteState(currentView, null, window.scrollY),
+  createAppRouteState(
+    currentView,
+    null,
+    window.scrollY,
+    restoredRetailPath ?? retailBrowserState.path,
+    restoredRetailerId
+  ),
   "",
   hashForView(currentView)
 );
 
-renderCatalog();
+if (!publicRetailCatalogMode) {
+  renderCatalog();
+}
 renderBasket();
 renderHomeExample();
 setupCatalogSort();
 setupSkyControls();
+setupRetailBrowser();
 // "Магазины": honest store map + list, mounted after the catalogue.
 try {
   document.querySelector(".catalog-section")?.after(createStoresSection());

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#f4f6f2" />
     <meta name="color-scheme" content="light" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https://images.openfoodfacts.org https://image.globus.ru https://tile.openstreetmap.org https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; connect-src 'self' https://cxpneczhczashanbetgj.supabase.co; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https://images.openfoodfacts.org https://image.globus.ru https://cdn.api.lenta.com https://tile.openstreetmap.org https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; connect-src 'self' https://cxpneczhczashanbetgj.supabase.co; upgrade-insecure-requests" />
     <title>CHECKNI — Где корзина дешевле?</title>
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
@@ -97,6 +97,28 @@
           <p id="beta-live-status" class="field-help" aria-live="polite">
             Сначала подтверждаем соответствие товаров без цен. Затем CHECKNI заново читает публичные страницы магазинов. Если данные неоднозначны — сравнения не будет.
           </p>
+        </section>
+
+        <section id="retail-browser" class="retail-browser" aria-label="Каталоги магазинов" hidden>
+          <div id="retail-store-grid" class="retail-store-grid" aria-label="Магазины с живым каталогом"></div>
+
+          <div id="retail-catalog-nav" class="retail-catalog-nav">
+            <div class="retail-browser-head">
+              <button id="retail-category-back" class="retail-category-back" type="button" hidden>
+                ← Назад
+              </button>
+              <div>
+                <p class="eyebrow">Каталог магазина</p>
+                <h2 id="retail-category-title">Категории</h2>
+                <p id="retail-category-note" class="field-help">
+                  Выберите раздел, затем подкатегорию — товары появятся ниже.
+                </p>
+              </div>
+            </div>
+            <nav id="retail-breadcrumbs" class="retail-breadcrumbs" aria-label="Путь по каталогу" hidden></nav>
+            <div id="retail-category-grid" class="retail-category-grid"></div>
+            <p id="retail-category-status" class="sr-only" aria-live="polite"></p>
+          </div>
         </section>
 
         <section class="catalog-section" aria-labelledby="catalog-title">

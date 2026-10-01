@@ -27,39 +27,66 @@ export function createProductCard(product, {
   article.className = "product-card";
   article.dataset.productId = product.id;
 
+  const legacyRetailerId = product.catalogSource === "globus"
+    ? "globus"
+    : null;
+  const retailObservation = (
+    product.catalogDisplayOnly === true
+    && (
+      (
+        typeof product.retailerId === "string"
+        && product.retailerId
+      )
+      || legacyRetailerId
+    )
+  );
   const visual = document.createElement("div");
-  visual.className = "product-visual";
+  visual.className = retailObservation
+    ? "product-visual retail-photo-fallback"
+    : "product-visual";
   visual.setAttribute("aria-hidden", "true");
-  visual.innerHTML = categoryPixelIcon(product.category);
-  visual.dataset.fallback = initials(product.name);
+  if (retailObservation) {
+    visual.textContent = "Фото товара";
+  } else {
+    visual.innerHTML = categoryPixelIcon(product.category);
+    visual.dataset.fallback = initials(product.name);
+  }
 
-  // Real photo from Open Food Facts, when one resolves. Decoration only:
-  // the pixel icon stays until then, and any failure leaves it in place.
-  if (typeof loadPhoto === "function") {
+  // Retail rows already contain a verified official image URL. Start that
+  // request synchronously so real catalogue cards do not briefly become
+  // pixel placeholders or lose the request before insertion into the DOM.
+  function attachPhoto(photoUrl) {
+    if (typeof photoUrl !== "string" || !photoUrl) return;
+
+    const image = document.createElement("img");
+    image.className = "product-photo";
+    image.alt = "";
+    image.loading = retailObservation ? "eager" : "lazy";
+    image.decoding = "async";
+    image.referrerPolicy = "no-referrer";
+    image.title = retailObservation
+      ? `Фото: официальный каталог ${product.retailerDisplayName ?? product.storeName ?? "магазина"}`
+      : product.catalogSource === "open-food-facts"
+        ? "Фото: Open Food Facts"
+        : "Фото: Open Food Facts · пример похожего товара";
+    image.addEventListener("error", () => image.remove());
+    image.addEventListener("load", () => {
+      // The card can still be detached while a very fast/cached image
+      // completes. Updating the detached visual is intentional: when the
+      // caller inserts the card a moment later, the real photo is already
+      // there instead of the pixel placeholder.
+      visual.replaceChildren(image);
+      visual.classList.add("has-photo");
+    });
+    image.src = photoUrl;
+  }
+
+  if (typeof product?.imageUrl === "string" && product.imageUrl) {
+    attachPhoto(product.imageUrl);
+  } else if (typeof loadPhoto === "function") {
     Promise.resolve()
       .then(() => loadPhoto(product))
-      .then((photoUrl) => {
-        if (typeof photoUrl !== "string" || !photoUrl || !article.isConnected) {
-          return;
-        }
-        const image = document.createElement("img");
-        image.className = "product-photo";
-        image.alt = "";
-        image.loading = "lazy";
-        image.decoding = "async";
-        image.referrerPolicy = "no-referrer";
-        image.src = photoUrl;
-        image.title = product.catalogSource === "globus"
-          ? "Фото: официальный каталог Глобус"
-          : product.catalogSource === "open-food-facts"
-            ? "Фото: Open Food Facts"
-            : "Фото: Open Food Facts · пример похожего товара";
-        image.addEventListener("error", () => image.remove());
-        image.addEventListener("load", () => {
-          visual.replaceChildren(image);
-          visual.classList.add("has-photo");
-        });
-      })
+      .then(attachPhoto)
       .catch(() => {});
   }
 
@@ -71,8 +98,10 @@ export function createProductCard(product, {
 
   const badge = document.createElement("span");
   badge.className = "mock-chip";
-  badge.textContent = product.catalogSource === "globus"
-    ? "Глобус · цена наблюдалась"
+  const retailerDisplayName = product.retailerDisplayName
+    ?? (legacyRetailerId === "globus" ? "Глобус" : "Магазин");
+  badge.textContent = retailObservation
+    ? `${retailerDisplayName} · цена наблюдалась`
     : product.catalogSource === "open-food-facts"
       ? "Каталог · не наличие"
       : "Тестовый товар";
@@ -100,6 +129,16 @@ export function createProductCard(product, {
     const amount = document.createElement("strong");
     amount.textContent = formatRubMinor(product.priceMinor);
     price.append(amount);
+    if (
+      typeof product.priceConditionLabel === "string"
+      && product.priceConditionLabel
+    ) {
+      const condition = document.createElement("span");
+      condition.className = "product-price-unit";
+      condition.textContent = ` · ${product.priceConditionLabel}`;
+      price.append(condition);
+      price.title = `Наблюдаемая цена ${product.priceConditionLabel}; наличие не подтверждено`;
+    }
   } else if (priceHint) {
     price = document.createElement("p");
     price.className = "product-price";
@@ -114,7 +153,7 @@ export function createProductCard(product, {
 
   let source = null;
   if (
-    product.catalogSource === "globus"
+    retailObservation
     && typeof product.sourceUrl === "string"
     && typeof product.observedAt === "string"
   ) {
@@ -132,7 +171,7 @@ export function createProductCard(product, {
           minute: "2-digit"
         })
       : "время неизвестно";
-    source.textContent = `${product.storeName ?? "Глобус"} · источник · ${observedLabel}`;
+    source.textContent = `${product.storeName ?? product.retailerDisplayName ?? "Магазин"} · источник · ${observedLabel}`;
   }
 
   const button = document.createElement("button");
