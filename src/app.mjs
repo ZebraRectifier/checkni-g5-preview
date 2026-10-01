@@ -427,6 +427,37 @@ function formatCatalogCount(value) {
   );
 }
 
+function russianCountNoun(value, one, few, many) {
+  const count = Number.isSafeInteger(value) && value >= 0 ? value : 0;
+  const mod100 = count % 100;
+  const mod10 = count % 10;
+  if (mod100 >= 11 && mod100 <= 14) return many;
+  if (mod10 === 1) return one;
+  if (mod10 >= 2 && mod10 <= 4) return few;
+  return many;
+}
+
+function retailStoreCountCopy(definition, productCount) {
+  const products =
+    `${formatCatalogCount(productCount)} ${russianCountNoun(
+      productCount,
+      "товар",
+      "товара",
+      "товаров"
+    )}`;
+  const categoryCount = definition?.rootCategoryCount;
+  if (!Number.isSafeInteger(categoryCount) || categoryCount <= 0) {
+    return products;
+  }
+  const categories =
+    `${formatCatalogCount(categoryCount)} ${russianCountNoun(
+      categoryCount,
+      "категория",
+      "категории",
+      "категорий"
+    )}`;
+  return `${categories} · ${products}`;
+}
 
 function renderRetailStoreButtons() {
   if (!elements.retailStoreGrid) return;
@@ -469,7 +500,7 @@ function renderRetailStoreButtons() {
     const count = selected
       ? retailBrowserState.rootProductCount
       : definition.defaultProductCount;
-    total.textContent = `${formatCatalogCount(count)} товаров`;
+    total.textContent = retailStoreCountCopy(definition, count);
 
     button.append(logo, copy, total);
     button.addEventListener("click", () => {
@@ -953,14 +984,10 @@ function restoreRetailNavigationFromHistory({ initial = false } = {}) {
   }
 
   if (restoredPath.length === 0) {
-    if (initial) {
-      void Promise.all([
-        loadRetailRoots({ clearCatalog: false }),
-        loadInitialRetailCatalog()
-      ]);
-    } else {
-      void loadRetailRoots();
-    }
+    void Promise.all([
+      loadRetailRoots({ clearCatalog: false }),
+      loadInitialRetailCatalog()
+    ]);
     return;
   }
 
@@ -975,8 +1002,8 @@ function setupRetailBrowser() {
   if (!publicRetailCatalogMode) return;
 
   elements.retailCategoryBack?.addEventListener("click", () => {
-    const nextPath = retailBrowserState.path.slice(0, -1);
-    void navigateRetailPath(nextPath);
+    if (retailBrowserState.path.length === 0) return;
+    history.back();
   });
 
   restoreRetailNavigationFromHistory({ initial: true });
@@ -1066,18 +1093,23 @@ function renderCatalog() {
       ? "Ищем реальные товары…"
       : `Загружаем реальные товары ${retailName}…`;
   } else if (live) {
-    elements.catalogEyebrow.textContent = catalogSearchState.retailCount > 0
-      ? normalizedQuery
-        ? `Живой каталог · ${retailName} + Open Food Facts`
-        : `Живой каталог · ${retailName}`
-      : "Живой каталог · Open Food Facts";
-    elements.catalogNote.textContent = catalogSearchState.retailCount > 0
-      ? catalogSearchState.categoryName
-        ? `${catalogSearchState.categoryName}: реальные товары ${retailName} с фото и наблюдаемыми ценами.`
-        : normalizedQuery
+    const categoryResult = Boolean(catalogSearchState.categoryName);
+    elements.catalogEyebrow.textContent = categoryResult
+      ? `Живой каталог · ${retailName}`
+      : catalogSearchState.retailCount > 0
+        ? normalizedQuery
+          ? `Живой каталог · ${retailName} + Open Food Facts`
+          : `Живой каталог · ${retailName}`
+        : "Живой каталог · Open Food Facts";
+    elements.catalogNote.textContent = categoryResult
+      ? catalogSearchState.retailCount > 0
+        ? `${catalogSearchState.categoryName}: реальные товары ${retailName} с наблюдаемыми ценами.`
+        : `${catalogSearchState.categoryName}: в этом разделе сейчас нет товаров.`
+      : catalogSearchState.retailCount > 0
+        ? normalizedQuery
           ? `Цена ${retailName} показана с источником и временем наблюдения. Наличие остаётся неизвестным; карточку можно сравнивать только после подтверждения общей товарной идентичности.`
           : `Реальные товары ${retailName}: фото, наблюдаемая цена, источник и время проверки. Наличие не выдумываем.`
-      : "Каталог помогает идентифицировать товар. Он не подтверждает цену или наличие в магазине.";
+        : "Каталог помогает идентифицировать товар. Он не подтверждает цену или наличие в магазине.";
   } else if (fallback) {
     elements.catalogEyebrow.textContent = publicRetailCatalogMode
       ? "Живой каталог недоступен"
@@ -1122,6 +1154,13 @@ function renderCatalog() {
   }
 
   if (live && !hasResults) {
+    if (catalogSearchState.categoryName) {
+      elements.emptySearchCopy.textContent =
+        `В этой категории ${retailName} сейчас нет товаров.`;
+      elements.searchStatus.textContent = "В категории нет товаров";
+      return;
+    }
+
     elements.emptySearchCopy.textContent = catalogSearchState.discoveredCount > 0
       ? "Нашлись позиции, но без подтверждённого штрихкода и размера упаковки. Попробуйте уточнить запрос."
       : "В живом каталоге по этому запросу ничего не найдено.";

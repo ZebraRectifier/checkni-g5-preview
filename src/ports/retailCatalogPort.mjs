@@ -54,6 +54,7 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     scopeLabel: "Публичный каталог · наличие неизвестно",
     logo: "Л",
     defaultProductCount: 3,
+    rootCategoryCount: 22,
     productUrlRules: Object.freeze([
       Object.freeze({ host: "lenta.com", prefix: "/product/" }),
       Object.freeze({ host: "www.lenta.com", prefix: "/product/" })
@@ -220,7 +221,6 @@ function normalizeRetailRow(row, retailer = "globus") {
   const observedMs = Date.parse(row.observed_at);
   if (
     !productUrl
-    || !imageUrl
     || !sourceUrl
     || !Number.isFinite(observedMs)
   ) {

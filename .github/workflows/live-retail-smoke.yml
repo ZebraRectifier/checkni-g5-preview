@@ -82,8 +82,24 @@ jobs:
               (await lenta.innerText()).includes("наличие неизвестно"),
               "Lenta selector must not claim stock availability"
             );
+            assert(
+              (await lenta.innerText()).includes("22 категории · 3 товара"),
+              "Lenta selector must show category coverage and observed product count"
+            );
+            assert(
+              await lenta.getAttribute("aria-pressed") === "false",
+              "Lenta must start unselected when GLOBUS is active"
+            );
 
             await lenta.click();
+            assert(
+              await lenta.getAttribute("aria-pressed") === "true",
+              "Lenta must become the selected store after tap"
+            );
+            assert(
+              await page.locator("#retail-store-card").getAttribute("aria-pressed") === "false",
+              "GLOBUS must become unselected after choosing Lenta"
+            );
 
             const categoryButtons = page.locator(
               "#retail-category-grid .retail-category-button:not(.is-loading)"
