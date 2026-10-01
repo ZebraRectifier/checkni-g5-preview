@@ -349,20 +349,20 @@ jobs:
 
             const lentaStoreText = await lenta.innerText();
             const lentaStoreCountMatch = lentaStoreText.match(
-              /22 категории · ([\\d\\s]+) (?:товар|товара|товаров)/u
+              /22 категории · ([\d\s]+) (?:товар|товара|товаров)/u
             );
             assert(
               lentaStoreCountMatch,
               "Lenta selector must expose a live product count"
             );
             const lentaStoreProductCount = Number(
-              lentaStoreCountMatch[1].replace(/\\s+/gu, "")
+              lentaStoreCountMatch[1].replace(/\s+/gu, "")
             );
             const lentaRootProductCount = (await categoryButtons.allTextContents())
               .reduce((sum, text) => {
-                const match = text.match(/([\\d\\s]+) товаров/u);
+                const match = text.match(/([\d\s]+) товаров/u);
                 return sum + (
-                  match ? Number(match[1].replace(/\\s+/gu, "")) : 0
+                  match ? Number(match[1].replace(/\s+/gu, "")) : 0
                 );
               }, 0);
             assert(
@@ -409,7 +409,7 @@ jobs:
               "Published dairy category is missing the Okskoe egg product"
             );
             assert(
-              /\\d[\\d\\s]*,\\d{2} ₽/u.test(eggText),
+              /\d[\d\s]*,\d{2} ₽/u.test(eggText),
               "Published Okskoe egg card is missing an observed RUB price"
             );
             assert(
@@ -455,7 +455,7 @@ jobs:
               );
             }
             assert(
-              /\\d[\\d\\s]*,\\d{2} ₽/u.test(cardText),
+              /\d[\d\s]*,\d{2} ₽/u.test(cardText),
               "Published Lenta card is missing an observed RUB price"
             );
 
