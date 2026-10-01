@@ -83,8 +83,8 @@ jobs:
               "Lenta selector must not claim stock availability"
             );
             assert(
-              (await lenta.innerText()).includes("22 категории · 3 товара"),
-              "Lenta selector must show category coverage and observed product count"
+              (await lenta.innerText()).includes("22 категории · 19 товаров"),
+              "Lenta selector must show 22 categories and 19 observed products"
             );
             assert(
               await lenta.getAttribute("aria-pressed") === "false",
@@ -128,6 +128,44 @@ jobs:
                 `Published Lenta root is missing category: ${expectedRoot}`
               );
             }
+
+            const dairy = page.getByRole("button", {
+              name: /Молочные продукты, яйцо/
+            });
+            await dairy.click();
+            await page.waitForFunction(() => (
+              document.querySelectorAll("#product-grid .product-card").length === 16
+            ), null, { timeout: 15000 });
+            assert(
+              await page.locator("#product-grid .product-card").count() === 16,
+              "Published Lenta dairy category must expose 16 products"
+            );
+
+            const eggCard = page.locator(
+              '[data-product-id="retail:lenta:lenta-public-web:127515"]'
+            );
+            await eggCard.waitFor({ state: "visible", timeout: 15000 });
+            const eggText = await eggCard.innerText();
+            assert(
+              eggText.includes("Яйцо куриное ОКСКОЕ СО, 10шт"),
+              "Published dairy category is missing the Okskoe egg product"
+            );
+            assert(
+              eggText.includes("149,99 ₽"),
+              "Published Okskoe egg card has the wrong observed price"
+            );
+            assert(
+              (await eggCard.locator("img.product-photo").getAttribute("src"))
+                ?.includes("cdn.api.lenta.com"),
+              "Published Okskoe egg card is missing the official Lenta image"
+            );
+
+            await page.locator("#retail-category-back").click();
+            await page.waitForFunction(() => (
+              document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length === 22
+            ), null, { timeout: 15000 });
 
             const root = page.getByRole("button", {
               name: /Макароны, крупы, мука/
