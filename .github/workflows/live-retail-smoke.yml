@@ -153,29 +153,39 @@ jobs:
             await globusChild.waitFor({ state: "visible", timeout: 15000 });
             await globusChild.click();
 
-            // The live GLOBUS taxonomy is allowed to terminate at this node
-            // or expose one more "Молоко" level. In either case the user must
-            // reach real products without stale state.
-            await page.waitForFunction(() => (
-              document.querySelectorAll("#product-grid .product-card").length > 0
-              || Array.from(
-                document.querySelectorAll(
+            // Follow the actual live taxonomy instead of hard-coding
+            // a fixed depth. The path must terminate in real products within
+            // a bounded number of user taps.
+            let reachedGlobusProducts = false;
+            for (let depth = 0; depth < 5; depth += 1) {
+              await page.waitForFunction(() => (
+                document.querySelectorAll("#product-grid .product-card").length > 0
+                || document.querySelectorAll(
                   "#retail-category-grid .retail-category-button:not(.is-loading)"
-                )
-              ).some((button) => /^Молоко(?:\\s|$)/u.test(button.textContent ?? ""))
-            ), null, { timeout: 15000 });
+                ).length > 0
+              ), null, { timeout: 15000 });
 
-            if (await page.getByRole("button", {
-              name: /^Молоко(?:\\s|$)/
-            }).count()) {
-              await page.getByRole("button", {
-                name: /^Молоко(?:\\s|$)/
-              }).click();
+              if (await page.locator("#product-grid .product-card").count()) {
+                reachedGlobusProducts = true;
+                break;
+              }
+
+              const nextCategory = page.locator(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).first();
+              await nextCategory.click();
             }
 
-            await page.waitForFunction(() => (
-              document.querySelectorAll("#product-grid .product-card").length > 0
-            ), null, { timeout: 15000 });
+            if (!reachedGlobusProducts) {
+              await page.waitForFunction(() => (
+                document.querySelectorAll("#product-grid .product-card").length > 0
+              ), null, { timeout: 15000 });
+              reachedGlobusProducts = true;
+            }
+            assert(
+              reachedGlobusProducts,
+              "Published GLOBUS taxonomy did not reach products within bounded depth"
+            );
             assert(
               (await page.locator("#catalog-eyebrow").innerText()).includes("Глобус"),
               "Published GLOBUS leaf lost retailer identity"
