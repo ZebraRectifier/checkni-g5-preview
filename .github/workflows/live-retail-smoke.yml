@@ -186,10 +186,64 @@ jobs:
               reachedGlobusProducts,
               "Published GLOBUS taxonomy did not reach products within bounded depth"
             );
-            assert(
-              (await page.locator("#catalog-eyebrow").innerText()).includes("Глобус"),
-              "Published GLOBUS leaf lost retailer identity"
+            const globusUiState = await page.evaluate(() => ({
+              catalogEyebrow:
+                document.querySelector("#catalog-eyebrow")?.textContent ?? "",
+              catalogNote:
+                document.querySelector("#catalog-note")?.textContent ?? "",
+              categoryTitle:
+                document.querySelector("#retail-category-title")?.textContent ?? "",
+              breadcrumbs:
+                document.querySelector("#retail-breadcrumbs")?.textContent ?? "",
+              globusPressed:
+                document.querySelector("#retail-store-card")
+                  ?.getAttribute("aria-pressed") ?? "",
+              lentaPressed:
+                document.querySelector("#retail-store-card-lenta")
+                  ?.getAttribute("aria-pressed") ?? "",
+              firstProductId:
+                document.querySelector("#product-grid .product-card")
+                  ?.getAttribute("data-product-id") ?? "",
+              productCount:
+                document.querySelectorAll("#product-grid .product-card").length
+            }));
+            console.log(
+              "GLOBUS_UI_STATE",
+              JSON.stringify(globusUiState)
             );
+
+            try {
+              await page.waitForFunction(() => (
+                document.querySelector("#catalog-eyebrow")
+                  ?.textContent?.includes("Глобус")
+              ), null, { timeout: 5000 });
+            } catch {
+              const settledGlobusUiState = await page.evaluate(() => ({
+                catalogEyebrow:
+                  document.querySelector("#catalog-eyebrow")?.textContent ?? "",
+                catalogNote:
+                  document.querySelector("#catalog-note")?.textContent ?? "",
+                categoryTitle:
+                  document.querySelector("#retail-category-title")?.textContent ?? "",
+                breadcrumbs:
+                  document.querySelector("#retail-breadcrumbs")?.textContent ?? "",
+                globusPressed:
+                  document.querySelector("#retail-store-card")
+                    ?.getAttribute("aria-pressed") ?? "",
+                lentaPressed:
+                  document.querySelector("#retail-store-card-lenta")
+                    ?.getAttribute("aria-pressed") ?? "",
+                firstProductId:
+                  document.querySelector("#product-grid .product-card")
+                    ?.getAttribute("data-product-id") ?? "",
+                productCount:
+                  document.querySelectorAll("#product-grid .product-card").length
+              }));
+              throw new Error(
+                "Published GLOBUS leaf lost retailer identity: "
+                + JSON.stringify(settledGlobusUiState)
+              );
+            }
             const globusProductCount = await page.locator(
               "#product-grid .product-card"
             ).count();
