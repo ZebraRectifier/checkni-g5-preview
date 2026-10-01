@@ -1,0 +1,164 @@
+name: Live Retail Smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "src/**"
+      - "deployment.json"
+      - ".github/workflows/live-retail-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-retail:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout published artifact
+        uses: actions/checkout@v4
+
+      - name: Install browser driver
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock playwright-core@1.63.0
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$chrome"
+          echo "CHROME_BIN=$chrome" >> "$GITHUB_ENV"
+
+      - name: Verify published Lenta flow
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const { chromium } = require("playwright-core");
+
+          const url =
+            "https://zebrarectifier.github.io/checkni-g5-preview/?comparison=observed&catalog=retail";
+
+          function assert(condition, message) {
+            if (!condition) throw new Error(message);
+          }
+
+          (async () => {
+            const browser = await chromium.launch({
+              headless: true,
+              executablePath: process.env.CHROME_BIN,
+              args: ["--no-sandbox"]
+            });
+            const page = await browser.newPage({
+              viewport: { width: 390, height: 844 }
+            });
+
+            const pageErrors = [];
+            page.on("pageerror", (error) => pageErrors.push(error.message));
+
+            let ready = false;
+            for (let attempt = 0; attempt < 10; attempt += 1) {
+              await page.goto(url, {
+                waitUntil: "domcontentloaded",
+                timeout: 30000
+              });
+              await page.waitForTimeout(1800);
+              if (await page.locator("#retail-store-card-lenta").count()) {
+                ready = true;
+                break;
+              }
+              await page.waitForTimeout(3500);
+            }
+
+            assert(ready, "Published page never exposed the Lenta store selector");
+
+            const lenta = page.locator("#retail-store-card-lenta");
+            assert(
+              (await lenta.innerText()).includes("Лента · публичный каталог"),
+              "Lenta selector has the wrong store label"
+            );
+            assert(
+              (await lenta.innerText()).includes("наличие неизвестно"),
+              "Lenta selector must not claim stock availability"
+            );
+
+            await lenta.click();
+
+            const root = page.getByRole("button", {
+              name: /Макароны, крупы, мука/
+            });
+            await root.waitFor({ state: "visible", timeout: 15000 });
+            await root.click();
+
+            const subcategory = page.getByRole("button", {
+              name: /Каши, хлопья, мюсли/
+            });
+            await subcategory.waitFor({ state: "visible", timeout: 15000 });
+            await subcategory.click();
+
+            const card = page.locator(
+              '[data-product-id="retail:lenta:lenta-public-web:709949"]'
+            );
+            await card.waitFor({ state: "visible", timeout: 15000 });
+
+            const cardText = await card.innerText();
+            for (const expected of [
+              "Хлопья овсяные ЛЕНТА Экстра, 500г",
+              "500 г",
+              "44,99 ₽",
+              "По Карте №1",
+              "Лента · публичный каталог · источник"
+            ]) {
+              assert(
+                cardText.includes(expected),
+                `Published Lenta card is missing: ${expected}`
+              );
+            }
+
+            const image = card.locator("img.product-photo");
+            await image.waitFor({ state: "visible", timeout: 15000 });
+            const imageState = await image.evaluate((node) => ({
+              src: node.currentSrc || node.src,
+              complete: node.complete,
+              naturalWidth: node.naturalWidth
+            }));
+            assert(
+              imageState.src.includes("cdn.api.lenta.com"),
+              "Lenta card is not using the official image CDN"
+            );
+            assert(
+              imageState.complete && imageState.naturalWidth > 0,
+              "Official Lenta product image did not load"
+            );
+
+            const addButton = card.getByRole("button");
+            assert(
+              await addButton.isDisabled(),
+              "Display-only Lenta observation must not enter the comparison basket"
+            );
+
+            assert(
+              pageErrors.length === 0,
+              `Published page errors: ${pageErrors.join(" | ")}`
+            );
+
+            await page.screenshot({
+              path: "live-retail-smoke.png",
+              fullPage: true
+            });
+            await browser.close();
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Upload live proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-retail-smoke
+          path: live-retail-smoke.png
+          if-no-files-found: ignore
+          retention-days: 3
