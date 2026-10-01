@@ -153,11 +153,25 @@ jobs:
             await globusChild.waitFor({ state: "visible", timeout: 15000 });
             await globusChild.click();
 
-            const globusLeaf = page.getByRole("button", {
+            // The live GLOBUS taxonomy is allowed to terminate at this node
+            // or expose one more "Молоко" level. In either case the user must
+            // reach real products without stale state.
+            await page.waitForFunction(() => (
+              document.querySelectorAll("#product-grid .product-card").length > 0
+              || Array.from(
+                document.querySelectorAll(
+                  "#retail-category-grid .retail-category-button:not(.is-loading)"
+                )
+              ).some((button) => /^Молоко(?:\\s|$)/u.test(button.textContent ?? ""))
+            ), null, { timeout: 15000 });
+
+            if (await page.getByRole("button", {
               name: /^Молоко(?:\\s|$)/
-            });
-            await globusLeaf.waitFor({ state: "visible", timeout: 15000 });
-            await globusLeaf.click();
+            }).count()) {
+              await page.getByRole("button", {
+                name: /^Молоко(?:\\s|$)/
+              }).click();
+            }
 
             await page.waitForFunction(() => (
               document.querySelectorAll("#product-grid .product-card").length > 0
@@ -172,10 +186,15 @@ jobs:
             assert(globusProductCount > 0, "Published GLOBUS leaf has no products");
 
             await page.goBack({ waitUntil: "domcontentloaded" });
-            await globusLeaf.waitFor({ state: "visible", timeout: 15000 });
+            await page.waitForFunction(() => (
+              document.querySelectorAll("#product-grid .product-card").length === 0
+              && document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length > 0
+            ), null, { timeout: 15000 });
             assert(
-              await page.locator("#product-grid .product-card").count() === 0,
-              "Back from GLOBUS leaf left stale product cards visible"
+              await globus.getAttribute("aria-pressed") === "true",
+              "Back from GLOBUS leaf lost retailer selection"
             );
 
             await page.goForward({ waitUntil: "domcontentloaded" });
