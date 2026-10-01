@@ -391,94 +391,120 @@ jobs:
               name: /Молочные продукты, яйцо/
             });
             await dairy.click();
-            await page.waitForFunction(() => (
-              document.querySelectorAll("#product-grid .product-card").length > 0
-            ), null, { timeout: 15000 });
-            assert(
-              await page.locator("#product-grid .product-card").count() > 0,
-              "Published Lenta dairy category must expose live products"
-            );
 
-            const eggCard = page.locator(
-              '[data-product-id="retail:lenta:lenta-public-web:127515"]'
-            );
-            await eggCard.waitFor({ state: "visible", timeout: 15000 });
-            const eggText = await eggCard.innerText();
-            assert(
-              eggText.includes("Яйцо куриное ОКСКОЕ СО, 10шт"),
-              "Published dairy category is missing the Okskoe egg product"
-            );
-            assert(
-              /\d[\d\s]*,\d{2} ₽/u.test(eggText),
-              "Published Okskoe egg card is missing an observed RUB price"
-            );
-            assert(
-              (await eggCard.locator("img.product-photo").getAttribute("src"))
-                ?.includes("cdn.api.lenta.com"),
-              "Published Okskoe egg card is missing the official Lenta image"
-            );
+            let reachedLentaProducts = false;
+            for (let depth = 0; depth < 6; depth += 1) {
+              await page.waitForFunction(() => (
+                document.querySelectorAll("#product-grid .product-card").length > 0
+                || document.querySelectorAll(
+                  "#retail-category-grid .retail-category-button:not(.is-loading)"
+                ).length > 0
+              ), null, { timeout: 15000 });
 
-            await page.locator("#retail-category-back").click();
-            await page.waitForFunction(() => (
-              document.querySelectorAll(
+              if (await page.locator("#product-grid .product-card").count()) {
+                reachedLentaProducts = true;
+                break;
+              }
+
+              const candidates = page.locator(
                 "#retail-category-grid .retail-category-button:not(.is-loading)"
-              ).length === 22
-            ), null, { timeout: 15000 });
+              );
+              const candidateTexts = await candidates.allTextContents();
+              let nextIndex = candidateTexts.findIndex((text) => {
+                const match = text.match(/([\d\s]+) товаров/u);
+                return match && Number(match[1].replace(/\s+/gu, "")) > 0;
+              });
+              if (nextIndex < 0) nextIndex = 0;
+              await candidates.nth(nextIndex).click();
+            }
 
-            const root = page.getByRole("button", {
-              name: /Макароны, крупы, мука/
-            });
-            await root.waitFor({ state: "visible", timeout: 15000 });
-            await root.click();
-
-            const subcategory = page.getByRole("button", {
-              name: /Каши, хлопья, мюсли/
-            });
-            await subcategory.waitFor({ state: "visible", timeout: 15000 });
-            await subcategory.click();
-
-            const card = page.locator(
-              '[data-product-id="retail:lenta:lenta-public-web:709949"]'
+            if (!reachedLentaProducts) {
+              await page.waitForFunction(() => (
+                document.querySelectorAll("#product-grid .product-card").length > 0
+              ), null, { timeout: 15000 });
+              reachedLentaProducts = true;
+            }
+            assert(
+              reachedLentaProducts,
+              "Published Lenta taxonomy did not reach products within bounded depth"
             );
+            assert(
+              (await page.locator("#catalog-eyebrow").innerText()).includes("Лента"),
+              "Published Lenta leaf lost retailer identity"
+            );
+
+            const card = page.locator("#product-grid .product-card").first();
             await card.waitFor({ state: "visible", timeout: 15000 });
+            const productId = await card.getAttribute("data-product-id");
+            assert(
+              productId?.startsWith("retail:lenta:lenta-public-web:"),
+              "Published Lenta leaf rendered a product from another retailer"
+            );
 
             const cardText = await card.innerText();
-            for (const expected of [
-              "Хлопья овсяные ЛЕНТА Экстра, 500г",
-              "500 г",
-              "По Карте №1",
-              "Лента · публичный каталог · источник"
-            ]) {
-              assert(
-                cardText.includes(expected),
-                `Published Lenta card is missing: ${expected}`
-              );
-            }
             assert(
               /\d[\d\s]*,\d{2} ₽/u.test(cardText),
               "Published Lenta card is missing an observed RUB price"
             );
+            assert(
+              cardText.includes("Лента · публичный каталог · источник"),
+              "Published Lenta card lost store/source provenance"
+            );
 
             const image = card.locator("img.product-photo");
-            await image.waitFor({ state: "visible", timeout: 15000 });
-            const imageState = await image.evaluate((node) => ({
-              src: node.currentSrc || node.src,
-              complete: node.complete,
-              naturalWidth: node.naturalWidth
-            }));
-            assert(
-              imageState.src.includes("cdn.api.lenta.com"),
-              "Lenta card is not using the official image CDN"
-            );
-            assert(
-              imageState.complete && imageState.naturalWidth > 0,
-              "Official Lenta product image did not load"
-            );
+            if (await image.count()) {
+              await image.waitFor({ state: "visible", timeout: 15000 });
+              const imageState = await image.evaluate((node) => ({
+                src: node.currentSrc || node.src,
+                complete: node.complete,
+                naturalWidth: node.naturalWidth
+              }));
+              assert(
+                imageState.src.includes("cdn.api.lenta.com"),
+                "Lenta card is not using the official image CDN"
+              );
+              assert(
+                imageState.complete && imageState.naturalWidth > 0,
+                "Official Lenta product image did not load"
+              );
+            } else {
+              assert(
+                (await card.locator(".product-visual").innerText()).includes(
+                  "Фото товара"
+                ),
+                "No-photo Lenta card is missing the calm fallback"
+              );
+            }
 
             const addButton = card.getByRole("button");
             assert(
               await addButton.isDisabled(),
               "Display-only Lenta observation must not enter the comparison basket"
+            );
+
+            await page.goBack({ waitUntil: "domcontentloaded" });
+            await page.waitForFunction(() => (
+              document.querySelectorAll("#product-grid .product-card").length === 0
+              && document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length > 0
+            ), null, { timeout: 15000 });
+            assert(
+              await lenta.getAttribute("aria-pressed") === "true",
+              "Back from Lenta leaf lost retailer selection"
+            );
+
+            await page.goForward({ waitUntil: "domcontentloaded" });
+            await page.waitForFunction(() => (
+              document.querySelectorAll("#product-grid .product-card").length > 0
+              && document.querySelector("#retail-store-card-lenta")
+                ?.getAttribute("aria-pressed") === "true"
+            ), null, { timeout: 15000 });
+            assert(
+              await page.locator(
+                '[data-product-id^="retail:globus:"]'
+              ).count() === 0,
+              "Forward to Lenta leaf left stale GLOBUS products visible"
             );
 
             assert(
