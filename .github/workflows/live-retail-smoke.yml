@@ -50,6 +50,68 @@ jobs:
               executablePath: process.env.CHROME_BIN,
               args: ["--no-sandbox"]
             });
+
+            // Force a real cross-retailer race: hold the first GLOBUS root
+            // response, switch to Lenta, then release the stale GLOBUS reply.
+            // The published runtime must keep the newer retailer ownership.
+            const racePage = await browser.newPage({
+              viewport: { width: 390, height: 844 }
+            });
+            let releaseGlobusRoot;
+            let globusRootHeld = false;
+            const globusRootGate = new Promise((resolve) => {
+              releaseGlobusRoot = resolve;
+            });
+            await racePage.route(
+              "**/rest/v1/retail_catalog_categories**",
+              async (route) => {
+                const requestUrl = new URL(route.request().url());
+                if (
+                  !globusRootHeld
+                  && requestUrl.searchParams.get("retailer_id") === "eq.globus"
+                  && requestUrl.searchParams.get("depth") === "eq.0"
+                ) {
+                  globusRootHeld = true;
+                  await globusRootGate;
+                }
+                await route.continue();
+              }
+            );
+            await racePage.goto(url, {
+              waitUntil: "domcontentloaded",
+              timeout: 30000
+            });
+            await racePage.locator("#retail-store-card-lenta").waitFor({
+              state: "visible",
+              timeout: 15000
+            });
+            for (let attempt = 0; attempt < 40 && !globusRootHeld; attempt += 1) {
+              await racePage.waitForTimeout(100);
+            }
+            assert(globusRootHeld, "Did not capture the initial GLOBUS root request");
+            await racePage.locator("#retail-store-card-lenta").click();
+            await racePage.waitForFunction(() => (
+              document.querySelector("#retail-store-card-lenta")
+                ?.getAttribute("aria-pressed") === "true"
+              && document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length === 22
+            ), null, { timeout: 15000 });
+            releaseGlobusRoot();
+            await racePage.waitForTimeout(1500);
+            assert(
+              await racePage.locator("#retail-store-card-lenta")
+                .getAttribute("aria-pressed") === "true",
+              "Late GLOBUS response stole retailer selection from Lenta"
+            );
+            assert(
+              await racePage.locator(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).count() === 22,
+              "Late GLOBUS response repainted Lenta categories"
+            );
+            await racePage.close();
+
             const page = await browser.newPage({
               viewport: { width: 390, height: 844 }
             });
@@ -73,7 +135,105 @@ jobs:
 
             assert(ready, "Published page never exposed the Lenta store selector");
 
+            const globus = page.locator("#retail-store-card");
+            assert(
+              await globus.getAttribute("aria-pressed") === "true",
+              "GLOBUS must be selected on initial retail load"
+            );
+
+            const globusRoot = page.getByRole("button", {
+              name: /Молочные продукты, сыр, яйца/
+            });
+            await globusRoot.waitFor({ state: "visible", timeout: 15000 });
+            await globusRoot.click();
+
+            const globusChild = page.getByRole("button", {
+              name: /Молоко и молочные продукты/
+            });
+            await globusChild.waitFor({ state: "visible", timeout: 15000 });
+            await globusChild.click();
+
+            const globusLeaf = page.getByRole("button", {
+              name: /^Молоко(?:\\s|$)/
+            });
+            await globusLeaf.waitFor({ state: "visible", timeout: 15000 });
+            await globusLeaf.click();
+
+            await page.waitForFunction(() => (
+              document.querySelectorAll("#product-grid .product-card").length > 0
+            ), null, { timeout: 15000 });
+            assert(
+              (await page.locator("#catalog-eyebrow").innerText()).includes("Глобус"),
+              "Published GLOBUS leaf lost retailer identity"
+            );
+            const globusProductCount = await page.locator(
+              "#product-grid .product-card"
+            ).count();
+            assert(globusProductCount > 0, "Published GLOBUS leaf has no products");
+
+            await page.goBack({ waitUntil: "domcontentloaded" });
+            await globusLeaf.waitFor({ state: "visible", timeout: 15000 });
+            assert(
+              await page.locator("#product-grid .product-card").count() === 0,
+              "Back from GLOBUS leaf left stale product cards visible"
+            );
+
+            await page.goForward({ waitUntil: "domcontentloaded" });
+            await page.waitForFunction(() => (
+              document.querySelectorAll("#product-grid .product-card").length > 0
+            ), null, { timeout: 15000 });
+            assert(
+              await globus.getAttribute("aria-pressed") === "true",
+              "Forward did not restore GLOBUS retailer state"
+            );
+
+            await page.reload({ waitUntil: "domcontentloaded" });
+            await page.waitForFunction(() => (
+              document.querySelector("#retail-store-card")
+                ?.getAttribute("aria-pressed") === "true"
+              && document.querySelectorAll("#product-grid .product-card").length > 0
+            ), null, { timeout: 15000 });
+
             const lenta = page.locator("#retail-store-card-lenta");
+            await lenta.click();
+            await page.waitForFunction(() => (
+              document.querySelector("#retail-store-card-lenta")
+                ?.getAttribute("aria-pressed") === "true"
+              && document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length === 22
+            ), null, { timeout: 15000 });
+
+            await page.goBack({ waitUntil: "domcontentloaded" });
+            await page.waitForFunction(() => (
+              document.querySelector("#retail-store-card")
+                ?.getAttribute("aria-pressed") === "true"
+              && document.querySelectorAll("#product-grid .product-card").length > 0
+            ), null, { timeout: 15000 });
+            assert(
+              await page.locator(
+                '[data-product-id^="retail:lenta:"]'
+              ).count() === 0,
+              "Browser Back from Lenta left stale Lenta products in GLOBUS"
+            );
+
+            await page.goForward({ waitUntil: "domcontentloaded" });
+            await page.waitForFunction(() => (
+              document.querySelector("#retail-store-card-lenta")
+                ?.getAttribute("aria-pressed") === "true"
+              && document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length === 22
+            ), null, { timeout: 15000 });
+
+            await page.reload({ waitUntil: "domcontentloaded" });
+            await page.waitForFunction(() => (
+              document.querySelector("#retail-store-card-lenta")
+                ?.getAttribute("aria-pressed") === "true"
+              && document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length === 22
+            ), null, { timeout: 15000 });
             assert(
               (await lenta.innerText()).includes("Лента · публичный каталог"),
               "Lenta selector has the wrong store label"
@@ -87,14 +247,8 @@ jobs:
               "Lenta selector must show 22 categories and 19 observed products"
             );
             assert(
-              await lenta.getAttribute("aria-pressed") === "false",
-              "Lenta must start unselected when GLOBUS is active"
-            );
-
-            await lenta.click();
-            assert(
               await lenta.getAttribute("aria-pressed") === "true",
-              "Lenta must become the selected store after tap"
+              "Reload must preserve Lenta as the selected retailer"
             );
             assert(
               await page.locator("#retail-store-card").getAttribute("aria-pressed") === "false",
