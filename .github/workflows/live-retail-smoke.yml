@@ -801,6 +801,83 @@ jobs:
               "Display-only DA promo observation must not enter the comparison basket"
             );
 
+            // Verify the dated Auchan Moscow public promo catalog on the
+            // actually published Pages artifact.
+            let auchanPublished = false;
+            for (let attempt = 0; attempt < 16; attempt += 1) {
+              const liveAuchanText = await page.locator(
+                "#retail-store-card-auchan"
+              ).innerText().catch(() => "");
+              if (
+                liveAuchanText.includes("АШАН · Москва · публичный промо-каталог")
+                && liveAuchanText.includes("1 категория · 312 товаров")
+                && liveAuchanText.includes("промо 1–14 октября")
+              ) {
+                auchanPublished = true;
+                break;
+              }
+              await page.waitForTimeout(2500);
+              await page.goto(
+                url + "&auchan_release=0da8c263&attempt=" + attempt,
+                { waitUntil: "domcontentloaded", timeout: 30000 }
+              );
+              await page.waitForTimeout(900);
+            }
+            assert(
+              auchanPublished,
+              "Published Auchan selector does not expose the current 312-product Moscow promo"
+            );
+
+            const auchanStore = page.locator("#retail-store-card-auchan");
+            await auchanStore.click();
+            await page.waitForFunction(() => (
+              document.querySelector("#retail-store-card-auchan")
+                ?.getAttribute("aria-pressed") === "true"
+              && document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length === 1
+            ), null, { timeout: 15000 });
+
+            const auchanCategory = page.locator(
+              '#retail-category-grid [data-category-id="950001"]'
+            );
+            await auchanCategory.waitFor({ state: "visible", timeout: 15000 });
+            await auchanCategory.click();
+
+            await page.waitForFunction(() => (
+              document.querySelectorAll(
+                '#product-grid [data-product-id^="retail:auchan:auchan-msk-public-promo:"]'
+              ).length > 0
+            ), null, { timeout: 15000 });
+
+            const auchanCard = page.locator(
+              '#product-grid [data-product-id^="retail:auchan:auchan-msk-public-promo:"]'
+            ).first();
+            await auchanCard.waitFor({ state: "visible", timeout: 15000 });
+            const auchanCardText = await auchanCard.innerText();
+            assert(
+              /\d[\d\s]*,\d{2} ₽/u.test(auchanCardText),
+              "Published Auchan card is missing an observed RUB promo price"
+            );
+            assert(
+              (
+                auchanCardText.includes("Промо-цена каталога")
+                || auchanCardText.includes("По карте АШАН")
+              )
+              && auchanCardText.includes("до 14.10"),
+              "Published Auchan card lost promo/card validity truth"
+            );
+            assert(
+              auchanCardText.includes(
+                "АШАН · Москва · публичный промо-каталог · источник"
+              ),
+              "Published Auchan card lost Moscow promo/source provenance"
+            );
+            assert(
+              await auchanCard.getByRole("button").isDisabled(),
+              "Display-only Auchan promo observation must not enter the comparison basket"
+            );
+
             assert(
               pageErrors.length === 0,
               `Published page errors: ${pageErrors.join(" | ")}`

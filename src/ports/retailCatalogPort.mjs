@@ -174,6 +174,38 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
       "yandex-eda-promo": "Промо-цена доставки Яндекс Еды"
     })
   }),
+  auchan: Object.freeze({
+    retailerId: "auchan",
+    storeId: "auchan-msk-public-promo",
+    storeName: "АШАН · Москва · публичный промо-каталог",
+    localityId: "city-moscow-promo",
+    localityName: "Москва",
+    displayName: "АШАН",
+    catalogLabel: "АШАН · Москва · текущий промо-каталог",
+    scopeLabel: "Москва · промо 1–14 октября · наличие зависит от гипермаркета",
+    logo: "А",
+    defaultProductCount: 312,
+    rootCategoryCount: 1,
+    catalogValidFrom: "2026-10-01",
+    catalogValidTo: "2026-10-14",
+    requiresPromoValidity: true,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "catalog.auchan.ru", prefix: "/60z9R061p97677" })
+    ]),
+    imageUrlRules: Object.freeze([]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "catalog.auchan.ru", prefix: "/60z9R061p97677" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "catalog.auchan.ru", prefix: "/60z9R061p97677" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      "public-promo": "Промо-цена каталога",
+      "auchan-card-promo": "По карте АШАН",
+      "auchan-multibuy": "Промо-цена каталога",
+      "auchan-card-multibuy": "По карте АШАН"
+    })
+  }),
   da: Object.freeze({
     retailerId: "da",
     storeId: "da-public-promo",

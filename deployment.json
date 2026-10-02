@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "24b1158363b95cf8cc9c3ada9634eb0c2767e653",
+  "sourceCommit": "0da8c263163cd928e3f15add78720920bc4ad3b0",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -11,6 +11,7 @@
     "vkusvill",
     "perekrestok",
     "lenta",
+    "auchan",
     "da"
   ],
   "perekrestok": {
@@ -28,5 +29,14 @@
     "validFrom": "2026-10-01",
     "validTo": "2026-10-14",
     "source": "https://market-da.ru/sale.html"
+  },
+  "auchan": {
+    "storeId": "auchan-msk-public-promo",
+    "scope": "Москва · публичный промо-каталог · наличие зависит от гипермаркета",
+    "products": 312,
+    "categories": 1,
+    "validFrom": "2026-10-01",
+    "validTo": "2026-10-14",
+    "source": "https://catalog.auchan.ru/60z9R061p97677"
   }
 }
