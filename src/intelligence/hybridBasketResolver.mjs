@@ -395,6 +395,30 @@ export async function resolveHybridBasketProposal(
     }));
   }
 
+  // The provider can suggest useful items for a broad intent, but an explicit
+  // product phrase that the local catalogue could not identify must never be
+  // replaced by a related known ID. Preserve deterministic local matches and
+  // surface the unresolved words for confirmation instead.
+  if (planned?.unresolvedTerms?.length > 0) {
+    const localResult = localDraft();
+    if (localResult) return localResult;
+
+    return typedResult(HYBRID_BASKET_RESULT.CLARIFICATION, {
+      source: HYBRID_BASKET_SOURCE.LOCAL,
+      reason: "confirmation_required",
+      triggerReason: planned.ambiguous.length > 0
+        ? "ambiguous_segment"
+        : "unresolved_segment",
+      unresolvedTerms: planned.unresolvedTerms,
+      ...(planned.ambiguous.length > 0
+        ? { ambiguousChoices: planned.ambiguous }
+        : {}),
+      ...(planned.packNotes.length > 0
+        ? { packNotes: planned.packNotes }
+        : {})
+    });
+  }
+
   const validation = validateFinalProposal(
     normalizedProviderResult.proposal,
     catalogSnapshot
