@@ -2,12 +2,19 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "33e8c5e50f61173fe144b3ebacab01e8671d771c",
+  "sourceCommit": "0a32d17c90f620cc10baa4d415f04166e5ecfdd4",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
     "globus",
-    "lenta",
-    "magnit"
-  ]
+    "magnit",
+    "vkusvill",
+    "perekrestok",
+    "lenta"
+  ],
+  "perekrestok": {
+    "storeId": "perekrestok-yandex-43939236872",
+    "scope": "Москва · доставка Яндекс",
+    "autoRefresh": "Supabase Cron every 6 hours"
+  }
 }

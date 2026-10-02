@@ -300,11 +300,21 @@ export async function resolveHybridBasketProposal(
       )
     : null;
   const localDraft = () => {
-    if (!planned || planned.needsAi || planned.proposal.items.length === 0) {
+    if (
+      !planned
+      || planned.needsAi
+      || (
+        planned.proposal.items.length === 0
+        && planned.ambiguous.length === 0
+      )
+    ) {
       return null;
     }
-    const validation = validateFinalProposal(planned.proposal, catalogSnapshot);
-    if (validation.status !== PROPOSAL_STATUS.ACCEPTED) return null;
+
+    const validation = planned.proposal.items.length > 0
+      ? validateFinalProposal(planned.proposal, catalogSnapshot)
+      : null;
+    if (validation && validation.status !== PROPOSAL_STATUS.ACCEPTED) return null;
 
     return typedResult(HYBRID_BASKET_RESULT.CLARIFICATION, {
       source: HYBRID_BASKET_SOURCE.LOCAL,
@@ -318,8 +328,9 @@ export async function resolveHybridBasketProposal(
             : planned.packNotes.length > 0
               ? "unit_quantity_ambiguous"
               : "unresolved_segment",
-      draftProposal: planned.proposal,
-      validation,
+      ...(validation
+        ? { draftProposal: planned.proposal, validation }
+        : {}),
       unresolvedTerms: planned.unresolvedTerms,
       ambiguousChoices: planned.ambiguous,
       packNotes: planned.packNotes

@@ -644,17 +644,31 @@ function normalizeRetailHistoryPath(path) {
     const name = typeof category?.name === "string"
       ? category.name.trim()
       : "";
+    const depth = Number(category?.depth);
+    const sourceUrl = typeof category?.sourceUrl === "string"
+      ? category.sourceUrl.trim()
+      : "";
 
     if (
       !Number.isSafeInteger(categoryId)
       || categoryId <= 0
       || !name
       || name.length > 180
+      || (
+        category?.depth !== undefined
+        && (!Number.isSafeInteger(depth) || depth < 0 || depth > 6)
+      )
+      || (sourceUrl && sourceUrl.length > 500)
     ) {
       return null;
     }
 
-    normalized.push({ categoryId, name });
+    normalized.push({
+      categoryId,
+      name,
+      ...(Number.isSafeInteger(depth) ? { depth } : {}),
+      ...(sourceUrl ? { sourceUrl } : {})
+    });
   }
 
   return normalized;
@@ -839,21 +853,7 @@ async function loadRetailChildren(category, path, {
     return;
   }
 
-  if (result.categories.length === 0) {
-    retailBrowserState = {
-      ...retailBrowserState,
-      status: "ready",
-      path: normalizedPath,
-      categories: []
-    };
-    renderRetailBrowser();
-    await loadRetailCategoryProducts(category, {
-      navigationRequestId: requestId,
-      scrollToProducts
-    });
-    return;
-  }
-
+  const hasChildren = result.categories.length > 0;
   retailBrowserState = {
     ...retailBrowserState,
     status: "ready",
@@ -861,6 +861,10 @@ async function loadRetailChildren(category, path, {
     categories: result.categories
   };
   renderRetailBrowser();
+  await loadRetailCategoryProducts(category, {
+    navigationRequestId: requestId,
+    scrollToProducts: hasChildren ? false : scrollToProducts
+  });
 }
 
 async function navigateRetailPath(path, {
@@ -921,7 +925,7 @@ async function loadRetailCategoryProducts(category, {
   };
   renderCatalog();
 
-  const result = await client.browseCategory(category.categoryId, {
+  const result = await client.browseCategory(category, {
     limit: 40
   });
   if (

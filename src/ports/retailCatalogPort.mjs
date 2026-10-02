@@ -22,6 +22,7 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     scopeLabel: "Москва · реальные наблюдаемые цены",
     logo: "Г",
     defaultProductCount: 3034,
+    rootCategoryUrlProductFallback: true,
     productUrlRules: Object.freeze([
       Object.freeze({ host: "www.globus.ru", prefix: "/products/" }),
       Object.freeze({ host: "globus.ru", prefix: "/products/" })
@@ -74,6 +75,75 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     ]),
     priceConditionLabels: Object.freeze({
       "public-online": "Публичная онлайн-цена"
+    })
+  }),
+  vkusvill: Object.freeze({
+    retailerId: "vkusvill",
+    storeId: "vkusvill-public-web",
+    storeName: "ВкусВилл · публичный каталог",
+    localityId: "country-ru-public-catalog",
+    localityName: "Россия",
+    displayName: "ВкусВилл",
+    catalogLabel: "ВкусВилл · публичный каталог",
+    scopeLabel: "Публичный каталог · цена может зависеть от региона · наличие неизвестно",
+    logo: "В",
+    defaultProductCount: 518,
+    rootCategoryCount: 17,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "vkusvill.ru", prefix: "/goods/" }),
+      Object.freeze({ host: "www.vkusvill.ru", prefix: "/goods/" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "img.vkusvill.ru", prefix: "/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "vkusvill.ru", prefix: "/goods/" }),
+      Object.freeze({ host: "www.vkusvill.ru", prefix: "/goods/" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "vkusvill.ru", prefix: "/goods/" }),
+      Object.freeze({ host: "www.vkusvill.ru", prefix: "/goods/" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      "public-online": "Публичная цена сайта"
+    })
+  }),
+  perekrestok: Object.freeze({
+    retailerId: "perekrestok",
+    storeId: "perekrestok-yandex-43939236872",
+    storeName: "Перекрёсток · Москва, ул. Брусилова, 29А",
+    localityId: "city-moscow",
+    localityName: "Москва",
+    displayName: "Перекрёсток",
+    catalogLabel: "Перекрёсток · Москва · доставка",
+    scopeLabel:
+      "Москва · доставка Яндекс · цена может отличаться в магазине · наличие неизвестно",
+    logo: "П",
+    defaultProductCount: 19,
+    rootCategoryCount: 6,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "eda.yandex", prefix: "/restaurant/" }),
+      Object.freeze({ host: "eda.yandex.ru", prefix: "/restaurant/" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "avatars.mds.yandex.net", prefix: "/get-eda/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({
+        host: "yandex.com",
+        prefix: "/maps/org/perekryostok/43939236872/prices/"
+      })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({
+        host: "yandex.com",
+        prefix: "/maps/org/perekryostok/43939236872/prices/"
+      }),
+      Object.freeze({ host: "eda.yandex", prefix: "/restaurant/" }),
+      Object.freeze({ host: "eda.yandex.ru", prefix: "/restaurant/" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      "yandex-delivery": "Цена доставки Яндекс"
     })
   }),
   lenta: Object.freeze({
@@ -352,6 +422,7 @@ export function createRetailCatalogClient(options = {}) {
   async function requestRows({
     query = null,
     categoryId = null,
+    categoryUrlPrefix = null,
     limit = 24
   } = {}) {
     if (
@@ -361,6 +432,12 @@ export function createRetailCatalogClient(options = {}) {
         !Number.isSafeInteger(categoryId)
         || categoryId <= 0
       ))
+      || (categoryUrlPrefix !== null && (
+        typeof categoryUrlPrefix !== "string"
+        || categoryUrlPrefix.length === 0
+        || categoryUrlPrefix.length > 500
+      ))
+      || (categoryId !== null && categoryUrlPrefix !== null)
       || !Number.isSafeInteger(limit)
       || limit < 1
       || limit > MAX_RETAIL_CATALOG_PRODUCTS
@@ -392,9 +469,14 @@ export function createRetailCatalogClient(options = {}) {
     if (categoryId !== null) {
       url.searchParams.set("main_category_id", `eq.${categoryId}`);
     }
+    if (categoryUrlPrefix !== null) {
+      url.searchParams.set("category_url", `like.${categoryUrlPrefix}*`);
+    }
     url.searchParams.set(
       "order",
-      categoryId === null ? "updated_at.desc" : "name.asc"
+      categoryId === null && categoryUrlPrefix === null
+        ? "updated_at.desc"
+        : "name.asc"
     );
     url.searchParams.set("limit", String(limit));
 
@@ -546,10 +628,30 @@ export function createRetailCatalogClient(options = {}) {
         limit: browseOptions.limit ?? 24
       });
     },
-    async browseCategory(categoryId, browseOptions = {}) {
+    async browseCategory(categoryRef, browseOptions = {}) {
+      const categoryId = Number.isSafeInteger(categoryRef)
+        ? categoryRef
+        : categoryRef?.categoryId;
+      const useRootSourceFallback = Boolean(
+        definition?.rootCategoryUrlProductFallback
+        && categoryRef
+        && typeof categoryRef === "object"
+        && categoryRef.depth === 0
+      );
+      let categoryUrlPrefix = null;
+      if (useRootSourceFallback) {
+        categoryUrlPrefix = safeUrl(
+          categoryRef.sourceUrl,
+          definition.categoryUrlRules
+        );
+        if (!categoryUrlPrefix) {
+          return result("error", { code: "invalid_request" });
+        }
+      }
       return requestRows({
         query: null,
-        categoryId,
+        categoryId: useRootSourceFallback ? null : categoryId,
+        categoryUrlPrefix,
         limit: browseOptions.limit ?? 40
       });
     },

@@ -120,11 +120,12 @@ export function planLocalSegments(text, catalogSnapshot, parseSegment) {
     ) {
       const candidates = parsed.candidateIds.filter((id) => byId.has(id));
       if (candidates.length > 0) {
-        add(candidates[0], 1);
+        // Several catalogue identities match the same human term. Keep the
+        // alternatives for the UI, but never smuggle the first one into a
+        // draft basket: catalogue order is not user intent.
         ambiguous.push(Object.freeze({
           term: cleanTerm(segment),
-          chosenName: byId.get(candidates[0]).name,
-          otherNames: Object.freeze(candidates.slice(1).map((id) => byId.get(id).name))
+          options: Object.freeze(candidates.map((id) => byId.get(id).name))
         }));
         continue;
       }

@@ -221,22 +221,28 @@ export function presentHybridBasketResult(result) {
 
       if (terms) notes.push(`Не нашла: ${terms}.`);
       for (const choice of ambiguousChoices) {
-        const others = choice.otherNames?.length
-          ? ` Есть ещё: ${choice.otherNames.join(", ")}.`
-          : "";
-        notes.push(`«${choice.term}» — взяла ${choice.chosenName}.${others}`);
+        const options = Array.isArray(choice.options)
+          ? choice.options.filter((name) => typeof name === "string" && name)
+          : [];
+        notes.push(
+          options.length > 0
+            ? `«${choice.term}» может означать: ${options.join(", ")}. Уточни, какой нужен.`
+            : `«${choice.term}» нужно уточнить.`
+        );
       }
       for (const note of packNotes) {
         notes.push(`«${note.term}» — в каталоге упаковка ${note.unit}; предлагаю 1 × ${note.productName}.`);
       }
       notes.push("Проверь и добавь.");
 
+      const canAddFound = items.length > 0;
+
       return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
         headline: terms ? "Нашла не всё." : "Нужно уточнение.",
         message: notes.join(" "),
         items,
-        primaryAction: "Добавить предложенное",
-        secondaryAction: "Уточнить запрос",
+        primaryAction: canAddFound ? "Добавить найденное" : "Уточнить запрос",
+        secondaryAction: canAddFound ? "Уточнить запрос" : "Искать вручную",
         focusClarification: true
       });
     }
