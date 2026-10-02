@@ -28,5 +28,6 @@
     "validFrom": "2026-10-01",
     "validTo": "2026-10-14",
     "source": "https://market-da.ru/sale.html"
-  }
+  },
+  "releaseNote": "Retail category navigation + safe parent-product pagination"
 }
