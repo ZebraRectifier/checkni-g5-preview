@@ -206,7 +206,12 @@ let catalogSearchState = {
   query: "",
   products: [],
   retailCount: 0,
-  discoveredCount: 0
+  discoveredCount: 0,
+  categoryExpectedCount: 0,
+  nextOffset: 0,
+  canLoadMore: false,
+  loadingMore: false,
+  loadMoreError: false
 };
 let retailBrowserState = {
   retailerId: DEFAULT_RETAILER_ID,
@@ -560,15 +565,24 @@ function renderRetailBrowser() {
       separator.setAttribute("aria-hidden", "true");
       elements.retailBreadcrumbs.append(separator);
 
-      const crumb = document.createElement("button");
-      crumb.type = "button";
-      crumb.textContent = category.name;
-      crumb.addEventListener("click", () => {
-        void navigateRetailPath(
-          retailBrowserState.path.slice(0, index + 1)
-        );
-      });
-      elements.retailBreadcrumbs.append(crumb);
+      const isCurrent = index === retailBrowserState.path.length - 1;
+      if (isCurrent) {
+        const currentCrumb = document.createElement("span");
+        currentCrumb.className = "is-current";
+        currentCrumb.textContent = category.name;
+        currentCrumb.setAttribute("aria-current", "page");
+        elements.retailBreadcrumbs.append(currentCrumb);
+      } else {
+        const crumb = document.createElement("button");
+        crumb.type = "button";
+        crumb.textContent = category.name;
+        crumb.addEventListener("click", () => {
+          void navigateRetailPath(
+            retailBrowserState.path.slice(0, index + 1)
+          );
+        });
+        elements.retailBreadcrumbs.append(crumb);
+      }
     }
   }
   elements.retailBreadcrumbs.hidden = retailBrowserState.path.length === 0;
@@ -590,7 +604,7 @@ function renderRetailBrowser() {
   if (retailBrowserState.status === "error") {
     const retry = document.createElement("button");
     retry.type = "button";
-    retry.className = "retail-category-button";
+    retry.className = "retail-category-button retail-category-retry";
     const title = document.createElement("strong");
     title.textContent = "Повторить загрузку";
     const note = document.createElement("span");
@@ -605,8 +619,26 @@ function renderRetailBrowser() {
       }
     });
     elements.retailCategoryGrid.append(retry);
+
+    if (retailBrowserState.path.length > 0) {
+      const parentButton = document.createElement("button");
+      parentButton.type = "button";
+      parentButton.className = "retail-category-button retail-category-exit";
+      const parentTitle = document.createElement("strong");
+      parentTitle.textContent = retailBrowserState.path.length > 1
+        ? "Вернуться на уровень выше"
+        : "Вернуться ко всем категориям";
+      const parentNote = document.createElement("span");
+      parentNote.textContent = "Можно выбрать другой раздел";
+      parentButton.append(parentTitle, parentNote);
+      parentButton.addEventListener("click", () => {
+        void navigateRetailPath(retailBrowserState.path.slice(0, -1));
+      });
+      elements.retailCategoryGrid.append(parentButton);
+    }
+
     elements.retailCategoryStatus.textContent =
-      `Категории ${definition.displayName} временно недоступны`;
+      `Категории ${definition.displayName} временно недоступны. Можно повторить или вернуться назад.`;
     return;
   }
 
@@ -619,11 +651,22 @@ function renderRetailBrowser() {
     const title = document.createElement("strong");
     title.textContent = category.name;
     const count = document.createElement("span");
+    const productNoun = russianCountNoun(
+      category.productCount,
+      "товар",
+      "товара",
+      "товаров"
+    );
     count.textContent = category.productCount > 0
-      ? `${formatCatalogCount(category.productCount)} товаров`
-      : "Открыть раздел";
+      ? `${formatCatalogCount(category.productCount)} ${productNoun} · открыть`
+      : "Товары не заявлены · проверить раздел";
 
-    button.append(title, count);
+    const arrow = document.createElement("span");
+    arrow.className = "retail-category-arrow";
+    arrow.textContent = "→";
+    arrow.setAttribute("aria-hidden", "true");
+
+    button.append(title, count, arrow);
     button.addEventListener("click", () => {
       void openRetailCategory(category);
     });
@@ -648,6 +691,7 @@ function normalizeRetailHistoryPath(path) {
     const sourceUrl = typeof category?.sourceUrl === "string"
       ? category.sourceUrl.trim()
       : "";
+    const productCount = Number(category?.productCount);
 
     if (
       !Number.isSafeInteger(categoryId)
@@ -659,6 +703,14 @@ function normalizeRetailHistoryPath(path) {
         && (!Number.isSafeInteger(depth) || depth < 0 || depth > 6)
       )
       || (sourceUrl && sourceUrl.length > 500)
+      || (
+        category?.productCount !== undefined
+        && (
+          !Number.isSafeInteger(productCount)
+          || productCount < 0
+          || productCount > 1_000_000
+        )
+      )
     ) {
       return null;
     }
@@ -667,7 +719,8 @@ function normalizeRetailHistoryPath(path) {
       categoryId,
       name,
       ...(Number.isSafeInteger(depth) ? { depth } : {}),
-      ...(sourceUrl ? { sourceUrl } : {})
+      ...(sourceUrl ? { sourceUrl } : {}),
+      ...(Number.isSafeInteger(productCount) ? { productCount } : {})
     });
   }
 
@@ -733,7 +786,12 @@ function resetCatalogForRetailNavigation(categoryName = "") {
     products: [],
     retailCount: 0,
     discoveredCount: 0,
-    categoryName
+    categoryName,
+    categoryExpectedCount: 0,
+    nextOffset: 0,
+    canLoadMore: false,
+    loadingMore: false,
+    loadMoreError: false
   };
   renderCatalog();
 }
@@ -911,6 +969,7 @@ async function loadRetailCategoryProducts(category, {
   const retailerId = retailBrowserState.retailerId;
   const client = currentRetailClient();
   const requestId = ++catalogRequestVersion;
+  const pageLimit = 40;
   pendingCatalogSearch = null;
   activeQuery = "";
   elements.searchInput.value = "";
@@ -921,12 +980,21 @@ async function loadRetailCategoryProducts(category, {
     products: [],
     retailCount: 0,
     discoveredCount: 0,
-    categoryName: category.name
+    categoryName: category.name,
+    categoryExpectedCount:
+      Number.isSafeInteger(category.productCount) && category.productCount >= 0
+        ? category.productCount
+        : 0,
+    nextOffset: 0,
+    canLoadMore: false,
+    loadingMore: false,
+    loadMoreError: false
   };
   renderCatalog();
 
   const result = await client.browseCategory(category, {
-    limit: 40
+    limit: pageLimit,
+    offset: 0
   });
   if (
     requestId !== catalogRequestVersion
@@ -937,13 +1005,31 @@ async function loadRetailCategoryProducts(category, {
   }
 
   if (result.kind === "catalog") {
+    const nextOffset = Number.isSafeInteger(result.nextOffset)
+      ? result.nextOffset
+      : result.products.length;
+    const pageSize = Number.isSafeInteger(result.pageSize)
+      ? result.pageSize
+      : result.products.length;
+    const expectedCount =
+      Number.isSafeInteger(category.productCount) && category.productCount >= 0
+        ? category.productCount
+        : result.products.length;
+
     catalogSearchState = {
       status: "live",
       query: "",
       products: result.products,
       retailCount: result.products.length,
       discoveredCount: result.products.length,
-      categoryName: category.name
+      categoryName: category.name,
+      categoryExpectedCount: expectedCount,
+      nextOffset,
+      canLoadMore: pageSize === pageLimit && (
+        expectedCount <= 0 || nextOffset < expectedCount
+      ),
+      loadingMore: false,
+      loadMoreError: false
     };
   } else {
     catalogSearchState = {
@@ -952,7 +1038,12 @@ async function loadRetailCategoryProducts(category, {
       products: [],
       retailCount: 0,
       discoveredCount: 0,
-      categoryName: category.name
+      categoryName: category.name,
+      categoryExpectedCount: 0,
+      nextOffset: 0,
+      canLoadMore: false,
+      loadingMore: false,
+      loadMoreError: false
     };
   }
   renderCatalog();
@@ -963,6 +1054,93 @@ async function loadRetailCategoryProducts(category, {
       block: "start"
     });
   }
+}
+
+async function loadMoreRetailCategoryProducts() {
+  if (
+    !publicRetailCatalogMode
+    || catalogSearchState.status !== "live"
+    || !catalogSearchState.categoryName
+    || !catalogSearchState.canLoadMore
+    || catalogSearchState.loadingMore
+  ) {
+    return;
+  }
+
+  const category = retailBrowserState.path.at(-1);
+  if (!category) return;
+
+  const retailerId = retailBrowserState.retailerId;
+  const navigationRequestId = retailBrowserRequestVersion;
+  const client = currentRetailClient();
+  const requestId = ++catalogRequestVersion;
+  const pageLimit = 40;
+  const offset = Number.isSafeInteger(catalogSearchState.nextOffset)
+    ? catalogSearchState.nextOffset
+    : catalogSearchState.products.length;
+
+  catalogSearchState = {
+    ...catalogSearchState,
+    loadingMore: true,
+    loadMoreError: false
+  };
+  renderCatalog();
+
+  const result = await client.browseCategory(category, {
+    limit: pageLimit,
+    offset
+  });
+
+  if (
+    requestId !== catalogRequestVersion
+    || navigationRequestId !== retailBrowserRequestVersion
+    || retailerId !== retailBrowserState.retailerId
+  ) {
+    return;
+  }
+
+  if (result.kind !== "catalog") {
+    catalogSearchState = {
+      ...catalogSearchState,
+      loadingMore: false,
+      loadMoreError: true
+    };
+    renderCatalog();
+    return;
+  }
+
+  const byId = new Map(
+    catalogSearchState.products.map((product) => [product.id, product])
+  );
+  for (const product of result.products) {
+    byId.set(product.id, product);
+  }
+  const products = Object.freeze(Array.from(byId.values()));
+  const nextOffset = Number.isSafeInteger(result.nextOffset)
+    ? result.nextOffset
+    : offset + result.products.length;
+  const pageSize = Number.isSafeInteger(result.pageSize)
+    ? result.pageSize
+    : result.products.length;
+  const expectedCount = Number.isSafeInteger(
+    catalogSearchState.categoryExpectedCount
+  )
+    ? catalogSearchState.categoryExpectedCount
+    : products.length;
+
+  catalogSearchState = {
+    ...catalogSearchState,
+    products,
+    retailCount: products.length,
+    discoveredCount: products.length,
+    nextOffset,
+    canLoadMore: pageSize === pageLimit && (
+      expectedCount <= 0 || nextOffset < expectedCount
+    ),
+    loadingMore: false,
+    loadMoreError: false
+  };
+  renderCatalog();
 }
 
 function restoreRetailNavigationFromHistory({ initial = false } = {}) {
@@ -1045,6 +1223,7 @@ function setupCatalogSort() {
 }
 
 function renderCatalog() {
+  document.querySelector("#retail-load-more")?.remove();
   const normalizedQuery = activeQuery.trim();
   const retailDefinition = currentRetailDefinition();
   const retailName = retailDefinition?.displayName ?? "магазина";
@@ -1090,6 +1269,35 @@ function renderCatalog() {
       })
     );
   });
+
+  if (
+    live
+    && catalogSearchState.categoryName
+    && (
+      catalogSearchState.canLoadMore
+      || catalogSearchState.loadingMore
+      || catalogSearchState.loadMoreError
+    )
+  ) {
+    const loadMore = document.createElement("button");
+    loadMore.id = "retail-load-more";
+    loadMore.type = "button";
+    loadMore.className = "add-button retail-load-more";
+    loadMore.disabled = catalogSearchState.loadingMore;
+    loadMore.textContent = catalogSearchState.loadingMore
+      ? "Загружаем ещё…"
+      : catalogSearchState.loadMoreError
+        ? "Повторить загрузку"
+        : "Показать ещё";
+    loadMore.setAttribute(
+      "aria-label",
+      `${loadMore.textContent}: ${catalogSearchState.categoryName}`
+    );
+    loadMore.addEventListener("click", () => {
+      void loadMoreRetailCategoryProducts();
+    });
+    elements.productGrid.after(loadMore);
+  }
 
   if (loading) {
     elements.catalogEyebrow.textContent = "Живой каталог";
@@ -1176,7 +1384,14 @@ function renderCatalog() {
     ? "Живой каталог сейчас не загрузился. Попробуйте ещё раз."
     : "Попробуйте более короткий запрос — например «сыр» или «хлеб».";
   elements.searchStatus.textContent = hasResults
-    ? `Найдено товаров: ${results.length}`
+    ? (
+        live
+        && catalogSearchState.categoryName
+        && Number.isSafeInteger(catalogSearchState.categoryExpectedCount)
+        && catalogSearchState.categoryExpectedCount > results.length
+      )
+      ? `Показано товаров: ${results.length} из ${catalogSearchState.categoryExpectedCount}`
+      : `Найдено товаров: ${results.length}`
     : fallback
       ? "Живой каталог временно недоступен"
       : "По вашему запросу ничего не найдено";
