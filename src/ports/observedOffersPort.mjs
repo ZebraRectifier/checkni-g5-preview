@@ -40,6 +40,9 @@ export const YANDEX_PUBLIC_SOURCE_ID = "yandex-business-public";
 export const YANDEX_PUBLIC_SOURCE_NAME =
   "Яндекс Карты · публичные прайс-листы";
 export const BETA_RETAIL_PRICE_MAX_AGE_MS = 5 * 60 * 1000;
+export const PEREKRESTOK_BETA_RETAIL_PRICE_MAX_AGE_MS =
+  7 * 60 * 60 * 1000;
+const PEREKRESTOK_BETA_SOURCE_ID = "perekrestok-yandex-eda-live";
 
 function isCoreBasketItem(item) {
   return Boolean(
@@ -608,6 +611,9 @@ export async function loadBetaRetailObservedOffers(coreBasket, options = {}) {
   const nowMs = options.nowMs ?? Date.now();
   const maxAgeMs =
     options.betaRetailMaxAgeMs ?? BETA_RETAIL_PRICE_MAX_AGE_MS;
+  const perekrestokMaxAgeMs =
+    options.perekrestokBetaRetailMaxAgeMs
+    ?? PEREKRESTOK_BETA_RETAIL_PRICE_MAX_AGE_MS;
 
   const responses = await Promise.all(profiles.map(async (profileId) => {
     try {
@@ -626,10 +632,15 @@ export async function loadBetaRetailObservedOffers(coreBasket, options = {}) {
     ) {
       continue;
     }
-    offers.push(...response.offers.filter((offer) => (
-      wantedIds.has(offer.canonicalProductId)
-      && isCurrentObservedAt(offer.observedAt, nowMs, maxAgeMs)
-    )));
+    offers.push(...response.offers.filter((offer) => {
+      const offerMaxAgeMs = offer.sourceId === PEREKRESTOK_BETA_SOURCE_ID
+        ? perekrestokMaxAgeMs
+        : maxAgeMs;
+      return (
+        wantedIds.has(offer.canonicalProductId)
+        && isCurrentObservedAt(offer.observedAt, nowMs, offerMaxAgeMs)
+      );
+    }));
   }
 
   return sortOffers(offers);
