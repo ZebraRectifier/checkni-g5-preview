@@ -144,6 +144,36 @@ jobs:
 
             assert(ready, "Published page never exposed the Lenta store selector");
 
+            // GitHub Pages can lag a branch push briefly. Do not validate the
+            // previous artifact by accident: bounded-reload until the exact
+            // Moscow Magnit release is visible.
+            let moscowMagnitPublished = false;
+            for (let attempt = 0; attempt < 18; attempt += 1) {
+              const liveMagnitText = await page.locator(
+                "#retail-store-card-magnit"
+              ).innerText().catch(() => "");
+              if (
+                liveMagnitText.includes(
+                  "Магнит · Москва, Дмитровское ш. 5 к 1"
+                )
+                && liveMagnitText.includes("18 категорий · 515 товаров")
+                && !liveMagnitText.includes("Краснодар")
+              ) {
+                moscowMagnitPublished = true;
+                break;
+              }
+              await page.waitForTimeout(3000);
+              await page.goto(
+                url + "&release=33e8c5e5&attempt=" + attempt,
+                { waitUntil: "domcontentloaded", timeout: 30000 }
+              );
+              await page.waitForTimeout(1200);
+            }
+            assert(
+              moscowMagnitPublished,
+              "GitHub Pages did not publish Moscow Magnit 515-product artifact"
+            );
+
             const globus = page.locator("#retail-store-card");
             assert(
               await globus.getAttribute("aria-pressed") === "true",
@@ -587,16 +617,20 @@ jobs:
             await magnit.waitFor({ state: "visible", timeout: 15000 });
             const magnitText = await magnit.innerText();
             assert(
-              magnitText.includes("Магнит · Краснодар, Дзержинского 42"),
+              magnitText.includes("Магнит · Москва, Дмитровское ш. 5 к 1"),
               "Magnit selector has the wrong store label"
             );
             assert(
-              magnitText.includes("18 категорий · 518 товаров"),
-              "Magnit selector must show 18 categories and 518 products"
+              magnitText.includes("18 категорий · 515 товаров"),
+              "Magnit selector must show 18 categories and 515 products"
             );
             assert(
               magnitText.includes("наличие неизвестно"),
               "Magnit selector must not claim stock availability"
+            );
+            assert(
+              !magnitText.includes("Краснодар"),
+              "Magnit selector leaked the retired Krasnodar scope"
             );
 
             await magnit.click();
@@ -642,7 +676,7 @@ jobs:
             await magnitCard.waitFor({ state: "visible", timeout: 15000 });
             const magnitProductId = await magnitCard.getAttribute("data-product-id");
             assert(
-              magnitProductId?.startsWith("retail:magnit:magnit-992301:"),
+              magnitProductId?.startsWith("retail:magnit:magnit-771878:"),
               "Published Magnit leaf rendered a product from another retailer"
             );
 
@@ -652,7 +686,7 @@ jobs:
               "Published Magnit card is missing an observed RUB price"
             );
             assert(
-              magnitCardText.includes("Магнит · Краснодар, Дзержинского 42 · источник"),
+              magnitCardText.includes("Магнит · Москва, Дмитровское ш. 5 к 1 · источник"),
               "Published Magnit card lost store/source provenance"
             );
 
