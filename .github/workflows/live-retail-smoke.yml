@@ -583,6 +583,99 @@ jobs:
               "Forward to Lenta leaf left stale GLOBUS products visible"
             );
 
+            const magnit = page.locator("#retail-store-card-magnit");
+            await magnit.waitFor({ state: "visible", timeout: 15000 });
+            const magnitText = await magnit.innerText();
+            assert(
+              magnitText.includes("Магнит · Краснодар, Дзержинского 42"),
+              "Magnit selector has the wrong store label"
+            );
+            assert(
+              magnitText.includes("18 категорий · 518 товаров"),
+              "Magnit selector must show 18 categories and 518 products"
+            );
+            assert(
+              magnitText.includes("наличие неизвестно"),
+              "Magnit selector must not claim stock availability"
+            );
+
+            await magnit.click();
+            await page.waitForFunction(() => (
+              document.querySelector("#retail-store-card-magnit")
+                ?.getAttribute("aria-pressed") === "true"
+              && document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length === 18
+            ), null, { timeout: 15000 });
+
+            const magnitCategories = page.locator(
+              "#retail-category-grid .retail-category-button:not(.is-loading)"
+            );
+            assert(
+              await magnitCategories.count() === 18,
+              "Published Magnit root must expose exactly 18 categories"
+            );
+
+            for (const expectedRoot of [
+              "Молочный прилавок",
+              "Овощи и фрукты",
+              "Хлеб и выпечка",
+              "Бакалея",
+              "Заморозка",
+              "Сладости",
+              "Чай, кофе, какао",
+              "Вода и напитки"
+            ]) {
+              assert(
+                (await magnitCategories.allTextContents())
+                  .some((text) => text.includes(expectedRoot)),
+                `Published Magnit root is missing category: ${expectedRoot}`
+              );
+            }
+
+            await page.getByRole("button", { name: /Молочный прилавок/ }).click();
+            await page.waitForFunction(() => (
+              document.querySelectorAll("#product-grid .product-card").length > 0
+            ), null, { timeout: 15000 });
+
+            const magnitCard = page.locator("#product-grid .product-card").first();
+            await magnitCard.waitFor({ state: "visible", timeout: 15000 });
+            const magnitProductId = await magnitCard.getAttribute("data-product-id");
+            assert(
+              magnitProductId?.startsWith("retail:magnit:magnit-992301:"),
+              "Published Magnit leaf rendered a product from another retailer"
+            );
+
+            const magnitCardText = await magnitCard.innerText();
+            assert(
+              /\d[\d\s]*,\d{2} ₽/u.test(magnitCardText),
+              "Published Magnit card is missing an observed RUB price"
+            );
+            assert(
+              magnitCardText.includes("Магнит · Краснодар, Дзержинского 42 · источник"),
+              "Published Magnit card lost store/source provenance"
+            );
+
+            const magnitImage = magnitCard.locator("img.product-photo");
+            await magnitImage.waitFor({ state: "visible", timeout: 15000 });
+            const magnitImageState = await magnitImage.evaluate((node) => ({
+              src: node.currentSrc || node.src,
+              complete: node.complete,
+              naturalWidth: node.naturalWidth
+            }));
+            assert(
+              magnitImageState.src.includes("images-foodtech.magnit.ru"),
+              "Magnit card is not using the official image CDN"
+            );
+            assert(
+              magnitImageState.complete && magnitImageState.naturalWidth > 0,
+              "Official Magnit product image did not load"
+            );
+            assert(
+              await magnitCard.getByRole("button").isDisabled(),
+              "Display-only Magnit observation must not enter the comparison basket"
+            );
+
             assert(
               pageErrors.length === 0,
               `Published page errors: ${pageErrors.join(" | ")}`

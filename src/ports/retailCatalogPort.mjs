@@ -43,6 +43,39 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     ]),
     priceConditionLabels: Object.freeze({})
   }),
+  magnit: Object.freeze({
+    retailerId: "magnit",
+    storeId: "magnit-992301",
+    storeName: "Магнит · Краснодар, Дзержинского 42",
+    localityId: "city-krasnodar",
+    localityName: "Краснодар",
+    displayName: "Магнит",
+    catalogLabel: "Магнит · Краснодар",
+    scopeLabel: "Краснодар · публичный магазин · наличие неизвестно",
+    logo: "М",
+    defaultProductCount: 518,
+    rootCategoryCount: 18,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "magnit.ru", prefix: "/product/" }),
+      Object.freeze({ host: "www.magnit.ru", prefix: "/product/" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "images-foodtech.magnit.ru", prefix: "/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "magnit.ru", prefix: "/catalog" }),
+      Object.freeze({ host: "www.magnit.ru", prefix: "/catalog" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "magnit.ru", prefix: "/product/" }),
+      Object.freeze({ host: "www.magnit.ru", prefix: "/product/" }),
+      Object.freeze({ host: "magnit.ru", prefix: "/catalog" }),
+      Object.freeze({ host: "www.magnit.ru", prefix: "/catalog" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      "public-online": "Публичная онлайн-цена"
+    })
+  }),
   lenta: Object.freeze({
     retailerId: "lenta",
     storeId: "lenta-public-web",
