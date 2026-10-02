@@ -24,7 +24,8 @@ const SOURCE_CONTRACTS = Object.freeze({
     hosts: Object.freeze(["globus.ru", "www.globus.ru", "online.globus.ru"]),
     locationPrefix: "globus:",
     storePrefix: "globus-pvz-",
-    allowedConditions: Object.freeze(["regular"])
+    allowedConditions: Object.freeze(["regular"]),
+    minimumQuantity: 1
   }),
   "metro-public-live": Object.freeze({
     sourceName: "METRO · публичный каталог",
@@ -32,7 +33,8 @@ const SOURCE_CONTRACTS = Object.freeze({
     hosts: Object.freeze(["online.metro-cc.ru"]),
     locationPrefix: "metro:",
     storePrefix: "metro-address-",
-    allowedConditions: Object.freeze(["regular"])
+    allowedConditions: Object.freeze(["regular"]),
+    minimumQuantity: 1
   }),
   "magnit-public-live": Object.freeze({
     sourceName: "Магнит · публичная карточка товара",
@@ -40,7 +42,19 @@ const SOURCE_CONTRACTS = Object.freeze({
     hosts: Object.freeze(["magnit.ru", "www.magnit.ru"]),
     locationPrefix: "magnit:",
     storePrefix: "magnit-shop-",
-    allowedConditions: Object.freeze(["promo"])
+    allowedConditions: Object.freeze(["promo"]),
+    minimumQuantity: 1,
+    promoComparable: "required"
+  }),
+  "perekrestok-yandex-eda-live": Object.freeze({
+    sourceName: "Перекрёсток · Яндекс Еда",
+    retailerId: "perekrestok",
+    hosts: Object.freeze(["eda.yandex.ru"]),
+    locationPrefix: "perekrestok:",
+    storePrefix: "perekrestok-yandex-",
+    allowedConditions: Object.freeze(["regular", "promo"]),
+    minimumQuantity: null,
+    promoComparable: "forbidden"
   })
 });
 
@@ -154,12 +168,19 @@ function normalizeOffer(value) {
     || (
       value.priceCondition === "promo"
       && (
-        value.priceConditionComparable !== true
-        || cleanString(value.conditionNote, 300) === null
+        cleanString(value.conditionNote, 300) === null
+        || (
+          contract.promoComparable === "required"
+          && value.priceConditionComparable !== true
+        )
+        || (
+          contract.promoComparable === "forbidden"
+          && value.priceConditionComparable !== false
+        )
       )
     )
     || value.salesChannel !== "online"
-    || value.minimumQuantity !== 1
+    || value.minimumQuantity !== contract.minimumQuantity
     || !storeId || !storeId.startsWith(contract.storePrefix)
     || locationId !== `${retailerId}:${storeId}`
     || !storeName || !locationLabel || !/Москва/u.test(locationLabel)
