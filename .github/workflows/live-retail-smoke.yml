@@ -710,6 +710,96 @@ jobs:
               "Display-only Magnit observation must not enter the comparison basket"
             );
 
+            // Verify the dated public-network DA promo catalog only after the
+            // corresponding Pages artifact is actually published.
+            let daPublished = false;
+            for (let attempt = 0; attempt < 16; attempt += 1) {
+              const daSelector = page.locator("#retail-store-card-da");
+              const daText = await daSelector.innerText().catch(() => "");
+              if (
+                daText.includes("ДА! · публичный промо-каталог")
+                && daText.includes("1 категория · 94 товара")
+                && daText.includes("Промо 1–14 октября")
+              ) {
+                daPublished = true;
+                break;
+              }
+              await page.waitForTimeout(2500);
+              await page.goto(
+                url + "&da_release=7bc40759&attempt=" + attempt,
+                { waitUntil: "domcontentloaded", timeout: 30000 }
+              );
+              await page.waitForTimeout(900);
+            }
+            assert(
+              daPublished,
+              "GitHub Pages did not publish DA 94-product promo artifact"
+            );
+
+            const da = page.locator("#retail-store-card-da");
+            await da.click();
+            await page.waitForFunction(() => (
+              document.querySelector("#retail-store-card-da")
+                ?.getAttribute("aria-pressed") === "true"
+              && document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length === 1
+            ), null, { timeout: 15000 });
+
+            const daCategory = page.getByRole("button", {
+              name: /Текущий промо-каталог/
+            });
+            await daCategory.waitFor({ state: "visible", timeout: 15000 });
+            await daCategory.click();
+
+            await page.waitForFunction(() => (
+              document.querySelectorAll(
+                '#product-grid [data-product-id^="retail:da:da-public-promo:"]'
+              ).length > 0
+            ), null, { timeout: 15000 });
+
+            const daCard = page.locator(
+              '#product-grid [data-product-id^="retail:da:da-public-promo:"]'
+            ).first();
+            await daCard.waitFor({ state: "visible", timeout: 15000 });
+            const daCardText = await daCard.innerText();
+            assert(
+              /\d[\d\s]*,\d{2} ₽/u.test(daCardText),
+              "Published DA card is missing an observed RUB promo price"
+            );
+            assert(
+              daCardText.includes("Промо-цена каталога"),
+              "Published DA card lost promo price condition"
+            );
+            assert(
+              /до (?:07|14)\.10/u.test(daCardText),
+              "Published DA card lost promo validity"
+            );
+            assert(
+              daCardText.includes("ДА! · публичный промо-каталог · источник"),
+              "Published DA card lost network/source provenance"
+            );
+
+            const daImage = daCard.locator("img.product-photo");
+            await daImage.waitFor({ state: "visible", timeout: 15000 });
+            const daImageState = await daImage.evaluate((node) => ({
+              src: node.currentSrc || node.src,
+              complete: node.complete,
+              naturalWidth: node.naturalWidth
+            }));
+            assert(
+              daImageState.src.startsWith("https://market-da.ru/assets/"),
+              "DA card is not using the official image host"
+            );
+            assert(
+              daImageState.complete && daImageState.naturalWidth > 0,
+              "Official DA promo image did not load"
+            );
+            assert(
+              await daCard.getByRole("button").isDisabled(),
+              "Display-only DA promo observation must not enter the comparison basket"
+            );
+
             assert(
               pageErrors.length === 0,
               `Published page errors: ${pageErrors.join(" | ")}`

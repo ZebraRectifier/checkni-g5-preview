@@ -171,11 +171,81 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
       "yandex-eda-regular": "Цена доставки Яндекс Еды",
       "yandex-eda-promo": "Промо-цена доставки Яндекс Еды"
     })
+  }),
+  da: Object.freeze({
+    retailerId: "da",
+    storeId: "da-public-promo",
+    storeName: "ДА! · публичный промо-каталог",
+    localityId: "network-da-public-promo",
+    localityName: "Сеть ДА!",
+    displayName: "ДА!",
+    catalogLabel: "ДА! · текущий промо-каталог",
+    scopeLabel: "Промо 1–14 октября · наличие зависит от магазина",
+    logo: "Д",
+    defaultProductCount: 94,
+    rootCategoryCount: 1,
+    catalogValidFrom: "2026-10-01",
+    catalogValidTo: "2026-10-14",
+    requiresPromoValidity: true,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "market-da.ru", prefix: "/sale.html" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "market-da.ru", prefix: "/assets/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "market-da.ru", prefix: "/sale.html" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "market-da.ru", prefix: "/sale.html" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      "public-promo": "Промо-цена каталога"
+    })
   })
 });
 
+function validDateKey(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/u.test(value)) {
+    return null;
+  }
+  const parsed = Date.parse(`${value}T00:00:00.000Z`);
+  if (!Number.isFinite(parsed)) return null;
+  return new Date(parsed).toISOString().slice(0, 10) === value ? value : null;
+}
+
+function moscowDateKey(nowMs = Date.now()) {
+  if (!Number.isFinite(nowMs)) return null;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Moscow",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date(nowMs));
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return values.year && values.month && values.day
+    ? `${values.year}-${values.month}-${values.day}`
+    : null;
+}
+
+function definitionIsCurrent(definition, nowMs = Date.now()) {
+  if (!definition?.catalogValidFrom && !definition?.catalogValidTo) return true;
+  const today = moscowDateKey(nowMs);
+  const validFrom = validDateKey(definition.catalogValidFrom);
+  const validTo = validDateKey(definition.catalogValidTo);
+  return Boolean(
+    today
+    && validFrom
+    && validTo
+    && validFrom <= validTo
+    && today >= validFrom
+    && today <= validTo
+  );
+}
+
 export const RETAIL_CATALOG_IDS = Object.freeze(
   Object.keys(RETAIL_CATALOG_DEFINITIONS)
+    .filter((retailerId) => definitionIsCurrent(RETAIL_CATALOG_DEFINITIONS[retailerId]))
 );
 
 const SELECT_FIELDS = [
@@ -189,6 +259,8 @@ const SELECT_FIELDS = [
   "price_minor",
   "currency",
   "price_condition",
+  "minimum_quantity",
+  "quantity_semantics",
   "availability",
   "product_url",
   "image_url",
@@ -287,7 +359,73 @@ async function readBoundedJsonResponse(response, maxBytes) {
   }
 }
 
-function normalizeRetailRow(row, retailer = "globus") {
+function promoTruth(row, definition, nowMs = Date.now()) {
+  if (!definition?.requiresPromoValidity) return Object.freeze({
+    conditionSuffixes: Object.freeze([])
+  });
+
+  const semantics = row?.quantity_semantics;
+  if (
+    !semantics
+    || typeof semantics !== "object"
+    || Array.isArray(semantics)
+  ) {
+    return null;
+  }
+
+  const validFrom = validDateKey(semantics.promo_valid_from);
+  const validTo = validDateKey(semantics.promo_valid_to);
+  const today = moscowDateKey(nowMs);
+  if (
+    !validFrom
+    || !validTo
+    || validFrom > validTo
+    || !today
+    || today < validFrom
+    || today > validTo
+  ) {
+    return null;
+  }
+
+  const minimumQuantity = row.minimum_quantity;
+  if (!Number.isSafeInteger(minimumQuantity) || minimumQuantity < 1) {
+    return null;
+  }
+
+  const suffixes = [];
+  if (semantics.kind === "multibuy") {
+    if (
+      minimumQuantity < 2
+      || semantics.minimum_quantity !== minimumQuantity
+    ) {
+      return null;
+    }
+    suffixes.push(`при покупке ${minimumQuantity} шт.`);
+  } else if (semantics.kind === "weight-basis") {
+    if (
+      minimumQuantity !== 1
+      || !Number.isSafeInteger(semantics.basis_grams)
+      || semantics.basis_grams < 1
+    ) {
+      return null;
+    }
+    suffixes.push(`за ${semantics.basis_grams} г`);
+  } else if (semantics.kind !== undefined) {
+    return null;
+  } else if (minimumQuantity !== 1) {
+    return null;
+  }
+
+  suffixes.push(`до ${validTo.slice(8, 10)}.${validTo.slice(5, 7)}`);
+  return Object.freeze({
+    validFrom,
+    validTo,
+    minimumQuantity,
+    conditionSuffixes: Object.freeze(suffixes)
+  });
+}
+
+function normalizeRetailRow(row, retailer = "globus", options = {}) {
   const definition = resolveDefinition(retailer);
   if (
     !definition
@@ -315,10 +453,13 @@ function normalizeRetailRow(row, retailer = "globus") {
   const sourceUrl = safeUrl(row.source_url, definition.sourceUrlRules)
     ?? productUrl;
   const observedMs = Date.parse(row.observed_at);
+  const nowMs = Number.isFinite(options.nowMs) ? options.nowMs : Date.now();
+  const promo = promoTruth(row, definition, nowMs);
   if (
     !productUrl
     || !sourceUrl
     || !Number.isFinite(observedMs)
+    || !promo
   ) {
     return null;
   }
@@ -326,8 +467,15 @@ function normalizeRetailRow(row, retailer = "globus") {
   const priceCondition = typeof row.price_condition === "string"
     ? row.price_condition
     : "unknown";
-  const priceConditionLabel =
+  const basePriceConditionLabel =
     definition.priceConditionLabels[priceCondition] ?? null;
+  const conditionParts = [
+    basePriceConditionLabel,
+    ...promo.conditionSuffixes
+  ].filter(Boolean);
+  const priceConditionLabel = conditionParts.length > 0
+    ? conditionParts.join(" · ")
+    : null;
 
   return Object.freeze({
     id: `retail:${definition.retailerId}:${row.store_id}:${row.source_product_id}`,
@@ -411,6 +559,9 @@ export function createRetailCatalogClient(options = {}) {
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const timeoutMs = options.timeoutMs ?? RETAIL_CATALOG_TIMEOUT_MS;
   const definition = resolveDefinition(options.retailerId ?? "globus");
+  const normalizeOptions = Number.isFinite(options.nowMs)
+    ? Object.freeze({ nowMs: options.nowMs })
+    : undefined;
 
   async function requestRows({
     query = null,
@@ -502,7 +653,7 @@ export function createRetailCatalogClient(options = {}) {
       }
 
       const products = payload
-        .map((row) => normalizeRetailRow(row, definition))
+        .map((row) => normalizeRetailRow(row, definition, normalizeOptions))
         .filter(Boolean);
       return result("catalog", {
         products: Object.freeze(products),

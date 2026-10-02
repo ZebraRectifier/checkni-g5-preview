@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "a5df1b1060378071e4934e8a54dae5dc8df1925c",
+  "sourceCommit": "7bc40759e293934b56edabd04b055aa823ac4b1d",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -10,7 +10,8 @@
     "magnit",
     "vkusvill",
     "perekrestok",
-    "lenta"
+    "lenta",
+    "da"
   ],
   "perekrestok": {
     "storeId": "perekrestok-yandex-3186917",
@@ -18,5 +19,14 @@
     "products": 5460,
     "categories": 58,
     "autoRefresh": "Supabase Cron every 6 hours"
+  },
+  "da": {
+    "storeId": "da-public-promo",
+    "scope": "Сеть ДА! · публичный промо-каталог · наличие зависит от магазина",
+    "products": 94,
+    "categories": 1,
+    "validFrom": "2026-10-01",
+    "validTo": "2026-10-14",
+    "source": "https://market-da.ru/sale.html"
   }
 }
