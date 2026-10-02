@@ -400,7 +400,7 @@ jobs:
             );
             const lentaRootProductCount = (await categoryButtons.allTextContents())
               .reduce((sum, text) => {
-                const match = text.match(/([\d\s]+) товаров/u);
+                const match = text.match(/([\d\s]+) (?:товар|товара|товаров)/u);
                 return sum + (
                   match ? Number(match[1].replace(/\s+/gu, "")) : 0
                 );
@@ -451,7 +451,7 @@ jobs:
               );
               const candidateTexts = await candidates.allTextContents();
               let nextIndex = candidateTexts.findIndex((text) => {
-                const match = text.match(/([\d\s]+) товаров/u);
+                const match = text.match(/([\d\s]+) (?:товар|товара|товаров)/u);
                 return match && Number(match[1].replace(/\s+/gu, "")) > 0;
               });
               if (nextIndex < 0) nextIndex = 0;
