@@ -567,7 +567,8 @@ export function createRetailCatalogClient(options = {}) {
     query = null,
     categoryId = null,
     categoryUrlPrefix = null,
-    limit = 24
+    limit = 24,
+    offset = 0
   } = {}) {
     if (
       !definition
@@ -585,6 +586,9 @@ export function createRetailCatalogClient(options = {}) {
       || !Number.isSafeInteger(limit)
       || limit < 1
       || limit > MAX_RETAIL_CATALOG_PRODUCTS
+      || !Number.isSafeInteger(offset)
+      || offset < 0
+      || offset > 10_000
     ) {
       return result("error", { code: "invalid_request" });
     }
@@ -620,9 +624,10 @@ export function createRetailCatalogClient(options = {}) {
       "order",
       categoryId === null && categoryUrlPrefix === null
         ? "updated_at.desc"
-        : "name.asc"
+        : "name.asc,source_product_id.asc"
     );
     url.searchParams.set("limit", String(limit));
+    url.searchParams.set("offset", String(offset));
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -657,7 +662,9 @@ export function createRetailCatalogClient(options = {}) {
         .filter(Boolean);
       return result("catalog", {
         products: Object.freeze(products),
-        partial: products.length !== payload.length
+        partial: products.length !== payload.length,
+        nextOffset: offset + payload.length,
+        pageSize: payload.length
       });
     } catch {
       return result("unavailable", { code: "transport_unavailable" });
@@ -796,7 +803,8 @@ export function createRetailCatalogClient(options = {}) {
         query: null,
         categoryId: useRootSourceFallback ? null : categoryId,
         categoryUrlPrefix,
-        limit: browseOptions.limit ?? 40
+        limit: browseOptions.limit ?? 40,
+        offset: browseOptions.offset ?? 0
       });
     },
     async rootCategories(categoryOptions = {}) {
