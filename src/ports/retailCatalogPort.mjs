@@ -649,9 +649,12 @@ export function createRetailCatalogClient(options = {}) {
       });
     },
     async rootCategories(categoryOptions = {}) {
+      const defaultRootLimit = Number.isSafeInteger(definition?.rootCategoryCount)
+        ? Math.min(160, Math.max(40, definition.rootCategoryCount))
+        : 40;
       return requestCategories({
         rootsOnly: true,
-        limit: categoryOptions.limit ?? 40
+        limit: categoryOptions.limit ?? defaultRootLimit
       });
     },
     async subcategories(parentId, categoryOptions = {}) {
