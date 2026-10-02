@@ -108,44 +108,6 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
       "public-online": "Публичная цена сайта"
     })
   }),
-  perekrestok: Object.freeze({
-    retailerId: "perekrestok",
-    storeId: "perekrestok-yandex-43939236872",
-    storeName: "Перекрёсток · Москва, ул. Брусилова, 29А",
-    localityId: "city-moscow",
-    localityName: "Москва",
-    displayName: "Перекрёсток",
-    catalogLabel: "Перекрёсток · Москва · доставка",
-    scopeLabel:
-      "Москва · доставка Яндекс · цена может отличаться в магазине · наличие неизвестно",
-    logo: "П",
-    defaultProductCount: 19,
-    rootCategoryCount: 6,
-    productUrlRules: Object.freeze([
-      Object.freeze({ host: "eda.yandex", prefix: "/restaurant/" }),
-      Object.freeze({ host: "eda.yandex.ru", prefix: "/restaurant/" })
-    ]),
-    imageUrlRules: Object.freeze([
-      Object.freeze({ host: "avatars.mds.yandex.net", prefix: "/get-eda/" })
-    ]),
-    categoryUrlRules: Object.freeze([
-      Object.freeze({
-        host: "yandex.com",
-        prefix: "/maps/org/perekryostok/43939236872/prices/"
-      })
-    ]),
-    sourceUrlRules: Object.freeze([
-      Object.freeze({
-        host: "yandex.com",
-        prefix: "/maps/org/perekryostok/43939236872/prices/"
-      }),
-      Object.freeze({ host: "eda.yandex", prefix: "/restaurant/" }),
-      Object.freeze({ host: "eda.yandex.ru", prefix: "/restaurant/" })
-    ]),
-    priceConditionLabels: Object.freeze({
-      "yandex-delivery": "Цена доставки Яндекс"
-    })
-  }),
   lenta: Object.freeze({
     retailerId: "lenta",
     storeId: "lenta-public-web",
@@ -177,6 +139,37 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     ]),
     priceConditionLabels: Object.freeze({
       "loyalty-card-1": "По Карте №1"
+    })
+  }),
+  perekrestok: Object.freeze({
+    retailerId: "perekrestok",
+    storeId: "perekrestok-yandex-3186917",
+    storeName:
+      "Перекрёсток · Москва, Большой Овчинниковский пер. 16 · Яндекс Еда",
+    localityId: "city-moscow",
+    localityName: "Москва",
+    displayName: "Перекрёсток",
+    catalogLabel: "Перекрёсток · Москва · Яндекс Еда",
+    scopeLabel: "Москва · цены доставки Яндекс Еды · наличие неизвестно",
+    logo: "П",
+    defaultProductCount: 5460,
+    rootCategoryCount: 58,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "eda.yandex.ru", prefix: "/retail/perekrestok" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "avatars.mds.yandex.net", prefix: "/get-eda/" }),
+      Object.freeze({ host: "eda.yandex", prefix: "/images/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "eda.yandex.ru", prefix: "/retail/perekrestok" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "eda.yandex.ru", prefix: "/retail/perekrestok" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      "yandex-eda-regular": "Цена доставки Яндекс Еды",
+      "yandex-eda-promo": "Промо-цена доставки Яндекс Еды"
     })
   })
 });

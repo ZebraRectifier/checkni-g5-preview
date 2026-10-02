@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "0a32d17c90f620cc10baa4d415f04166e5ecfdd4",
+  "sourceCommit": "16298513e0261647fab79a6df280c074a290f821",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -13,8 +13,10 @@
     "lenta"
   ],
   "perekrestok": {
-    "storeId": "perekrestok-yandex-43939236872",
-    "scope": "Москва · доставка Яндекс",
+    "storeId": "perekrestok-yandex-3186917",
+    "scope": "Москва · Яндекс Еда delivery",
+    "products": 5460,
+    "categories": 58,
     "autoRefresh": "Supabase Cron every 6 hours"
   }
 }
