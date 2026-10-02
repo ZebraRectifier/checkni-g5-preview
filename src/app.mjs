@@ -791,7 +791,7 @@ async function loadRetailRoots({ clearCatalog = true } = {}) {
   const retailerId = retailBrowserState.retailerId;
   const client = currentRetailClient();
   const requestId = beginRetailNavigation([], { clearCatalog });
-  const result = await client.rootCategories({ limit: 40 });
+  const result = await client.rootCategories();
   if (
     requestId !== retailBrowserRequestVersion
     || retailerId !== retailBrowserState.retailerId
