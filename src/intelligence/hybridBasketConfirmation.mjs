@@ -6,7 +6,6 @@ export const HYBRID_DRAFT_CONFIRMATION = Object.freeze({
 const CONFIRMABLE_TRIGGER_REASONS = new Set([
   "budget_request",
   "semantic_intent",
-  "ambiguous_segment",
   "unresolved_segment",
   "context_correction",
   "identity_specification",

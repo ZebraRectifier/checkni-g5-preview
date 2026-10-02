@@ -137,9 +137,12 @@ export function presentHybridBasketResult(result) {
       && result.reason === "confirmation_required"
       && result.triggerReason === "unresolved_segment"
     ) {
+      const terms = listTerms(result.unresolvedTerms);
       return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
         headline: "Поняла не всё.",
-        message: "Показываю только то, что смогла уверенно сопоставить. Непонятную часть лучше уточнить, чтобы не положить в корзину не тот товар.",
+        message: terms
+          ? `Проверь, правильно ли я поняла: ${terms}. Показываю только то, что смогла сопоставить с каталогом.`
+          : "Показываю только то, что смогла уверенно сопоставить. Непонятную часть лучше уточнить, чтобы не положить в корзину не тот товар.",
         items,
         primaryAction: items.length > 0 ? "Добавить найденное" : "Уточнить запрос",
         secondaryAction: items.length > 0 ? "Уточнить запрос" : "Искать вручную",
@@ -183,6 +186,36 @@ export function presentHybridBasketResult(result) {
         secondaryAction: items.length > 0 && canAddFoundOnly
           ? "Добавить только найденное"
           : "Искать вручную",
+        focusClarification: true
+      });
+    }
+
+    if (result.triggerReason === "ambiguous_segment") {
+      const choices = Array.isArray(result.ambiguousChoices)
+        ? result.ambiguousChoices.slice(0, 5)
+        : [];
+      const descriptions = choices.map((choice) => {
+        const options = Array.isArray(choice?.options)
+          ? choice.options.filter((name) => typeof name === "string" && name)
+          : [];
+        return typeof choice?.term === "string" && choice.term && options.length > 0
+          ? `«${choice.term}» может означать: ${options.join(", ")}.`
+          : typeof choice?.term === "string" && choice.term
+            ? `«${choice.term}» нужно уточнить.`
+            : "";
+      }).filter(Boolean);
+      const unresolved = listTerms(result.unresolvedTerms);
+      if (unresolved) descriptions.push(`Ещё не нашла: ${unresolved}.`);
+      const message = descriptions.length > 0
+        ? `${descriptions.join(" ")} Уточни, какой товар нужен.`
+        : "Не буду выбирать за тебя — уточни, какой товар нужен.";
+
+      return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+        headline: "Есть несколько похожих товаров.",
+        message,
+        items,
+        primaryAction: "Уточнить товар",
+        secondaryAction: "Искать вручную",
         focusClarification: true
       });
     }
@@ -243,17 +276,6 @@ export function presentHybridBasketResult(result) {
         items,
         primaryAction: canAddFound ? "Добавить найденное" : "Уточнить запрос",
         secondaryAction: canAddFound ? "Уточнить запрос" : "Искать вручную",
-        focusClarification: true
-      });
-    }
-
-    if (result.triggerReason === "ambiguous_segment") {
-      return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
-        headline: "Есть несколько похожих товаров.",
-        message: "Предложила один вариант — проверь перед добавлением.",
-        items,
-        primaryAction: "Добавить предложенное",
-        secondaryAction: "Уточнить запрос",
         focusClarification: true
       });
     }

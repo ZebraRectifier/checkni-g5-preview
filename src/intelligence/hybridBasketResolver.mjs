@@ -319,12 +319,12 @@ export async function resolveHybridBasketProposal(
     return typedResult(HYBRID_BASKET_RESULT.CLARIFICATION, {
       source: HYBRID_BASKET_SOURCE.LOCAL,
       reason: "confirmation_required",
-      triggerReason: planned.intents.length > 0
-        ? "semantic_intent"
+      triggerReason: planned.ambiguous.length > 0
+        ? "ambiguous_segment"
         : planned.unresolvedTerms.length > 0
           ? "unresolved_segment"
-          : planned.ambiguous.length > 0
-            ? "ambiguous_segment"
+          : planned.intents.length > 0
+            ? "semantic_intent"
             : planned.packNotes.length > 0
               ? "unit_quantity_ambiguous"
               : "unresolved_segment",
@@ -424,7 +424,16 @@ export async function resolveHybridBasketProposal(
       reason: "confirmation_required",
       triggerReason,
       draftProposal: normalizedProviderResult.proposal,
-      validation
+      validation,
+      ...(planned?.unresolvedTerms?.length > 0
+        ? { unresolvedTerms: planned.unresolvedTerms }
+        : {}),
+      ...(planned?.ambiguous?.length > 0
+        ? { ambiguousChoices: planned.ambiguous }
+        : {}),
+      ...(planned?.packNotes?.length > 0
+        ? { packNotes: planned.packNotes }
+        : {})
     });
   }
 
