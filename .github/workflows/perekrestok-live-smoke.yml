@@ -1,0 +1,130 @@
+name: Perekrestok Live Smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "src/**"
+      - "deployment.json"
+      - ".github/workflows/perekrestok-live-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  perekrestok-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install browser driver
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock playwright-core@1.63.0
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$chrome"
+          echo "CHROME_BIN=$chrome" >> "$GITHUB_ENV"
+
+      - name: Verify published Perekrestok prices
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const { chromium } = require("playwright-core");
+
+          const base =
+            "https://zebrarectifier.github.io/checkni-g5-preview/?comparison=observed&catalog=retail";
+
+          function assert(condition, message) {
+            if (!condition) throw new Error(message);
+          }
+
+          (async () => {
+            const browser = await chromium.launch({
+              headless: true,
+              executablePath: process.env.CHROME_BIN,
+              args: ["--no-sandbox"]
+            });
+            const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+            const pageErrors = [];
+            page.on("pageerror", (error) => pageErrors.push(error.message));
+
+            let published = false;
+            for (let attempt = 0; attempt < 20; attempt += 1) {
+              await page.goto(base + "&perekrestokRelease=0a32d17c&attempt=" + attempt, {
+                waitUntil: "domcontentloaded",
+                timeout: 30000
+              });
+              await page.waitForTimeout(1500);
+              const text = await page.locator("#retail-store-card-perekrestok")
+                .innerText().catch(() => "");
+              if (
+                text.includes("Перекрёсток · Москва, ул. Брусилова, 29А")
+                && text.includes("6 категорий · 19 товаров")
+                && text.includes("доставка Яндекс")
+                && text.includes("наличие неизвестно")
+              ) {
+                published = true;
+                break;
+              }
+              await page.waitForTimeout(2500);
+            }
+            assert(published, "Published Pages artifact does not expose the Perekrestok release");
+
+            const store = page.locator("#retail-store-card-perekrestok");
+            await store.click();
+            await page.waitForFunction(() => (
+              document.querySelector("#retail-store-card-perekrestok")
+                ?.getAttribute("aria-pressed") === "true"
+              && document.querySelectorAll(
+                "#retail-category-grid .retail-category-button:not(.is-loading)"
+              ).length === 6
+            ), null, { timeout: 15000 });
+
+            const roots = page.locator(
+              "#retail-category-grid .retail-category-button:not(.is-loading)"
+            );
+            assert(await roots.count() === 6, "Perekrestok root must expose 6 categories");
+
+            const rootTexts = await roots.allTextContents();
+            let index = rootTexts.findIndex((text) => /7 товаров/u.test(text));
+            if (index < 0) index = rootTexts.findIndex((text) => /[1-9]\d* товар/u.test(text));
+            assert(index >= 0, "No Perekrestok root category exposes products");
+            await roots.nth(index).click();
+
+            await page.waitForFunction(() => (
+              document.querySelectorAll(
+                '#product-grid .product-card[data-product-id^="retail:perekrestok:perekrestok-yandex-43939236872:"]'
+              ).length > 0
+            ), null, { timeout: 15000 });
+
+            const card = page.locator(
+              '#product-grid .product-card[data-product-id^="retail:perekrestok:perekrestok-yandex-43939236872:"]'
+            ).first();
+            const cardText = await card.innerText();
+            assert(/\d[\d\s]*,\d{2} ₽/u.test(cardText), "Perekrestok card has no observed RUB price");
+            assert(cardText.includes("Цена доставки Яндекс"), "Perekrestok price condition is missing");
+            assert(
+              cardText.includes("Перекрёсток · Москва, ул. Брусилова, 29А · источник"),
+              "Perekrestok store/source provenance is missing"
+            );
+            assert(
+              await card.getByRole("button").isDisabled(),
+              "Perekrestok delivery observation must remain display-only"
+            );
+            assert(pageErrors.length === 0, "Page errors: " + pageErrors.join(" | "));
+
+            console.log("PEREKRESTOK_LIVE", JSON.stringify({
+              store: await store.innerText(),
+              product: cardText
+            }));
+            await browser.close();
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
