@@ -87,7 +87,7 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     catalogLabel: "ВкусВилл · публичный каталог",
     scopeLabel: "Публичный каталог · цена может зависеть от региона · наличие неизвестно",
     logo: "В",
-    defaultProductCount: 518,
+    defaultProductCount: 697,
     rootCategoryCount: 17,
     productUrlRules: Object.freeze([
       Object.freeze({ host: "vkusvill.ru", prefix: "/goods/" }),
@@ -105,7 +105,9 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
       Object.freeze({ host: "www.vkusvill.ru", prefix: "/goods/" })
     ]),
     priceConditionLabels: Object.freeze({
-      "public-online": "Публичная цена сайта"
+      "public-online": "Публичная цена сайта",
+      "loyalty-vkusvill": "По карте ВкусВилл",
+      "promo": "Акционная цена сайта"
     })
   }),
   lenta: Object.freeze({
