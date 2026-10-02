@@ -53,7 +53,7 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     catalogLabel: "Лента · публичный каталог",
     scopeLabel: "Публичный каталог · наличие неизвестно",
     logo: "Л",
-    defaultProductCount: 19,
+    defaultProductCount: 64,
     rootCategoryCount: 22,
     productUrlRules: Object.freeze([
       Object.freeze({ host: "lenta.com", prefix: "/product/" }),
