@@ -30,7 +30,7 @@ jobs:
           test -n "$chrome"
           echo "CHROME_BIN=$chrome" >> "$GITHUB_ENV"
 
-      - name: Verify published Lenta flow
+      - name: Verify published retail flow
         shell: bash
         run: |
           set -euo pipefail
@@ -77,14 +77,23 @@ jobs:
                 await route.continue();
               }
             );
-            await racePage.goto(url, {
-              waitUntil: "domcontentloaded",
-              timeout: 30000
-            });
-            await racePage.locator("#retail-store-card-lenta").waitFor({
-              state: "visible",
-              timeout: 15000
-            });
+            let raceReady = false;
+            for (let attempt = 0; attempt < 10; attempt += 1) {
+              await racePage.goto(url, {
+                waitUntil: "domcontentloaded",
+                timeout: 30000
+              });
+              await racePage.waitForTimeout(1200);
+              if (await racePage.locator("#retail-store-card-lenta").count()) {
+                raceReady = true;
+                break;
+              }
+              await racePage.waitForTimeout(2500);
+            }
+            assert(
+              raceReady,
+              "Published page never exposed the Lenta selector for the race gate"
+            );
             for (let attempt = 0; attempt < 40 && !globusRootHeld; attempt += 1) {
               await racePage.waitForTimeout(100);
             }
@@ -428,10 +437,77 @@ jobs:
               reachedLentaProducts,
               "Published Lenta taxonomy did not reach products within bounded depth"
             );
-            assert(
-              (await page.locator("#catalog-eyebrow").innerText()).includes("Лента"),
-              "Published Lenta leaf lost retailer identity"
+            const lentaUiState = await page.evaluate(() => ({
+              catalogEyebrow:
+                document.querySelector("#catalog-eyebrow")?.textContent ?? "",
+              catalogNote:
+                document.querySelector("#catalog-note")?.textContent ?? "",
+              categoryTitle:
+                document.querySelector("#retail-category-title")?.textContent ?? "",
+              breadcrumbs:
+                document.querySelector("#retail-breadcrumbs")?.textContent ?? "",
+              globusPressed:
+                document.querySelector("#retail-store-card")
+                  ?.getAttribute("aria-pressed") ?? "",
+              lentaPressed:
+                document.querySelector("#retail-store-card-lenta")
+                  ?.getAttribute("aria-pressed") ?? "",
+              firstProductId:
+                document.querySelector("#product-grid .product-card")
+                  ?.getAttribute("data-product-id") ?? "",
+              productCount:
+                document.querySelectorAll("#product-grid .product-card").length
+            }));
+            console.log(
+              "LENTA_UI_STATE",
+              JSON.stringify(lentaUiState)
             );
+
+            try {
+              await page.waitForFunction(() => {
+                const eyebrow =
+                  document.querySelector("#catalog-eyebrow")?.textContent ?? "";
+                const firstProductId =
+                  document.querySelector("#product-grid .product-card")
+                    ?.getAttribute("data-product-id") ?? "";
+                const lentaPressed =
+                  document.querySelector("#retail-store-card-lenta")
+                    ?.getAttribute("aria-pressed");
+                return (
+                  eyebrow.includes("Лента")
+                  && firstProductId.startsWith(
+                    "retail:lenta:lenta-public-web:"
+                  )
+                  && lentaPressed === "true"
+                );
+              }, null, { timeout: 5000 });
+            } catch {
+              const settledLentaUiState = await page.evaluate(() => ({
+                catalogEyebrow:
+                  document.querySelector("#catalog-eyebrow")?.textContent ?? "",
+                catalogNote:
+                  document.querySelector("#catalog-note")?.textContent ?? "",
+                categoryTitle:
+                  document.querySelector("#retail-category-title")?.textContent ?? "",
+                breadcrumbs:
+                  document.querySelector("#retail-breadcrumbs")?.textContent ?? "",
+                globusPressed:
+                  document.querySelector("#retail-store-card")
+                    ?.getAttribute("aria-pressed") ?? "",
+                lentaPressed:
+                  document.querySelector("#retail-store-card-lenta")
+                    ?.getAttribute("aria-pressed") ?? "",
+                firstProductId:
+                  document.querySelector("#product-grid .product-card")
+                    ?.getAttribute("data-product-id") ?? "",
+                productCount:
+                  document.querySelectorAll("#product-grid .product-card").length
+              }));
+              throw new Error(
+                "Published Lenta leaf did not settle to Lenta ownership: "
+                + JSON.stringify(settledLentaUiState)
+              );
+            }
 
             const card = page.locator("#product-grid .product-card").first();
             await card.waitFor({ state: "visible", timeout: 15000 });
