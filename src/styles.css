@@ -1366,6 +1366,16 @@ h1 {
   cursor: pointer;
 }
 
+.retail-breadcrumbs .is-current {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border-radius: 10px;
+  color: var(--ink);
+  font-weight: 900;
+}
+
 .retail-category-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1375,10 +1385,11 @@ h1 {
 
 .retail-category-button {
   min-height: 72px;
+  position: relative;
   display: grid;
   align-content: center;
   gap: 6px;
-  padding: 13px 14px;
+  padding: 13px 42px 13px 14px;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: #ffffff;
@@ -1401,6 +1412,28 @@ h1 {
 .retail-category-button span {
   color: var(--muted);
   font-size: 11px;
+}
+
+.retail-category-button .retail-category-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  translate: 0 -50%;
+  color: #28533c;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.retail-category-retry,
+.retail-category-exit {
+  padding-right: 14px;
+}
+
+.retail-load-more {
+  display: block;
+  width: min(100%, 420px);
+  min-height: 46px;
+  margin: 16px auto 0;
 }
 
 .retail-category-button.is-loading {
