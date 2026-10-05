@@ -1,1 +1,6 @@
-{"status":"manual","lastAttemptAt":null,"reason":"automation_not_yet_verified"}
+{
+  "lastAttemptAt": "2026-10-05T12:30:18.707Z",
+  "status": "blocked",
+  "selectedDeliveryAddress": "Москва, проспект Мира, 211к2",
+  "reason": "source_challenge"
+}
