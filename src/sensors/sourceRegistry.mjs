@@ -8,9 +8,11 @@ import { ozonFreshSource } from "./sources/ozonFresh.mjs";
 import { samokatSource } from "./sources/samokat.mjs";
 import { vprokSource } from "./sources/vprok.mjs";
 import { yandexEdaSource } from "./sources/yandexEda.mjs";
+import { yandexMapsEdadealExactStoreSource } from "./sources/yandexMapsEdadealExactStore.mjs";
 
 export const SENSOR_SOURCES = Object.freeze([
   yandexEdaSource,
+  yandexMapsEdadealExactStoreSource,
   kuperSource,
   deliverySource,
   megamarketSource,
