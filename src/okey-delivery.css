@@ -1,0 +1,14 @@
+.okey-delivery{margin:1rem 0;padding:1rem;border:1px solid currentColor;border-radius:12px}
+.okey-delivery summary,.address-price-history summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600}
+.okey-delivery label{display:block}
+.okey-delivery select,.okey-delivery input,.okey-delivery button{max-width:100%;min-height:44px;margin:.4rem 0;padding:.5rem;font:inherit}
+.okey-delivery input{width:100%}
+.okey-delivery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:1rem}
+.okey-delivery-card{padding:1rem;border:1px solid currentColor;border-radius:8px;min-width:0}
+.okey-delivery-card h3{font-size:1rem;margin:0 0 .5rem}
+.okey-delivery-card a{display:block;padding:.6rem 0}
+.address-price-history svg{width:100%;height:auto;display:block}
+.address-price-history table{width:100%;font-size:.8rem}
+.address-price-history th,.address-price-history td{text-align:left;padding:.25rem}
+.address-price-history caption{overflow-wrap:anywhere;text-align:left}
+.address-price-history{margin-top:.5rem}

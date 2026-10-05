@@ -1,0 +1,86 @@
+name: OKEY public data refresh
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/data/okeyDelivery*.json'
+      - '.github/workflows/okey-public-data.yml'
+  schedule:
+    - cron: '15 * * * *'
+  workflow_dispatch:
+concurrency:
+  group: okey-public-data
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Read public source data and validate delivery scope
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, pathlib
+          root = "https://raw.githubusercontent.com/ZebraRectifier/Checkni/main/"
+          files = {}
+          for name in ["okeyDeliveryHistory.json", "okeyDeliveryRefresh.json"]:
+              path = "src/data/" + name
+              with urllib.request.urlopen(root + path, timeout=30) as response:
+                  data = response.read(8 * 1024 * 1024 + 1)
+              assert len(data) <= 8 * 1024 * 1024, "Oversized public artifact"
+              files[path] = data
+          bundle = json.loads(files["src/data/okeyDeliveryHistory.json"])
+          assert bundle["version"] == 1 and 0 < len(bundle["snapshots"]) <= 90
+          for s in bundle["snapshots"]:
+              assert s["retailerId"] == "okey" and s["salesChannel"] == "yandex-eda-delivery"
+              assert s["priceScope"] == "selected-delivery-address-not-proven-physical-store"
+              assert s["physicalStoreId"] is None and s["physicalStoreAddress"] is None
+              assert s["selectedDeliveryAddress"] and s["complete"] is False
+              assert 0 < len(s["products"]) <= 20000
+              for p in s["products"]:
+                  assert type(p["displayedPriceKopeks"]) is int and p["displayedPriceKopeks"] > 0
+                  assert p["priceWithCardKopeks"] is None and p["priceWithoutCardKopeks"] is None
+                  assert p["availability"] == "unknown"
+          refresh = json.loads(files["src/data/okeyDeliveryRefresh.json"])
+          assert refresh["status"] in ["manual", "collected", "unavailable", "blocked"]
+          for path, data in files.items():
+              pathlib.Path(path).write_bytes(data)
+          PY
+      - name: Commit changed observations only
+        run: |
+          set -euo pipefail
+          git add src/data/okeyDeliveryHistory.json src/data/okeyDeliveryRefresh.json
+          if ! git diff --cached --quiet; then
+            git config user.name "CHECKNI Price History"
+            git config user.email "actions@users.noreply.github.com"
+            git commit -m "DATA: publish verified OKEY delivery history"
+            git push origin HEAD:main
+          fi
+      - name: Package static browser artifact
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp index.html prices.html _site/
+          cp -a src _site/src
+          touch _site/.nojekyll
+          if grep -RIE --exclude='*.map' '(OPENROUTER_API_KEY|service[_-]?role[^a-z]|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})' _site; then
+            exit 1
+          fi
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b
+        with:
+          path: _site
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
+      - id: deploy
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
