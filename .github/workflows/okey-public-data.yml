@@ -1,12 +1,13 @@
-name: OKEY public data refresh
+name: OKEY delivery price history
 on:
   push:
     branches: [main]
     paths:
-      - 'src/data/okeyDelivery*.json'
+      - 'tools/okey-public-catalog/collect-eda.mjs'
+      - 'tools/okey-public-catalog/eda-parser.mjs'
       - '.github/workflows/okey-public-data.yml'
   schedule:
-    - cron: '15 * * * *'
+    - cron: '30 0 * * *'
   workflow_dispatch:
 concurrency:
   group: okey-public-data
@@ -29,35 +30,14 @@ jobs:
         with:
           ref: main
           persist-credentials: true
-      - name: Read public source data and validate delivery scope
-        run: |
-          python3 - <<'PY'
-          import json, urllib.request, pathlib
-          root = "https://raw.githubusercontent.com/ZebraRectifier/Checkni/main/"
-          files = {}
-          for name in ["okeyDeliveryHistory.json", "okeyDeliveryRefresh.json"]:
-              path = "src/data/" + name
-              with urllib.request.urlopen(root + path, timeout=30) as response:
-                  data = response.read(8 * 1024 * 1024 + 1)
-              assert len(data) <= 8 * 1024 * 1024, "Oversized public artifact"
-              files[path] = data
-          bundle = json.loads(files["src/data/okeyDeliveryHistory.json"])
-          assert bundle["version"] == 1 and 0 < len(bundle["snapshots"]) <= 90
-          for s in bundle["snapshots"]:
-              assert s["retailerId"] == "okey" and s["salesChannel"] == "yandex-eda-delivery"
-              assert s["priceScope"] == "selected-delivery-address-not-proven-physical-store"
-              assert s["physicalStoreId"] is None and s["physicalStoreAddress"] is None
-              assert s["selectedDeliveryAddress"] and s["complete"] is False
-              assert 0 < len(s["products"]) <= 20000
-              for p in s["products"]:
-                  assert type(p["displayedPriceKopeks"]) is int and p["displayedPriceKopeks"] > 0
-                  assert p["priceWithCardKopeks"] is None and p["priceWithoutCardKopeks"] is None
-                  assert p["availability"] == "unknown"
-          refresh = json.loads(files["src/data/okeyDeliveryRefresh.json"])
-          assert refresh["status"] in ["manual", "collected", "unavailable", "blocked"]
-          for path, data in files.items():
-              pathlib.Path(path).write_bytes(data)
-          PY
+      - name: Install locked collector dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install pinned Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Collect visible address-bound observations
+        run: node tools/okey-public-catalog/collect-eda.mjs
+      - name: Validate measured history
+        run: node --test tests/addressPriceHistory.test.mjs
       - name: Commit changed observations only
         run: |
           set -euo pipefail
