@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "0da8c263163cd928e3f15add78720920bc4ad3b0",
+  "sourceCommit": "42a0ebe2c548f39f3d0e7d2d039afe708724933c",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -38,5 +38,12 @@
     "validFrom": "2026-10-01",
     "validTo": "2026-10-14",
     "source": "https://catalog.auchan.ru/60z9R061p97677"
+  },
+  "okeyDirectory": {
+    "scope": "Официальный выбор Москва: 8 адресов в Москве, 3 в Московской области",
+    "stores": 11,
+    "storePricesWithCard": "unknown",
+    "storePricesWithoutCard": "unknown",
+    "autoRefresh": "unavailable without exact-store price source"
   }
 }

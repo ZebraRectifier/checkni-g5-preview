@@ -25,6 +25,7 @@ import { revealWinningBasketList } from "./runtime/listInspection.mjs";
 import { createProductPhotoLoader } from "./runtime/productPhotos.mjs";
 import { requestCatalogPhotos } from "./ports/catalogPhotosPort.mjs";
 import { createStoresSection } from "./components/StoresMap.mjs";
+import { createOkeyStoreDirectory } from "./components/OkeyStoreDirectory.mjs";
 import {
   CATALOG_SORT,
   buildSnapshotPriceHints,
@@ -77,6 +78,9 @@ import {
 
 const elements = {
   brandHome: document.querySelector(".brand"),
+  mascotStage: document.querySelector(".hero-identity"),
+  mascotBubble: document.querySelector(".hero-bubble"),
+  mascotImage: document.querySelector(".hero-mascot"),
   shopView: document.querySelector("#shop-view"),
   basketView: document.querySelector("#basket-view"),
   proposalSection: document.querySelector("#basket-proposal-section"),
@@ -364,6 +368,65 @@ function renderHomeExample() {
       + `${WEB_SNAPSHOT_META.observedDateLabel}. Регион не подтверждён.`;
   }
   section.hidden = false;
+}
+
+const MASCOT_COPY = Object.freeze({
+  idle: "Что ищем сегодня?",
+  curious: "Уточним — и я добью корзину.",
+  searching: "Ищу и сверяю товары…",
+  checking: "Проверяю варианты…",
+  found: "Нашёл. Проверь корзину.",
+  partial: "Часть нашёл — остальное уточним.",
+  error: "Не вышло. Корзина цела.",
+  big_saving: "О, тут уже есть экономия."
+});
+
+function setMascotState(state = "idle", copy = null) {
+  if (!elements.mascotStage || !elements.mascotBubble) return;
+
+  const safeState = Object.prototype.hasOwnProperty.call(MASCOT_COPY, state)
+    ? state
+    : "idle";
+  elements.mascotStage.dataset.mascotState = safeState;
+  elements.mascotBubble.textContent = copy || MASCOT_COPY[safeState];
+
+  if (elements.mascotImage) {
+    elements.mascotImage.dataset.mascotState = safeState;
+  }
+}
+
+function mascotStateForHybrid(status) {
+  if (status === HYBRID_BASKET_FLOW_STATUS.LOADING) return "searching";
+  if (status === HYBRID_BASKET_FLOW_STATUS.SUCCESS) return "found";
+  if (status === HYBRID_BASKET_FLOW_STATUS.PARTIAL) return "partial";
+  if (status === HYBRID_BASKET_FLOW_STATUS.CLARIFICATION) return "curious";
+  if (
+    status === HYBRID_BASKET_FLOW_STATUS.UNAVAILABLE
+    || status === HYBRID_BASKET_FLOW_STATUS.ERROR
+  ) return "error";
+  if (status === HYBRID_BASKET_FLOW_STATUS.REJECTED) return "curious";
+  return "idle";
+}
+
+function comparisonHasPositiveSavings(result) {
+  const direct = result?.savingsMinor;
+  const observed = result?.conclusion?.savingsMinor;
+  return (
+    (Number.isSafeInteger(direct) && direct > 0)
+    || (Number.isSafeInteger(observed) && observed > 0)
+  );
+}
+
+function mascotStateForComparison(state) {
+  if (state.status === COMPARISON_STATUS.LOADING) return "checking";
+  if (state.status === COMPARISON_STATUS.SUCCESS) {
+    return comparisonHasPositiveSavings(state.result)
+      ? "big_saving"
+      : "found";
+  }
+  if (state.status === COMPARISON_STATUS.NO_WINNER) return "partial";
+  if (state.status === COMPARISON_STATUS.ERROR) return "error";
+  return "idle";
 }
 
 function renderBetaLiveSection() {
@@ -740,7 +803,7 @@ function createAppRouteState(
 ) {
   const state = createRouteState(view, fromView, scrollY);
 
-  if (publicRetailCatalogMode && view === VIEW.SHOP) {
+  if (publicRetailCatalogMode) {
     state.checkniRetailNavigation = true;
     state.checkniRetailPath = retailPathForHistory(retailPath);
     state.checkniRetailerId = validRetailerId(retailerId);
@@ -1183,6 +1246,7 @@ function setupRetailBrowser() {
   renderRetailBrowser();
   if (!publicRetailCatalogMode) return;
 
+  elements.retailStoreGrid?.after(createOkeyStoreDirectory());
   elements.retailCategoryBack?.addEventListener("click", () => {
     if (retailBrowserState.path.length === 0) return;
     history.back();
@@ -1507,6 +1571,7 @@ function applyClarificationAction(mode) {
 
 function renderBasketProposalState() {
   const state = basketProposalFlow.getState();
+  setMascotState(mascotStateForHybrid(state.status));
   const isLoading = state.status === HYBRID_BASKET_FLOW_STATUS.LOADING;
 
   elements.proposalSubmit.disabled = false;
@@ -1624,6 +1689,23 @@ function renderBasketProposalState() {
       appendProposalAction(
         view?.primaryAction || "Написать покупки",
         focusProposalInput
+      );
+    } else if (triggerReason === "ambiguous_segment") {
+      appendProposalAction(
+        view?.primaryAction || "Уточнить товар",
+        focusProposalInput
+      );
+      appendProposalAction(
+        view?.secondaryAction || "Искать вручную",
+        () => {
+          invalidateHybridForManualTakeover();
+          elements.searchInput.focus({ preventScroll: true });
+          elements.searchInput.scrollIntoView({
+            block: "center",
+            behavior: "auto"
+          });
+        },
+        { secondary: true }
       );
     } else {
       appendProposalAction(
@@ -1806,6 +1888,7 @@ function renderComparisonState({ focusResult = false } = {}) {
   if (!compareButton || !output) return;
 
   const state = comparisonFlow.getState();
+  setMascotState(mascotStateForComparison(state));
   const isLoading = state.status === COMPARISON_STATUS.LOADING;
 
   compareButton.disabled = isLoading;
@@ -2366,7 +2449,7 @@ const restoredRetailerId = publicRetailCatalogMode
 history.replaceState(
   createAppRouteState(
     currentView,
-    null,
+    history.state?.checkniSurfaceFrom ?? null,
     window.scrollY,
     restoredRetailPath ?? retailBrowserState.path,
     restoredRetailerId

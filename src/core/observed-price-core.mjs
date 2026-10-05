@@ -67,6 +67,17 @@ function normalizeCountryCode(value) {
   return /^[A-Z]{2}$/.test(upper) ? upper : null;
 }
 
+function normalizeOldPriceMinor(value, unitPriceMinor) {
+  if (value == null) return null;
+  if (
+    !Number.isSafeInteger(value)
+    || value <= unitPriceMinor
+  ) {
+    throw new TypeError("observed offer oldPriceMinor is invalid");
+  }
+  return value;
+}
+
 function normalizePriceCondition(value) {
   if (value == null) return null;
   const normalized = cleanGeoString(value);
@@ -183,6 +194,14 @@ function normalizeProvenance(offer) {
     proof: provenance.proof ?? null,
     license: provenance.license ?? null,
     priceCondition: provenance.priceCondition ?? offer.priceCondition ?? null,
+    priceConditionComparable:
+      provenance.priceConditionComparable
+      ?? offer.priceConditionComparable
+      ?? false,
+    oldPriceMinor:
+      provenance.oldPriceMinor
+      ?? offer.oldPriceMinor
+      ?? null,
     conditionNote:
       provenance.proof?.conditionNote
       ?? provenance.conditionNote
@@ -248,6 +267,10 @@ function requireObservedOffer(offer) {
   const localityId = cleanGeoString(offer.localityId);
   const localityName = cleanGeoString(offer.localityName);
   const priceCondition = normalizePriceCondition(offer.priceCondition);
+  const oldPriceMinor = normalizeOldPriceMinor(
+    offer.oldPriceMinor,
+    offer.unitPriceMinor
+  );
   const salesChannel = normalizeSalesChannel(offer.salesChannel);
   const minimumQuantity = normalizeMinimumQuantity(offer.minimumQuantity);
   const conditionNote = cleanGeoString(
@@ -281,6 +304,7 @@ function requireObservedOffer(offer) {
     sourceProductId: offer.sourceProductId ?? null,
     sourceProductName: offer.sourceProductName ?? null,
     unitPriceMinor: offer.unitPriceMinor,
+    oldPriceMinor,
     currency: "RUB",
     priceCondition,
     priceConditionComparable,
@@ -318,6 +342,7 @@ function stableOfferKey(offer) {
     offer.storeName ?? "",
     offer.locationLabel ?? "",
     offer.unitPriceMinor,
+    offer.oldPriceMinor ?? "",
     offer.priceCondition ?? "",
     offer.priceConditionComparable === true ? "comparable" : "not-comparable",
     offer.conditionNote ?? "",
@@ -336,6 +361,7 @@ function hasEqualTimeTruthConflict(a, b) {
     "localityId",
     "retailerId",
     "storeId",
+    "oldPriceMinor",
     "priceCondition",
     "priceConditionComparable",
     "conditionNote",
@@ -571,6 +597,8 @@ function buildCandidateBasket(basket, group) {
         lineTotalMinor: null,
         priceCondition: null,
         priceConditionComparable: false,
+        comparisonReady: false,
+        comparisonBlockReason: "missing_observation",
         salesChannel: OBSERVED_SALES_CHANNEL.UNKNOWN,
         availability: OBSERVATION_AVAILABILITY.UNKNOWN,
         observedAt: null,
@@ -590,6 +618,8 @@ function buildCandidateBasket(basket, group) {
         lineTotalMinor: null,
         priceCondition: null,
         priceConditionComparable: false,
+        comparisonReady: false,
+        comparisonBlockReason: "conflicting_observation",
         salesChannel: OBSERVED_SALES_CHANNEL.UNKNOWN,
         availability: OBSERVATION_AVAILABILITY.UNKNOWN,
         observedAt: selected.observedAt,
@@ -616,6 +646,11 @@ function buildCandidateBasket(basket, group) {
         lineTotalMinor: null,
         priceCondition: observed.priceCondition,
         priceConditionComparable: observed.priceConditionComparable,
+        comparisonReady: false,
+        comparisonBlockReason: minimumQuantity == null
+          ? "minimum_quantity_unproven"
+          : "minimum_quantity_not_one",
+        oldPriceMinor: observed.oldPriceMinor,
         conditionNote: observed.conditionNote,
         salesChannel: observed.salesChannel,
         minimumQuantity,
@@ -625,6 +660,11 @@ function buildCandidateBasket(basket, group) {
         provenance: observed.provenance
       };
     }
+
+    const comparisonReady = (
+      minimumQuantity === 1
+      && observed.priceConditionComparable === true
+    );
 
     return {
       productId: item.product.id,
@@ -636,6 +676,13 @@ function buildCandidateBasket(basket, group) {
       lineTotalMinor: lineTotal(observed.unitPriceMinor, item.quantity),
       priceCondition: observed.priceCondition,
       priceConditionComparable: observed.priceConditionComparable,
+      comparisonReady,
+      comparisonBlockReason: comparisonReady
+        ? null
+        : observed.priceConditionComparable !== true
+          ? "price_condition_unproven"
+          : "minimum_quantity_not_one",
+      oldPriceMinor: observed.oldPriceMinor,
       conditionNote: observed.conditionNote,
       salesChannel: observed.salesChannel,
       minimumQuantity,
@@ -650,6 +697,10 @@ function buildCandidateBasket(basket, group) {
   const coveredItems = priced.length;
   const totalItems = basket.length;
   const completePriceCoverage = coveredItems === totalItems;
+  const comparisonReadyItems = priced.filter(
+    (line) => line.comparisonReady === true
+  ).length;
+  const completeComparisonReadyCoverage = comparisonReadyItems === totalItems;
   const knownSubtotalMinor = sumMinor(
     priced.map((line) => line.lineTotalMinor),
     "observed candidate subtotal"
@@ -729,7 +780,13 @@ function buildCandidateBasket(basket, group) {
       totalItems,
       ratio: coveredItems / totalItems
     },
-    completePriceCoverage
+    comparisonReadyCoverage: {
+      coveredItems: comparisonReadyItems,
+      totalItems,
+      ratio: comparisonReadyItems / totalItems
+    },
+    completePriceCoverage,
+    completeComparisonReadyCoverage
   };
 }
 
@@ -822,12 +879,15 @@ export function compareObservedBasket({ basket, offers } = {}) {
       && candidate.contextCoherent
     ))
     .sort(compareCompleteCandidates);
+  const comparisonComplete = complete.filter(
+    (candidate) => candidate.completeComparisonReadyCoverage
+  );
   const hasIncoherentComplete = candidates.some((candidate) => (
     candidate.completePriceCoverage
     && !candidate.contextCoherent
   ));
 
-  const winnerCandidate = complete[0] ?? null;
+  const winnerCandidate = comparisonComplete[0] ?? complete[0] ?? null;
   const winner = winnerCandidate == null
     ? null
     : {
@@ -856,12 +916,19 @@ export function compareObservedBasket({ basket, offers } = {}) {
         salesChannel: winnerCandidate.salesChannel,
         salesChannels: winnerCandidate.salesChannels,
         totalMinor: winnerCandidate.totalMinor,
-        priceCoverage: winnerCandidate.priceCoverage
+        priceCoverage: winnerCandidate.priceCoverage,
+        comparisonReadyCoverage: winnerCandidate.comparisonReadyCoverage
       };
 
-  const completeScopes = complete.map((candidate) => comparisonScopeFor(candidate));
-  const firstScope = completeScopes[0] ?? null;
-  const hasConditionalPriceContext = complete.some((candidate) => (
+  const comparisonScopes = comparisonComplete.map(
+    (candidate) => comparisonScopeFor(candidate)
+  );
+  const firstComparisonScope = comparisonScopes[0] ?? null;
+  const winnerScope = winnerCandidate == null
+    ? null
+    : comparisonScopeFor(winnerCandidate);
+
+  const candidateHasConditionalPriceContext = (candidate) => (
     candidate.priceConditions.length > 1
     || candidate.lines.some((line) => {
       if (line.status !== OBSERVED_LINE_STATUS.PRICED) return false;
@@ -875,34 +942,55 @@ export function compareObservedBasket({ basket, offers } = {}) {
         )
       );
     })
-  ));
-  const hasMixedSalesChannel = complete.some((candidate) => (
+  );
+
+  const candidateHasMixedSalesChannel = (candidate) => (
     candidate.salesChannels.length > 1
     || candidate.salesChannel == null
     || candidate.salesChannel === OBSERVED_SALES_CHANNEL.UNKNOWN
-  )) || new Set(complete.map((candidate) => candidate.salesChannel)).size > 1;
+  );
+
+  const hasRawConditionalPriceContext = complete.some(
+    candidateHasConditionalPriceContext
+  );
+  const hasConditionalPriceContext = comparisonComplete.some(
+    candidateHasConditionalPriceContext
+  );
+
+  const hasRawMixedSalesChannel = (
+    complete.some(candidateHasMixedSalesChannel)
+    || new Set(complete.map((candidate) => candidate.salesChannel)).size > 1
+  );
+  const hasMixedSalesChannel = (
+    comparisonComplete.some(candidateHasMixedSalesChannel)
+    || new Set(
+      comparisonComplete.map((candidate) => candidate.salesChannel)
+    ).size > 1
+  );
+
   const comparableComplete = (
-    complete.length >= 2
+    comparisonComplete.length >= 2
     && !hasConditionalPriceContext
     && !hasMixedSalesChannel
-    && firstScope !== null
-    && completeScopes.every((scope) => (
+    && firstComparisonScope !== null
+    && comparisonScopes.every((scope) => (
       scope !== null
-      && scope.key === firstScope.key
-      && scope.truthLevel === firstScope.truthLevel
+      && scope.key === firstComparisonScope.key
+      && scope.truthLevel === firstComparisonScope.truthLevel
     ))
   );
+
   const uniqueCheapest = (
     comparableComplete
-    && complete[0].totalMinor < complete[1].totalMinor
+    && comparisonComplete[0].totalMinor < comparisonComplete[1].totalMinor
   );
   const lowestTie = (
     comparableComplete
-    && complete[0].totalMinor === complete[1].totalMinor
+    && comparisonComplete[0].totalMinor === comparisonComplete[1].totalMinor
   );
 
   const savingsMinor = uniqueCheapest
-    ? complete[1].totalMinor - complete[0].totalMinor
+    ? comparisonComplete[1].totalMinor - comparisonComplete[0].totalMinor
     : null;
 
   let conclusion;
@@ -917,9 +1005,53 @@ export function compareObservedBasket({ basket, offers } = {}) {
       savingsMinor: null,
       comparisonScope: null
     });
+  } else if (comparisonComplete.length === 0) {
+    if (
+      complete.length === 1
+      && complete[0].priceConditions.length <= 1
+      && complete[0].salesChannels.length <= 1
+    ) {
+      conclusion = Object.freeze({
+        kind: OBSERVED_COMPARISON_CONCLUSION.OBSERVED_TOTAL_ONLY,
+        reason: "single_complete_candidate",
+        candidateId: winnerCandidate.candidateId,
+        totalMinor: winnerCandidate.totalMinor,
+        savingsMinor: null,
+        comparisonScope: winnerScope
+      });
+    } else {
+      conclusion = Object.freeze({
+        kind: OBSERVED_COMPARISON_CONCLUSION.INSUFFICIENT_COVERAGE,
+        reason: hasRawConditionalPriceContext
+          ? "conditional_price_context"
+          : hasRawMixedSalesChannel
+            ? "mixed_sales_channel"
+            : "no_comparison_ready_candidate",
+        candidateId: null,
+        totalMinor: null,
+        savingsMinor: null,
+        comparisonScope: null
+      });
+    }
   } else if (
-    complete.length === 1
-    && complete[0].priceConditions.length > 1
+    comparisonComplete.length === 1
+    && complete.length > comparisonComplete.length
+  ) {
+    conclusion = Object.freeze({
+      kind: OBSERVED_COMPARISON_CONCLUSION.INSUFFICIENT_COVERAGE,
+      reason: hasRawConditionalPriceContext
+        ? "conditional_price_context"
+        : hasRawMixedSalesChannel
+          ? "mixed_sales_channel"
+          : "no_comparison_ready_candidate",
+      candidateId: null,
+      totalMinor: null,
+      savingsMinor: null,
+      comparisonScope: null
+    });
+  } else if (
+    comparisonComplete.length === 1
+    && comparisonComplete[0].priceConditions.length > 1
   ) {
     conclusion = Object.freeze({
       kind: OBSERVED_COMPARISON_CONCLUSION.INSUFFICIENT_COVERAGE,
@@ -930,8 +1062,8 @@ export function compareObservedBasket({ basket, offers } = {}) {
       comparisonScope: null
     });
   } else if (
-    complete.length === 1
-    && complete[0].salesChannels.length > 1
+    comparisonComplete.length === 1
+    && comparisonComplete[0].salesChannels.length > 1
   ) {
     conclusion = Object.freeze({
       kind: OBSERVED_COMPARISON_CONCLUSION.INSUFFICIENT_COVERAGE,
@@ -941,14 +1073,14 @@ export function compareObservedBasket({ basket, offers } = {}) {
       savingsMinor: null,
       comparisonScope: null
     });
-  } else if (complete.length === 1) {
+  } else if (comparisonComplete.length === 1) {
     conclusion = Object.freeze({
       kind: OBSERVED_COMPARISON_CONCLUSION.OBSERVED_TOTAL_ONLY,
       reason: "single_complete_candidate",
       candidateId: winnerCandidate.candidateId,
       totalMinor: winnerCandidate.totalMinor,
       savingsMinor: null,
-      comparisonScope: firstScope
+      comparisonScope: winnerScope
     });
   } else if (hasConditionalPriceContext) {
     conclusion = Object.freeze({
@@ -975,10 +1107,10 @@ export function compareObservedBasket({ basket, offers } = {}) {
       candidateId: winnerCandidate.candidateId,
       totalMinor: winnerCandidate.totalMinor,
       savingsMinor,
-      comparisonScope: firstScope
+      comparisonScope: firstComparisonScope
     });
   } else if (lowestTie) {
-    const candidateIds = complete
+    const candidateIds = comparisonComplete
       .filter((candidate) => candidate.totalMinor === winnerCandidate.totalMinor)
       .map((candidate) => candidate.candidateId);
 
@@ -989,7 +1121,7 @@ export function compareObservedBasket({ basket, offers } = {}) {
       candidateIds: Object.freeze(candidateIds),
       totalMinor: winnerCandidate.totalMinor,
       savingsMinor: null,
-      comparisonScope: firstScope
+      comparisonScope: firstComparisonScope
     });
   } else {
     conclusion = Object.freeze({

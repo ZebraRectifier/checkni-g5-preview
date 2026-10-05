@@ -1224,6 +1224,23 @@ h1 {
 .stores-list-note { color: rgba(21, 32, 25, 0.62); }
 
 
+
+/* Official O’КЕЙ addresses, separate from verified priced catalogues. */
+.okey-directory {
+  border: 1px solid rgba(21, 32, 25, 0.16);
+  border-radius: 16px;
+  padding: 14px 18px;
+  background: #fff;
+}
+.okey-directory summary { cursor: pointer; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.okey-directory summary strong { color: #bd1d2b; }
+.okey-directory-note { margin: 12px 0; color: rgba(21, 32, 25, 0.72); }
+.okey-directory h3 { font-size: 1rem; margin: 16px 0 8px; }
+.okey-directory ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.okey-directory li a { display: block; color: #bd1d2b; font-weight: 700; }
+.okey-directory li span { display: block; overflow-wrap: anywhere; }
+.okey-directory details > a { display: inline-block; margin-top: 14px; color: #bd1d2b; }
+
 /* ---------- Live retailer catalogue ---------- */
 .retail-browser {
   margin: 0 0 28px;

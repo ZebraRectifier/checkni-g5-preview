@@ -124,7 +124,7 @@ function normalizeOffer(value) {
     "granularity", "locationTruthLevel", "locationId",
     "countryCode", "regionId", "regionName", "localityId",
     "localityName", "retailerId", "canonicalProductId", "sourceProductId",
-    "sourceProductName", "unitPriceMinor", "currency",
+    "sourceProductName", "unitPriceMinor", "oldPriceMinor", "currency",
     "priceCondition", "priceConditionComparable", "conditionNote",
     "salesChannel", "minimumQuantity",
     "storeId", "storeName", "locationLabel", "availability"
@@ -164,6 +164,17 @@ function normalizeOffer(value) {
     || !Number.isSafeInteger(value.unitPriceMinor)
     || value.unitPriceMinor <= 0
     || value.currency !== "RUB"
+    || (
+      value.oldPriceMinor != null
+      && (
+        !Number.isSafeInteger(value.oldPriceMinor)
+        || value.oldPriceMinor <= value.unitPriceMinor
+      )
+    )
+    || (
+      value.priceCondition === "regular"
+      && value.oldPriceMinor != null
+    )
     || !contract.allowedConditions.includes(value.priceCondition)
     || (
       value.priceCondition === "promo"
