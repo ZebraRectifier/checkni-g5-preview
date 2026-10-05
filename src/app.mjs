@@ -26,6 +26,7 @@ import { createProductPhotoLoader } from "./runtime/productPhotos.mjs";
 import { requestCatalogPhotos } from "./ports/catalogPhotosPort.mjs";
 import { createStoresSection } from "./components/StoresMap.mjs";
 import { createOkeyStoreDirectory } from "./components/OkeyStoreDirectory.mjs";
+import { createOkeyDeliveryCatalog } from "./components/OkeyDeliveryCatalog.mjs";
 import {
   CATALOG_SORT,
   buildSnapshotPriceHints,
@@ -1247,6 +1248,7 @@ function setupRetailBrowser() {
   if (!publicRetailCatalogMode) return;
 
   elements.retailStoreGrid?.after(createOkeyStoreDirectory());
+  elements.retailStoreGrid?.after(createOkeyDeliveryCatalog());
   elements.retailCategoryBack?.addEventListener("click", () => {
     if (retailBrowserState.path.length === 0) return;
     history.back();

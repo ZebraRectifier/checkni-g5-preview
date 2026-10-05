@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "42a0ebe2c548f39f3d0e7d2d039afe708724933c",
+  "sourceCommit": "17ec2faba301afea6844e036e0ff4bd2b21141e3",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -45,5 +45,16 @@
     "storePricesWithCard": "unknown",
     "storePricesWithoutCard": "unknown",
     "autoRefresh": "unavailable without exact-store price source"
+  },
+  "okeyDelivery": {
+    "selectedDeliveryAddress": "Москва, проспект Мира, 211к2",
+    "scope": "Яндекс Еда · доставка на выбранный адрес; физический магазин выдачи не доказан",
+    "products": 3860,
+    "rootCategoriesVisited": 75,
+    "complete": false,
+    "cardPrices": "unknown",
+    "history": "Measured observations only",
+    "sourceCollectionSchedule": "03:30 Europe/Moscow daily; first machine run pending",
+    "publicArtifactRefresh": "Hourly from verified source repository data"
   }
 }
