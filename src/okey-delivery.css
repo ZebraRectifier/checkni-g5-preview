@@ -7,7 +7,8 @@
 .okey-delivery-card{padding:1rem;border:1px solid currentColor;border-radius:8px;min-width:0}
 .okey-delivery-card h3{font-size:1rem;margin:0 0 .5rem}
 .okey-delivery-card a{display:block;padding:.6rem 0}
-.address-price-history svg{width:100%;height:auto;display:block}
+.address-price-history svg{width:100%;max-width:600px;height:auto;display:block}
+.address-price-history svg text{fill:currentColor}
 .address-price-history table{width:100%;font-size:.8rem}
 .address-price-history th,.address-price-history td{text-align:left;padding:.25rem}
 .address-price-history caption{overflow-wrap:anywhere;text-align:left}
