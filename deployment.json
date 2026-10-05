@@ -55,6 +55,6 @@
     "cardPrices": "unknown",
     "history": "Measured observations only",
     "sourceCollectionSchedule": "03:30 Europe/Moscow daily; first machine run pending",
-    "publicArtifactRefresh": "Hourly from verified source repository data"
+    "publicArtifactRefresh": "Daily standalone collector on public host; challenge pauses future requests"
   }
 }
