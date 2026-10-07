@@ -17,4 +17,3 @@ export function resolveMagnitMoscowStore({ shopCode, address } = {}) {
   if (typeof address === "string" && address.trim() !== store.address) return null;
   return store;
 }
-
