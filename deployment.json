@@ -2,11 +2,12 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "17ec2faba301afea6844e036e0ff4bd2b21141e3",
+  "sourceCommit": "0eeedcb51518b87ef1e305756d7560cd7b807f35",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
     "globus",
+    "metro",
     "magnit",
     "vkusvill",
     "perekrestok",
@@ -56,5 +57,18 @@
     "history": "Measured observations only",
     "sourceCollectionSchedule": "03:30 Europe/Moscow daily; first machine run pending",
     "publicArtifactRefresh": "Daily standalone collector on public host; challenge pauses future requests"
+  },
+  "metro": {
+    "directoryStores": 22,
+    "selectableExactOnlinePickupStores": 20,
+    "unavailablePublicPickupStoreNumbers": [
+      "49",
+      "1307"
+    ],
+    "fullCatalogStoreNumber": "10",
+    "fullCatalogProducts": 329,
+    "fullCatalogCategories": 51,
+    "availability": "unknown",
+    "addressSelection": "user-visible"
   }
 }
