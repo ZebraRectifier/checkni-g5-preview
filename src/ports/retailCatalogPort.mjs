@@ -1,6 +1,7 @@
 import {
   CATALOG_SEARCH_PUBLISHABLE_KEY
 } from "./catalogGatewayPort.mjs";
+import { resolveMagnitMoscowStore } from "../data/magnitMoscowStores.mjs";
 
 export const RETAIL_CATALOG_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/rest/v1/retail_catalog_items";
@@ -46,16 +47,18 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
   }),
   magnit: Object.freeze({
     retailerId: "magnit",
-    storeId: "magnit-771878",
-    storeName: "Магнит · Москва, Дмитровское ш. 5 к 1",
+    shopCode: "777312",
+    storeAddress: "г Москва, аллея Берёзовая, д 17 к 2",
+    storeId: "magnit-777312",
+    storeName: "Магнит · г Москва, аллея Берёзовая, д 17 к 2",
     localityId: "city-moscow",
     localityName: "Москва",
     displayName: "Магнит",
-    catalogLabel: "Магнит · Москва",
-    scopeLabel: "Москва · публичный магазин · наличие неизвестно",
+    catalogLabel: "Магнит · аллея Берёзовая, д 17 к 2",
+    scopeLabel: "г Москва, аллея Берёзовая, д 17 к 2 · публичная цена сайта · наличие неизвестно",
     logo: "М",
-    defaultProductCount: 515,
-    rootCategoryCount: 18,
+    defaultProductCount: 291,
+    rootCategoryCount: 17,
     productUrlRules: Object.freeze([
       Object.freeze({ host: "magnit.ru", prefix: "/product/" }),
       Object.freeze({ host: "www.magnit.ru", prefix: "/product/" })
@@ -344,14 +347,27 @@ function resolveDefinition(value = "globus") {
   if (typeof value === "string") {
     return getRetailCatalogDefinition(value);
   }
-  if (
-    value
-    && typeof value === "object"
-    && typeof value.retailerId === "string"
-  ) {
-    return getRetailCatalogDefinition(value.retailerId);
+  if (!value || typeof value !== "object" || typeof value.retailerId !== "string") {
+    return null;
   }
-  return null;
+  const base = getRetailCatalogDefinition(value.retailerId);
+  if (!base || value.retailerId !== "magnit") return base;
+  if (value.shopCode && value.storeId) return value;
+  if (!value.store) return base;
+
+  const store = resolveMagnitMoscowStore(value.store);
+  if (!store) return null;
+  const storeId = "magnit-" + store.shopCode;
+  const storeName = "Магнит · " + store.address;
+  return Object.freeze({
+    ...base,
+    shopCode: store.shopCode,
+    storeAddress: store.address,
+    storeId,
+    storeName,
+    catalogLabel: "Магнит · " + store.address,
+    scopeLabel: store.address + " · публичная цена сайта · наличие неизвестно"
+  });
 }
 
 async function readBoundedJsonResponse(response, maxBytes) {
@@ -484,6 +500,13 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
 
   const productUrl = safeUrl(row.product_url, definition.productUrlRules);
   const imageUrl = safeUrl(row.image_url, definition.imageUrlRules);
+  if (definition.retailerId === "magnit" && definition.shopCode) {
+    try {
+      if (new URL(productUrl).searchParams.get("shopCode") !== definition.shopCode) return null;
+    } catch {
+      return null;
+    }
+  }
   const sourceUrl = safeUrl(row.source_url, definition.sourceUrlRules)
     ?? productUrl;
   const observedMs = Date.parse(row.observed_at);
@@ -592,7 +615,7 @@ export function createRetailCatalogClient(options = {}) {
     options.publishableKey ?? CATALOG_SEARCH_PUBLISHABLE_KEY;
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const timeoutMs = options.timeoutMs ?? RETAIL_CATALOG_TIMEOUT_MS;
-  const definition = resolveDefinition(options.retailerId ?? "globus");
+  const definition = resolveDefinition({ ...options, retailerId: options.retailerId ?? "globus" });
   const normalizeOptions = Number.isFinite(options.nowMs)
     ? Object.freeze({ nowMs: options.nowMs })
     : undefined;
@@ -887,3 +910,4 @@ export {
   normalizeRetailRow,
   readBoundedJsonResponse
 };
+

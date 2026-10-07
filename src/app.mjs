@@ -26,6 +26,8 @@ import { createProductPhotoLoader } from "./runtime/productPhotos.mjs";
 import { requestCatalogPhotos } from "./ports/catalogPhotosPort.mjs";
 import { createStoresSection } from "./components/StoresMap.mjs";
 import { createOkeyStoreDirectory } from "./components/OkeyStoreDirectory.mjs";
+import { createMagnitStorePicker } from "./components/MagnitStorePicker.mjs";
+import { resolveMagnitMoscowStore } from "./data/magnitMoscowStores.mjs";
 import { createOkeyDeliveryCatalog } from "./components/OkeyDeliveryCatalog.mjs";
 import {
   CATALOG_SORT,
@@ -227,12 +229,42 @@ let retailBrowserState = {
     getRetailCatalogDefinition(DEFAULT_RETAILER_ID)?.defaultProductCount ?? 0
 };
 
+let selectedMagnitStore = resolveMagnitMoscowStore({
+  shopCode: history.state?.checkniMagnitShopCode
+}) ?? resolveMagnitMoscowStore({ shopCode: "777312" });
+let magnitStorePicker = null;
+
+function retailDefinitionFor(retailerId) {
+  const base = getRetailCatalogDefinition(retailerId);
+  if (retailerId !== "magnit" || selectedMagnitStore.shopCode === base.shopCode) return base;
+  return {
+    ...base,
+    shopCode: selectedMagnitStore.shopCode,
+    storeId: "magnit-" + selectedMagnitStore.shopCode,
+    storeAddress: selectedMagnitStore.address,
+    storeName: "Магнит · " + selectedMagnitStore.address,
+    catalogLabel: "Магнит · " + selectedMagnitStore.address,
+    scopeLabel: selectedMagnitStore.address + " · публичная цена сайта · наличие неизвестно",
+    defaultProductCount: null,
+    rootCategoryCount: null
+  };
+}
+
 function currentRetailDefinition() {
-  return getRetailCatalogDefinition(retailBrowserState.retailerId)
+  return retailDefinitionFor(retailBrowserState.retailerId)
     ?? getRetailCatalogDefinition(DEFAULT_RETAILER_ID);
 }
 
 function currentRetailClient() {
+  if (retailBrowserState.retailerId === "magnit") {
+    const key = "magnit-" + selectedMagnitStore.shopCode;
+    if (!retailCatalogClients.has(key)) {
+      retailCatalogClients.set(key, createRetailCatalogClient({
+        retailerId: "magnit", store: selectedMagnitStore
+      }));
+    }
+    return retailCatalogClients.get(key);
+  }
   return retailCatalogClients.get(retailBrowserState.retailerId)
     ?? retailCatalogClients.get(DEFAULT_RETAILER_ID);
 }
@@ -507,6 +539,7 @@ function russianCountNoun(value, one, few, many) {
 }
 
 function retailStoreCountCopy(definition, productCount) {
+  if (!Number.isSafeInteger(productCount)) return "Каталог выбранного адреса";
   const products =
     `${formatCatalogCount(productCount)} ${russianCountNoun(
       productCount,
@@ -533,7 +566,7 @@ function renderRetailStoreButtons() {
 
   elements.retailStoreGrid.replaceChildren();
   for (const retailerId of RETAIL_CATALOG_IDS) {
-    const definition = getRetailCatalogDefinition(retailerId);
+    const definition = retailDefinitionFor(retailerId);
     if (!definition) continue;
 
     const selected = retailerId === retailBrowserState.retailerId;
@@ -597,6 +630,12 @@ function renderRetailBrowser() {
   const definition = currentRetailDefinition();
   elements.retailBrowser.hidden = false;
   renderRetailStoreButtons();
+  magnitStorePicker?.update({
+    visible: retailBrowserState.retailerId === "magnit",
+    store: selectedMagnitStore,
+    status: retailBrowserState.status,
+    hasCategories: retailBrowserState.path.length > 0 || retailBrowserState.categories.length > 0
+  });
   elements.retailCategoryGrid.replaceChildren();
 
   const current = retailBrowserState.path.at(-1) ?? null;
@@ -808,6 +847,7 @@ function createAppRouteState(
     state.checkniRetailNavigation = true;
     state.checkniRetailPath = retailPathForHistory(retailPath);
     state.checkniRetailerId = validRetailerId(retailerId);
+    state.checkniMagnitShopCode = selectedMagnitStore.shopCode;
   }
 
   return state;
@@ -882,7 +922,7 @@ function beginRetailNavigation(path, { clearCatalog = true } = {}) {
 async function selectRetailer(retailerId, {
   replaceHistory = false
 } = {}) {
-  const definition = getRetailCatalogDefinition(retailerId);
+  const definition = retailDefinitionFor(retailerId);
   if (!publicRetailCatalogMode || !definition) return;
 
   retailBrowserRequestVersion += 1;
@@ -1208,15 +1248,20 @@ async function loadMoreRetailCategoryProducts() {
 }
 
 function restoreRetailNavigationFromHistory({ initial = false } = {}) {
+  const restoredStore = resolveMagnitMoscowStore({
+    shopCode: history.state?.checkniMagnitShopCode
+  });
+  const addressChanged = Boolean(restoredStore && restoredStore.shopCode !== selectedMagnitStore.shopCode);
+  if (restoredStore) selectedMagnitStore = restoredStore;
   const retailerId = validRetailerId(history.state?.checkniRetailerId);
   const restoredPath = normalizeRetailHistoryPath(
     history.state?.checkniRetailPath
   ) ?? [];
-  const definition = getRetailCatalogDefinition(retailerId);
+  const definition = retailDefinitionFor(retailerId);
 
   if (!definition) return;
 
-  if (retailerId !== retailBrowserState.retailerId) {
+  if (retailerId !== retailBrowserState.retailerId || addressChanged) {
     retailBrowserRequestVersion += 1;
     catalogRequestVersion += 1;
     pendingCatalogSearch = null;
@@ -1244,6 +1289,16 @@ function restoreRetailNavigationFromHistory({ initial = false } = {}) {
 }
 
 function setupRetailBrowser() {
+  if (publicRetailCatalogMode && elements.retailCatalogNav) {
+    magnitStorePicker = createMagnitStorePicker({
+      shopCode: selectedMagnitStore.shopCode,
+      onSelect: (store) => {
+        selectedMagnitStore = store;
+        void selectRetailer("magnit");
+      }
+    });
+    elements.retailCatalogNav.before(magnitStorePicker.element);
+  }
   renderRetailBrowser();
   if (!publicRetailCatalogMode) return;
 
@@ -2478,3 +2533,4 @@ renderDock();
 renderBetaLiveSection();
 renderBasketProposalState();
 renderView({ scrollY: scrollYFromState(history.state) });
+

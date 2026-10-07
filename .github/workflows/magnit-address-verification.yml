@@ -1,0 +1,26 @@
+name: Magnit address release verification
+on:
+  push:
+    branches: [main, fix/magnit-address-selection]
+    paths:
+      - "src/**"
+      - "tests/magnit/**"
+      - "playwright.magnit.config.mjs"
+      - ".github/workflows/magnit-address-verification.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Verify switching and real address-bound cards on desktop and mobile
+        run: npx playwright test --config=playwright.magnit.config.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure()
+        with:
+          name: magnit-address-browser-report
+          path: test-results/
