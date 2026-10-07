@@ -27,7 +27,9 @@ import { requestCatalogPhotos } from "./ports/catalogPhotosPort.mjs";
 import { createStoresSection } from "./components/StoresMap.mjs";
 import { createOkeyStoreDirectory } from "./components/OkeyStoreDirectory.mjs";
 import { createMagnitStorePicker } from "./components/MagnitStorePicker.mjs";
+import { createMetroStorePicker } from "./components/MetroStorePicker.mjs";
 import { resolveMagnitMoscowStore } from "./data/magnitMoscowStores.mjs";
+import { resolveMetroMoscowRegionStore } from "./data/metroMoscowRegionStores.mjs";
 import { createOkeyDeliveryCatalog } from "./components/OkeyDeliveryCatalog.mjs";
 import {
   CATALOG_SORT,
@@ -232,10 +234,28 @@ let retailBrowserState = {
 let selectedMagnitStore = resolveMagnitMoscowStore({
   shopCode: history.state?.checkniMagnitShopCode
 }) ?? resolveMagnitMoscowStore({ shopCode: "777312" });
+let selectedMetroStore = resolveMetroMoscowRegionStore({
+  storeNumber: history.state?.checkniMetroStoreNumber
+}) ?? resolveMetroMoscowRegionStore({ storeNumber: "10" });
 let magnitStorePicker = null;
+let metroStorePicker = null;
+
+function selectedMetroClient() {
+  const key = "metro-" + selectedMetroStore.storeNumber;
+  if (!retailCatalogClients.has(key)) {
+    retailCatalogClients.set(key, createRetailCatalogClient({
+      retailerId: "metro",
+      store: selectedMetroStore
+    }));
+  }
+  return retailCatalogClients.get(key) ?? null;
+}
 
 function retailDefinitionFor(retailerId) {
   const base = getRetailCatalogDefinition(retailerId);
+  if (retailerId === "metro") {
+    return selectedMetroClient()?.definition ?? base;
+  }
   if (retailerId !== "magnit" || selectedMagnitStore.shopCode === base.shopCode) return base;
   return {
     ...base,
@@ -256,6 +276,10 @@ function currentRetailDefinition() {
 }
 
 function currentRetailClient() {
+  if (retailBrowserState.retailerId === "metro") {
+    return selectedMetroClient()
+      ?? retailCatalogClients.get(DEFAULT_RETAILER_ID);
+  }
   if (retailBrowserState.retailerId === "magnit") {
     const key = "magnit-" + selectedMagnitStore.shopCode;
     if (!retailCatalogClients.has(key)) {
@@ -636,6 +660,12 @@ function renderRetailBrowser() {
     status: retailBrowserState.status,
     hasCategories: retailBrowserState.path.length > 0 || retailBrowserState.categories.length > 0
   });
+  metroStorePicker?.update({
+    visible: retailBrowserState.retailerId === "metro",
+    store: selectedMetroStore,
+    status: retailBrowserState.status,
+    hasCategories: retailBrowserState.path.length > 0 || retailBrowserState.categories.length > 0
+  });
   elements.retailCategoryGrid.replaceChildren();
 
   const current = retailBrowserState.path.at(-1) ?? null;
@@ -848,6 +878,7 @@ function createAppRouteState(
     state.checkniRetailPath = retailPathForHistory(retailPath);
     state.checkniRetailerId = validRetailerId(retailerId);
     state.checkniMagnitShopCode = selectedMagnitStore.shopCode;
+    state.checkniMetroStoreNumber = selectedMetroStore.storeNumber;
   }
 
   return state;
@@ -1248,12 +1279,24 @@ async function loadMoreRetailCategoryProducts() {
 }
 
 function restoreRetailNavigationFromHistory({ initial = false } = {}) {
-  const restoredStore = resolveMagnitMoscowStore({
+  const retailerId = validRetailerId(history.state?.checkniRetailerId);
+  const restoredMagnitStore = resolveMagnitMoscowStore({
     shopCode: history.state?.checkniMagnitShopCode
   });
-  const addressChanged = Boolean(restoredStore && restoredStore.shopCode !== selectedMagnitStore.shopCode);
-  if (restoredStore) selectedMagnitStore = restoredStore;
-  const retailerId = validRetailerId(history.state?.checkniRetailerId);
+  const restoredMetroStore = resolveMetroMoscowRegionStore({
+    storeNumber: history.state?.checkniMetroStoreNumber
+  });
+  const addressChanged = (
+    retailerId === "magnit"
+      ? Boolean(restoredMagnitStore && restoredMagnitStore.shopCode !== selectedMagnitStore.shopCode)
+      : retailerId === "metro"
+        ? Boolean(restoredMetroStore && restoredMetroStore.storeNumber !== selectedMetroStore.storeNumber)
+        : false
+  );
+  if (restoredMagnitStore) selectedMagnitStore = restoredMagnitStore;
+  if (restoredMetroStore?.onlinePickupStatus === "proven") {
+    selectedMetroStore = restoredMetroStore;
+  }
   const restoredPath = normalizeRetailHistoryPath(
     history.state?.checkniRetailPath
   ) ?? [];
@@ -1297,7 +1340,15 @@ function setupRetailBrowser() {
         void selectRetailer("magnit");
       }
     });
+    metroStorePicker = createMetroStorePicker({
+      storeNumber: selectedMetroStore.storeNumber,
+      onSelect: (store) => {
+        selectedMetroStore = store;
+        void selectRetailer("metro");
+      }
+    });
     elements.retailCatalogNav.before(magnitStorePicker.element);
+    elements.retailCatalogNav.before(metroStorePicker.element);
   }
   renderRetailBrowser();
   if (!publicRetailCatalogMode) return;
@@ -2533,4 +2584,3 @@ renderDock();
 renderBetaLiveSection();
 renderBasketProposalState();
 renderView({ scrollY: scrollYFromState(history.state) });
-
