@@ -1,0 +1,121 @@
+name: METRO live address smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/app.mjs"
+      - "src/components/MetroStorePicker.mjs"
+      - "src/data/metroMoscowRegionStores.mjs"
+      - "src/ports/retailCatalogPort.mjs"
+      - ".github/workflows/metro-live-address-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: metro-live-address-smoke
+  cancel-in-progress: true
+
+jobs:
+  metro-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install browser driver
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock playwright-core@1.63.0
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$chrome"
+          echo "CHROME_BIN=$chrome" >> "$GITHUB_ENV"
+
+      - name: Verify published METRO address UX
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const { chromium } = require("playwright-core");
+
+          const assert = (condition, message) => {
+            if (!condition) throw new Error(message);
+          };
+
+          (async () => {
+            const browser = await chromium.launch({
+              headless: true,
+              executablePath: process.env.CHROME_BIN,
+              args: ["--no-sandbox"]
+            });
+            const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+            const pageErrors = [];
+            page.on("pageerror", (error) => pageErrors.push(error.message));
+
+            const base =
+              "https://zebrarectifier.github.io/checkni-g5-preview/?comparison=observed&catalog=retail";
+
+            let ready = false;
+            for (let attempt = 0; attempt < 20; attempt += 1) {
+              await page.goto(base + "&metroAddressUx=d74e7c97&attempt=" + attempt, {
+                waitUntil: "domcontentloaded",
+                timeout: 30000
+              });
+              await page.waitForTimeout(1200);
+              const text = await page.locator("#retail-store-card-metro").innerText().catch(() => "");
+              if (text.includes("METRO · Москва, Ленинградское ш. 71Г")
+                  && text.includes("51 категория")
+                  && text.includes("329 товаров")) {
+                ready = true;
+                break;
+              }
+              await page.waitForTimeout(1800);
+            }
+            assert(ready, "Published Pages artifact does not expose current METRO store card");
+
+            const store = page.locator("#retail-store-card-metro");
+            await store.click();
+            const picker = page.locator("#metro-store-picker");
+            await picker.waitFor({ state: "visible", timeout: 15000 });
+
+            const options = picker.locator("#metro-store-address option");
+            assert(await options.count() === 22, "METRO picker must expose 22 official directory addresses");
+            assert(await picker.locator('option[value="49"]').isDisabled(), "METRO #49 must stay fail-closed");
+            assert(await picker.locator('option[value="1307"]').isDisabled(), "METRO #1307 must stay fail-closed");
+
+            const select = picker.locator("#metro-store-address");
+            await select.selectOption("1317");
+            await page.waitForFunction(() => (
+              document.querySelector("#retail-store-card-metro")?.textContent?.includes("Серпухов")
+              && document.querySelector("#metro-store-address")?.value === "1317"
+            ), null, { timeout: 15000 });
+
+            const category = page.getByRole("button", { name: /Йогурт фруктовый/ });
+            await category.waitFor({ state: "visible", timeout: 15000 });
+            await category.click();
+
+            const card = page.locator(
+              '[data-product-id="retail:metro:metro-address-17mcpb2:275436"]'
+            );
+            await card.waitFor({ state: "visible", timeout: 15000 });
+            const cardText = await card.innerText();
+            assert(cardText.includes("69,91 ₽"), "Serpukhov exact-store price is not published");
+            assert(cardText.includes("Обычная онлайн-цена"), "METRO online price condition is missing");
+            assert(cardText.includes("Серпухов"), "METRO exact-store provenance is missing");
+            assert(await card.getByRole("button").isDisabled(), "METRO observation must remain display-only");
+            assert(pageErrors.length === 0, "Published page errors: " + pageErrors.join(" | "));
+
+            console.log("METRO_LIVE_ADDRESS_OK", JSON.stringify({
+              optionCount: await options.count(),
+              selectedStore: await store.innerText(),
+              selectedPrice: cardText
+            }));
+            await browser.close();
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
