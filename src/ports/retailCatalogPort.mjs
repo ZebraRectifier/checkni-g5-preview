@@ -2,6 +2,7 @@ import {
   CATALOG_SEARCH_PUBLISHABLE_KEY
 } from "./catalogGatewayPort.mjs";
 import { resolveMagnitMoscowStore } from "../data/magnitMoscowStores.mjs";
+import { resolveMetroMoscowRegionStore } from "../data/metroMoscowRegionStores.mjs";
 
 export const RETAIL_CATALOG_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/rest/v1/retail_catalog_items";
@@ -78,6 +79,40 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     ]),
     priceConditionLabels: Object.freeze({
       "public-online": "Публичная онлайн-цена"
+    })
+  }),
+  metro: Object.freeze({
+    retailerId: "metro",
+    storeNumber: "10",
+    storeAddress: "125445, г. Москва, Ленинградское ш., д.71Г",
+    bindingId: "metro-address-c5gsqz",
+    storeId: "metro-address-c5gsqz",
+    storeName: "METRO · Москва, Ленинградское ш. 71Г",
+    localityId: "city-moscow",
+    localityName: "Москва",
+    displayName: "METRO",
+    catalogLabel: "METRO · Ленинградское ш. 71Г",
+    scopeLabel: "Ленинградское ш. 71Г · точная точка самовывоза · наличие неизвестно",
+    logo: "M",
+    defaultProductCount: 329,
+    rootCategoryCount: 51,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "online.metro-cc.ru", prefix: "/products/" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "cdn.metro-cc.ru", prefix: "/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "online.metro-cc.ru", prefix: "/dynamic/" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "online.metro-cc.ru", prefix: "/products/" }),
+      Object.freeze({ host: "online.metro-cc.ru", prefix: "/dynamic/" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      regular: "Обычная онлайн-цена",
+      promo: "Промо-цена",
+      unknown: "Условие цены не доказано"
     })
   }),
   vkusvill: Object.freeze({
@@ -296,6 +331,7 @@ const SELECT_FIELDS = [
   "price_minor",
   "currency",
   "price_condition",
+  "sales_channel",
   "minimum_quantity",
   "quantity_semantics",
   "availability",
@@ -304,6 +340,10 @@ const SELECT_FIELDS = [
   "weight_text",
   "main_category_id",
   "source_url",
+  "location_label",
+  "scope_binding",
+  "binding_id",
+  "scope_evidence_url",
   "observed_at"
 ].join(",");
 
@@ -351,23 +391,69 @@ function resolveDefinition(value = "globus") {
     return null;
   }
   const base = getRetailCatalogDefinition(value.retailerId);
-  if (!base || value.retailerId !== "magnit") return base;
-  if (value.shopCode && value.storeId) return value;
-  if (!value.store) return base;
+  if (!base) return null;
 
-  const store = resolveMagnitMoscowStore(value.store);
-  if (!store) return null;
-  const storeId = "magnit-" + store.shopCode;
-  const storeName = "Магнит · " + store.address;
-  return Object.freeze({
-    ...base,
-    shopCode: store.shopCode,
-    storeAddress: store.address,
-    storeId,
-    storeName,
-    catalogLabel: "Магнит · " + store.address,
-    scopeLabel: store.address + " · публичная цена сайта · наличие неизвестно"
-  });
+  if (value.retailerId === "magnit") {
+    if (value.shopCode && value.storeId) return value;
+    if (!value.store) return base;
+    const store = resolveMagnitMoscowStore(value.store);
+    if (!store) return null;
+    const storeId = "magnit-" + store.shopCode;
+    const storeName = "Магнит · " + store.address;
+    return Object.freeze({
+      ...base,
+      shopCode: store.shopCode,
+      storeAddress: store.address,
+      storeId,
+      storeName,
+      catalogLabel: "Магнит · " + store.address,
+      scopeLabel: store.address + " · публичная цена сайта · наличие неизвестно"
+    });
+  }
+
+  if (value.retailerId === "metro") {
+    if (value.storeNumber && value.storeId && value.storeAddress) return value;
+    if (!value.store) return base;
+    const store = resolveMetroMoscowRegionStore(value.store);
+    if (
+      !store
+      || store.onlinePickupStatus !== "proven"
+      || typeof store.bindingId !== "string"
+      || !/^metro-address-[a-z0-9]+$/u.test(store.bindingId)
+    ) {
+      return null;
+    }
+    if (store.storeNumber === "10") {
+      return Object.freeze({
+        ...base,
+        pickupAddress: store.onlinePickupLabel,
+        acceptedLocationLabels: Object.freeze(
+          [base.storeAddress, store.address, store.onlinePickupLabel].filter(Boolean)
+        )
+      });
+    }
+    const isCity = store.scope === "moscow-city";
+    return Object.freeze({
+      ...base,
+      storeNumber: store.storeNumber,
+      storeAddress: store.address,
+      pickupAddress: store.onlinePickupLabel,
+      acceptedLocationLabels: Object.freeze(
+        [store.address, store.onlinePickupLabel].filter(Boolean)
+      ),
+      bindingId: store.bindingId,
+      storeId: store.bindingId,
+      storeName: "METRO · " + store.address,
+      localityId: isCity ? "city-moscow" : "region-moscow-oblast",
+      localityName: isCity ? "Москва" : "Московская область",
+      catalogLabel: "METRO · " + store.address,
+      scopeLabel: store.address + " · точная точка самовывоза · наличие неизвестно",
+      defaultProductCount: null,
+      rootCategoryCount: null
+    });
+  }
+
+  return base;
 }
 
 async function readBoundedJsonResponse(response, maxBytes) {
@@ -509,6 +595,31 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
   }
   const sourceUrl = safeUrl(row.source_url, definition.sourceUrlRules)
     ?? productUrl;
+  if (definition.retailerId === "metro") {
+    const scopeEvidenceUrl = safeUrl(
+      row.scope_evidence_url,
+      definition.sourceUrlRules
+    );
+    if (
+      row.sales_channel !== "online"
+      || row.price_condition !== "regular"
+      || row.minimum_quantity !== 1
+      || row.scope_binding !== "same-source"
+      || typeof row.location_label !== "string"
+      || !(
+        Array.isArray(definition.acceptedLocationLabels)
+          ? definition.acceptedLocationLabels.includes(row.location_label)
+          : row.location_label === definition.storeAddress
+      )
+      || typeof row.binding_id !== "string"
+      || !/^metro-address-[a-z0-9]+$/u.test(row.binding_id)
+      || (definition.bindingId && row.binding_id !== definition.bindingId)
+      || !scopeEvidenceUrl
+      || scopeEvidenceUrl !== sourceUrl
+    ) {
+      return null;
+    }
+  }
   const observedMs = Date.parse(row.observed_at);
   const nowMs = Number.isFinite(options.nowMs) ? options.nowMs : Date.now();
   const promo = promoTruth(row, definition, nowMs);
@@ -910,4 +1021,3 @@ export {
   normalizeRetailRow,
   readBoundedJsonResponse
 };
-
