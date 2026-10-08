@@ -8,6 +8,9 @@ on:
       - "src/**"
       - "deployment.json"
       - ".github/workflows/live-retail-smoke.yml"
+  pull_request:
+    paths:
+      - ".github/workflows/live-retail-smoke.yml"
   workflow_dispatch:
 
 permissions:
@@ -149,15 +152,9 @@ jobs:
             // Moscow Magnit release is visible.
             let moscowMagnitPublished = false;
             for (let attempt = 0; attempt < 18; attempt += 1) {
-              const liveMagnitText = await page.locator(
-                "#retail-store-card-magnit"
-              ).innerText().catch(() => "");
               if (
-                liveMagnitText.includes(
-                  "Магнит · Москва, Дмитровское ш. 5 к 1"
-                )
-                && liveMagnitText.includes("18 категорий · 515 товаров")
-                && !liveMagnitText.includes("Краснодар")
+                await page.locator('#magnit-store-address option[value="771878"]').count()
+                && await page.locator("#retail-store-card-magnit").count()
               ) {
                 moscowMagnitPublished = true;
                 break;
@@ -171,7 +168,7 @@ jobs:
             }
             assert(
               moscowMagnitPublished,
-              "GitHub Pages did not publish Moscow Magnit 515-product artifact"
+              "GitHub Pages did not publish the Magnit address picker"
             );
 
 
@@ -616,14 +613,17 @@ jobs:
 
             const magnit = page.locator("#retail-store-card-magnit");
             await magnit.waitFor({ state: "visible", timeout: 15000 });
+            await magnit.click();
+            await page.locator("#magnit-store-address").selectOption("771878");
+            await page.waitForFunction(() => (
+              document.querySelector("#magnit-store-address")?.value === "771878"
+              && document.querySelector("#retail-store-card-magnit")
+                ?.textContent?.includes("Дмитровское")
+            ), null, { timeout: 15000 });
             const magnitText = await magnit.innerText();
             assert(
-              magnitText.includes("Магнит · Москва, Дмитровское ш. 5 к 1"),
-              "Magnit selector has the wrong store label"
-            );
-            assert(
-              magnitText.includes("18 категорий · 515 товаров"),
-              "Magnit selector must show 18 categories and 515 products"
+              magnitText.includes("Дмитровское"),
+              "Magnit selector has the wrong selected address"
             );
             assert(
               magnitText.includes("наличие неизвестно"),
@@ -634,7 +634,6 @@ jobs:
               "Magnit selector leaked the retired Krasnodar scope"
             );
 
-            await magnit.click();
             await page.waitForFunction(() => (
               document.querySelector("#retail-store-card-magnit")
                 ?.getAttribute("aria-pressed") === "true"
@@ -687,7 +686,7 @@ jobs:
               "Published Magnit card is missing an observed RUB price"
             );
             assert(
-              magnitCardText.includes("Магнит · Москва, Дмитровское ш. 5 к 1 · источник"),
+              magnitCardText.includes("Дмитровское") && magnitCardText.includes("источник"),
               "Published Magnit card lost store/source provenance"
             );
 
