@@ -620,6 +620,11 @@ jobs:
               && document.querySelector("#retail-store-card-magnit")
                 ?.textContent?.includes("Дмитровское")
             ), null, { timeout: 15000 });
+            await page.waitForFunction(() => (
+              /18 категорий · 518 товаров/u.test(
+                document.querySelector("#retail-store-card-magnit")?.textContent ?? ""
+              )
+            ), null, { timeout: 15000 });
             const magnitText = await magnit.innerText();
             assert(
               magnitText.includes("Дмитровское"),
