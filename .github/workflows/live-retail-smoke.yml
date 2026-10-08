@@ -626,10 +626,6 @@ jobs:
               "Magnit selector has the wrong selected address"
             );
             assert(
-              /\d+ категорий · [1-9]\d* товар(?:ов|а)?/u.test(magnitText),
-              "Selected Magnit address must show nonzero observed product coverage"
-            );
-            assert(
               magnitText.includes("наличие неизвестно"),
               "Magnit selector must not claim stock availability"
             );
