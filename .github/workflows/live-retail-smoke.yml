@@ -8,6 +8,9 @@ on:
       - "src/**"
       - "deployment.json"
       - ".github/workflows/live-retail-smoke.yml"
+  pull_request:
+    paths:
+      - ".github/workflows/live-retail-smoke.yml"
   workflow_dispatch:
 
 permissions:
