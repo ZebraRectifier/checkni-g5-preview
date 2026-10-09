@@ -1,4 +1,4 @@
-// Exact official public store-selector bindings; partial price coverage is separate.
+// Exact official public-selector bindings; partial prices are separate.
 export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
   {
     "shopCode": "020588",
@@ -53,6 +53,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Бронницы, ул Советская, д 48",
     "sourceUrl": "https://magnit.ru/shops?shopCode=127692&shopType=1",
     "observedAt": "2026-10-09T07:18:16.466Z"
+  },
+  {
+    "shopCode": "128067",
+    "address": "Московская обл, г Дмитров, д Акишево, д 92Б",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=128067&shopType=1",
+    "observedAt": "2026-10-09T10:33:07.438Z"
   },
   {
     "shopCode": "129567",
@@ -125,6 +131,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Балашиха, мкр Железнодорожный, пр-кт Героев, д 15",
     "sourceUrl": "https://magnit.ru/shops?shopCode=250076&shopType=1",
     "observedAt": "2026-10-09T06:55:43.396Z"
+  },
+  {
+    "shopCode": "250172",
+    "address": "Московская обл, г Дмитров, с Жестылево, д 21Б",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=250172&shopType=1",
+    "observedAt": "2026-10-09T10:43:04.977Z"
   },
   {
     "shopCode": "259020",
@@ -259,6 +271,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T06:52:04.933Z"
   },
   {
+    "shopCode": "493365",
+    "address": "Московская обл, г Дмитров, пгт Некрасовский, ул Льва Толстого, д 8А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=493365&shopType=1",
+    "observedAt": "2026-10-09T10:41:54.604Z"
+  },
+  {
     "shopCode": "500580",
     "address": "Московская обл, г Видное, ул Олимпийская, д 1 к 2",
     "sourceUrl": "https://magnit.ru/shops?shopCode=500580&shopType=1",
@@ -269,6 +287,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Голицыно, ш Можайское, стр 158",
     "sourceUrl": "https://magnit.ru/shops?shopCode=501064&shopType=1",
     "observedAt": "2026-10-09T07:44:22.777Z"
+  },
+  {
+    "shopCode": "501066",
+    "address": "Московская обл, г Дмитров, д Зверково, д 295",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=501066&shopType=1",
+    "observedAt": "2026-10-09T10:33:28.501Z"
   },
   {
     "shopCode": "501070",
@@ -293,6 +317,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Балашиха, мкр Купавна, ул Адмирала Нахимова, д 1",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502382&shopType=1",
     "observedAt": "2026-10-09T06:59:34.579Z"
+  },
+  {
+    "shopCode": "502398",
+    "address": "Московская обл, г Дмитров, ул Большевистская, д 20",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502398&shopType=1",
+    "observedAt": "2026-10-09T10:45:48.568Z"
   },
   {
     "shopCode": "502401",
@@ -331,6 +361,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:39:21.675Z"
   },
   {
+    "shopCode": "502459",
+    "address": "Московская обл, г Дмитров, деревня Подосинки, влд 38",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502459&shopType=1",
+    "observedAt": "2026-10-09T10:35:47.143Z"
+  },
+  {
     "shopCode": "502473",
     "address": "Московская обл, Волоколамск, село Осташево, 50-летия Победы пл, 1",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502473&shopType=1",
@@ -361,10 +397,46 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T06:58:03.141Z"
   },
   {
+    "shopCode": "502637",
+    "address": "Московская обл, г Дмитров, д Ольявидово, ул Центральная, д 16А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502637&shopType=1",
+    "observedAt": "2026-10-09T10:34:36.625Z"
+  },
+  {
+    "shopCode": "502639",
+    "address": "Московская обл, г Дмитров, с Рогачево, пл Осипова, д 13",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502639&shopType=1",
+    "observedAt": "2026-10-09T10:45:05.102Z"
+  },
+  {
+    "shopCode": "502643",
+    "address": "Московская обл, г Дмитров, с Рогачево, ул Мира, д 30",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502643&shopType=1",
+    "observedAt": "2026-10-09T10:45:26.535Z"
+  },
+  {
+    "shopCode": "502656",
+    "address": "Московская обл, г Дмитров, пгт Икша, ул Набережная, д 16",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502656&shopType=1",
+    "observedAt": "2026-10-09T10:40:48.303Z"
+  },
+  {
+    "shopCode": "502657",
+    "address": "Московская обл, г Дмитров, пгт Деденево, ул Московская, д 5",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502657&shopType=1",
+    "observedAt": "2026-10-09T10:40:08.044Z"
+  },
+  {
     "shopCode": "502731",
     "address": "Московская обл, Балашиха, ул Кудаковского, 11, пом. 9-11,16-29,40,49-58, пом. 2, ком. 1-14",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502731&shopType=1",
     "observedAt": "2026-10-09T06:38:32.088Z"
+  },
+  {
+    "shopCode": "502783",
+    "address": "Московская обл, г Дмитров, мкр им Владимира Махалина, д 13",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502783&shopType=1",
+    "observedAt": "2026-10-09T10:36:33.446Z"
   },
   {
     "shopCode": "502789",
@@ -383,6 +455,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Бронницы, ул Советская, д 116Б",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502824&shopType=1",
     "observedAt": "2026-10-09T07:17:52.539Z"
+  },
+  {
+    "shopCode": "502847",
+    "address": "Московская обл, г Дмитров, п Подосинки, влд 17",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502847&shopType=1",
+    "observedAt": "2026-10-09T10:38:55.969Z"
   },
   {
     "shopCode": "502848",
@@ -469,6 +547,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:06:51.420Z"
   },
   {
+    "shopCode": "503037",
+    "address": "Московская обл, г Дмитров, д Каменка, д 74А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503037&shopType=1",
+    "observedAt": "2026-10-09T10:33:51.716Z"
+  },
+  {
     "shopCode": "503040",
     "address": "Московская обл, г Высоковск, ул Владыкина, д 22",
     "sourceUrl": "https://magnit.ru/shops?shopCode=503040&shopType=1",
@@ -479,6 +563,18 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Балашиха, мкр Янтарный, проезд Акуловский, д 4",
     "sourceUrl": "https://magnit.ru/shops?shopCode=503064&shopType=1",
     "observedAt": "2026-10-09T07:06:26.156Z"
+  },
+  {
+    "shopCode": "503092",
+    "address": "Московская обл, г Дмитров, с Озерецкое, б-р Мечта, д 2",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503092&shopType=1",
+    "observedAt": "2026-10-09T10:43:27.933Z"
+  },
+  {
+    "shopCode": "503431",
+    "address": "Московская обл, г Дмитров, пгт Деденево, ул Заречная, д 9",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503431&shopType=1",
+    "observedAt": "2026-10-09T10:39:44.785Z"
   },
   {
     "shopCode": "503442",
@@ -511,16 +607,40 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T06:42:46.466Z"
   },
   {
+    "shopCode": "503633",
+    "address": "Московская обл, г Дмитров, ул Космонавтов, д 45",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503633&shopType=1",
+    "observedAt": "2026-10-09T10:46:10.717Z"
+  },
+  {
+    "shopCode": "503646",
+    "address": "Московская обл, г Дмитров, п Горшково, д 62",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503646&shopType=1",
+    "observedAt": "2026-10-09T10:37:41.499Z"
+  },
+  {
     "shopCode": "503652",
     "address": "Московская обл, г Волоколамск, с Ярополец, ул Додогорского, д 37А",
     "sourceUrl": "https://magnit.ru/shops?shopCode=503652&shopType=1",
     "observedAt": "2026-10-09T07:34:36.566Z"
   },
   {
+    "shopCode": "503657",
+    "address": "Московская обл, г Дмитров, п Новосиньково, д 60Б",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503657&shopType=1",
+    "observedAt": "2026-10-09T10:38:29.827Z"
+  },
+  {
     "shopCode": "503683",
     "address": "Московская обл, г Балашиха, ул Мещера, д 26",
     "sourceUrl": "https://magnit.ru/shops?shopCode=503683&shopType=1",
     "observedAt": "2026-10-09T07:09:56.402Z"
+  },
+  {
+    "shopCode": "503714",
+    "address": "Московская обл, г Дмитров, д Рыбаки, д 30",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503714&shopType=1",
+    "observedAt": "2026-10-09T10:35:00.119Z"
   },
   {
     "shopCode": "503715",
@@ -539,6 +659,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Балашиха, мкр Салтыковка, ш Разинское, д 68А",
     "sourceUrl": "https://magnit.ru/shops?shopCode=503744&shopType=1",
     "observedAt": "2026-10-09T07:06:03.395Z"
+  },
+  {
+    "shopCode": "503792",
+    "address": "Московская обл, г Дмитров, с Орудьево, ул Центральная, д 90",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503792&shopType=1",
+    "observedAt": "2026-10-09T10:44:41.934Z"
   },
   {
     "shopCode": "503821",
@@ -575,6 +701,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, Воскресенск, с Конобеево, ул Победы, уч. 71-г",
     "sourceUrl": "https://magnit.ru/shops?shopCode=503874&shopType=1",
     "observedAt": "2026-10-09T06:48:23.284Z"
+  },
+  {
+    "shopCode": "503916",
+    "address": "Московская обл, г Дмитров, д Татищево, ул Татищевская, д 1",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503916&shopType=1",
+    "observedAt": "2026-10-09T10:35:24.587Z"
   },
   {
     "shopCode": "503938",
@@ -631,6 +763,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:42:05.783Z"
   },
   {
+    "shopCode": "504411",
+    "address": "Московская обл, г Дмитров, ул Профессиональная, д 88",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=504411&shopType=1",
+    "observedAt": "2026-10-09T10:47:07.579Z"
+  },
+  {
     "shopCode": "504459",
     "address": "Московская обл, г Воскресенск, пгт им. Цюрупы, ул Центральная, зд 7",
     "sourceUrl": "https://magnit.ru/shops?shopCode=504459&shopType=1",
@@ -641,6 +779,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Белоозёрский, ул 50 лет Октября, зд 5",
     "sourceUrl": "https://magnit.ru/shops?shopCode=504463&shopType=1",
     "observedAt": "2026-10-09T07:15:52.979Z"
+  },
+  {
+    "shopCode": "508745",
+    "address": "Московская обл, г Дмитров, п Новосиньково, д 43А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=508745&shopType=1",
+    "observedAt": "2026-10-09T10:38:05.617Z"
   },
   {
     "shopCode": "508761",
@@ -685,6 +829,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T06:58:49.727Z"
   },
   {
+    "shopCode": "508851",
+    "address": "Московская обл, г Дмитров, поселок дома отдыха \"Горки\", д 16А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=508851&shopType=1",
+    "observedAt": "2026-10-09T10:42:43.325Z"
+  },
+  {
     "shopCode": "508888",
     "address": "Московская обл, г Видное, п Развилка, д 37",
     "sourceUrl": "https://magnit.ru/shops?shopCode=508888&shopType=1",
@@ -695,6 +845,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Воскресенск, ул Ломоносова, зд 119 к 4",
     "sourceUrl": "https://magnit.ru/shops?shopCode=508896&shopType=1",
     "observedAt": "2026-10-09T07:41:07.255Z"
+  },
+  {
+    "shopCode": "508912",
+    "address": "Московская обл, г Дмитров, пл Торговая, д 2",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=508912&shopType=1",
+    "observedAt": "2026-10-09T10:42:20.207Z"
   },
   {
     "shopCode": "508943",
@@ -727,6 +883,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:00:37.560Z"
   },
   {
+    "shopCode": "509114",
+    "address": "Московская обл, г Дмитров, ул Профессиональная, д 106",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=509114&shopType=1",
+    "observedAt": "2026-10-09T10:46:33.587Z"
+  },
+  {
     "shopCode": "509130",
     "address": "Московская обл, г Балашиха, б-р Московский, д 6А",
     "sourceUrl": "https://magnit.ru/shops?shopCode=509130&shopType=1",
@@ -739,6 +901,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:44:00.016Z"
   },
   {
+    "shopCode": "509279",
+    "address": "Московская обл, г Дмитров, с Орудьево, ул Центральная, д 103Б",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=509279&shopType=1",
+    "observedAt": "2026-10-09T10:44:19.385Z"
+  },
+  {
     "shopCode": "509297",
     "address": "Московская обл, г Балашиха, мкр Кучино, ул Южная, д 7",
     "sourceUrl": "https://magnit.ru/shops?shopCode=509297&shopType=1",
@@ -749,6 +917,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Дзержинский, ул Лермонтова, д 42",
     "sourceUrl": "https://magnit.ru/shops?shopCode=509308&shopType=1",
     "observedAt": "2026-10-09T07:47:33.750Z"
+  },
+  {
+    "shopCode": "509346",
+    "address": "Московская обл, г Дмитров, пгт Некрасовский, ул Вокзальная, д 9",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=509346&shopType=1",
+    "observedAt": "2026-10-09T10:41:31.509Z"
   },
   {
     "shopCode": "509383",
@@ -785,6 +959,18 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, Воскресенск, ул Мичурина, 9б",
     "sourceUrl": "https://magnit.ru/shops?shopCode=509616&shopType=1",
     "observedAt": "2026-10-09T06:49:23.152Z"
+  },
+  {
+    "shopCode": "509627",
+    "address": "Московская обл, г Дмитров, мкр Дуброво (п Новосиньково), д 6А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=509627&shopType=1",
+    "observedAt": "2026-10-09T10:36:10.963Z"
+  },
+  {
+    "shopCode": "509634",
+    "address": "Московская обл, г Дмитров, мкр Строителей (пгт Некрасовский), д 43",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=509634&shopType=1",
+    "observedAt": "2026-10-09T10:37:18.206Z"
   },
   {
     "shopCode": "509637",
@@ -901,10 +1087,28 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:23:26.427Z"
   },
   {
+    "shopCode": "670884",
+    "address": "Московская обл, г Дмитров, п Подосинки, д 100",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=670884&shopType=1",
+    "observedAt": "2026-10-09T10:39:20.663Z"
+  },
+  {
     "shopCode": "674361",
     "address": "Московская обл, г Балашиха, ул Молодежная, д 2А",
     "sourceUrl": "https://magnit.ru/shops?shopCode=674361&shopType=1",
     "observedAt": "2026-10-09T07:10:19.387Z"
+  },
+  {
+    "shopCode": "682731",
+    "address": "Московская обл, г Дмитров, мкр им Владимира Махалина, д 37",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=682731&shopType=1",
+    "observedAt": "2026-10-09T10:36:55.511Z"
+  },
+  {
+    "shopCode": "687908",
+    "address": "Московская обл, г Дмитров, с Озерецкое, б-р Радости, д 4А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=687908&shopType=1",
+    "observedAt": "2026-10-09T10:43:56.312Z"
   },
   {
     "shopCode": "691768",
@@ -997,6 +1201,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:35:00.448Z"
   },
   {
+    "shopCode": "770220",
+    "address": "Московская обл, г Дмитров, пгт Деденево, ш Московское, д 5А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=770220&shopType=1",
+    "observedAt": "2026-10-09T10:40:27.010Z"
+  },
+  {
     "shopCode": "770417",
     "address": "Московская обл, Воскресенск, Ратчино д, Некрасова ул, зд. 12а, помещ. 2",
     "sourceUrl": "https://magnit.ru/shops?shopCode=770417&shopType=1",
@@ -1015,10 +1225,22 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:27:47.731Z"
   },
   {
+    "shopCode": "810309",
+    "address": "Московская обл, г Дмитров, пгт Некрасовский, мкр Трудовая, д 30А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=810309&shopType=1",
+    "observedAt": "2026-10-09T10:41:11.054Z"
+  },
+  {
     "shopCode": "849004",
     "address": "Московская обл, г Балашиха, мкр Новое Павлино, ул Бояринова, д 13",
     "sourceUrl": "https://magnit.ru/shops?shopCode=849004&shopType=1",
     "observedAt": "2026-10-09T07:01:45.235Z"
+  },
+  {
+    "shopCode": "853627",
+    "address": "Московская обл, г Дмитров, д Курово, д 109",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=853627&shopType=1",
+    "observedAt": "2026-10-09T10:34:14.011Z"
   },
   {
     "shopCode": "857286",
