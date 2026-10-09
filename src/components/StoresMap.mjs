@@ -1,3 +1,5 @@
+import { createMagnitStoreDirectory } from "./MagnitStoreDirectory.mjs";
+
 // "Магазины" section: an honest, dependency-free map of the stores whose
 // prices CHECKNI actually works with. Built from OpenStreetMap raster
 // tiles (© OpenStreetMap contributors, ODbL) laid out as plain <img>
@@ -202,7 +204,7 @@ export function createStoresSection({
     list.append(item);
   }
 
-  section.append(map, attribution, list);
+  section.append(map, attribution, list, createMagnitStoreDirectory());
   return section;
 }
 

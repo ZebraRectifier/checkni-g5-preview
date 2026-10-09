@@ -1501,3 +1501,116 @@ h1 {
     padding: 14px;
   }
 }
+
+/* Official Magnit address directory. Directory presence is not price/stock truth. */
+.magnit-directory {
+  margin-top: 4px;
+  border: 1px solid rgba(21, 32, 25, 0.16);
+  border-radius: 16px;
+  padding: 14px 18px;
+  background: #fff;
+}
+
+.magnit-directory summary {
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.magnit-directory summary strong { color: #d71920; }
+
+.magnit-directory-note {
+  margin: 12px 0;
+  color: rgba(21, 32, 25, 0.72);
+}
+
+.magnit-directory-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+
+.magnit-directory-search,
+.magnit-directory-region {
+  min-height: 44px;
+  width: 100%;
+  border: 1px solid rgba(21, 32, 25, 0.18);
+  border-radius: 12px;
+  background: #fff;
+  color: #152019;
+  font: inherit;
+  padding: 0 12px;
+}
+
+.magnit-directory-status {
+  margin: 8px 0;
+  color: rgba(21, 32, 25, 0.62);
+  font-size: 13px;
+}
+
+.magnit-directory-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  max-height: 420px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-top: 1px solid rgba(21, 32, 25, 0.08);
+}
+
+.magnit-directory-list li {
+  display: grid;
+  gap: 2px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(21, 32, 25, 0.08);
+}
+
+.magnit-directory-list strong {
+  font-size: 12px;
+  color: #d71920;
+}
+
+.magnit-directory-list span {
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
+.magnit-directory-more {
+  min-height: 42px;
+  margin-top: 12px;
+  padding: 0 14px;
+  border: 1px solid rgba(215, 25, 32, 0.24);
+  border-radius: 12px;
+  background: #fff;
+  color: #b5161d;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.magnit-directory-source {
+  display: inline-block;
+  margin-top: 12px;
+  color: #b5161d;
+  font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .magnit-directory {
+    padding: 12px 14px;
+  }
+
+  .magnit-directory-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .magnit-directory-list {
+    max-height: 360px;
+  }
+}
+
