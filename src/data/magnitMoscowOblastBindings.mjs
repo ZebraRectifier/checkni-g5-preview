@@ -19,6 +19,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T06:40:38.872Z"
   },
   {
+    "shopCode": "050417",
+    "address": "Московская обл, г Одинцово, мкр Равновесие (с Перхушково), стр 14",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=050417&shopType=1",
+    "observedAt": "2026-10-09T12:27:38.306Z"
+  },
+  {
     "shopCode": "052335",
     "address": "Московская обл, Видное, поселок Развилка, Римский проезд, 13, помещ. 2Н",
     "sourceUrl": "https://magnit.ru/shops?shopCode=052335&shopType=1",
@@ -29,6 +35,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, Волоколамск, Тимонино д, Ново-Тимонинская ул, 2А",
     "sourceUrl": "https://magnit.ru/shops?shopCode=054414&shopType=1",
     "observedAt": "2026-10-09T06:45:50.792Z"
+  },
+  {
+    "shopCode": "059532",
+    "address": "Московская обл, г Наро-Фоминск, с Петровское, д 71А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=059532&shopType=1",
+    "observedAt": "2026-10-09T12:14:13.686Z"
   },
   {
     "shopCode": "073414",
@@ -137,6 +149,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Красногорск, ул Ленина, д 21А",
     "sourceUrl": "https://magnit.ru/shops?shopCode=178354&shopType=1",
     "observedAt": "2026-10-09T11:33:07.132Z"
+  },
+  {
+    "shopCode": "179914",
+    "address": "Московская обл, г Одинцово, д Таганьково, д 25",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=179914&shopType=1",
+    "observedAt": "2026-10-09T12:27:17.497Z"
   },
   {
     "shopCode": "187562",
@@ -301,6 +319,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T11:59:32.997Z"
   },
   {
+    "shopCode": "330070",
+    "address": "Московская обл, г Орехово-Зуево, д Давыдово, ул Заводская, д 2",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=330070&shopType=1",
+    "observedAt": "2026-10-09T12:33:21.259Z"
+  },
+  {
     "shopCode": "330920",
     "address": "Московская обл, Волоколамск, деревня Матрёнино, 39",
     "sourceUrl": "https://magnit.ru/shops?shopCode=330920&shopType=1",
@@ -323,6 +347,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Красногорск, д Глухово, ул Романовская, д 23",
     "sourceUrl": "https://magnit.ru/shops?shopCode=367989&shopType=1",
     "observedAt": "2026-10-09T11:28:55.969Z"
+  },
+  {
+    "shopCode": "369593",
+    "address": "Московская обл, г Наро-Фоминск, ул Курзенкова, д 22",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=369593&shopType=1",
+    "observedAt": "2026-10-09T12:15:03.639Z"
   },
   {
     "shopCode": "370332",
@@ -427,6 +457,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:32:24.546Z"
   },
   {
+    "shopCode": "501056",
+    "address": "Московская обл, г Одинцово, ш Можайское, д 38Г",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=501056&shopType=1",
+    "observedAt": "2026-10-09T12:32:28.926Z"
+  },
+  {
     "shopCode": "501062",
     "address": "Московская обл, г Ликино-Дулёво, ул 1 Мая, д 22",
     "sourceUrl": "https://magnit.ru/shops?shopCode=501062&shopType=1",
@@ -487,6 +523,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T06:50:26.929Z"
   },
   {
+    "shopCode": "502361",
+    "address": "Московская обл, г Ногинск, ул Московская, д 7",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502361&shopType=1",
+    "observedAt": "2026-10-09T12:25:41.063Z"
+  },
+  {
     "shopCode": "502373",
     "address": "Московская обл, г Дубна, ул Ленинградская, д 4",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502373&shopType=1",
@@ -505,6 +547,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T12:09:26.672Z"
   },
   {
+    "shopCode": "502376",
+    "address": "Московская обл, г Одинцово, пгт Лесной Городок, ул Молодежная, д 8",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502376&shopType=1",
+    "observedAt": "2026-10-09T12:29:16.472Z"
+  },
+  {
     "shopCode": "502382",
     "address": "Московская обл, г Балашиха, мкр Купавна, ул Адмирала Нахимова, д 1",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502382&shopType=1",
@@ -515,6 +563,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Ивантеевка, проезд Центральный, д 14Б",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502383&shopType=1",
     "observedAt": "2026-10-09T11:14:50.655Z"
+  },
+  {
+    "shopCode": "502386",
+    "address": "Московская обл, г Озёры, ул Ленина, д 47В",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502386&shopType=1",
+    "observedAt": "2026-10-09T12:32:59.686Z"
   },
   {
     "shopCode": "502389",
@@ -577,6 +631,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T10:48:35.955Z"
   },
   {
+    "shopCode": "502443",
+    "address": "Московская обл, г Одинцово, ул Триумфальная, д 14",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502443&shopType=1",
+    "observedAt": "2026-10-09T12:31:28.045Z"
+  },
+  {
     "shopCode": "502451",
     "address": "Московская обл, г Видное, п Володарского, ул Зеленая, д 31А",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502451&shopType=1",
@@ -625,6 +685,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T12:05:49.914Z"
   },
   {
+    "shopCode": "502491",
+    "address": "Московская обл, г Ногинск, ул 3-го Интернационала, д 90",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502491&shopType=1",
+    "observedAt": "2026-10-09T12:23:20.578Z"
+  },
+  {
     "shopCode": "502492",
     "address": "Московская обл, г Люберцы, ул Авиаторов, д 1",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502492&shopType=1",
@@ -661,6 +727,18 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:32:49.469Z"
   },
   {
+    "shopCode": "502540",
+    "address": "Московская обл, г Одинцово, пгт Большие Вязёмы, ш Можайское, д 1",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502540&shopType=1",
+    "observedAt": "2026-10-09T12:28:51.685Z"
+  },
+  {
+    "shopCode": "502564",
+    "address": "Московская обл, г Орехово-Зуево, п Авсюнино, ул Ленина, д 12",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502564&shopType=1",
+    "observedAt": "2026-10-09T12:33:44.152Z"
+  },
+  {
     "shopCode": "502573",
     "address": "Московская обл, Видное, Володарского п, Центральная ул, 26, лит. А4, этаж 1, помещение №3, комната №2",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502573&shopType=1",
@@ -677,6 +755,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Звенигород, кв-л Маяковского, д 6",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502595&shopType=1",
     "observedAt": "2026-10-09T11:11:46.367Z"
+  },
+  {
+    "shopCode": "502604",
+    "address": "Московская обл, г Наро-Фоминск, пгт Селятино, ул Больничная, д 117Б",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502604&shopType=1",
+    "observedAt": "2026-10-09T12:13:21.772Z"
   },
   {
     "shopCode": "502615",
@@ -701,6 +785,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Дмитров, с Рогачево, ул Мира, д 30",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502643&shopType=1",
     "observedAt": "2026-10-09T10:45:26.535Z"
+  },
+  {
+    "shopCode": "502646",
+    "address": "Московская обл, г Наро-Фоминск, пгт Селятино, ул Теннисная, д 49/1",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502646&shopType=1",
+    "observedAt": "2026-10-09T12:13:48.281Z"
   },
   {
     "shopCode": "502648",
@@ -805,6 +895,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T11:09:50.623Z"
   },
   {
+    "shopCode": "502838",
+    "address": "Московская обл, г Ногинск, пгт им. Воровского, ул Рабочая, д 3А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502838&shopType=1",
+    "observedAt": "2026-10-09T12:20:11.718Z"
+  },
+  {
     "shopCode": "502847",
     "address": "Московская обл, г Дмитров, п Подосинки, влд 17",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502847&shopType=1",
@@ -815,6 +911,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, Волоколамск, Сычево рп, Школьная ул, 4А",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502848&shopType=1",
     "observedAt": "2026-10-09T06:45:28.701Z"
+  },
+  {
+    "shopCode": "502850",
+    "address": "Московская обл, г Одинцово, п Летний Отдых, ул Колхозная, д 1",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502850&shopType=1",
+    "observedAt": "2026-10-09T12:28:02.109Z"
   },
   {
     "shopCode": "502855",
@@ -835,6 +937,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:07:42.243Z"
   },
   {
+    "shopCode": "502867",
+    "address": "Московская обл, г Одинцово, с Немчиновка, проезд Рублевский, д 20Б",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502867&shopType=1",
+    "observedAt": "2026-10-09T12:31:03.147Z"
+  },
+  {
     "shopCode": "502872",
     "address": "Московская обл, г Люберцы, ул СНТ Зеленая зона, д 97 стр 1",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502872&shopType=1",
@@ -847,10 +955,22 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:05:36.813Z"
   },
   {
+    "shopCode": "502887",
+    "address": "Московская обл, г Ногинск, ул Комсомольская, д 76",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502887&shopType=1",
+    "observedAt": "2026-10-09T12:25:17.743Z"
+  },
+  {
     "shopCode": "502903",
     "address": "Московская обл, г Балашиха, мкр Керамик, проезд Железнодорожный, влд 25",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502903&shopType=1",
     "observedAt": "2026-10-09T06:58:25.042Z"
+  },
+  {
+    "shopCode": "502907",
+    "address": "Московская обл, г Ногинск, ул 200 лет Города, д 1",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502907&shopType=1",
+    "observedAt": "2026-10-09T12:22:34.326Z"
   },
   {
     "shopCode": "502910",
@@ -877,6 +997,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:08:06.562Z"
   },
   {
+    "shopCode": "502918",
+    "address": "Московская обл, г Орехово-Зуево, п Верея, ул Центральная, д 50",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502918&shopType=1",
+    "observedAt": "2026-10-09T12:34:07.870Z"
+  },
+  {
     "shopCode": "502921",
     "address": "Московская обл, г Балашиха, ул Твардовского, д 40",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502921&shopType=1",
@@ -887,6 +1013,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Коломна, ул Ленина, д 70Б",
     "sourceUrl": "https://magnit.ru/shops?shopCode=502932&shopType=1",
     "observedAt": "2026-10-09T11:25:21.575Z"
+  },
+  {
+    "shopCode": "502949",
+    "address": "Московская обл, г Мытищи, с Марфино, ул Зелёная, стр 1А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=502949&shopType=1",
+    "observedAt": "2026-10-09T12:11:09.520Z"
   },
   {
     "shopCode": "502954",
@@ -1033,6 +1165,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:31:14.746Z"
   },
   {
+    "shopCode": "503453",
+    "address": "Московская обл, г Ногинск, ул 1-ая Ревсобраний, д 8",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503453&shopType=1",
+    "observedAt": "2026-10-09T12:22:13.197Z"
+  },
+  {
     "shopCode": "503499",
     "address": "Московская обл, г Долгопрудный, пр-кт Пацаева, д 15",
     "sourceUrl": "https://magnit.ru/shops?shopCode=503499&shopType=1",
@@ -1123,6 +1261,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T10:38:29.827Z"
   },
   {
+    "shopCode": "503660",
+    "address": "Московская обл, г Наро-Фоминск, ул Погодина, д 93А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503660&shopType=1",
+    "observedAt": "2026-10-09T12:16:25.334Z"
+  },
+  {
     "shopCode": "503664",
     "address": "Московская обл, г Домодедово, мкр Южный, ул Курыжова, д 3",
     "sourceUrl": "https://magnit.ru/shops?shopCode=503664&shopType=1",
@@ -1133,6 +1277,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Звенигород, р-н Восточный, мкр 3, д 7",
     "sourceUrl": "https://magnit.ru/shops?shopCode=503676&shopType=1",
     "observedAt": "2026-10-09T11:13:35.101Z"
+  },
+  {
+    "shopCode": "503682",
+    "address": "Московская обл, г Ногинск, ул Климова, д 30",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503682&shopType=1",
+    "observedAt": "2026-10-09T12:24:11.499Z"
   },
   {
     "shopCode": "503683",
@@ -1157,6 +1307,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Луховицы, ул Пушкина, стр 100",
     "sourceUrl": "https://magnit.ru/shops?shopCode=503720&shopType=1",
     "observedAt": "2026-10-09T11:45:50.802Z"
+  },
+  {
+    "shopCode": "503727",
+    "address": "Московская обл, г Наро-Фоминск, ул Новикова",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503727&shopType=1",
+    "observedAt": "2026-10-09T12:15:58.075Z"
   },
   {
     "shopCode": "503743",
@@ -1243,10 +1399,22 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T12:07:25.541Z"
   },
   {
+    "shopCode": "503911",
+    "address": "Московская обл, г Ногинск, пер 1-ый Текстильный, д 11А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503911&shopType=1",
+    "observedAt": "2026-10-09T12:20:59.391Z"
+  },
+  {
     "shopCode": "503916",
     "address": "Московская обл, г Дмитров, д Татищево, ул Татищевская, д 1",
     "sourceUrl": "https://magnit.ru/shops?shopCode=503916&shopType=1",
     "observedAt": "2026-10-09T10:35:24.587Z"
+  },
+  {
+    "shopCode": "503920",
+    "address": "Московская обл, г Ногинск, с Кудиново, ул Центральная, д 46",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503920&shopType=1",
+    "observedAt": "2026-10-09T12:21:38.632Z"
   },
   {
     "shopCode": "503938",
@@ -1261,6 +1429,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T06:34:41.228Z"
   },
   {
+    "shopCode": "503968",
+    "address": "Московская обл, г Одинцово, пгт Лесной Городок, ул Центральная, д 23",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503968&shopType=1",
+    "observedAt": "2026-10-09T12:29:39.954Z"
+  },
+  {
     "shopCode": "504008",
     "address": "Московская обл, Балашиха, мкр Железнодорожный, ул Струве, 6",
     "sourceUrl": "https://magnit.ru/shops?shopCode=504008&shopType=1",
@@ -1271,6 +1445,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Истра, село Новопетровское, ул Полевая, зд 4А",
     "sourceUrl": "https://magnit.ru/shops?shopCode=504019&shopType=1",
     "observedAt": "2026-10-09T11:17:24.959Z"
+  },
+  {
+    "shopCode": "504047",
+    "address": "Московская обл, г Ногинск, д Щемилово, ул Орлова, д 2",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=504047&shopType=1",
+    "observedAt": "2026-10-09T12:18:04.705Z"
   },
   {
     "shopCode": "504052",
@@ -1429,6 +1609,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T11:01:30.119Z"
   },
   {
+    "shopCode": "508753",
+    "address": "Московская обл, г Ногинск, д Большое Буньково, ул Ленинская, д 32",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=508753&shopType=1",
+    "observedAt": "2026-10-09T12:17:16.655Z"
+  },
+  {
     "shopCode": "508759",
     "address": "Московская обл, г Домодедово, село Ям, ул Морская, д 6",
     "sourceUrl": "https://magnit.ru/shops?shopCode=508759&shopType=1",
@@ -1457,6 +1643,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Домодедово, тер Генеральские дачи (п санатория \"Подмосковье\"), д 1Б",
     "sourceUrl": "https://magnit.ru/shops?shopCode=508768&shopType=1",
     "observedAt": "2026-10-09T11:03:57.279Z"
+  },
+  {
+    "shopCode": "508782",
+    "address": "Московская обл, г Одинцово, ш Можайское, д 119Б",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=508782&shopType=1",
+    "observedAt": "2026-10-09T12:32:03.433Z"
   },
   {
     "shopCode": "508785",
@@ -1505,6 +1697,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Лобня, ул Ленина, д 31",
     "sourceUrl": "https://magnit.ru/shops?shopCode=508823&shopType=1",
     "observedAt": "2026-10-09T11:40:33.284Z"
+  },
+  {
+    "shopCode": "508831",
+    "address": "Московская обл, г Ногинск, д Щемилово, ул Орлова, д 26",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=508831&shopType=1",
+    "observedAt": "2026-10-09T12:18:30.603Z"
   },
   {
     "shopCode": "508843",
@@ -1573,6 +1771,18 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:41:07.255Z"
   },
   {
+    "shopCode": "508898",
+    "address": "Московская обл, г Ногинск, ул Климова, д 46",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=508898&shopType=1",
+    "observedAt": "2026-10-09T12:24:32.165Z"
+  },
+  {
+    "shopCode": "508899",
+    "address": "Московская обл, г Наро-Фоминск, ул Латышская, д 7",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=508899&shopType=1",
+    "observedAt": "2026-10-09T12:15:30.730Z"
+  },
+  {
     "shopCode": "508912",
     "address": "Московская обл, г Дмитров, пл Торговая, д 2",
     "sourceUrl": "https://magnit.ru/shops?shopCode=508912&shopType=1",
@@ -1633,6 +1843,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T11:29:40.704Z"
   },
   {
+    "shopCode": "509079",
+    "address": "Московская обл, г Ногинск, пгт им. Воровского, ул Рабочая, д 12",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=509079&shopType=1",
+    "observedAt": "2026-10-09T12:19:46.327Z"
+  },
+  {
     "shopCode": "509084",
     "address": "Московская обл, г Балашиха, мкр Кучино, ул Центральная, д 39А",
     "sourceUrl": "https://magnit.ru/shops?shopCode=509084&shopType=1",
@@ -1661,6 +1877,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Люберцы, ул 8 Марта, д 57",
     "sourceUrl": "https://magnit.ru/shops?shopCode=509175&shopType=1",
     "observedAt": "2026-10-09T11:59:56.214Z"
+  },
+  {
+    "shopCode": "509196",
+    "address": "Московская обл, г Мытищи, ул Трудовая, д 6",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=509196&shopType=1",
+    "observedAt": "2026-10-09T12:11:33.417Z"
   },
   {
     "shopCode": "509223",
@@ -1759,6 +1981,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T06:35:06.154Z"
   },
   {
+    "shopCode": "509442",
+    "address": "Московская обл, г Ногинск, ул 3-го Интернационала, д 254",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=509442&shopType=1",
+    "observedAt": "2026-10-09T12:22:58.989Z"
+  },
+  {
     "shopCode": "509464",
     "address": "Московская обл, г Жуковский, ул Чкалова, д 1",
     "sourceUrl": "https://magnit.ru/shops?shopCode=509464&shopType=1",
@@ -1841,6 +2069,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Балашиха, мкр Кучино, ул Брагина, д 1",
     "sourceUrl": "https://magnit.ru/shops?shopCode=509687&shopType=1",
     "observedAt": "2026-10-09T07:00:16.767Z"
+  },
+  {
+    "shopCode": "509712",
+    "address": "Московская обл, г Одинцово, п Часцы, ш Можайское, д 69",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=509712&shopType=1",
+    "observedAt": "2026-10-09T12:28:27.153Z"
   },
   {
     "shopCode": "509720",
@@ -1945,6 +2179,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:29:22.238Z"
   },
   {
+    "shopCode": "532977",
+    "address": "Московская обл, г Мытищи, пр-кт Новомытищинский, д 4А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=532977&shopType=1",
+    "observedAt": "2026-10-09T12:10:16.000Z"
+  },
+  {
     "shopCode": "537819",
     "address": "Московская обл, Воскресенск, Ленинская ул, зд. 20",
     "sourceUrl": "https://magnit.ru/shops?shopCode=537819&shopType=1",
@@ -2015,6 +2255,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Домодедово, д Ступино, стр 1Д",
     "sourceUrl": "https://magnit.ru/shops?shopCode=592832&shopType=1",
     "observedAt": "2026-10-09T10:54:33.889Z"
+  },
+  {
+    "shopCode": "617885",
+    "address": "Московская обл, г Одинцово, пгт Новоивановское, б-р Эйнштейна, д 5",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=617885&shopType=1",
+    "observedAt": "2026-10-09T12:30:05.769Z"
   },
   {
     "shopCode": "623007",
@@ -2089,6 +2335,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:25:56.662Z"
   },
   {
+    "shopCode": "704732",
+    "address": "Московская обл, г Ногинск, ул Самодеятельная, д 2",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=704732&shopType=1",
+    "observedAt": "2026-10-09T12:26:43.666Z"
+  },
+  {
     "shopCode": "707660",
     "address": "Московская обл, г Лосино-Петровский, пгт Свердловский, ул Народного Ополчения, д 3",
     "sourceUrl": "https://magnit.ru/shops?shopCode=707660&shopType=1",
@@ -2143,6 +2395,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T07:38:32.864Z"
   },
   {
+    "shopCode": "770001",
+    "address": "Московская обл, г Ногинск, ул 3-я Доможировская, д 5",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=770001&shopType=1",
+    "observedAt": "2026-10-09T12:23:45.316Z"
+  },
+  {
     "shopCode": "770006",
     "address": "Московская обл, г Дзержинский, ул Дзержинская, д 11",
     "sourceUrl": "https://magnit.ru/shops?shopCode=770006&shopType=1",
@@ -2153,6 +2411,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Дзержинский, ул Ленина, д 8",
     "sourceUrl": "https://magnit.ru/shops?shopCode=770007&shopType=1",
     "observedAt": "2026-10-09T07:46:43.583Z"
+  },
+  {
+    "shopCode": "770011",
+    "address": "Московская обл, г Мытищи, пр-кт Новомытищинский, д 88 к 2",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=770011&shopType=1",
+    "observedAt": "2026-10-09T12:10:43.493Z"
   },
   {
     "shopCode": "770016",
@@ -2179,6 +2443,18 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T11:28:16.342Z"
   },
   {
+    "shopCode": "770025",
+    "address": "Московская обл, г Ногинск, ул Октябрьская, д 85А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=770025&shopType=1",
+    "observedAt": "2026-10-09T12:26:18.296Z"
+  },
+  {
+    "shopCode": "770026",
+    "address": "Московская обл, г Мытищи, ул Юбилейная, д 5",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=770026&shopType=1",
+    "observedAt": "2026-10-09T12:12:21.073Z"
+  },
+  {
     "shopCode": "770036",
     "address": "Московская обл, Апрелевка, Парковая ул, 2 3",
     "sourceUrl": "https://magnit.ru/shops?shopCode=770036&shopType=1",
@@ -2195,6 +2471,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Лотошино, ул Почтовая, д 10",
     "sourceUrl": "https://magnit.ru/shops?shopCode=770067&shopType=1",
     "observedAt": "2026-10-09T11:43:22.313Z"
+  },
+  {
+    "shopCode": "770070",
+    "address": "Московская обл, г Ногинск, ул Климова, д 49",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=770070&shopType=1",
+    "observedAt": "2026-10-09T12:24:54.548Z"
   },
   {
     "shopCode": "770076",
@@ -2221,6 +2503,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T11:09:00.859Z"
   },
   {
+    "shopCode": "770113",
+    "address": "Московская обл, г Мытищи, ул Щербакова, д 4",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=770113&shopType=1",
+    "observedAt": "2026-10-09T12:11:55.845Z"
+  },
+  {
     "shopCode": "770123",
     "address": "Московская обл, г Лобня, ул Батарейная, д 8А",
     "sourceUrl": "https://magnit.ru/shops?shopCode=770123&shopType=1",
@@ -2243,6 +2531,18 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Люберцы, пгт Октябрьский, ул Ленина, д 3 стр 1",
     "sourceUrl": "https://magnit.ru/shops?shopCode=770158&shopType=1",
     "observedAt": "2026-10-09T11:55:09.916Z"
+  },
+  {
+    "shopCode": "770176",
+    "address": "Московская обл, г Ногинск, п Зеленый, ул Школьная, д 11",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=770176&shopType=1",
+    "observedAt": "2026-10-09T12:19:22.567Z"
+  },
+  {
+    "shopCode": "770189",
+    "address": "Московская обл, г Наро-Фоминск, ул Шибанкова, д 1",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=770189&shopType=1",
+    "observedAt": "2026-10-09T12:16:52.546Z"
   },
   {
     "shopCode": "770197",
@@ -2281,6 +2581,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T11:12:08.633Z"
   },
   {
+    "shopCode": "780383",
+    "address": "Московская обл, г Ногинск, мкр Бисерово-парк (п Рыбхоз), д 1А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=780383&shopType=1",
+    "observedAt": "2026-10-09T12:18:57.377Z"
+  },
+  {
     "shopCode": "794578",
     "address": "Московская обл, г Видное, д Коробово, ул Авиаторов, д 2",
     "sourceUrl": "https://magnit.ru/shops?shopCode=794578&shopType=1",
@@ -2291,6 +2597,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Люберцы, мкр Птицефабрика (пгт Томилино), д 35 к 3",
     "sourceUrl": "https://magnit.ru/shops?shopCode=797095&shopType=1",
     "observedAt": "2026-10-09T11:51:34.654Z"
+  },
+  {
+    "shopCode": "797357",
+    "address": "Московская обл, г Наро-Фоминск, тер Узоры, зд 384",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=797357&shopType=1",
+    "observedAt": "2026-10-09T12:14:37.508Z"
   },
   {
     "shopCode": "798838",
@@ -2315,6 +2627,12 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "address": "Московская обл, г Дмитров, пгт Некрасовский, мкр Трудовая, д 30А",
     "sourceUrl": "https://magnit.ru/shops?shopCode=810309&shopType=1",
     "observedAt": "2026-10-09T10:41:11.054Z"
+  },
+  {
+    "shopCode": "810487",
+    "address": "Московская обл, г Наро-Фоминск, д Чешково, зд 61",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=810487&shopType=1",
+    "observedAt": "2026-10-09T12:12:45.544Z"
   },
   {
     "shopCode": "817563",
@@ -2383,10 +2701,22 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "observedAt": "2026-10-09T11:02:22.309Z"
   },
   {
+    "shopCode": "899570",
+    "address": "Московская обл, г Ногинск, д Боровково, ул Серова, д 42А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=899570&shopType=1",
+    "observedAt": "2026-10-09T12:17:40.635Z"
+  },
+  {
     "shopCode": "905657",
     "address": "Московская обл, г Красногорск, пгт Нахабино, ул Стартовая, д 3",
     "sourceUrl": "https://magnit.ru/shops?shopCode=905657&shopType=1",
     "observedAt": "2026-10-09T11:31:14.400Z"
+  },
+  {
+    "shopCode": "937523",
+    "address": "Московская обл, г Одинцово, пгт Старый Городок, ул Школьная, д 30",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=937523&shopType=1",
+    "observedAt": "2026-10-09T12:30:38.462Z"
   },
   {
     "shopCode": "937961",
