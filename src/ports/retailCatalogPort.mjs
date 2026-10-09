@@ -2,6 +2,7 @@ import {
   CATALOG_SEARCH_PUBLISHABLE_KEY
 } from "./catalogGatewayPort.mjs";
 import { resolveMagnitMoscowStore } from "../data/magnitMoscowStores.mjs";
+import { resolveMagnitMoscowOblastStore } from "../data/magnitMoscowOblastBindings.mjs";
 import { resolveMetroMoscowRegionStore } from "../data/metroMoscowRegionStores.mjs";
 
 export const RETAIL_CATALOG_ENDPOINT =
@@ -396,12 +397,15 @@ function resolveDefinition(value = "globus") {
   if (value.retailerId === "magnit") {
     if (value.shopCode && value.storeId) return value;
     if (!value.store) return base;
-    const store = resolveMagnitMoscowStore(value.store);
+    const cityStore = resolveMagnitMoscowStore(value.store);
+    const store = cityStore || resolveMagnitMoscowOblastStore(value.store);
     if (!store) return null;
     const storeId = "magnit-" + store.shopCode;
     const storeName = "Магнит · " + store.address;
     return Object.freeze({
       ...base,
+      localityId: cityStore ? "city-moscow" : "region-moscow-oblast",
+      localityName: cityStore ? "Москва" : "Московская область",
       shopCode: store.shopCode,
       storeAddress: store.address,
       storeId,
