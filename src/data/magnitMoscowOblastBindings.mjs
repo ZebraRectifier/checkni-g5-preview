@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 51835)
-Total output lines: 4635
-
 // Exact official public-selector bindings; partial prices are separate.
 export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
   {
@@ -2213,7 +2210,170 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
   },
   {
     "shopCode": "503720",
-    "address": "Московская обл, г Луховицы, ул Пушкина, стр …1835 tokens truncated…shopCode=503920&shopType=1",
+    "address": "Московская обл, г Луховицы, ул Пушкина, стр 100",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503720&shopType=1",
+    "observedAt": "2026-10-09T11:45:50.802Z"
+  },
+  {
+    "shopCode": "503727",
+    "address": "Московская обл, г Наро-Фоминск, ул Новикова",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503727&shopType=1",
+    "observedAt": "2026-10-09T12:15:58.075Z"
+  },
+  {
+    "shopCode": "503742",
+    "address": "Московская обл, г Электросталь, п Фрязево, ул Линейная, д 1",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503742&shopType=1",
+    "observedAt": "2026-10-09T13:58:43.209Z"
+  },
+  {
+    "shopCode": "503743",
+    "address": "Московская обл, г Балашиха, кв-л Щитниково, д 75",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503743&shopType=1",
+    "observedAt": "2026-10-09T06:53:35.839Z"
+  },
+  {
+    "shopCode": "503744",
+    "address": "Московская обл, г Балашиха, мкр Салтыковка, ш Разинское, д 68А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503744&shopType=1",
+    "observedAt": "2026-10-09T07:06:03.395Z"
+  },
+  {
+    "shopCode": "503759",
+    "address": "Московская обл, Мытищи, Жостово п, Филимоновская ул",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503759&shopType=1",
+    "observedAt": "2026-10-09T14:28:59.082Z"
+  },
+  {
+    "shopCode": "503766",
+    "address": "Московская обл, Клин, деревня Щекино, 42",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503766&shopType=1",
+    "observedAt": "2026-10-09T14:17:48.962Z"
+  },
+  {
+    "shopCode": "503786",
+    "address": "Московская обл, г Яхрома, мкр Левобережье, д 15",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503786&shopType=1",
+    "observedAt": "2026-10-09T14:03:49.052Z"
+  },
+  {
+    "shopCode": "503792",
+    "address": "Московская обл, г Дмитров, с Орудьево, ул Центральная, д 90",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503792&shopType=1",
+    "observedAt": "2026-10-09T10:44:41.934Z"
+  },
+  {
+    "shopCode": "503801",
+    "address": "Московская обл, г Звенигород, мкр Супонево, д 2",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503801&shopType=1",
+    "observedAt": "2026-10-09T11:12:28.694Z"
+  },
+  {
+    "shopCode": "503819",
+    "address": "Московская обл, г Красногорск, ул Ленина, д 39",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503819&shopType=1",
+    "observedAt": "2026-10-09T11:33:36.906Z"
+  },
+  {
+    "shopCode": "503821",
+    "address": "Московская обл, Видное, снт Березка-2 (п Развилка), проезд 6-й Березовый, 1, пом. 1, СНТ \"Березка-2\", этаж 1, номера на поэтажном плане №№ 1,2",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503821&shopType=1",
+    "observedAt": "2026-10-09T06:43:48.296Z"
+  },
+  {
+    "shopCode": "503823",
+    "address": "Московская обл, г Талдом, д Пановка, д 28",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503823&shopType=1",
+    "observedAt": "2026-10-09T13:23:13.483Z"
+  },
+  {
+    "shopCode": "503827",
+    "address": "Московская обл, г Волоколамск, с Спасс, ул Центральная, д 37",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503827&shopType=1",
+    "observedAt": "2026-10-09T07:33:35.004Z"
+  },
+  {
+    "shopCode": "503830",
+    "address": "Московская обл, г Дедовск, ул Космонавта Комарова, д 11",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503830&shopType=1",
+    "observedAt": "2026-10-09T07:45:10.034Z"
+  },
+  {
+    "shopCode": "503841",
+    "address": "Московская обл, г Красногорск, пгт Нахабино, ул Почтовая, д 57",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503841&shopType=1",
+    "observedAt": "2026-10-09T11:30:29.328Z"
+  },
+  {
+    "shopCode": "503845",
+    "address": "Московская обл, Голицыно, Советская ул, на земельном участке 14А с кадастровым номером 50:20:0071002:1113",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503845&shopType=1",
+    "observedAt": "2026-10-09T14:04:14.392Z"
+  },
+  {
+    "shopCode": "503847",
+    "address": "Московская обл, г Воскресенск, ул Куйбышева, д 47А к 1",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503847&shopType=1",
+    "observedAt": "2026-10-09T07:40:44.373Z"
+  },
+  {
+    "shopCode": "503849",
+    "address": "Московская обл, Воскресенск, д Губино, ул Лесная, 2а",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503849&shopType=1",
+    "observedAt": "2026-10-09T06:46:49.983Z"
+  },
+  {
+    "shopCode": "503861",
+    "address": "Московская обл, Зарайск, ул Московская, стр. 99а",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503861&shopType=1",
+    "observedAt": "2026-10-09T14:15:01.953Z"
+  },
+  {
+    "shopCode": "503869",
+    "address": "Московская обл, г Дрезна, ул Южная, д 7",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503869&shopType=1",
+    "observedAt": "2026-10-09T11:05:05.736Z"
+  },
+  {
+    "shopCode": "503874",
+    "address": "Московская обл, Воскресенск, с Конобеево, ул Победы, уч. 71-г",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503874&shopType=1",
+    "observedAt": "2026-10-09T06:48:23.284Z"
+  },
+  {
+    "shopCode": "503876",
+    "address": "Московская обл, г Можайск, с Борисово, ул Нагорная, д 39",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503876&shopType=1",
+    "observedAt": "2026-10-09T12:07:25.541Z"
+  },
+  {
+    "shopCode": "503905",
+    "address": "Московская обл, г Подольск, мкр Климовск, ул Ленина, д 1",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503905&shopType=1",
+    "observedAt": "2026-10-09T12:37:28.258Z"
+  },
+  {
+    "shopCode": "503911",
+    "address": "Московская обл, г Ногинск, пер 1-ый Текстильный, д 11А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503911&shopType=1",
+    "observedAt": "2026-10-09T12:20:59.391Z"
+  },
+  {
+    "shopCode": "503913",
+    "address": "Московская обл, г Чехов, ул Полиграфистов, д 14А",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503913&shopType=1",
+    "observedAt": "2026-10-09T13:43:54.485Z"
+  },
+  {
+    "shopCode": "503916",
+    "address": "Московская обл, г Дмитров, д Татищево, ул Татищевская, д 1",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503916&shopType=1",
+    "observedAt": "2026-10-09T10:35:24.587Z"
+  },
+  {
+    "shopCode": "503920",
+    "address": "Московская обл, г Ногинск, с Кудиново, ул Центральная, д 46",
+    "sourceUrl": "https://magnit.ru/shops?shopCode=503920&shopType=1",
     "observedAt": "2026-10-09T12:21:38.632Z"
   },
   {
