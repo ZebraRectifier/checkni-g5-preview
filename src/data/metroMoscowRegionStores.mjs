@@ -7,6 +7,27 @@ export const METRO_MOSCOW_REGION_DIRECTORY_SOURCE = Object.freeze({
   moscowOblast: 10
 });
 
+const NEW_PICKUP_PROOFS = Object.freeze({
+  "49": {
+    "observedAt": "2026-10-10T04:52:27.387Z",
+    "storeNumber": "49",
+    "sourceUrl": "https://metro-cc.ru/markets/moskva-i-oblast/kievskoe-s-23-i-km-d-kartmazovo",
+    "heading": "Киевское ш., 23-й км (д. Картмазово)",
+    "officialEmail": "customerservice.store49@metro-cc.ru",
+    "selectedHeader": "Самовывоз: Москва и область, Киевское ш., 23-й км (д. Картмазово)",
+    "proofKind": "official-directory-and-public-pickup-selection"
+  },
+  "1307": {
+    "observedAt": "2026-10-10T04:53:28.695Z",
+    "storeNumber": "1307",
+    "sourceUrl": "https://metro-cc.ru/markets/moskva-i-oblast/gorkovskoe-s-49-i-km-noginsk",
+    "heading": "Горьковское ш., 49-й км (Ногинск)",
+    "officialEmail": "customerservice.store1307@metro-cc.ru",
+    "selectedHeader": "Самовывоз: Москва и область, Горьковское ш., 49-й км (Ногинск)",
+    "proofKind": "official-directory-and-public-pickup-selection"
+  }
+});
+
 const RAW_STORES = [
   ["10","125445, г. Москва, Ленинградское шоссе 71Г","moscow-city","metro-address-c5gsqz","proven","Ленинградское ш., 71Г"],
   ["11","129226, г. Москва, пр-кт Мира, д.211, корп.1","moscow-city","metro-address-fjag7i","proven","просп. Мира, 211, корп.1 («Европолис»)"],
@@ -17,11 +38,11 @@ const RAW_STORES = [
   ["18","105523, г.Москва, 104 км МКАД, строение 6","moscow-city","metro-address-1jk8v9u","proven","МКАД 104-й км, 6 (Щелковское ш.)"],
   ["19","109548, г. Москва, ул. Шоссейная, д.2Б","moscow-city","metro-address-bmth5s","proven","Шоссейная ул., 2Б (Печатники)"],
   ["48","140073, Московская область, Люберецкий район, пос. Томилино, 23 км. Новорязанского шоссе, д.17","moscow-oblast","metro-address-ojxph5","proven","Новорязанское ш., 23й км, 17 (Люберцы)"],
-  ["49","108811, г. Москва, внутригородская территория муниципальный округ Ново-Переделкино, квартал 2, д.3, с.1","moscow-city",null,"not-exposed-in-public-pickup",null],
+  ["49","108811, г. Москва, внутригородская территория муниципальный округ Ново-Переделкино, квартал 2, д.3, с.1","moscow-city","metro-address-10o1hl3","proven","Киевское ш., 23-й км (д. Картмазово)"],
   ["61","141580, РОССИЯ Московская обл., Химки г.о.,Черная Грязь д, Торгово-Промышленная ул, зд. 5","moscow-oblast","metro-address-zgvtf8","proven","Ленинградское ш., 33-й км (д. Черная грязь)"],
   ["67","143987, Московская область, г. Балашиха, мкр. Железнодорожный, ул. Советская, д. 60.","moscow-oblast","metro-address-19g88v3","proven","Железнодорожный, Советская ул., 60"],
   ["73","Московская область, Городской округ Подольск, территория автодорога М-2 Крым, километр 42-й, дом 1, строение 1","moscow-oblast","metro-address-15zne35","proven","Симферопольское ш., 42-й км (Подольск)"],
-  ["1307","142434, Московская Область, Богородский городской округ, деревня Новые Псарьки, ул Парковая, дом 4","moscow-oblast",null,"not-exposed-in-public-pickup",null],
+  ["1307","142434, Московская Область, Богородский городской округ, деревня Новые Псарьки, ул Парковая, дом 4","moscow-oblast","metro-address-7v4tds","proven","Горьковское ш., 49-й км (Ногинск)"],
   ["1308","127018, г. Москва, ул. Складочная, д. 1, строение 1","moscow-city","metro-address-1dqr3xq","proven","Складочная ул., 1, стр.1 («Станколит»)"],
   ["1317","142204, Московская область, г. Серпухов, городской округ Серпухов, бульвар 65 лет Победы, д.4","moscow-oblast","metro-address-17mcpb2","proven","Серпухов, бул. 65 лет Победы, 4"],
   ["1318","141733,Московская обл., городской округ Лобня, Лобня г., промзона Горки Киовские ул., 15,1,Б,1,1-98,137-157","moscow-oblast","metro-address-da224d","proven","Лобня, ул. Горки Киовские (Рогачевское ш.)"],
@@ -96,6 +117,7 @@ export const METRO_MOSCOW_REGION_STORES = Object.freeze(RAW_STORES.map(
     storeId: bindingId,
     onlinePickupStatus,
     onlinePickupLabel,
+    onlinePickupEvidence: NEW_PICKUP_PROOFS[storeNumber] ?? null,
     sourceUrl: METRO_MOSCOW_REGION_DIRECTORY_SOURCE.sourceUrl
   })
 ));
