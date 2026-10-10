@@ -1,0 +1,223 @@
+export const GLOBUS_MOSCOW_REGION_DIRECTORY = Object.freeze({
+  "schemaVersion": 1,
+  "directorySourceUrl": "https://www.globus.ru/page/contacts",
+  "directoryObservedAt": "2026-10-10T08:01:42.887Z",
+  "assortment": "partial",
+  "availability": "unknown",
+  "stores": [
+    {
+      "name": "Глобус Щелково",
+      "address": "г. Щелково, Пролетарский пр-т, д. 18",
+      "officialUrl": "https://www.globus.ru/store/5001",
+      "officialStoreId": "5001",
+      "scope": "moscow-oblast",
+      "pvzId": null,
+      "priceStatus": "verified",
+      "bindingId": "store:5001",
+      "priceObservations": 592,
+      "priceObservedAt": "2026-10-10T08:21:26.292Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Климовск",
+      "address": "г. Подольск, мкрн Климовск, ул. Молодежная, д. 11",
+      "officialUrl": "https://www.globus.ru/store/5002",
+      "officialStoreId": "5002",
+      "scope": "moscow-oblast",
+      "pvzId": 1,
+      "priceStatus": "verified",
+      "bindingId": "store:5002",
+      "priceObservations": 586,
+      "priceObservedAt": "2026-10-10T08:23:12.359Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Королёв",
+      "address": "г. Королёв, ул. Коммунальная, д. 1",
+      "officialUrl": "https://www.globus.ru/store/5010",
+      "officialStoreId": "5010",
+      "scope": "moscow-oblast",
+      "pvzId": 7,
+      "priceStatus": "verified",
+      "bindingId": "store:5010",
+      "priceObservations": 586,
+      "priceObservedAt": "2026-10-10T08:36:46.213Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Красногорск",
+      "address": "г. Москва, вн.тер.г. муниципальный округ Кунцево, Новорижское шоссе 22-й км, д. 1 стр. 1",
+      "officialUrl": "https://www.globus.ru/store/5011",
+      "officialStoreId": "5011",
+      "scope": "moscow-city",
+      "pvzId": 2,
+      "priceStatus": "verified",
+      "bindingId": "store:5011",
+      "priceObservations": 585,
+      "priceObservedAt": "2026-10-10T08:22:18.885Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Электросталь",
+      "address": "г.о. Электросталь, пос. Случайный, массив 1, стр. 2",
+      "officialUrl": "https://www.globus.ru/store/5013",
+      "officialStoreId": "5013",
+      "scope": "moscow-oblast",
+      "pvzId": null,
+      "priceStatus": "verified",
+      "bindingId": "store:5013",
+      "priceObservations": 589,
+      "priceObservedAt": "2026-10-10T08:24:32.555Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Пушкино",
+      "address": "г. Пушкино, Красноармейское ш., вл. 105",
+      "officialUrl": "https://www.globus.ru/store/5014",
+      "officialStoreId": "5014",
+      "scope": "moscow-oblast",
+      "pvzId": 3,
+      "priceStatus": "verified",
+      "bindingId": "store:5014",
+      "priceObservations": 586,
+      "priceObservedAt": "2026-10-10T08:25:26.050Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Одинцово",
+      "address": "Одинцовский г.о., Юдино с., д. 55Е",
+      "officialUrl": "https://www.globus.ru/store/5015",
+      "officialStoreId": "5015",
+      "scope": "moscow-oblast",
+      "pvzId": 9,
+      "priceStatus": "verified",
+      "bindingId": "store:5015",
+      "priceObservations": 584,
+      "priceObservedAt": "2026-10-10T08:26:18.418Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Котельники",
+      "address": "г. Котельники, Новорязанское ш., д. 24",
+      "officialUrl": "https://www.globus.ru/store/5016",
+      "officialStoreId": "5016",
+      "scope": "moscow-oblast",
+      "pvzId": 8,
+      "priceStatus": "verified",
+      "bindingId": "store:5016",
+      "priceObservations": 586,
+      "priceObservedAt": "2026-10-10T08:27:11.871Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Балашиха",
+      "address": "г. Балашиха, Шоссе Энтузиастов, д. 48",
+      "officialUrl": "https://www.globus.ru/store/5017",
+      "officialStoreId": "5017",
+      "scope": "moscow-oblast",
+      "pvzId": null,
+      "priceStatus": "verified",
+      "bindingId": "store:5017",
+      "priceObservations": 592,
+      "priceObservedAt": "2026-10-10T08:28:07.524Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Саларьево",
+      "address": "г. Москва, Киевское ш., 23-й км, д. 1",
+      "officialUrl": "https://www.globus.ru/store/5018",
+      "officialStoreId": "5018",
+      "scope": "moscow-city",
+      "pvzId": null,
+      "priceStatus": "verified",
+      "bindingId": "store:5018",
+      "priceObservations": 590,
+      "priceObservedAt": "2026-10-10T08:28:59.411Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Коммунарка",
+      "address": "г. Москва, мун.округ Коммунарка, пос. Коммунарка, ул. Александры Монаховой, 61, стр. 1",
+      "officialUrl": "https://www.globus.ru/store/5019",
+      "officialStoreId": "5019",
+      "scope": "moscow-city",
+      "pvzId": null,
+      "priceStatus": "verified",
+      "bindingId": "store:5019",
+      "priceObservations": 590,
+      "priceObservedAt": "2026-10-10T08:29:48.519Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Медведково",
+      "address": "г. Москва, м. Медведково, ул. Широкая, 2а",
+      "officialUrl": "https://www.globus.ru/store/5020",
+      "officialStoreId": "5020",
+      "scope": "moscow-city",
+      "pvzId": 4,
+      "priceStatus": "verified",
+      "bindingId": "store:5020",
+      "priceObservations": 586,
+      "priceObservedAt": "2026-10-10T08:30:41.038Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Митино",
+      "address": "Москва, ул. Дубравная, д. 51, стр. 2.",
+      "officialUrl": "https://www.globus.ru/store/5023",
+      "officialStoreId": "5023",
+      "scope": "moscow-city",
+      "pvzId": null,
+      "priceStatus": "verified",
+      "bindingId": "store:5023",
+      "priceObservations": 590,
+      "priceObservedAt": "2026-10-10T08:31:33.437Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Косино",
+      "address": "г. Москва, ТРЦ Город Косино, ул. Новоухтомское шоссе 2А",
+      "officialUrl": "https://www.globus.ru/store/5024",
+      "officialStoreId": "5024",
+      "scope": "moscow-city",
+      "pvzId": 5,
+      "priceStatus": "verified",
+      "bindingId": "store:5024",
+      "priceObservations": 587,
+      "priceObservedAt": "2026-10-10T08:32:27.222Z",
+      "rootCategoryCount": 15
+    },
+    {
+      "name": "Глобус Лавка Рождественка",
+      "address": "г. Москва, ул. Рождественка, д. 6/9/20, стр. 1",
+      "officialUrl": "https://www.globus.ru/store/5102",
+      "officialStoreId": "5102",
+      "scope": "moscow-city",
+      "pvzId": null,
+      "priceStatus": "verified",
+      "bindingId": "store:5102",
+      "priceObservations": 146,
+      "priceObservedAt": "2026-10-10T08:33:06.345Z",
+      "rootCategoryCount": 7
+    },
+    {
+      "name": "Глобус Лавка Арбат",
+      "address": "г. Москва, ул. Арбат д.1, пом.1А/1/1",
+      "officialUrl": "https://www.globus.ru/store/5103",
+      "officialStoreId": "5103",
+      "scope": "moscow-city",
+      "pvzId": null,
+      "priceStatus": "verified",
+      "bindingId": "store:5103",
+      "priceObservations": 134,
+      "priceObservedAt": "2026-10-10T08:33:40.447Z",
+      "rootCategoryCount": 6
+    }
+  ]
+});
+
+export function getGlobusMoscowRegionStores() { return GLOBUS_MOSCOW_REGION_DIRECTORY.stores; }
+export function resolveGlobusMoscowRegionStore(value) {
+  const id = typeof value === 'string' ? value : value?.officialStoreId;
+  return GLOBUS_MOSCOW_REGION_DIRECTORY.stores.find(store => store.officialStoreId === id) ?? null;
+}
