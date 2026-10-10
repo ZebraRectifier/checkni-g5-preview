@@ -30,6 +30,8 @@ import { createMagnitStorePicker } from "./components/MagnitStorePicker.mjs";
 import { createMetroStorePicker } from "./components/MetroStorePicker.mjs";
 import { resolveMagnitMoscowStore } from "./data/magnitMoscowStores.mjs";
 import { resolveMetroMoscowRegionStore } from "./data/metroMoscowRegionStores.mjs";
+import { resolveGlobusMoscowRegionStore } from "./data/globusMoscowRegionStores.mjs";
+import { createGlobusStorePicker } from "./components/GlobusStorePicker.mjs";
 import { createOkeyDeliveryCatalog } from "./components/OkeyDeliveryCatalog.mjs";
 import {
   CATALOG_SORT,
@@ -239,6 +241,15 @@ let selectedMetroStore = resolveMetroMoscowRegionStore({
 }) ?? resolveMetroMoscowRegionStore({ storeNumber: "10" });
 let magnitStorePicker = null;
 let metroStorePicker = null;
+let selectedGlobusStore = resolveGlobusMoscowRegionStore(history.state?.checkniGlobusStoreId ?? "5011") ?? resolveGlobusMoscowRegionStore("5011");
+let globusStorePicker = null;
+
+function selectedGlobusClient() {
+  const key = "globus-" + selectedGlobusStore.officialStoreId;
+  if (!retailCatalogClients.has(key)) retailCatalogClients.set(key, createRetailCatalogClient({ retailerId: "globus", store: selectedGlobusStore }));
+  return retailCatalogClients.get(key);
+}
+
 
 function selectedMetroClient() {
   const key = "metro-" + selectedMetroStore.storeNumber;
@@ -253,6 +264,7 @@ function selectedMetroClient() {
 
 function retailDefinitionFor(retailerId) {
   const base = getRetailCatalogDefinition(retailerId);
+  if (retailerId === "globus") return selectedGlobusClient()?.definition;
   if (retailerId === "metro") {
     return selectedMetroClient()?.definition ?? base;
   }
@@ -276,6 +288,7 @@ function currentRetailDefinition() {
 }
 
 function currentRetailClient() {
+  if (retailBrowserState.retailerId === "globus") return selectedGlobusClient();
   if (retailBrowserState.retailerId === "metro") {
     return selectedMetroClient()
       ?? retailCatalogClients.get(DEFAULT_RETAILER_ID);
@@ -666,6 +679,7 @@ function renderRetailBrowser() {
     status: retailBrowserState.status,
     hasCategories: retailBrowserState.path.length > 0 || retailBrowserState.categories.length > 0
   });
+  globusStorePicker?.update({ visible: retailBrowserState.retailerId === "globus", store: selectedGlobusStore, status: retailBrowserState.status, hasCategories: retailBrowserState.path.length > 0 || retailBrowserState.categories.length > 0 });
   elements.retailCategoryGrid.replaceChildren();
 
   const current = retailBrowserState.path.at(-1) ?? null;
@@ -879,6 +893,7 @@ function createAppRouteState(
     state.checkniRetailerId = validRetailerId(retailerId);
     state.checkniMagnitShopCode = selectedMagnitStore.shopCode;
     state.checkniMetroStoreNumber = selectedMetroStore.storeNumber;
+    state.checkniGlobusStoreId = selectedGlobusStore.officialStoreId;
   }
 
   return state;
@@ -1286,13 +1301,16 @@ function restoreRetailNavigationFromHistory({ initial = false } = {}) {
   const restoredMetroStore = resolveMetroMoscowRegionStore({
     storeNumber: history.state?.checkniMetroStoreNumber
   });
+  const restoredGlobusStore = resolveGlobusMoscowRegionStore(history.state?.checkniGlobusStoreId);
   const addressChanged = (
+    retailerId === "globus" ? Boolean(restoredGlobusStore && restoredGlobusStore.officialStoreId !== selectedGlobusStore.officialStoreId) :
     retailerId === "magnit"
       ? Boolean(restoredMagnitStore && restoredMagnitStore.shopCode !== selectedMagnitStore.shopCode)
       : retailerId === "metro"
         ? Boolean(restoredMetroStore && restoredMetroStore.storeNumber !== selectedMetroStore.storeNumber)
         : false
   );
+  if (restoredGlobusStore?.priceStatus === "verified") selectedGlobusStore = restoredGlobusStore;
   if (restoredMagnitStore) selectedMagnitStore = restoredMagnitStore;
   if (restoredMetroStore?.onlinePickupStatus === "proven") {
     selectedMetroStore = restoredMetroStore;
@@ -1349,6 +1367,8 @@ function setupRetailBrowser() {
     });
     elements.retailCatalogNav.before(magnitStorePicker.element);
     elements.retailCatalogNav.before(metroStorePicker.element);
+    globusStorePicker = createGlobusStorePicker({ officialStoreId: selectedGlobusStore.officialStoreId, onSelect: store => { selectedGlobusStore = store; void selectRetailer("globus"); } });
+    elements.retailCatalogNav.before(globusStorePicker.element);
   }
   renderRetailBrowser();
   if (!publicRetailCatalogMode) return;

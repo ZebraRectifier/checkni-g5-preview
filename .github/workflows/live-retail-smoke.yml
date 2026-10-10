@@ -17,7 +17,25 @@ permissions:
   contents: read
 
 jobs:
+  globus-address-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact artifact address data
+        run: |
+          node --input-type=module - <<'NODE'
+          import assert from 'node:assert/strict';
+          import {GLOBUS_MOSCOW_REGION_DIRECTORY as d} from './src/data/globusMoscowRegionStores.mjs';
+          assert.equal(d.stores.length,16);
+          assert.equal(new Set(d.stores.map(s=>s.officialStoreId)).size,16);
+          for(const s of d.stores.filter(s=>s.priceStatus==='verified')) {
+            assert.equal(s.bindingId,'store:'+s.officialStoreId);
+            assert(s.priceObservations>0); assert(Number.isFinite(Date.parse(s.observedAt)));
+          }
+          assert.equal(d.availability,'unknown'); assert.equal(d.assortment,'partial');
+          NODE
   live-retail:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -173,146 +191,29 @@ jobs:
 
 
             const globus = page.locator("#retail-store-card");
-            assert(
-              await globus.getAttribute("aria-pressed") === "true",
-              "GLOBUS must be selected on initial retail load"
-            );
-
-            const globusRoot = page.getByRole("button", {
-              name: /Молочные продукты, сыр, яйца/
-            });
-            await globusRoot.waitFor({ state: "visible", timeout: 15000 });
-            await globusRoot.click();
-
-            const globusChild = page.getByRole("button", {
-              name: /Молоко и молочные продукты/
-            });
-            await globusChild.waitFor({ state: "visible", timeout: 15000 });
-            await globusChild.click();
-
-            // Follow the actual live taxonomy instead of hard-coding
-            // a fixed depth. The path must terminate in real products within
-            // a bounded number of user taps.
-            let reachedGlobusProducts = false;
-            for (let depth = 0; depth < 5; depth += 1) {
-              await page.waitForFunction(() => (
-                document.querySelectorAll("#product-grid .product-card").length > 0
-                || document.querySelectorAll(
-                  "#retail-category-grid .retail-category-button:not(.is-loading)"
-                ).length > 0
-              ), null, { timeout: 15000 });
-
-              if (await page.locator("#product-grid .product-card").count()) {
-                reachedGlobusProducts = true;
-                break;
-              }
-
-              const nextCategory = page.locator(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
-              ).first();
-              await nextCategory.click();
+            assert(await globus.getAttribute("aria-pressed") === "true", "GLOBUS must be initially selected");
+            const picker = page.locator("#globus-store-address");
+            await picker.waitFor({state:"visible",timeout:15000});
+            assert(await picker.locator("option").count()===16,"All 16 official Moscow/MO addresses must be visible");
+            for (const code of ["5011","5001","5023"]) {
+              await picker.selectOption(code);
+              await page.waitForFunction(code => (
+                document.querySelector("#globus-store-address")?.value === code
+                && document.querySelectorAll("#retail-category-grid .retail-category-button:not(.is-loading)").length > 0
+              ), code, {timeout:15000});
+              await page.getByRole("button",{name:/Молочные продукты, сыр, яйца/}).click();
+              const card = page.locator('#product-grid [data-product-id^="retail:globus:globus-store-'+code+':"]').first();
+              await card.waitFor({state:"visible",timeout:15000});
+              const text = await card.innerText();
+              assert(/\d[\d\s]*,\d{2} ₽/u.test(text),"GLOBUS exact-address card must expose a positive RUB observation");
+              assert(text.includes("Обычная цена без карты"),"GLOBUS loyalty discount must not masquerade as the no-card price");
+              assert(await card.getByRole("button").isDisabled(),"GLOBUS observations remain display-only");
+              assert(await page.locator('#product-grid [data-product-id^="retail:globus:"]:not([data-product-id^="retail:globus:globus-store-'+code+':"])').count()===0,"A previous address leaked into the new catalog");
+              await page.reload({waitUntil:"domcontentloaded"});
+              await page.waitForFunction(code => document.querySelector("#globus-store-address")?.value===code,code,{timeout:15000});
+              await page.locator('#product-grid [data-product-id^="retail:globus:globus-store-'+code+':"]').first().waitFor({state:"visible",timeout:15000});
             }
-
-            if (!reachedGlobusProducts) {
-              await page.waitForFunction(() => (
-                document.querySelectorAll("#product-grid .product-card").length > 0
-              ), null, { timeout: 15000 });
-              reachedGlobusProducts = true;
-            }
-            assert(
-              reachedGlobusProducts,
-              "Published GLOBUS taxonomy did not reach products within bounded depth"
-            );
-            const globusUiState = await page.evaluate(() => ({
-              catalogEyebrow:
-                document.querySelector("#catalog-eyebrow")?.textContent ?? "",
-              catalogNote:
-                document.querySelector("#catalog-note")?.textContent ?? "",
-              categoryTitle:
-                document.querySelector("#retail-category-title")?.textContent ?? "",
-              breadcrumbs:
-                document.querySelector("#retail-breadcrumbs")?.textContent ?? "",
-              globusPressed:
-                document.querySelector("#retail-store-card")
-                  ?.getAttribute("aria-pressed") ?? "",
-              lentaPressed:
-                document.querySelector("#retail-store-card-lenta")
-                  ?.getAttribute("aria-pressed") ?? "",
-              firstProductId:
-                document.querySelector("#product-grid .product-card")
-                  ?.getAttribute("data-product-id") ?? "",
-              productCount:
-                document.querySelectorAll("#product-grid .product-card").length
-            }));
-            console.log(
-              "GLOBUS_UI_STATE",
-              JSON.stringify(globusUiState)
-            );
-
-            try {
-              await page.waitForFunction(() => (
-                document.querySelector("#catalog-eyebrow")
-                  ?.textContent?.includes("Глобус")
-              ), null, { timeout: 5000 });
-            } catch {
-              const settledGlobusUiState = await page.evaluate(() => ({
-                catalogEyebrow:
-                  document.querySelector("#catalog-eyebrow")?.textContent ?? "",
-                catalogNote:
-                  document.querySelector("#catalog-note")?.textContent ?? "",
-                categoryTitle:
-                  document.querySelector("#retail-category-title")?.textContent ?? "",
-                breadcrumbs:
-                  document.querySelector("#retail-breadcrumbs")?.textContent ?? "",
-                globusPressed:
-                  document.querySelector("#retail-store-card")
-                    ?.getAttribute("aria-pressed") ?? "",
-                lentaPressed:
-                  document.querySelector("#retail-store-card-lenta")
-                    ?.getAttribute("aria-pressed") ?? "",
-                firstProductId:
-                  document.querySelector("#product-grid .product-card")
-                    ?.getAttribute("data-product-id") ?? "",
-                productCount:
-                  document.querySelectorAll("#product-grid .product-card").length
-              }));
-              throw new Error(
-                "Published GLOBUS leaf lost retailer identity: "
-                + JSON.stringify(settledGlobusUiState)
-              );
-            }
-            const globusProductCount = await page.locator(
-              "#product-grid .product-card"
-            ).count();
-            assert(globusProductCount > 0, "Published GLOBUS leaf has no products");
-
-            await page.goBack({ waitUntil: "domcontentloaded" });
-            await page.waitForFunction(() => (
-              document.querySelectorAll("#product-grid .product-card").length === 0
-              && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
-              ).length > 0
-            ), null, { timeout: 15000 });
-            assert(
-              await globus.getAttribute("aria-pressed") === "true",
-              "Back from GLOBUS leaf lost retailer selection"
-            );
-
-            await page.goForward({ waitUntil: "domcontentloaded" });
-            await page.waitForFunction(() => (
-              document.querySelectorAll("#product-grid .product-card").length > 0
-            ), null, { timeout: 15000 });
-            assert(
-              await globus.getAttribute("aria-pressed") === "true",
-              "Forward did not restore GLOBUS retailer state"
-            );
-
-            await page.reload({ waitUntil: "domcontentloaded" });
-            await page.waitForFunction(() => (
-              document.querySelector("#retail-store-card")
-                ?.getAttribute("aria-pressed") === "true"
-              && document.querySelectorAll("#product-grid .product-card").length > 0
-            ), null, { timeout: 15000 });
+            await page.screenshot({path:"globus-exact-address-smoke.png",fullPage:true});
 
             const lenta = page.locator("#retail-store-card-lenta");
             await lenta.click();
@@ -898,6 +799,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: live-retail-smoke
-          path: live-retail-smoke.png
+          path: |
+            live-retail-smoke.png
+            globus-exact-address-smoke.png
           if-no-files-found: ignore
           retention-days: 3

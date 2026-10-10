@@ -4,6 +4,7 @@ import {
 import { resolveMagnitMoscowStore } from "../data/magnitMoscowStores.mjs";
 import { resolveMagnitMoscowOblastStore } from "../data/magnitMoscowOblastBindings.mjs";
 import { resolveMetroMoscowRegionStore } from "../data/metroMoscowRegionStores.mjs";
+import { resolveGlobusMoscowRegionStore } from "../data/globusMoscowRegionStores.mjs";
 
 export const RETAIL_CATALOG_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/rest/v1/retail_catalog_items";
@@ -394,6 +395,22 @@ function resolveDefinition(value = "globus") {
   const base = getRetailCatalogDefinition(value.retailerId);
   if (!base) return null;
 
+  if (value.retailerId === "globus" && (value.store || value.officialStoreId)) {
+    const store = resolveGlobusMoscowRegionStore(value.store ?? value.officialStoreId);
+    if (!store || store.priceStatus !== "verified" || store.bindingId !== "store:" + store.officialStoreId) return null;
+    const city = store.scope === "moscow-city";
+    return Object.freeze({
+      ...base, officialStoreId: store.officialStoreId,
+      storeId: "globus-store-" + store.officialStoreId, bindingId: store.bindingId, storeAddress: store.address,
+      storeName: store.name, localityId: city ? "city-moscow" : "region-moscow-oblast",
+      localityName: city ? "Москва" : "Московская область",
+      catalogLabel: store.name + " · " + store.address,
+      scopeLabel: store.address + " · каталог гипермаркета · наличие неизвестно",
+      defaultProductCount: store.priceObservations, rootCategoryCount: store.rootCategoryCount,
+      priceConditionLabels: Object.freeze({ regular: "Обычная цена без карты" })
+    });
+  }
+
   if (value.retailerId === "magnit") {
     if (value.shopCode && value.storeId) return value;
     if (!value.store) return base;
@@ -624,6 +641,12 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
       return null;
     }
   }
+  if (definition.retailerId === "globus" && definition.officialStoreId) {
+    const evidenceUrl = safeUrl(row.scope_evidence_url, definition.categoryUrlRules);
+    if (row.sales_channel !== "store" || row.price_condition !== "regular"
+        || row.scope_binding !== "same-source" || row.binding_id !== definition.bindingId
+        || row.location_label !== definition.storeAddress || !evidenceUrl || evidenceUrl !== sourceUrl) return null;
+  }
   const observedMs = Date.parse(row.observed_at);
   const nowMs = Number.isFinite(options.nowMs) ? options.nowMs : Date.now();
   const promo = promoTruth(row, definition, nowMs);
@@ -652,9 +675,12 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
   return Object.freeze({
     id: `retail:${definition.retailerId}:${row.store_id}:${row.source_product_id}`,
     name: row.name.trim(),
-    unit: typeof row.weight_text === "string" && row.weight_text.trim()
-      ? row.weight_text.trim()
-      : "упаковка",
+    unit: definition.retailerId === "globus" && definition.officialStoreId
+      && row.quantity_semantics?.packageType !== "piece" && row.quantity_semantics?.unitPriceText
+        ? "Цена за " + row.quantity_semantics.unitPriceText
+        : typeof row.weight_text === "string" && row.weight_text.trim()
+          ? row.weight_text.trim()
+          : "упаковка",
     category: definition.catalogLabel,
     catalogSource: definition.retailerId,
     catalogDisplayOnly: true,
@@ -1025,3 +1051,4 @@ export {
   normalizeRetailRow,
   readBoundedJsonResponse
 };
+
