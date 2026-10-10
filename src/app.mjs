@@ -1474,7 +1474,7 @@ function renderCatalog() {
   results.forEach((product) => {
     elements.productGrid.append(
       createProductCard(product, {
-        quantity: basketQuantityFor(product.id),
+        quantity: basketQuantityFor(product.basketProductId ?? product.id),
         priceHint: live ? null : snapshotPriceHints.get(product.id),
         loadPhoto: loadProductPhoto,
         onAdd: (selectedProduct) => {

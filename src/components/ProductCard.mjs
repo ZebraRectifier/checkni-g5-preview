@@ -3,6 +3,7 @@ import { categoryPixelIcon } from "./pixelIcons.mjs";
 import { formatRubMinor } from "./ComparisonResult.mjs";
 import { formatPerUnit, priceHintTitle } from "../runtime/priceHints.mjs";
 import { focusByKey, productAddFocusKey } from "../runtime/focusRecovery.mjs";
+import { getReviewedRetailBasketProduct } from "../catalog/reviewedRetailBasket.mjs";
 
 function initials(name) {
   return name
@@ -176,7 +177,9 @@ export function createProductCard(product, {
 
   const button = document.createElement("button");
   const focusKey = productAddFocusKey(product.id);
-  const displayOnly = product.catalogDisplayOnly === true;
+  const reviewedProduct = retailObservation ? getReviewedRetailBasketProduct(product) : null;
+  const displayOnly = product.catalogDisplayOnly === true
+    && (!reviewedProduct || product.basketProductId !== reviewedProduct.id);
   const atLimit = isAddLimitReached(quantity);
 
   button.className = quantity > 0 ? "add-button is-added" : "add-button";
@@ -209,7 +212,7 @@ export function createProductCard(product, {
   button.addEventListener("click", () => {
     if (displayOnly || atLimit) return;
 
-    onAdd(product);
+    onAdd(reviewedProduct ?? product);
     focusByKey(document, focusKey);
   });
 
