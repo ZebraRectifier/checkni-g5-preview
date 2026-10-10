@@ -5,6 +5,7 @@ import { resolveMagnitMoscowStore } from "../data/magnitMoscowStores.mjs";
 import { resolveMagnitMoscowOblastStore } from "../data/magnitMoscowOblastBindings.mjs";
 import { resolveMetroMoscowRegionStore } from "../data/metroMoscowRegionStores.mjs";
 import { resolveGlobusMoscowRegionStore } from "../data/globusMoscowRegionStores.mjs";
+import { getReviewedRetailBasketProduct } from "../catalog/reviewedRetailBasket.mjs";
 
 export const RETAIL_CATALOG_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/rest/v1/retail_catalog_items";
@@ -672,15 +673,24 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
     ? conditionParts.join(" · ")
     : null;
 
+  const basketProduct = getReviewedRetailBasketProduct({
+    retailerId: definition.retailerId,
+    sourceProductId: row.source_product_id,
+    name: row.name,
+    unit: row.weight_text,
+    productUrl
+  });
+
   return Object.freeze({
     id: `retail:${definition.retailerId}:${row.store_id}:${row.source_product_id}`,
+    ...(basketProduct ? { basketProductId: basketProduct.id } : {}),
     name: row.name.trim(),
-    unit: definition.retailerId === "globus" && definition.officialStoreId
+    unit: basketProduct?.unit ?? (definition.retailerId === "globus" && definition.officialStoreId
       && row.quantity_semantics?.packageType !== "piece" && row.quantity_semantics?.unitPriceText
         ? "Цена за " + row.quantity_semantics.unitPriceText
         : typeof row.weight_text === "string" && row.weight_text.trim()
           ? row.weight_text.trim()
-          : "упаковка",
+          : "упаковка"),
     category: definition.catalogLabel,
     catalogSource: definition.retailerId,
     catalogDisplayOnly: true,
