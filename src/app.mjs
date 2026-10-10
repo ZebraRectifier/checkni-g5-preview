@@ -1322,7 +1322,7 @@ function restoreRetailNavigationFromHistory({ initial = false } = {}) {
 
   if (!definition) return;
 
-  if (retailerId !== retailBrowserState.retailerId || addressChanged) {
+  if (initial || retailerId !== retailBrowserState.retailerId || addressChanged) {
     retailBrowserRequestVersion += 1;
     catalogRequestVersion += 1;
     pendingCatalogSearch = null;
@@ -1347,6 +1347,30 @@ function restoreRetailNavigationFromHistory({ initial = false } = {}) {
     clearCatalog: true,
     scrollToProducts: false
   });
+  if (retailerId === "globus" && (initial || addressChanged)) {
+    void refreshRestoredGlobusRootCount();
+  }
+}
+
+async function refreshRestoredGlobusRootCount() {
+  const requestId = retailBrowserRequestVersion;
+  const client = currentRetailClient();
+  const storeId = client?.definition?.storeId;
+  const result = await client.rootCategories();
+  if (
+    requestId !== retailBrowserRequestVersion
+    || retailBrowserState.retailerId !== "globus"
+    || currentRetailClient()?.definition?.storeId !== storeId
+    || result.kind !== "categories"
+  ) return;
+
+  const total = result.categories.reduce(
+    (sum, category) => sum + category.productCount,
+    0
+  );
+  if (!Number.isSafeInteger(total) || total <= 0) return;
+  retailBrowserState = { ...retailBrowserState, rootProductCount: total };
+  renderRetailStoreButtons();
 }
 
 function setupRetailBrowser() {
@@ -2604,3 +2628,4 @@ renderDock();
 renderBetaLiveSection();
 renderBasketProposalState();
 renderView({ scrollY: scrollYFromState(history.state) });
+
