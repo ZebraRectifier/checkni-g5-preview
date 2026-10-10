@@ -9,6 +9,10 @@ on:
       - "src/data/metroMoscowRegionStores.mjs"
       - "src/ports/retailCatalogPort.mjs"
       - ".github/workflows/metro-live-address-smoke.yml"
+  pull_request:
+    paths:
+      - "src/data/metroMoscowRegionStores.mjs"
+      - ".github/workflows/metro-live-address-smoke.yml"
   workflow_dispatch:
 
 permissions:
@@ -19,7 +23,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  binding-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Validate exact public pickup bindings
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";
+          import {METRO_MOSCOW_REGION_STORES as stores} from "./src/data/metroMoscowRegionStores.mjs";
+          assert.equal(stores.length,22);
+          assert.equal(stores.filter(s=>s.scope==="moscow-city").length,12);
+          assert.equal(stores.filter(s=>s.scope==="moscow-oblast").length,10);
+          assert.equal(new Set(stores.map(s=>s.storeNumber)).size,22);
+          assert.equal(new Set(stores.map(s=>s.bindingId)).size,22);
+          assert.ok(stores.every(s=>s.onlinePickupStatus==="proven" && /^metro-address-[a-z0-9]+$/u.test(s.bindingId)));
+          for(const [number,id,scope] of [["49","metro-address-10o1hl3","moscow-city"],["1307","metro-address-7v4tds","moscow-oblast"]]) {
+            const store=stores.find(s=>s.storeNumber===number);
+            assert.equal(store.bindingId,id);assert.equal(store.scope,scope);
+            assert.equal(store.onlinePickupEvidence.storeNumber,number);
+            assert.ok(store.onlinePickupEvidence.officialEmail.includes("store"+number+"@metro-cc.ru"));
+            assert.ok(store.onlinePickupEvidence.selectedHeader.includes(store.onlinePickupLabel));
+            assert.equal(new URL(store.onlinePickupEvidence.sourceUrl).hostname,"metro-cc.ru");
+          }
+          console.log("METRO_BINDINGS_OK",JSON.stringify({stores:stores.length,head:process.env.GITHUB_SHA}));
+          NODE
   metro-live:
+    if: github.event_name != 'pull_request'
+    needs: binding-contract
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -67,8 +101,8 @@ jobs:
               await page.waitForTimeout(1200);
               const text = await page.locator("#retail-store-card-metro").innerText().catch(() => "");
               if (text.includes("METRO · Москва, Ленинградское ш. 71Г")
-                  && text.includes("51 категория")
-                  && text.includes("329 товаров")) {
+                  && /\d+ категор/u.test(text)
+                  && /\d+ товар/u.test(text)) {
                 ready = true;
                 break;
               }
@@ -83,36 +117,34 @@ jobs:
 
             const options = picker.locator("#metro-store-address option");
             assert(await options.count() === 22, "METRO picker must expose 22 official directory addresses");
-            assert(await picker.locator('option[value="49"]').isDisabled(), "METRO #49 must stay fail-closed");
-            assert(await picker.locator('option[value="1307"]').isDisabled(), "METRO #1307 must stay fail-closed");
+            assert(!await picker.locator('option[value="49"]').isDisabled(), "METRO #49 official pickup binding must be available");
+            assert(!await picker.locator('option[value="1307"]').isDisabled(), "METRO #1307 official pickup binding must be available");
 
             const select = picker.locator("#metro-store-address");
-            await select.selectOption("1317");
-            await page.waitForFunction(() => (
-              document.querySelector("#retail-store-card-metro")?.textContent?.includes("Серпухов")
-              && document.querySelector("#metro-store-address")?.value === "1317"
-            ), null, { timeout: 15000 });
-
-            const category = page.getByRole("button", { name: /Йогурт фруктовый/ });
-            await category.waitFor({ state: "visible", timeout: 15000 });
-            await category.click();
-
-            const card = page.locator(
-              '[data-product-id="retail:metro:metro-address-17mcpb2:275436"]'
-            );
-            await card.waitFor({ state: "visible", timeout: 15000 });
-            const cardText = await card.innerText();
-            assert(cardText.includes("69,91 ₽"), "Serpukhov exact-store price is not published");
-            assert(cardText.includes("Обычная онлайн-цена"), "METRO online price condition is missing");
-            assert(cardText.includes("Серпухов"), "METRO exact-store provenance is missing");
-            assert(await card.getByRole("button").isDisabled(), "METRO observation must remain display-only");
-            assert(pageErrors.length === 0, "Published page errors: " + pageErrors.join(" | "));
-
-            console.log("METRO_LIVE_ADDRESS_OK", JSON.stringify({
-              optionCount: await options.count(),
-              selectedStore: await store.innerText(),
-              selectedPrice: cardText
-            }));
+            const expected = [{"storeNumber":"1317","bindingId":"metro-address-17mcpb2","address":"142204, Московская область, г. Серпухов, городской округ Серпухов, бульвар 65 лет Победы, д.4","categoryId":930542483,"sku":"215144","observedAt":"2026-10-10T04:49:02.897Z"},{"storeNumber":"49","bindingId":"metro-address-10o1hl3","address":"108811, г. Москва, внутригородская территория муниципальный округ Ново-Переделкино, квартал 2, д.3, с.1","categoryId":930542483,"sku":"375122","observedAt":"2026-10-10T06:34:50.123Z"},{"storeNumber":"1307","bindingId":"metro-address-7v4tds","address":"142434, Московская Область, Богородский городской округ, деревня Новые Псарьки, ул Парковая, дом 4","categoryId":930542483,"sku":"135490","observedAt":"2026-10-10T06:39:46.743Z"}];
+            for (const item of expected) {
+              await select.selectOption(item.storeNumber);
+              await page.waitForFunction((item) => (
+                document.querySelector("#metro-store-address")?.value === item.storeNumber
+                && document.querySelector("#retail-store-card-metro")?.textContent?.includes(item.address)
+                && document.querySelectorAll("#retail-category-grid .retail-category-button:not(.is-loading)").length > 0
+              ), item, { timeout: 15000 });
+              const category = page.locator('#retail-category-grid [data-category-id="' + item.categoryId + '"]');
+              await category.waitFor({state:"visible",timeout:15000});
+              await category.click();
+              const card = page.locator('[data-product-id="retail:metro:' + item.bindingId + ':' + item.sku + '"]');
+              await card.waitFor({state:"visible",timeout:15000});
+              const cardText=await card.innerText();
+              assert(/\d[\d\s]*,\d{2} ₽/u.test(cardText),"Current exact-store RUB price missing: "+item.storeNumber);
+              assert(cardText.includes("Обычная онлайн-цена"),"METRO price condition missing");
+              assert(cardText.includes("источник"),"METRO official source missing");
+              assert(await card.getByRole("button").isDisabled(),"METRO observation must remain display-only");
+              const ids=await page.locator("#product-grid .product-card").evaluateAll(nodes=>nodes.map(n=>n.getAttribute("data-product-id")));
+              assert(ids.length>0 && ids.every(id=>id?.startsWith("retail:metro:"+item.bindingId+":")),"Foreign address rows leaked into "+item.storeNumber);
+              console.log("METRO_LIVE_ADDRESS_OK",JSON.stringify({storeNumber:item.storeNumber,bindingId:item.bindingId,sku:item.sku,observedAt:item.observedAt,cardText}));
+              await store.click();
+            }
+            assert(pageErrors.length===0,"Published page errors: "+pageErrors.join(" | "));
             await browser.close();
           })().catch((error) => {
             console.error(error);
