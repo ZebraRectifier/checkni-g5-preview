@@ -1,7 +1,5 @@
 import { WEB_SNAPSHOT_CONCLUSION } from "../core/web-snapshot-comparison.mjs";
 import { formatRubMinor } from "./ComparisonResult.mjs";
-import { shareSnapshotResult } from "./shareResult.mjs";
-import { PIXEL_ICONS } from "./pixelIcons.mjs";
 
 const STORE_COLORS = Object.freeze({
   perekrestok: "#2e8b3e",
@@ -24,47 +22,29 @@ export function buildWebSnapshotModel(result) {
   if (!result || result.kind !== "web-snapshot-comparison") return null;
 
   const { conclusion, meta } = result;
-  const eyebrow = `Цены с сайтов магазинов · ${meta.observedDateLabel}`;
+  const eyebrow = `Архив цен с сайтов · ${meta.observedDateLabel}`;
 
-  let title;
-  let facts = null;
-  let winner = null;
+  // This snapshot uses similar products, resized packages and an unconfirmed
+  // default region. Its arithmetic cannot prove a purchasable basket winner,
+  // even when every reference line has a price.
+  const title = conclusion.kind === WEB_SNAPSHOT_CONCLUSION.NO_DATA
+    ? "Для этих товаров архивных цен нет"
+    : "Архивный ориентир по похожим товарам";
+  const facts = conclusion.kind === WEB_SNAPSHOT_CONCLUSION.NO_DATA
+    ? "В архиве есть только часть базовых продуктов."
+    : "Расчёт по прежним ценам похожих товаров. Это не текущая стоимость вашей корзины; самый дешёвый магазин и экономия не подтверждены.";
 
-  if (conclusion.kind === WEB_SNAPSHOT_CONCLUSION.CHEAPEST) {
-    winner = storeById(result, conclusion.winnerId);
-    const runnerUp = conclusion.runnerUpId
-      ? storeById(result, conclusion.runnerUpId)
-      : null;
-    title = `Дешевле ${winner.nameIn}`;
-    facts = runnerUp && conclusion.savingsMinor > 0
-      ? `Корзина ${formatRubMinor(conclusion.totalMinor)} — на ${formatRubMinor(conclusion.savingsMinor)} дешевле, чем ${runnerUp.nameIn}`
-      : `Корзина ${formatRubMinor(conclusion.totalMinor)}`;
-  } else if (conclusion.kind === WEB_SNAPSHOT_CONCLUSION.TIE) {
-    const names = conclusion.tiedIds
-      .map((id) => storeById(result, id)?.name)
-      .filter(Boolean);
-    title = "Одинаково по цене";
-    facts = `${names.join(" и ")}: ${formatRubMinor(conclusion.totalMinor)}`;
-  } else if (conclusion.kind === WEB_SNAPSHOT_CONCLUSION.PARTIAL_ONLY) {
-    title = "Цены есть не на всё";
-    facts = "Ни в одном магазине не нашли цены на всю корзину, поэтому «дешевле» не называем.";
-  } else {
-    title = "Для этих товаров цен пока нет";
-    facts = "Мы собрали цены только на базовые продукты из каталога.";
-  }
-
-  const winnerMinor = winner?.totalMinor ?? null;
-  const stores = result.stores.map((store) => ({
+  const stores = [...result.stores]
+    .sort((left, right) => left.name.localeCompare(right.name, "ru"))
+    .map((store) => ({
     retailerId: store.retailerId,
     name: store.name,
     siteUrl: store.siteUrl,
-    isWinner: winner?.retailerId === store.retailerId,
-    diffMinor: store.complete && winnerMinor !== null
-      ? store.totalMinor - winnerMinor
-      : null,
+    isWinner: false,
+    diffMinor: null,
     summary: store.complete
-      ? formatRubMinor(store.totalMinor)
-      : `цены на ${store.coveredCount} из ${store.totalCount}`,
+      ? `Ориентир: ${formatRubMinor(store.totalMinor)}`
+      : `архивные цены на ${store.coveredCount} из ${store.totalCount}`,
     lines: store.lines.map((line) => (
       line.status === "priced"
         ? {
@@ -91,11 +71,12 @@ export function buildWebSnapshotModel(result) {
   return {
     kind: conclusion.kind,
     eyebrow,
-    chip: "Регион не подтверждён",
+    chip: "Архив · регион не подтверждён",
     title,
     facts,
     note: REGION_NOTE,
-    winner: winner ? { name: winner.name, siteUrl: winner.siteUrl } : null,
+    referenceOnly: true,
+    winner: null,
     stores
   };
 }
@@ -192,23 +173,7 @@ export function createWebSnapshotResult(result) {
 
   section.append(meta, textElement("h2", null, model.title));
 
-  if (model.winner) {
-    const found = document.createElement("div");
-    found.className = "horek-found";
-    const icon = document.createElement("span");
-    icon.className = "hf-icon";
-    icon.setAttribute("aria-hidden", "true");
-    icon.innerHTML = PIXEL_ICONS.ferret;
-    const col = document.createElement("div");
-    col.append(
-      textElement("div", "hf-label", "ХОРЁК НАШЁЛ"),
-      textElement("div", "hf-text", model.facts)
-    );
-    found.append(icon, col);
-    section.append(found);
-  } else {
-    section.append(textElement("p", "snapshot-facts", model.facts));
-  }
+  section.append(textElement("p", "snapshot-facts", model.facts));
 
   if (model.stores.some((store) => store.lines.length > 0)) {
     const stores = document.createElement("div");
@@ -227,40 +192,6 @@ export function createWebSnapshotResult(result) {
 
   section.append(textElement("p", "comparison-provenance", model.note));
 
-  if (model.winner) {
-    const share = document.createElement("button");
-    share.type = "button";
-    share.className = "text-button share-button";
-    share.textContent = "Поделиться картинкой";
-    share.addEventListener("click", async () => {
-      share.disabled = true;
-      try {
-        const outcome = await shareSnapshotResult(model);
-        share.textContent = outcome === "downloaded"
-          ? "Картинка сохранена"
-          : outcome === "shared"
-            ? "Отправлено!"
-            : "Поделиться картинкой";
-      } catch {
-        share.textContent = "Не получилось, попробуй ещё раз";
-      } finally {
-        share.disabled = false;
-      }
-    });
-    section.append(share);
-
-    const action = document.createElement("a");
-    action.className = "primary-button";
-    action.href = model.winner.siteUrl;
-    action.target = "_blank";
-    action.rel = "noopener noreferrer";
-    action.textContent = `Открыть ${model.winner.name}`;
-    action.setAttribute(
-      "aria-label",
-      `Открыть ${model.winner.name} — сайт магазина, откроется в новой вкладке`
-    );
-    section.append(action);
-  }
 
   return section;
 }

@@ -10,6 +10,7 @@ on:
       - ".github/workflows/live-retail-smoke.yml"
   pull_request:
     paths:
+      - "src/components/WebSnapshotResult.mjs"
       - ".github/workflows/live-retail-smoke.yml"
   workflow_dispatch:
 
@@ -21,6 +22,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify archived basket references cannot recommend a winner
+        run: |
+          node --input-type=module - <<'NODE'
+          import assert from 'node:assert/strict';
+          import { compareWebSnapshot } from './src/core/web-snapshot-comparison.mjs';
+          import { buildWebSnapshotModel } from './src/components/WebSnapshotResult.mjs';
+          const result = compareWebSnapshot([
+            {id:'milk-25-900',quantity:1},
+            {id:'kefir-1l',quantity:1},
+            {id:'butter-825-180',quantity:1}
+          ]);
+          assert.equal(result.conclusion.kind,'cheapest');
+          const model = buildWebSnapshotModel(result);
+          assert.equal(model.referenceOnly,true);
+          assert.equal(model.winner,null);
+          assert.match(model.title,/Архивный ориентир/);
+          assert.match(model.facts,/не текущая стоимость/);
+          assert.ok(model.stores.every(store=>!store.isWinner && store.diffMinor===null));
+          assert.ok(model.stores.filter(store=>store.summary.includes('Ориентир:')).length>=2);
+          console.log('ARCHIVE_REFERENCE_OK',process.env.GITHUB_SHA);
+          NODE
       - name: Verify exact artifact address data
         run: |
           node --input-type=module - <<'NODE'
