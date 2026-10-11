@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "a22af6819c5206feedcf9e72856bc7ed87b09381",
+  "sourceCommit": "f22e85bde2bf7576ad8a39e8f2e9df7a4d96b1d0",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -100,22 +100,23 @@
       505,
       506,
       508,
-      509
+      509,
+      511
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
     "commercialAnswers": "Core and selected-store observed catalog",
     "basketChangesRequireConfirmation": true,
     "providerRoute": "zero-cost OpenRouter",
-    "providerDeploymentVersion": 27,
+    "providerDeploymentVersion": 28,
     "validation": {
-      "unitAndGuardChecks": 1365,
+      "unitAndGuardChecks": 1381,
       "chromiumDesktopAndMobileCases": 262,
-      "exactHead": "8fdc48ffb207243ef8feb3656ef2f83032ad2749",
-      "sourceCommit": "a22af6819c5206feedcf9e72856bc7ed87b09381",
-      "exactHeadCiRun": 38170322334,
-      "mergedMainCiRun": 38171016433,
-      "validationScope": "exact-head checks passed; merged source tree identical; actual-main result tracked in implementation PR"
+      "exactHead": "b7296112222f9ab0761da1ac1ecea7300c7b189a",
+      "sourceCommit": "f22e85bde2bf7576ad8a39e8f2e9df7a4d96b1d0",
+      "exactHeadCiRun": 38178328349,
+      "mergedMainCiRun": 38179099063,
+      "validationScope": "exact-head and actual-main checks passed without retries or skipped cases; merged source tree identical"
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -211,11 +212,38 @@
       "fallbackReasoningExcluded": true,
       "fallbackCombinedTokenCap": 2048,
       "primaryTokenCaps": {
-        "proposal": 256,
-        "advice": 768
+        "proposal": 2048,
+        "advice": 2048
       },
-      "liveRouteIdentities": "not established by the latest scoped logs",
+      "liveRouteIdentities": "primary and fallback route IDs verified in v28 scoped logs; selected model identities not recorded",
       "latestLiveProbes": [
+        {
+          "mode": "advice",
+          "at": "2026-10-11T22:08:21.523Z",
+          "http": 503,
+          "kind": "unavailable",
+          "code": "provider_timeout",
+          "latencyMs": 18625,
+          "basketMutationRequested": false
+        },
+        {
+          "mode": "proposal",
+          "at": "2026-10-11T22:08:40.148Z",
+          "http": 503,
+          "kind": "unavailable",
+          "code": "provider_timeout",
+          "latencyMs": 12752,
+          "basketMutationRequested": false
+        }
+      ],
+      "primaryReasoningCompatibilitySourcePr": 511,
+      "primaryReasoning": {
+        "excludedFromVisibleOutput": true,
+        "enablement": "model default",
+        "effort": "model default"
+      },
+      "primaryCombinedTokenCap": 2048,
+      "previousLiveProbes": [
         {
           "at": "2026-10-11T18:59:48.761Z",
           "mode": "proposal",
@@ -246,7 +274,31 @@
           "guarded": true,
           "latencyMs": 12126
         }
-      ]
+      ],
+      "latestLiveRoutes": {
+        "deploymentVersion": 28,
+        "advice": {
+          "primary": {
+            "code": "provider_timeout",
+            "latencyMs": 3002
+          },
+          "fallback": {
+            "code": "provider_timeout",
+            "latencyMs": 9002
+          }
+        },
+        "proposal": {
+          "primary": {
+            "code": "provider_timeout",
+            "latencyMs": 3002
+          },
+          "fallback": {
+            "code": "provider_timeout",
+            "latencyMs": 9000
+          }
+        }
+      },
+      "liveReasoningCompatibility": "mandatory-reasoning parameter rejection absent in both v28 probes; both routes timed out"
     },
     "shoppingFollowups": {
       "sourcePr": 504,
@@ -326,7 +378,14 @@
         "selectionQuestion": "response drifted into home preparation"
       },
       "arbitraryProseTruth": "not established",
-      "groundedSelection": "source-linked local selection; generic free-generated prose remains variable"
+      "groundedSelection": "source-linked local selection; generic free-generated prose remains variable",
+      "lastLiveAvailabilityReview": {
+        "at": "2026-10-11T22:08:21.523Z",
+        "http": 503,
+        "code": "provider_timeout",
+        "generatedAnswerAvailable": false,
+        "scope": "one advice probe on v28"
+      }
     }
   }
 }
