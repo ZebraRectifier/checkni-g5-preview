@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "8426edc7af8c3d2e2699ba0a019ed1c3786d7385",
+  "sourceCommit": "4fa92db6f28982f8d676dfc745b47124f97c6476",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -82,7 +82,8 @@
       415,
       436,
       496,
-      497
+      497,
+      499
     ],
     "conversationMemory": "session-only",
     "readOnlyProductAdvice": true,
@@ -91,8 +92,8 @@
     "providerRoute": "zero-cost OpenRouter",
     "providerDeploymentVersion": 22,
     "validation": {
-      "unitAndGuardChecks": 1254,
-      "chromiumDesktopAndMobileCases": 212
+      "unitAndGuardChecks": 1270,
+      "chromiumDesktopAndMobileCases": 214
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -103,6 +104,14 @@
       ],
       "exclusionsEnforced": true,
       "ingredientsAtHome": "ask, never infer"
+    },
+    "localProductReference": {
+      "topics": [
+        "milk and kefir difference"
+      ],
+      "scope": "general facts, no specific package composition",
+      "source": "Tetra Pak Dairy Processing Handbook",
+      "modelRequired": false
     }
   }
 }

@@ -3,7 +3,7 @@ import { createShoppingConversation, extractShoppingDelta, updateShoppingConvers
 import { planConversationBasket, presentConversationBasket, knownPreparation } from "../intelligence/conversationBasket.mjs";
 import { validateBasketProposal } from "../core/ai-basket-proposal.mjs";
 import { parseLocalBasketText } from "../intelligence/localBasketParser.mjs";
-import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation, localShoppingAdvice } from "../intelligence/shoppingAdvice.mjs";
+import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation, localShoppingAdvice, localShoppingProductReference } from "../intelligence/shoppingAdvice.mjs";
 import { normalizeShoppingAdviceResponse } from "../intelligence/shoppingAdviceContract.mjs";
 
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -154,6 +154,11 @@ export function createShoppingConversationFlow(options) {
         return state;
       }
       const input = shoppingAdviceInput(text, memory, localCatalog, lastPlan);
+      const reference = localShoppingProductReference(input);
+      if (reference) {
+        state = messageState("Давай разберёмся.", reference.message);
+        return state;
+      }
       state = { status: "loading" };
       let answer;
       try { answer = typeof options.requestShoppingAdvice === "function" ? await options.requestShoppingAdvice(input) : null; }

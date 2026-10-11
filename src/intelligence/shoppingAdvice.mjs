@@ -7,7 +7,7 @@ export function shoppingAdviceTopic(text) {
   if (/^(?:а )?(?:почему|зачем|объясни).*(?:выбр|так|это|эти|именно|набор|корзин|подбор)/u.test(value)) return "explanation";
   if (/^(?:а )?(?:что ты помнишь|какие (?:мои )?пожелания|что мы решили)/u.test(value)) return "preferences";
   return !/₽|руб|цен[ауы]|стоим|скидк|акци|дешев|налич/u.test(value)
-    && /^(?:а )?(?:как|како[йея]|какие|чем|расскажи|что (?:можно|скажешь|посоветуешь))/u.test(value)
+    && /^(?:а )?(?:как|како[йея]|какие|(?:в )?чем|расскажи|что (?:можно|скажешь|посоветуешь))/u.test(value)
     && (shoppingTargets(value).length || /продукт|покуп|корзин|готов|хран|поесть|перекус|круп|ужин|завтрак|кофе|ча[йяю]|мяс|рыб/u.test(value)) ? "advice" : null;
 }
 
@@ -23,11 +23,29 @@ export function shoppingAdviceInput(text, memory, catalog, plan) {
   } };
 }
 
+// Stable general reference, not a claim about a particular catalog package.
+// https://dairyprocessinghandbook.tetrapak.com/chapter/fermented-milk-products
+// https://dairyprocessinghandbook.tetrapak.com/chapter/heat-exchangers
+// No health benefits or retailer facts are inferred.
+export function localShoppingProductReference(input) {
+  const request = normalizeShoppingAdviceRequest(input);
+  if (!request || shoppingAdviceTopic(request.text) !== "advice") return null;
+  const value = stripAssistantGreetingPrefix(request.text).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е");
+  const targets = shoppingTargets(value);
+  if (!/отлич|разниц|сравн/u.test(value) || !targets.includes("kefir") || !targets.includes("milk")
+    || request.context.excluded.some(key => key === "kefir" || key === "milk")) return null;
+  return normalizeShoppingAdviceResponse({ kind: "advice", message:
+    "Кефир делают сквашиванием молока; он обычно кислее и гуще. Пастеризованное и ультрапастеризованное молоко проходит тепловую обработку. У конкретной упаковки смотри вид продукта, состав и жирность на этикетке. Для чего выбираешь: напиток или готовка?"
+  }, request.context);
+}
+
 // A small read-only recovery for everyday questions. Catalog hints are possible
 // choices, never proof of groceries at home or of a store's stock/composition.
 export function localShoppingAdvice(input) {
   const request = normalizeShoppingAdviceRequest(input);
   if (!request || shoppingAdviceTopic(request.text) !== "advice") return null;
+  const reference = localShoppingProductReference(request);
+  if (reference) return reference;
   const value = stripAssistantGreetingPrefix(request.text).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е");
   const targets = shoppingTargets(value);
   const allowed = request.catalog.filter(product => !productShoppingTargets(product).some(key => request.context.excluded.includes(key)));
@@ -45,8 +63,6 @@ export function localShoppingAdvice(input) {
     } else message = "Подберу вариант с минимумом готовки. Какие продукты ты хочешь использовать и есть ли микроволновка?";
   } else if (/как.{0,20}выб|како[йея].{0,20}(?:сыр|выб)/u.test(value) && targets.includes("cheese") && !request.context.excluded.includes("cheese")) {
     message = "Для простого перекуса удобны ломтики: меньше подготовки. Цельный кусок подойдёт, если хочешь нарезать сам. Сравни состав, массу упаковки и срок хранения на этикетке. По одному названию конкретный состав не определить.";
-  } else if (targets.includes("kefir") && targets.includes("milk") && !request.context.excluded.some(key => key === "kefir" || key === "milk")) {
-    message = "Кефир обычно кислее молока и гуще по текстуре. Для нейтрального вкуса чаще выбирают молоко, для кисломолочного — кефир. У конкретных упаковок сравни состав и жирность на этикетке. Для чего выбираешь: напиток или готовка?";
   } else message = "Уточни, что важнее: вкус, размер упаковки или минимум готовки? Для точного совета о конкретном товаре нужен его состав с этикетки.";
   return normalizeShoppingAdviceResponse({ kind: "advice", message }, request.context);
 }
