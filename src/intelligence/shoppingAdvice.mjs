@@ -2,13 +2,14 @@ import { shoppingTargetLabel, shoppingTargets, productShoppingTargets } from "./
 import { stripAssistantGreetingPrefix } from "./localAssistantDialogue.mjs";
 import { normalizeShoppingAdviceRequest, normalizeShoppingAdviceResponse } from "./shoppingAdviceContract.mjs";
 import { formatRubMinor } from "../components/ComparisonResult.mjs";
+import { matchShoppingProductReference } from "./shoppingProductReference.mjs";
 
 export function shoppingAdviceTopic(text) {
   const value = stripAssistantGreetingPrefix(String(text)).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е").trim();
   if (/^(?:а )?(?:почему|зачем|объясни).*(?:выбр|так|это|эти|именно|набор|корзин|подбор)/u.test(value)) return "explanation";
   if (/^(?:а )?(?:что ты помнишь|какие (?:мои )?пожелания|что мы решили)/u.test(value)) return "preferences";
   return !/₽|руб|цен[ауы]|стоим|скидк|акци|дешев|налич/u.test(value)
-    && (/^(?:а )?(?:как|како[йея]|какие|(?:в )?чем|расскажи|что (?:можно|скажешь|посоветуешь|приготовить|съесть|выбрать))/u.test(value)
+    && (/^(?:а )?(?:как|како[йея]|какие|(?:в )?чем|расскажи|сколько.{0,30}хран|можно ли хран|что (?:можно|скажешь|посоветуешь|приготовить|съесть|выбрать))/u.test(value)
       || /^(?:а )?(?:подскажи|посоветуй|помоги)[,\s]+(?:как|како[йея]|какие|(?:в )?чем|что|выбрать|приготовить|съесть)(?=\s|$)/u.test(value))
     && (shoppingTargets(value).length || /продукт|покуп|корзин|готов|хран|поесть|перекус|круп|ужин|завтрак|кофе|ча[йяю]|мяс|рыб/u.test(value)) ? "advice" : null;
 }
@@ -25,20 +26,20 @@ export function shoppingAdviceInput(text, memory, catalog, plan) {
   } };
 }
 
-// Stable general reference, not a claim about a particular catalog package.
-// https://dairyprocessinghandbook.tetrapak.com/chapter/fermented-milk-products
-// https://dairyprocessinghandbook.tetrapak.com/chapter/heat-exchangers
-// No health benefits or retailer facts are inferred.
-export function localShoppingProductReference(input) {
+// References run before the provider, share the same prose/exclusion guards,
+// and expose provenance only through an internal, allowlisted identity.
+export function localShoppingReference(input) {
   const request = normalizeShoppingAdviceRequest(input);
   if (!request || shoppingAdviceTopic(request.text) !== "advice") return null;
-  const value = stripAssistantGreetingPrefix(request.text).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е");
-  const targets = shoppingTargets(value);
-  if (!/отлич|разниц|сравн/u.test(value) || !targets.includes("kefir") || !targets.includes("milk")
-    || request.context.excluded.some(key => key === "kefir" || key === "milk")) return null;
-  return normalizeShoppingAdviceResponse({ kind: "advice", message:
-    "Кефир делают сквашиванием молока; он обычно кислее и гуще. Пастеризованное и ультрапастеризованное молоко проходит тепловую обработку. У конкретной упаковки смотри вид продукта, состав и жирность на этикетке. Для чего выбираешь: напиток или готовка?"
-  }, request.context);
+  if (shoppingTargets(request.text).some(key => request.context.excluded.includes(key))) return null;
+  const match = matchShoppingProductReference(request.text);
+  if (!match) return null;
+  const reply = normalizeShoppingAdviceResponse({ kind: "advice", message: match.message }, request.context);
+  return reply ? Object.freeze({ reply, referenceKey: match.key }) : null;
+}
+
+export function localShoppingProductReference(input) {
+  return localShoppingReference(input)?.reply ?? null;
 }
 
 // A small read-only recovery for everyday questions. Catalog hints are possible

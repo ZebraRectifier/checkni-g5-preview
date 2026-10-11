@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "78d2a69a68c97da6af8fe7942ffe277596990b8a",
+  "sourceCommit": "70e20b0b85ade1ebe048d3b317046a33a0e9ed65",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -96,22 +96,23 @@
       501,
       502,
       503,
-      504
+      504,
+      505
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
     "commercialAnswers": "Core and selected-store observed catalog",
     "basketChangesRequireConfirmation": true,
     "providerRoute": "zero-cost OpenRouter",
-    "providerDeploymentVersion": 24,
+    "providerDeploymentVersion": 25,
     "validation": {
-      "unitAndGuardChecks": 1317,
-      "chromiumDesktopAndMobileCases": 248,
-      "exactHead": "ed681989cd70a50ac19c724c1598f094ec143fe7",
-      "sourceCommit": "78d2a69a68c97da6af8fe7942ffe277596990b8a",
-      "exactHeadCiRun": 38153027152,
-      "mergedMainCiRun": 38153699564,
-      "validationScope": "exact-head checks; merged source tree is identical"
+      "unitAndGuardChecks": 1333,
+      "chromiumDesktopAndMobileCases": 256,
+      "exactHead": "5c86b92bae0abdc5313179a4031c71292e04ca98",
+      "sourceCommit": "70e20b0b85ade1ebe048d3b317046a33a0e9ed65",
+      "exactHeadCiRun": 38160113266,
+      "mergedMainCiRun": 38160841378,
+      "validationScope": "exact-head checks; merged source tree identical; actual-main result tracked in implementation PR"
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -124,12 +125,28 @@
       "ingredientsAtHome": "ask, never infer"
     },
     "localProductReference": {
+      "sourcePr": 505,
       "topics": [
-        "milk and kefir difference"
+        "milk and kefir difference",
+        "pasteurisation and UHT difference",
+        "kefir and yoghurt difference",
+        "cheese selection",
+        "cheese types",
+        "dairy storage from package label"
       ],
-      "scope": "general facts, no specific package composition",
-      "source": "Tetra Pak Dairy Processing Handbook",
-      "modelRequired": false
+      "scope": "curated general facts, no specific package composition or retailer assortment",
+      "checkedAt": "2026-10-11",
+      "source": "Tetra Pak Dairy Processing Handbook and Rospotrebnadzor label/storage guidance",
+      "sources": [
+        "https://dairyprocessinghandbook.tetrapak.com/chapter/cheese",
+        "https://dairyprocessinghandbook.tetrapak.com/chapter/fermented-milk-products",
+        "https://dairyprocessinghandbook.tetrapak.com/chapter/heat-exchangers",
+        "https://04.rospotrebnadzor.ru/index.php/information-for-businesses/helpful-information/18632-27072023.html"
+      ],
+      "modelRequired": false,
+      "visibleSources": true,
+      "sourceLinks": "allowlisted local references only",
+      "arbitraryFactCoverage": false
     },
     "currentCardFacts": {
       "sourcePr": 501,
@@ -148,7 +165,7 @@
       "sourcePr": 502,
       "scope": "current tab until reload",
       "maxPreviousTurns": 8,
-      "archivedReplies": "read-only text; no basket confirmation actions",
+      "archivedReplies": "read-only text and allowlisted general reference links; no basket confirmation actions",
       "transcriptStored": false,
       "transcriptSentToProvider": false,
       "clearPreservesBasketAndPreferences": true,
@@ -188,7 +205,8 @@
       "priceQuestions": "Core tools",
       "cardQuestions": "current admitted catalogue fields",
       "transcriptStored": false,
-      "transcriptSentToProvider": false
+      "transcriptSentToProvider": false,
+      "storageQuestions": "current subject; manufacturer package instructions required"
     },
     "semanticValidation": {
       "sourcePr": 504,
@@ -222,7 +240,9 @@
         ],
         "latencyMs": 7497,
         "exact": true
-      }
+      },
+      "assortmentCompletenessClaims": "rejected",
+      "unsupportedNumericAgeingAndStorageRules": "rejected"
     }
   }
 }

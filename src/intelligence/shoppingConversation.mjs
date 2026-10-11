@@ -13,7 +13,7 @@ const TERMS = Object.freeze({
   onions: /лук(?:а|у|ом)?(?=$|[^а-я])/u, carrots: /морков\S*/u, cabbage: /капуст\S*/u,
   milk: /молок\S*/u, kefir: /кефир\S*/u, vegetables: /овощ\S*/u,
   fruit: /фрукт\S*/u, tomatoes: /томат\S*|помидор\S*/u, bread: /хлеб\S*/u,
-  cheese: /сыр(?:а|у|ом)?(?=$|[^а-я])/u, apples: /яблок\S*/u,
+  cheese: /сыр(?:а|у|ом|ы|ов|ам|ами|ах)?(?=$|[^а-я])/u, apples: /яблок\S*/u,
   bananas: /банан\S*/u, pelmeni: /пельмен\S*/u, beef_mince: /говяж\S*\s+фарш|фарш\s+говяж\S*/u
 });
 const VEGETABLES = new Set(["potatoes", "onions", "carrots", "cabbage", "tomatoes"]);

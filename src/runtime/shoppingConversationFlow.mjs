@@ -3,7 +3,7 @@ import { extractShoppingDelta, updateShoppingConversation, isShoppingProductReje
 import { planConversationBasket, presentConversationBasket, knownPreparation } from "../intelligence/conversationBasket.mjs";
 import { validateBasketProposal } from "../core/ai-basket-proposal.mjs";
 import { parseLocalBasketText } from "../intelligence/localBasketParser.mjs";
-import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation, localShoppingAdvice, localShoppingProductReference } from "../intelligence/shoppingAdvice.mjs";
+import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation, localShoppingAdvice, localShoppingReference } from "../intelligence/shoppingAdvice.mjs";
 import { normalizeShoppingAdviceResponse } from "../intelligence/shoppingAdviceContract.mjs";
 import { isShoppingProductFactsQuestion, localShoppingProductFacts } from "../intelligence/shoppingProductFacts.mjs";
 import { createShoppingPreferenceStore } from "./shoppingPreferenceStorage.mjs";
@@ -234,9 +234,10 @@ export function createShoppingConversationFlow(options) {
         return state;
       }
       const input = shoppingAdviceInput(text, memory, localCatalog, lastPlan);
-      const reference = localShoppingProductReference(input);
+      const reference = localShoppingReference(input);
       if (reference) {
-        state = messageState("Давай разберёмся.", reference.message);
+        state = messageState("Давай разберёмся.", reference.reply.message);
+        state.presentation.referenceKey = reference.referenceKey;
         return state;
       }
       state = { status: "loading" };

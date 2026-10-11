@@ -21,10 +21,12 @@ export function resolveShoppingAdviceFollowup(text, focus) {
   const another = /^(?:а\s+)?(?:другой|другая|другое|другие|еще вариант|что еще)(?:\s+вариант)?$/u.test(value);
   const attribute = /^(?:а\s+)?(?:что (?:с|насчет) (?:состава|составом|бренда|веса)|како[йея] (?:у него |у нее |там )?(?:состав|бренд|марка|вес)|сколько (?:там )?грамм)$/u.test(value);
   const difference = /^(?:а\s+)?(?:чем (?:они|эти) отличаются|в чем (?:их )?разница)$/u.test(value);
+  const storage = /^(?:а\s+)?(?:(?:как|сколько) (?:его |ее |их |это )?хранить(?: после (?:открытия|вскрытия))?|после (?:открытия|вскрытия))$/u.test(value);
   const exclusion = /^без\s+.{1,80}$/u.test(value);
-  if (!purpose && !another && !attribute && !difference && !exclusion) return null;
+  if (!purpose && !another && !attribute && !difference && !storage && !exclusion) return null;
   if (!focus) return purpose || exclusion ? null : { kind: "clarification", message: "О каком продукте или блюде речь?" };
   const names = focus.targets.map(shoppingTargetLabel).join(" и ");
+  if (storage && focus.targets.length) return { kind: "question", text: `Как хранить ${names}${/после/u.test(value) ? " после вскрытия упаковки" : ""}?` };
   if (attribute && focus.targets.length === 1) {
     const field = /состав/u.test(value) ? "состав" : /бренд|марк/u.test(value) ? "марка" : "вес";
     return { kind: "question", text: `Какой ${field} у товара: ${names}?` };

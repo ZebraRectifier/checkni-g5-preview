@@ -1,3 +1,5 @@
+import { shoppingReferenceSources } from "../intelligence/shoppingProductReference.mjs";
+
 const MAX_PREVIOUS_TURNS = 8;
 const MAX_REPLY_CHARACTERS = 6000;
 
@@ -67,6 +69,24 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
   let active = null;
   let previous = [];
 
+  function appendSources(parent, key) {
+    const sources = shoppingReferenceSources(key);
+    if (!sources.length) return;
+    const paragraph = document.createElement("p");
+    paragraph.className = "shopping-dialogue-sources";
+    paragraph.append("Общий справочник: ");
+    for (const [index, source] of sources.entries()) {
+      if (index) paragraph.append(" · ");
+      const link = document.createElement("a");
+      link.textContent = source.title;
+      link.href = source.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      paragraph.append(link);
+    }
+    parent.append(paragraph);
+  }
+
   function renderHistory() {
     history.replaceChildren();
     for (const turn of previous) {
@@ -85,6 +105,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
         paragraph.textContent = text;
         answer.append(paragraph);
       }
+      appendSources(answer, turn.referenceKey);
       entry.append(question, answer);
       history.append(entry);
     }
@@ -96,7 +117,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
 
   function archiveActive() {
     if (!active) return;
-    previous.push({ user: active.user, reply: active.reply.length ? active.reply : ["Запрос отменён. Отправь новое сообщение, чтобы продолжить."] });
+    previous.push({ user: active.user, reply: active.reply.length ? active.reply : ["Запрос отменён. Отправь новое сообщение, чтобы продолжить."], referenceKey: active.referenceKey });
     previous = previous.slice(-MAX_PREVIOUS_TURNS);
     active = null;
     user.hidden = true;
@@ -117,12 +138,15 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
   }
 
   function sync(state) {
+    output.querySelectorAll(".shopping-dialogue-sources").forEach(node => node.remove());
+    appendSources(output, state.presentation?.referenceKey);
     root.hidden = !active && !previous.length && !output.childElementCount;
     speaker.hidden = !output.childElementCount;
     if (!active) return;
     if (state.status === "idle") { archiveActive(); return; }
     active.pending = state.status === "loading";
     if (active.pending) return;
+    active.referenceKey = state.presentation?.referenceKey;
     let remaining = MAX_REPLY_CHARACTERS;
     active.reply = [...output.querySelectorAll(".proposal-message, .proposal-detail, .proposal-preview-list li, .proposal-problems li")]
       .map(node => {

@@ -80,6 +80,23 @@
   line-height: 1.5;
 }
 
+.shopping-dialogue-sources {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.shopping-dialogue-sources a {
+  color: #d5c3ff;
+  text-decoration: underline;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 6px 0;
+}
+
 .shopping-dialogue :focus-visible { outline: 2px solid #bd95ff; outline-offset: 3px; }
 
 @media (max-width: 480px) {
