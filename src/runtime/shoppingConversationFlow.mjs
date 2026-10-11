@@ -7,6 +7,8 @@ import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation, loc
 import { normalizeShoppingAdviceResponse } from "../intelligence/shoppingAdviceContract.mjs";
 import { isShoppingProductFactsQuestion, localShoppingProductFacts } from "../intelligence/shoppingProductFacts.mjs";
 import { createShoppingPreferenceStore } from "./shoppingPreferenceStorage.mjs";
+import { preflightLocalBasketText } from "../intelligence/localBasketPreflight.mjs";
+import { shoppingAdviceFocus, resolveShoppingAdviceFollowup, resolveShoppingBasketFollowup, resolveShoppingPriceFollowup, explicitShoppingItems } from "../intelligence/shoppingTurnContext.mjs";
 
 const copy = value => JSON.parse(JSON.stringify(value));
 const rowsOf = validation => (validation?.basket ?? []).map(row => ({ productId: row.product.id, quantity: row.quantity }));
@@ -21,6 +23,9 @@ export function createShoppingConversationFlow(options) {
   let checkpoint = null;
   let managed = [];
   let lastPlan = [];
+  let referencePlan = [];
+  let adviceFocus = null;
+  let referenceAction = null;
   let pending = null;
   let suspendedDraft = null;
   let stagedByHybrid = null;
@@ -46,12 +51,15 @@ export function createShoppingConversationFlow(options) {
 
   function invalidate() {
     epoch += 1; pending = null; suspendedDraft = null; inFlight = null; stagedByHybrid = null;
+    referencePlan = []; adviceFocus = null; referenceAction = null;
     hybrid.invalidate(); state = { status: "idle" };
     return state;
   }
   function edit() {
     const draft = pending ? { pending, state } : suspendedDraft;
+    const references = referencePlan, focus = adviceFocus, action = referenceAction;
     invalidate();
+    referencePlan = references; adviceFocus = focus; referenceAction = action;
     suspendedDraft = draft;
     return state;
   }
@@ -86,6 +94,7 @@ export function createShoppingConversationFlow(options) {
     }
     pending = { epoch, revision: memory.revision, base: copy(base), replacement: copy(replacement), plan: copy(plan), diff };
     lastPlan = copy(plan.items);
+    referencePlan = copy(plan.items);
     state = { status: "clarification", result: { kind: "clarification", triggerReason: "conversation_draft", reason: "confirmation_required", draftProposal: { items: plan.items }, validation }, validation,
       presentation: presentConversationBasket(memory, plan, localCatalog, priceHints, replacement, diff) };
     pending.presentation = state.presentation;
@@ -115,9 +124,55 @@ export function createShoppingConversationFlow(options) {
   }
   async function execute(text, token) {
     commercialTurn = false;
+    if (preflightLocalBasketText(text).kind === "reject") {
+      pending = null; suspendedDraft = null; referencePlan = []; adviceFocus = null; referenceAction = null;
+      const request = hybrid.run(text);
+      state = hybrid.getState();
+      const next = await request;
+      if (token === epoch) state = next;
+      return state;
+    }
+    const priceTurn = resolveShoppingPriceFollowup(text, adviceFocus, referencePlan, localCatalog);
+    if (priceTurn?.kind === "clarification") {
+      pending = null; suspendedDraft = null; referenceAction = null; hybrid.invalidate();
+      state = messageState("Уточню один момент.", priceTurn.message);
+      return state;
+    }
+    if (priceTurn) text = priceTurn.text;
+    const editTurn = resolveShoppingBasketFollowup(text, referencePlan, localCatalog, referenceAction);
+    referenceAction = null;
+    if (editTurn) {
+      pending = null; suspendedDraft = null; hybrid.invalidate();
+      if (editTurn.kind === "clarification") {
+        referenceAction = editTurn.action ?? null;
+        state = messageState("Уточню один момент.", editTurn.message);
+        return state;
+      }
+      const updated = updateShoppingConversation(memory, extractShoppingDelta(editTurn.memoryText));
+      if (updated.overflow) {
+        state = messageState("Условия уже не помещаются в короткую память.", "Предыдущие условия сохранены. Можно сбросить предпочтения или начать новую корзину.");
+        return state;
+      }
+      checkpoint = { memory, plan: copy(lastPlan), basket: basket.getSnapshot(), appliedSnapshot: null };
+      setMemory(updated.state);
+      return preview({ items: editTurn.items, unresolved: [], warnings: [], explicit: true });
+    }
+    const inferredFocus = referencePlan.length === 1
+      ? shoppingAdviceFocus(`Как выбрать ${byId.get(referencePlan[0].productId)?.name ?? ""}?`) : null;
+    const followup = resolveShoppingAdviceFollowup(text, adviceFocus ?? inferredFocus);
+    if (followup?.kind === "clarification") {
+      pending = null; suspendedDraft = null; hybrid.invalidate();
+      state = messageState("Уточню один момент.", followup.message);
+      return state;
+    }
+    if (followup) text = followup.text;
     const delta = extractShoppingDelta(text);
     const affirmative = /^(?:го|ок|да|давай|применить|применяй|подтверждаю)$/iu.test(text.trim());
     if (affirmative) {
+      if (!pending && suspendedDraft && suspendedDraft.pending.revision === memory.revision
+        && JSON.stringify(suspendedDraft.pending.base) === JSON.stringify(basket.getSnapshot())) {
+        pending = suspendedDraft.pending; pending.epoch = epoch; state = suspendedDraft.state;
+      }
       suspendedDraft = null;
       if (pending) return confirm("confirm_all");
       const result = hybrid.getState().result;
@@ -133,9 +188,9 @@ export function createShoppingConversationFlow(options) {
     // go through the existing preference/constraint path.
     const readOnlyQuestion = ["advice", "product_facts"].includes(adviceTopic)
       && (adviceTopic === "product_facts" || !Object.keys(delta.facts).length)
-      && !delta.reject.length && !delta.want.length && !delta.unset.length
+      && !delta.want.length && !delta.unset.length
       && !delta.reset && !delta.undo && !delta.newGoal && !delta.clearUnresolved
-      && !/без\s|убери|не надо|надоел|терпеть не могу|не\s+(?:хочу|нужн|ем|люблю|нрав|подход|перенош)/iu.test(text);
+      && !/убери|не надо|надоел|терпеть не могу|не\s+(?:хочу|нужн|ем|люблю|нрав|подход|перенош)/iu.test(text);
     if (adviceTopic && (!delta.recognized || readOnlyQuestion)) {
       const explanation = localShoppingExplanation(adviceTopic, memory, localCatalog, lastPlan);
       if (adviceTopic === "explanation" && !pending && suspendedDraft
@@ -160,6 +215,13 @@ export function createShoppingConversationFlow(options) {
         return state;
       }
       pending = null; hybrid.invalidate();
+      // A question with a food exclusion stays an advice turn. Never let
+      // "можно" authorize an excluded food or turn a question into a draft.
+      if (readOnlyQuestion && delta.reject.length) {
+        const updated = updateShoppingConversation(memory, { ...delta, allow: [] });
+        if (!updated.overflow) setMemory(updated.state);
+      }
+      adviceFocus = shoppingAdviceFocus(text); referencePlan = [];
       if (memory.facts.unresolvedConstraints) {
         state = messageState("Осталось непонятое условие.", "Сначала уточни или явно отмени нераспознанное условие. Сохраняю его, чтобы не нарушить отказ.");
         return state;
@@ -191,6 +253,7 @@ export function createShoppingConversationFlow(options) {
     // Every new substantive message supersedes the previous reviewed candidate,
     // including a price question or an unsupported specification.
     pending = null; suspendedDraft = null;
+    adviceFocus = null;
     const rebuild = /перестрой|пересобери|обнови корзину/u.test(text.toLocaleLowerCase("ru-RU"));
     const onlyProductWish = delta.want.length && !delta.reject.length && !delta.allow.length && !Object.keys(delta.facts).length
       && !delta.reset && !delta.undo && !delta.newGoal && !delta.dissatisfaction && !delta.unresolved.length;
@@ -223,16 +286,23 @@ export function createShoppingConversationFlow(options) {
       checkpoint = { memory, plan: copy(lastPlan), basket: basket.getSnapshot(), appliedSnapshot: null };
       setMemory(updated.state);
       if (delta.reset) {
-        managed = []; lastPlan = [];
+        managed = []; lastPlan = []; referencePlan = [];
         state = preferenceStore.status().failed
           ? messageState("Сбросила условия этого разговора.", "Сохранённые предпочтения удалить не удалось. После перезагрузки они могут восстановиться. Подтверждённая корзина сохранена.")
           : messageState("Предпочтения сброшены.", "Начнём новый разговор о покупках. Подтверждённая корзина сохранена.");
         return state;
       }
-      if (delta.newGoal) lastPlan = [];
+      if (delta.newGoal) { lastPlan = []; referencePlan = []; }
       if (memory.facts.unresolvedConstraints) {
         state = messageState("Не всё условие удалось понять.", `Не распознала: ${memory.facts.unresolvedConstraints.value.join("; ")}. Уточни именно эту часть, чтобы я не нарушила отказ. Можно явно написать «забудь нераспознанное условие». Другие пожелания сохранила; корзина не изменилась.`);
         return state;
+      }
+      const explicit = delta.reject.length ? explicitShoppingItems(text, localCatalog) : null;
+      if (explicit) {
+        const items = new Map(lastPlan.map(row => [row.productId, row]));
+        for (const row of explicit.items) items.set(row.productId, row);
+        const allowed = [...items.values()].filter(row => !isShoppingProductRejected(byId.get(row.productId), memory));
+        return preview({ ...explicit, items: allowed });
       }
       return preview(planConversationBasket(memory, localCatalog, priceHints, lastPlan));
     }
@@ -263,6 +333,7 @@ export function createShoppingConversationFlow(options) {
       // confirmable product interpretation or an earlier basket candidate.
       hybrid.invalidate();
       stagedByHybrid = null;
+      adviceFocus = shoppingAdviceFocus(text); referencePlan = [];
       if (next.result?.triggerReason === "commercial_constraint") {
         const { validation, draftProposal, proposal, ...safeResult } = next.result;
         state = { ...next, validation: null, result: safeResult, presentation: { ...next.presentation,
@@ -297,7 +368,7 @@ export function createShoppingConversationFlow(options) {
       return preview({ items: [...items.values()], unresolved: next.result?.unresolvedTerms ?? [], warnings });
     }
     state = next;
-    if (next.validation?.basket?.length) lastPlan = rowsOf(next.validation);
+    if (next.validation?.basket?.length) { lastPlan = rowsOf(next.validation); referencePlan = copy(lastPlan); }
     return state;
   }
   function run(text) {

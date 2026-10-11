@@ -91,7 +91,7 @@ export function conversationPriceSummary(rows, hints) {
       dates.add(hints.get(id).observedDateLabel || "дата неизвестна");
     }
   }
-  return { kind: unknownCount ? "incomplete_historical" : rows.length ? "historical" : "unknown", knownSubtotalMinor, unknownCount, dates: [...dates] };
+  return { kind: !rows.length || unknownCount === rows.length ? "unknown" : unknownCount ? "incomplete_historical" : "historical", knownSubtotalMinor, unknownCount, dates: [...dates] };
 }
 
 export function presentConversationBasket(state, plan, catalog, hints, nextBasket, diff) {
@@ -115,7 +115,9 @@ export function presentConversationBasket(state, plan, catalog, hints, nextBaske
   if (state.hypotheses.some(entry => entry.value === "structure_mismatch")) {
     messages.push("Похоже, дело в структуре корзины: набор мог получиться случайным или слишком однотипным. Перестрою вокруг способов поесть.");
   }
-  if (state.facts.cookingEffort?.value === "minimal") {
+  if (plan.explicit) {
+    messages.push("Проверь товары и количество. Применю показанные изменения после подтверждения.");
+  } else if (state.facts.cookingEffort?.value === "minimal") {
     messages.push(recommendation
       ? `Я бы выбрала ${recommendation}: можно поесть без долгой готовки. Ещё два направления — холодный набор или продукт для разогрева; конкретные варианты зависят от каталога.`
       : "Я бы начала с еды без долгой готовки, потому что это соответствует твоему пожеланию. Подходящие конкретные товары пока не подтверждены.");
@@ -132,6 +134,6 @@ export function presentConversationBasket(state, plan, catalog, hints, nextBaske
   if (specific) messages.push("Марки показываю только из данных товара. У общей позиции каталога конкретная марка может быть не подтверждена.");
   if (diff.length) messages.push(`Изменения после подтверждения: ${diff.map(row => `${row.name}: ${row.before} → ${row.after}`).join("; ")}.`);
   messages.push("Актуальную стоимость и покрытие проверит «Где дешевле?» после подтверждения корзины.");
-  return { mascotState: plan.unresolved.length ? "partial" : "checking", headline: "Перестроила черновик с учётом разговора.", message: messages.join(" "), items,
+  return { mascotState: plan.unresolved.length ? "partial" : "checking", headline: plan.explicit ? "Обновила черновик покупок." : "Перестроила черновик с учётом разговора.", message: messages.join(" "), items,
     primaryAction: plan.unresolved.length ? "Применить найденную часть" : "Применить изменения", secondaryAction: "Уточнить запрос", focusClarification: true };
 }

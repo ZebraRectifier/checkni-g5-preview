@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "cd163f1b37198dbae3e328bff17689debebff02f",
+  "sourceCommit": "78d2a69a68c97da6af8fe7942ffe277596990b8a",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -95,21 +95,23 @@
       499,
       501,
       502,
-      503
+      503,
+      504
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
     "commercialAnswers": "Core and selected-store observed catalog",
     "basketChangesRequireConfirmation": true,
     "providerRoute": "zero-cost OpenRouter",
-    "providerDeploymentVersion": 23,
+    "providerDeploymentVersion": 24,
     "validation": {
-      "unitAndGuardChecks": 1286,
-      "chromiumDesktopAndMobileCases": 234,
-      "exactHead": "0ef5f4cda8120a45e96e3877f75fb9515c7c09e1",
-      "sourceCommit": "cd163f1b37198dbae3e328bff17689debebff02f",
-      "exactHeadCiRun": 38143357812,
-      "mergedMainCiRun": 38143950123
+      "unitAndGuardChecks": 1317,
+      "chromiumDesktopAndMobileCases": 248,
+      "exactHead": "ed681989cd70a50ac19c724c1598f094ec143fe7",
+      "sourceCommit": "78d2a69a68c97da6af8fe7942ffe277596990b8a",
+      "exactHeadCiRun": 38153027152,
+      "mergedMainCiRun": 38153699564,
+      "validationScope": "exact-head checks; merged source tree is identical"
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -169,6 +171,57 @@
         "fallback": "advice",
         "fallbackLatencyMs": 1400,
         "confirmedBasketChanged": false
+      }
+    },
+    "shoppingFollowups": {
+      "sourcePr": 504,
+      "scope": "current dialogue only",
+      "exactMixedListQuantities": true,
+      "reviewedCorrections": [
+        "quantity",
+        "remove",
+        "replace"
+      ],
+      "ambiguousReferences": "ask for product name",
+      "multiPieceCount": "ask packages or pieces",
+      "typedAcknowledgement": "current reviewed draft only",
+      "priceQuestions": "Core tools",
+      "cardQuestions": "current admitted catalogue fields",
+      "transcriptStored": false,
+      "transcriptSentToProvider": false
+    },
+    "semanticValidation": {
+      "sourcePr": 504,
+      "scope": "requests independently resolved by the local parser",
+      "rejects": [
+        "wrong quantities",
+        "missing products",
+        "extra products",
+        "duplicate products"
+      ],
+      "guardedFallback": true,
+      "composition": "unknown without current card evidence",
+      "basketMutationClaims": "rejected",
+      "arbitraryProseTruth": "not established",
+      "liveProposal": {
+        "at": "2026-10-11T16:02:15.533Z",
+        "http": 200,
+        "items": [
+          {
+            "productId": "milk-25-900",
+            "quantity": 2
+          },
+          {
+            "productId": "eggs-c1-10",
+            "quantity": 1
+          },
+          {
+            "productId": "apples-1kg",
+            "quantity": 1
+          }
+        ],
+        "latencyMs": 7497,
+        "exact": true
       }
     }
   }

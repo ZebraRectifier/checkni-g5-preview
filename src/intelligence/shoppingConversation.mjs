@@ -19,19 +19,22 @@ const TERMS = Object.freeze({
 const VEGETABLES = new Set(["potatoes", "onions", "carrots", "cabbage", "tomatoes"]);
 const FRUITS = new Set(["apples", "bananas"]);
 const REFUSAL = /не\s+(?:хочу|нужн|ем|люблю|нрав[ия]\S*|подход\S*|переношу)|не надо|убери|надоел\S*|терпеть не могу|без\s+/u;
-const CLAUSE_PREDICATE = /хочу|нужн|можно|верни|добавь|не люблю|не нрав[ия]\S*|не подход\S*|не ем|убери|надоел\S*/u;
-function shoppingClauses(value) {
-  return value.split(/[;.!?\n]+|,?\s+(?:но|зато)\s+/u).filter(Boolean).flatMap(clause => {
+const CLAUSE_PREDICATE = /хочу|нужн|можно|верни|добавь|не надо|не люблю|не нрав[ия]\S*|не подход\S*|не ем|убери|надоел\S*/u;
+const EXPLICIT_COUNT = /(?:^|\s)(?:\d{1,3}|один|одна|одну|два|две|три|четыре|пять|пару)(?=$|\s)/u;
+export function shoppingClauses(value) {
+  return value.split(/[;!?\n]+|(?<!\d)\.|\.(?!\d)|,?\s+(?:но|зато|хотя)\s+/u).filter(Boolean).flatMap(clause => {
     const output = [];
     let remaining = clause;
     let start = 0;
     for (;;) {
       const comma = remaining.indexOf(",", start);
       if (comma === -1) break;
+      if (/\d/u.test(remaining[comma - 1] ?? "") && /\d/u.test(remaining[comma + 1] ?? "")) { start = comma + 1; continue; }
       const left = remaining.slice(0, comma);
       const right = remaining.slice(comma + 1);
       // Keep comma-separated lists under one final predicate; split two complete acts.
-      if (CLAUSE_PREDICATE.test(left) && CLAUSE_PREDICATE.test(right)) {
+      const repeatedTarget = shoppingTargets(right).some(target => shoppingTargets(left).includes(target));
+      if (CLAUSE_PREDICATE.test(right) && (CLAUSE_PREDICATE.test(left) || EXPLICIT_COUNT.test(left) || repeatedTarget)) {
         output.push(left); remaining = right; start = 0;
       } else start = comma + 1;
     }
@@ -119,12 +122,14 @@ export function extractShoppingDelta(text) {
     const except = clause.match(/кроме\s+(.+)/u);
     if (except) { addTargets(except[1], "allow"); clause = clause.slice(0, except.index); }
     if (REFUSAL.test(clause)) {
-      const targets = shoppingTargets(clause);
+      const without = clause.match(/без\s+(.+)/u);
+      const otherRefusal = /не\s+(?:хочу|нужн|ем|люблю|нрав[ия]\S*|подход\S*|переношу)|не надо|убери|надоел\S*|терпеть не могу/u.test(clause);
+      const targets = shoppingTargets(without && !otherRefusal ? without[1] : clause);
       delta.reject.push(...targets);
       for (const target of targets) delta.rejectScopes[target] = /никогда|вообще не ем|всегда без/u.test(clause) ? "conversation" : "goal";
       // Do not reinterpret unknown explicit refusals as a recommendation.
       if (!targets.length && !/готов|бренд|марк|самое дешев|не знаю/u.test(clause)) {
-        delta.unresolved.push(clause.trim().slice(0, 80));
+        delta.unresolved.push((without && !otherRefusal ? `без ${without[1]}` : clause).trim().slice(0, 80));
       }
     } else if (/можно|верни|передумал|снова хочу/u.test(clause)) addTargets(clause, "allow");
     else if (/хочу|добавь|еще|нужен|возьми/u.test(clause)) {

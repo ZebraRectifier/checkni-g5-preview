@@ -36,12 +36,18 @@ export function normalizeShoppingAdviceRequest(input) {
 const COMMERCIAL = /₽|[$€]|\b(?:rub|rur|usd|eur)\b|руб(?:л|лей|ля)?|\d\s*р\.(?:$|\s)|(?:^|[^а-я])цен[а-я]*|стоимост|стоит\s*(?:всего\s*|от\s*|около\s*)?\d|скидк|акци[яию]|налич[а-я]*|эконом|деш[её]в|выгод|сбереж|куп(?:и|ить).{0,40}за\s*\d|https?:\/\/|магнит|глобус|вкусвилл|пят[её]рочк|перекр[её]сток|чижик|(?:^|[^а-я])метро(?:$|[^а-я])/iu;
 const MEDICAL = /пр[ое]биотик|иммунитет|усваива|пищевар|(?:^|[^а-я])леч(?:ит|ени|ебн)|диабет|холестерин|(?:полез|польз|вред|безопас|улучш|укрепл|восстанавл).{0,40}(?:здоров|кишеч|желуд|микрофлор|бактери|культур)|(?:кишеч|желуд|микрофлор).{0,40}(?:полез|польз|вред|улучш|укрепл|восстанавл)/iu;
 const INVENTORY = /(?:у тебя|у вас)\s+(?:уже\s+)?(?:есть|имеется)|(?:продукты|товары)\s+уже\s+(?:дома|куплены|в корзине)/iu;
+const COMPOSITION = /содерж(?:ит|ат)|вход(?:ит|ят)\s+в\s+состав|(?:состав|ингредиенты)\s*[:—-]|\d+(?:[.,]\d+)?\s*(?:ккал|г\s+белк)/iu;
+const BASKET_CHANGE = /(?:добавил[а]?|убрал[а]?|удалил[а]?|заменил[а]?|поменял[а]?|изменил[а]?|собрал[а]?|оформил[а]?).{0,50}(?:корзин|заказ)|(?:^|\s)я\s+(?:уже\s+)?(?:добавила|убрала|заменила|удалила)/iu;
 export function shoppingAdviceResponseIssue(value, context = {}) {
   if (!exactKeys(value, ["kind", "message"]) || value.kind !== "advice") return "invalid_provider_advice";
   const message = typeof value.message === "string" ? value.message.trim() : "";
   if (!message || message.length > MAX_ADVICE_MESSAGE_LENGTH || /[<>\u0000-\u0008\u000b\u000c\u000e-\u001f]/u.test(message)) return "provider_advice_invalid_text";
   if (COMMERCIAL.test(message)) return "provider_advice_commercial_claim";
   if (MEDICAL.test(message)) return "provider_advice_medical_claim";
+  if (BASKET_CHANGE.test(message)) return "provider_advice_basket_claim";
+  if (message.split(/(?<=[.!?])\s+/u).some(sentence => COMPOSITION.test(sentence)
+    && !/^(?:проверь|посмотри|уточни).{0,40}содержит ли/iu.test(sentence)
+    && !/^(?:содержит ли|что содержит|какие ингредиенты)/iu.test(sentence) && !sentence.endsWith("?"))) return "provider_advice_unverified_composition";
   if (message.split(/(?<=[.!?])\s+/u).some(sentence => !sentence.endsWith("?") && INVENTORY.test(sentence)
     && !/(?:если|есть ли)\s+(?:у тебя|у вас)/iu.test(sentence))) return "provider_advice_inventory_claim";
   if (productShoppingTargets({ name: message }).some(key => context.excluded?.includes(key))) return "provider_advice_excluded_target";

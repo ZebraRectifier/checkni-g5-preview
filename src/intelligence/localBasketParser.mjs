@@ -528,7 +528,7 @@ function candidatesForSegment(segment, catalog) {
 }
 
 function parseUniqueWhitespaceList(text, catalog) {
-  if (/[;,\n]/.test(text) || /\d/.test(text)) return null;
+  if (/[;,\n]/.test(text)) return null;
 
   const tokens = normalizeText(text).split(/\s+/).filter(Boolean);
   if (tokens.length < 2 || tokens.length > 10) return null;
@@ -548,27 +548,26 @@ function parseUniqueWhitespaceList(text, catalog) {
       if (
         match.identitySpecification
         || match.invalidQuantity
-        || match.explicitQuantity
         || match.candidates.length !== 1
         || hasAmbiguousUnitQuantity(phrase, match)
       ) {
         continue;
       }
 
-      walk(end, [...parts, match.candidates[0].id]);
+      walk(end, [...parts, [match.candidates[0].id, match.quantity]]);
     }
   };
 
   walk(0, []);
 
   const unique = new Map();
-  for (const ids of solutions) unique.set(ids.join("\u0000"), ids);
+  for (const items of solutions) unique.set(JSON.stringify(items), items);
   if (unique.size !== 1) return null;
 
-  const [ids] = unique.values();
+  const [items] = unique.values();
   const totals = new Map();
-  for (const productId of ids) {
-    const quantity = (totals.get(productId) ?? 0) + 1;
+  for (const [productId, count] of items) {
+    const quantity = (totals.get(productId) ?? 0) + count;
     if (quantity > 99) return null;
     totals.set(productId, quantity);
   }
@@ -900,12 +899,14 @@ export function parseLocalBasketText(text, catalog) {
     }
 
     if (match.candidates.length === 0) {
-      if (segments.length === 1 && segmentIndex === 0) {
-        const whitespaceTotals = parseUniqueWhitespaceList(
-          segment,
-          normalizedCatalog
-        );
-        if (whitespaceTotals) return proposalFromTotals(whitespaceTotals);
+      const whitespaceTotals = parseUniqueWhitespaceList(segment, normalizedCatalog);
+      if (whitespaceTotals) {
+        for (const [id, count] of whitespaceTotals) {
+          const quantity = (totals.get(id) ?? 0) + count;
+          if (!Number.isSafeInteger(quantity) || quantity > 99) return fallback("quantity_out_of_range", { segmentIndex });
+          totals.set(id, quantity);
+        }
+        continue;
       }
       return fallback("unresolved_segment", { segmentIndex });
     }

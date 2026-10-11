@@ -8,7 +8,8 @@ export function shoppingAdviceTopic(text) {
   if (/^(?:а )?(?:почему|зачем|объясни).*(?:выбр|так|это|эти|именно|набор|корзин|подбор)/u.test(value)) return "explanation";
   if (/^(?:а )?(?:что ты помнишь|какие (?:мои )?пожелания|что мы решили)/u.test(value)) return "preferences";
   return !/₽|руб|цен[ауы]|стоим|скидк|акци|дешев|налич/u.test(value)
-    && /^(?:а )?(?:как|како[йея]|какие|(?:в )?чем|расскажи|что (?:можно|скажешь|посоветуешь))/u.test(value)
+    && (/^(?:а )?(?:как|како[йея]|какие|(?:в )?чем|расскажи|что (?:можно|скажешь|посоветуешь|приготовить|съесть|выбрать))/u.test(value)
+      || /^(?:а )?(?:подскажи|посоветуй|помоги)[,\s]+(?:как|како[йея]|какие|(?:в )?чем|что|выбрать|приготовить|съесть)(?=\s|$)/u.test(value))
     && (shoppingTargets(value).length || /продукт|покуп|корзин|готов|хран|поесть|перекус|круп|ужин|завтрак|кофе|ча[йяю]|мяс|рыб/u.test(value)) ? "advice" : null;
 }
 
@@ -48,7 +49,7 @@ export function localShoppingAdvice(input) {
   const reference = localShoppingProductReference(request);
   if (reference) return reference;
   const value = stripAssistantGreetingPrefix(request.text).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е");
-  const targets = shoppingTargets(value);
+  const targets = shoppingTargets(value).filter(key => !request.context.excluded.includes(key));
   const allowed = request.catalog.filter(product => !productShoppingTargets(product).some(key => request.context.excluded.includes(key)));
   const find = target => allowed.find(product => productShoppingTargets(product).includes(target));
   let message;
@@ -63,7 +64,11 @@ export function localShoppingAdvice(input) {
       message = `Для перекуса без плиты можно выбрать «${fruit.name}». Это лёгкий вариант; для полноценного ужина нужно подобрать что-то ещё. Какие продукты ты хочешь использовать?`;
     } else message = "Подберу вариант с минимумом готовки. Какие продукты ты хочешь использовать и есть ли микроволновка?";
   } else if (/как.{0,20}выб|како[йея].{0,20}(?:сыр|выб)/u.test(value) && targets.includes("cheese") && !request.context.excluded.includes("cheese")) {
-    message = "Для простого перекуса удобны ломтики: меньше подготовки. Цельный кусок подойдёт, если хочешь нарезать сам. Сравни состав, массу упаковки и срок хранения на этикетке. По одному названию конкретный состав не определить.";
+    message = /бутерброд/u.test(value)
+      ? "Для бутербродов удобны готовые ломтики: не придётся нарезать сыр. Если берёшь цельный кусок, выбери размер упаковки под свой расход. Состав и срок хранения проверь на этикетке."
+      : /другой вариант/u.test(value)
+        ? "Какой вариант сыра хочется: готовые ломтики или цельный кусок? Подберём формат под твой перекус; состав конкретной упаковки нужно проверить по этикетке."
+        : "Для простого перекуса удобны ломтики: меньше подготовки. Цельный кусок подойдёт, если хочешь нарезать сам. Сравни состав, массу упаковки и срок хранения на этикетке. По одному названию конкретный состав не определить.";
   } else message = "Уточни, что важнее: вкус, размер упаковки или минимум готовки? Для точного совета о конкретном товаре нужен его состав с этикетки.";
   return normalizeShoppingAdviceResponse({ kind: "advice", message }, request.context);
 }
