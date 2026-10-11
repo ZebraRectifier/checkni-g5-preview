@@ -49,8 +49,8 @@ import {
 } from "./runtime/comparisonFlow.mjs";
 import {
   HYBRID_BASKET_FLOW_STATUS,
-  createHybridBasketFlow
 } from "./runtime/hybridBasketFlow.mjs";
+import { createShoppingConversationFlow } from "./runtime/shoppingConversationFlow.mjs";
 import {
   createHybridBasketInterpreterLoader
 } from "./runtime/hybridBasketLoader.mjs";
@@ -61,6 +61,10 @@ import {
   HYBRID_DRAFT_CONFIRMATION,
   canConfirmHybridBasketDraft
 } from "./intelligence/hybridBasketConfirmation.mjs";
+import {
+  createMartenMindState,
+  updateMartenMindState
+} from "./intelligence/martenMind.mjs";
 import { requestBasketProposal } from "./ports/basketProposalPort.mjs";
 import { requestCatalogSearch } from "./ports/catalogGatewayPort.mjs";
 import {
@@ -164,11 +168,13 @@ const resolveAiCatalog = createAiCatalogResolver(
 );
 const hybridInterpreterLoader = createHybridBasketInterpreterLoader();
 const hybridBetaMetrics = createHybridBetaMetricsStore();
+let martenMindState = createMartenMindState();
 // Budget drafts ("корзина на 600 рублей") always plan against the dated
 // snapshot hints: the draft text carries its own source/region label, so
 // this map stays mode-independent, unlike the catalogue card hints below.
 const budgetPlannerHints = buildSnapshotPriceHints();
-const basketProposalFlow = createHybridBasketFlow({
+const basketProposalFlow = createShoppingConversationFlow({
+  basket,
   loader: hybridInterpreterLoader,
   localCatalog: SHOP_CATALOG,
   resolveLiveCatalog: resolveAiCatalog,
@@ -445,10 +451,11 @@ const MASCOT_COPY = Object.freeze({
   curious: "Уточним — и я добью корзину.",
   searching: "Ищу и сверяю товары…",
   checking: "Проверяю варианты…",
-  found: "Нашёл. Проверь корзину.",
-  partial: "Часть нашёл — остальное уточним.",
+  found: "Нашла. Проверь корзину.",
+  partial: "Часть нашла — остальное уточним.",
   error: "Не вышло. Корзина цела.",
-  big_saving: "О, тут уже есть экономия."
+  big_saving: "О, тут уже есть экономия.",
+  sleeping: "Я тут. Позовёшь — проснусь."
 });
 
 function setMascotState(state = "idle", copy = null) {
@@ -1667,7 +1674,7 @@ function appendProposalItems(items) {
 
   items.forEach((row) => {
     const item = document.createElement("li");
-    item.textContent = `${row.name} · ${row.unit} ×${row.quantity}`;
+    item.textContent = row.displayLabel || `${row.name} · ${row.unit} ×${row.quantity}`;
     list.append(item);
   });
 
@@ -1723,7 +1730,12 @@ function applyClarificationAction(mode) {
 
 function renderBasketProposalState() {
   const state = basketProposalFlow.getState();
-  setMascotState(mascotStateForHybrid(state.status));
+  const conversationalMascotState = state.presentation?.mascotState;
+  setMascotState(
+    typeof conversationalMascotState === "string"
+      ? conversationalMascotState
+      : mascotStateForHybrid(state.status)
+  );
   const isLoading = state.status === HYBRID_BASKET_FLOW_STATUS.LOADING;
 
   elements.proposalSubmit.disabled = false;
@@ -1806,7 +1818,13 @@ function renderBasketProposalState() {
       HYBRID_DRAFT_CONFIRMATION.ADD_FOUND_ONLY
     );
 
-    if (
+    if (triggerReason === "conversation_draft") {
+      appendProposalAction(
+        view?.primaryAction || "Применить изменения",
+        () => applyClarificationAction(HYBRID_DRAFT_CONFIRMATION.CONFIRM_ALL)
+      );
+      appendProposalAction("Уточнить запрос", focusProposalInput, { secondary: true });
+    } else if (
       reason === "partial_validation"
       && (state.validation?.acceptedRows.length ?? 0) > 0
       && canAddFoundOnly
@@ -1911,10 +1929,15 @@ function renderBasketProposalState() {
 }
 async function handleBasketProposal() {
   const submittedRevision = proposalInputRevision;
-  const pending = basketProposalFlow.run(elements.proposalInput.value);
+  const submittedText = elements.proposalInput.value;
+  const pending = basketProposalFlow.run(submittedText);
   renderBasketProposalState();
 
   const state = await pending;
+  martenMindState = updateMartenMindState(martenMindState, {
+    preferences: basketProposalFlow.getMartenPreferences(),
+    result: state.result
+  });
   renderBasketProposalState();
 
   if (state.status === HYBRID_BASKET_FLOW_STATUS.SUCCESS) {

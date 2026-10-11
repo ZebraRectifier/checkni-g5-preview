@@ -3,6 +3,7 @@ import {
   canConfirmHybridBasketDraft
 } from "./hybridBasketConfirmation.mjs";
 import { formatRubMinor } from "../components/ComparisonResult.mjs";
+import { MARTEN_STATE } from "./martenMind.mjs";
 
 const HYBRID_BASKET_RESULT = Object.freeze({
   PROPOSAL: "proposal",
@@ -46,9 +47,16 @@ function listTerms(terms) {
     .join(", ");
 }
 
+function defaultMascotState(state) {
+  if (state === HYBRID_PRESENTATION_STATE.READY) return MARTEN_STATE.FOUND;
+  if (state === HYBRID_PRESENTATION_STATE.CLARIFY) return MARTEN_STATE.CHECKING;
+  return MARTEN_STATE.ERROR;
+}
+
 function freezeView(state, details = {}) {
   return Object.freeze({
     state,
+    mascotState: details.mascotState ?? defaultMascotState(state),
     headline: details.headline ?? "",
     message: details.message ?? "",
     items: details.items ?? Object.freeze([]),
@@ -93,6 +101,7 @@ export function presentHybridBasketResult(result) {
         items,
         primaryAction: result.assistantReply.actionLabel || "Написать покупки",
         secondaryAction: null,
+        mascotState: result.assistantReply.mascotState ?? MARTEN_STATE.CURIOUS,
         focusClarification: true
       });
     }
@@ -140,6 +149,7 @@ export function presentHybridBasketResult(result) {
       const terms = listTerms(result.unresolvedTerms);
       return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
         headline: "Поняла не всё.",
+        mascotState: MARTEN_STATE.PARTIAL,
         message: terms
           ? `Проверь, правильно ли я поняла: ${terms}. Показываю только то, что смогла сопоставить с каталогом.`
           : "Показываю только то, что смогла уверенно сопоставить. Непонятную часть лучше уточнить, чтобы не положить в корзину не тот товар.",
@@ -181,6 +191,7 @@ export function presentHybridBasketResult(result) {
       return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
         headline: "Поняла часть запроса.",
         message: "Остальное нужно уточнить.",
+        mascotState: MARTEN_STATE.PARTIAL,
         items,
         primaryAction: "Уточнить",
         secondaryAction: items.length > 0 && canAddFoundOnly
@@ -213,6 +224,7 @@ export function presentHybridBasketResult(result) {
       return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
         headline: "Есть несколько похожих товаров.",
         message,
+        mascotState: MARTEN_STATE.PARTIAL,
         items,
         primaryAction: "Уточнить товар",
         secondaryAction: "Искать вручную",
@@ -273,6 +285,7 @@ export function presentHybridBasketResult(result) {
       return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
         headline: terms ? "Нашла не всё." : "Нужно уточнение.",
         message: notes.join(" "),
+        mascotState: terms ? MARTEN_STATE.PARTIAL : MARTEN_STATE.CHECKING,
         items,
         primaryAction: canAddFound ? "Добавить найденное" : "Уточнить запрос",
         secondaryAction: canAddFound ? "Уточнить запрос" : "Искать вручную",

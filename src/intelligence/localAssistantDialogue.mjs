@@ -1,9 +1,39 @@
-// Lightweight zero-token assistant dialogue for CHECKNI.
-// It handles social chatter locally and strips a leading greeting from a
-// shopping request. No model call, commercial claim or basket mutation.
+import { MARTEN_STATE } from "./martenMind.mjs";
+
+// Lightweight zero-token dialogue for CHECKNI.
+// Social language stays social; shopping language stays in the basket parser.
+// This layer never mutates the basket or authors commercial truth.
 
 const GREETING_PREFIX =
-  /^(?:привет(?:ик)?|прив|здравствуй(?:те)?|здрасте|здрасьте|здарова|здорово|доброе\s+утро|добрый\s+день|добрый\s+вечер|хай|hello|hi)(?=$|[\s,!.—-])[\s,!.—-]*/iu;
+  /^(?:привет(?:ик)?|прив|превет|здравствуй(?:те)?|здрасте|здрасьте|здарова|здорово|доброе\s+утро|добрый\s+день|добрый\s+вечер|хай|hello|hi|privet(?:ik)?|zdraste|zdarova|ghbdtn(?:br)?)(?=$|[\s,!.—-])[\s,!.—-]*/iu;
+
+const KEYBOARD_EN_TO_RU = Object.freeze({
+  q:"й", w:"ц", e:"у", r:"к", t:"е", y:"н", u:"г", i:"ш", o:"щ", p:"з",
+  "[":"х", "]":"ъ", a:"ф", s:"ы", d:"в", f:"а", g:"п", h:"р", j:"о",
+  k:"л", l:"д", ";":"ж", "'":"э", z:"я", x:"ч", c:"с", v:"м", b:"и",
+  n:"т", m:"ь", ",":"б", ".":"ю"
+});
+
+const LATIN_DIALOGUE_ALIASES = new Map([
+  ["privet", "привет"],
+  ["privetik", "приветик"],
+  ["zdraste", "здрасте"],
+  ["zdarova", "здарова"],
+  ["kak dela", "как дела"],
+  ["kak ty", "как ты"],
+  ["che kak", "че как"],
+  ["cho kak", "че как"],
+  ["chto delaesh", "что делаешь"],
+  ["chto ty umeesh", "что ты умеешь"],
+  ["spasibo", "спасибо"],
+  ["spasiba", "спасибо"],
+  ["poka", "пока"],
+  ["ok", "ок"],
+  ["okay", "окей"],
+  ["mne grustno", "мне грустно"],
+  ["ya ustal", "я устал"],
+  ["ya ustala", "я устала"]
+]);
 
 function normalize(value) {
   return String(value ?? "")
@@ -15,8 +45,39 @@ function normalize(value) {
     .trim();
 }
 
-function reply(headline, message, actionLabel = "Написать покупки") {
+function swapEnglishKeyboard(value) {
+  return String(value ?? "").replace(/[a-z\[\];',.]/gi, (char) => {
+    const lower = char.toLocaleLowerCase("en-US");
+    const replacement = KEYBOARD_EN_TO_RU[lower];
+    if (!replacement) return char;
+    return char === char.toLocaleUpperCase("en-US")
+      ? replacement.toLocaleUpperCase("ru-RU")
+      : replacement;
+  });
+}
+
+function conversationalForm(value) {
+  return normalize(value)
+    .replace(/^(?:(?:ну|короче|бля(?:ть)?|сука)\s+)+/u, "")
+    .trim();
+}
+
+function dialogueCandidates(value) {
+  const direct = conversationalForm(value);
+  const swapped = conversationalForm(swapEnglishKeyboard(value));
+  const alias = LATIN_DIALOGUE_ALIASES.get(direct) ?? null;
+
+  return [...new Set([direct, alias, swapped].filter(Boolean))];
+}
+
+function matches(candidates, pattern) {
+  return candidates.some((candidate) => pattern.test(candidate));
+}
+
+function reply(dialogueKind, mascotState, headline, message, actionLabel = "Написать покупки") {
   return Object.freeze({
+    dialogueKind,
+    mascotState,
     headline,
     message,
     actionLabel
@@ -30,56 +91,152 @@ export function stripAssistantGreetingPrefix(text) {
 }
 
 export function resolveLocalAssistantDialogue(text) {
-  const normalized = normalize(text);
-  if (!normalized) return null;
+  const raw = String(text ?? "").normalize("NFKC").trim();
+  if (!normalize(raw)) return null;
 
-  const withoutGreeting = normalize(
-    String(text ?? "").normalize("NFKC").replace(GREETING_PREFIX, "")
-  );
+  const stripped = raw.replace(GREETING_PREFIX, "").trim();
+  const utteranceCandidates = dialogueCandidates(stripped || raw);
 
   if (
-    /^(?:что|че|чё)\s+(?:ты\s+)?(?:умеешь|можешь)(?:\s+делать)?$/u.test(withoutGreeting || normalized)
-    || /^(?:помоги|помощь|help|как\s+(?:тут|этим|тобой)\s+пользоваться)$/u.test(withoutGreeting || normalized)
+    matches(
+      utteranceCandidates,
+      /^(?:что|че|чё)\s+(?:ты\s+)?(?:умеешь|можешь)(?:\s+делать)?$/u
+    )
+    || matches(
+      utteranceCandidates,
+      /^(?:помоги|помощь|help|как\s+(?:тут|этим|тобой)\s+пользоваться)$/u
+    )
   ) {
     return reply(
+      "capability",
+      MARTEN_STATE.CURIOUS,
       "Помогу с корзиной.",
-      "Напиши продукты обычными словами — списком, с количеством, с опечатками или как сказал бы вслух. Я соберу черновик. Цены, наличие и магазин не выдумываю: это CHECKNI проверяет отдельно."
+      "Пиши покупки обычными словами — списком, с количеством, опечатками или разговорно. Соберу черновик и спрошу, если что-то неоднозначно. Цены, наличие и победителя не выдумываю: это CHECKNI проверяет отдельно."
     );
   }
 
-  if (/^(?:кто\s+ты|ты\s+кто|как\s+тебя\s+зовут)$/u.test(withoutGreeting || normalized)) {
+  if (matches(utteranceCandidates, /^(?:кто\s+ты|ты\s+кто|как\s+тебя\s+зовут)$/u)) {
     return reply(
-      "Я помощник CHECKNI.",
-      "Моя работа — понять, что ты хочешь купить, собрать аккуратный черновик корзины и спросить, если что-то неоднозначно."
+      "identity",
+      MARTEN_STATE.IDLE,
+      "Я куница CHECKNI.",
+      "Помогаю понять список покупок и собрать черновик корзины. Если не уверена — уточню, а не выберу товар за тебя."
     );
   }
 
-  if (/^(?:как\s+дела|как\s+ты|как\s+жизнь)$/u.test(withoutGreeting || normalized)) {
+  if (
+    matches(
+      utteranceCandidates,
+      /^(?:(?:че|что|чё)\s+как(?:\s+дела)?|как\s+дела|как\s+ты|как\s+жизнь|что\s+делаешь|чем\s+занимаешься)$/u
+    )
+  ) {
     return reply(
-      "Нормально 🙂",
-      "Я на месте и готов разбирать корзину. Пиши хоть коротко, хоть разговорно."
+      "check_in",
+      MARTEN_STATE.CURIOUS,
+      "Да вот, на посту 🙂",
+      "Разбираю списки и слежу, чтобы лишнего не додумывать. А у тебя что нового?"
     );
   }
 
-  if (/^(?:спасибо|спс|благодарю|пасиб|пасиба|мерси)$/u.test(withoutGreeting || normalized)) {
+  if (
+    matches(
+      utteranceCandidates,
+      /^(?:мне\s+(?:грустно|плохо|тяжело|одиноко)|я\s+(?:устал|устала|задолбался|задолбалась)|все\s+бесит|ничего\s+не\s+получается)$/u
+    )
+  ) {
     return reply(
+      "support",
+      MARTEN_STATE.IDLE,
+      "Похоже, день тяжёлый.",
+      "Можешь рассказать, что случилось. Покупки можно вообще не трогать.",
+      "Написать"
+    );
+  }
+
+  if (
+    matches(
+      utteranceCandidates,
+      /^(?:ау|алло|ты\s+(?:тут|здесь)|есть\s+кто)$/u
+    )
+  ) {
+    return reply(
+      "attention",
+      MARTEN_STATE.CURIOUS,
+      "Я тут.",
+      "Не пропала. Продолжай.",
+      "Написать"
+    );
+  }
+
+  if (
+    matches(
+      utteranceCandidates,
+      /^(?:лаги?|завис(?:ла|ло)?|ничего\s+не\s+работает|ты\s+(?:тупишь|тупая|сломал(?:ся|ась)|не\s+работаешь|не\s+понимаешь)|все\s+сломалось|бесит)$/u
+    )
+  ) {
+    return reply(
+      "frustration",
+      MARTEN_STATE.ERROR,
+      "Да, тут что-то пошло не так.",
+      "Опиши, где именно сломалось — попробую понять. В товар эту фразу не превращу.",
+      "Описать проблему"
+    );
+  }
+
+  if (matches(utteranceCandidates, /^(?:расскажи\s+(?:анекдот|шутку)|пошути)$/u)) {
+    return reply(
+      "joke",
+      MARTEN_STATE.CURIOUS,
+      "Ладно, держи 🙂",
+      "Куница зашла в магазин за одной скидкой. Вышла с калькулятором.",
+      "Ещё поговорить"
+    );
+  }
+
+  if (matches(utteranceCandidates, /^(?:спасибо|спс|благодарю|пасиб|пасиба|мерси)$/u)) {
+    return reply(
+      "thanks",
+      MARTEN_STATE.IDLE,
       "Пожалуйста 🙂",
-      "Кидай следующий список — разберу."
+      "Я рядом. Можем продолжить разговор или собрать покупки."
     );
   }
 
-  if (/^(?:пока|до\s+встречи|увидимся|бывай|давай\s+пока)$/u.test(withoutGreeting || normalized)) {
+  if (matches(utteranceCandidates, /^(?:пока|до\s+встречи|увидимся|бывай|давай\s+пока)$/u)) {
     return reply(
+      "goodbye",
+      MARTEN_STATE.SLEEPING,
       "Давай 👋",
-      "Корзина никуда не денется. Вернёшься — продолжим.",
+      "Вернёшься — продолжим.",
       "Продолжить"
     );
   }
 
-  if (GREETING_PREFIX.test(String(text ?? "").normalize("NFKC").trim()) && withoutGreeting === "") {
+  if (
+    matches(
+      utteranceCandidates,
+      /^(?:ага|угу|ок|окей|ладно|понял|поняла|ясно|круто|класс|ахах|хаха|лол)$/u
+    )
+  ) {
     return reply(
+      "acknowledgement",
+      MARTEN_STATE.IDLE,
+      "Угу 🙂",
+      "Я с тобой. Продолжай."
+    );
+  }
+
+  const greetingOnly = dialogueCandidates(raw).some((candidate) => (
+    /^(?:привет(?:ик)?|прив|превет|здравствуй(?:те)?|здрасте|здрасьте|здарова|здорово|доброе\s+утро|добрый\s+день|добрый\s+вечер|хай|hello|hi)$/u
+      .test(candidate)
+  ));
+
+  if (greetingOnly || (GREETING_PREFIX.test(raw) && normalize(stripped) === "")) {
+    return reply(
+      "greeting",
+      MARTEN_STATE.IDLE,
       "Привет 👋",
-      "Я здесь. Напиши, что купить — например «молоко, хлеб и 2 пачки гречки» или просто как сказал бы человеку."
+      "Я здесь. Можешь просто поговорить или написать, что купить."
     );
   }
 

@@ -272,6 +272,27 @@ export function createBasketStore(options = {}) {
     return () => listeners.delete(listener);
   };
 
+  // Compare-and-swap a reviewed full basket. All rows validate before any write.
+  // Includes quantities and metadata in the lease: manual edits invalidate it.
+  const replaceReviewedBasket = (expected, replacement) => {
+    const signature = rows => JSON.stringify(rows.map(row => ({ id: row.id, name: row.name, unit: row.unit, quantity: row.quantity })).sort((a, b) => a.id.localeCompare(b.id)));
+    if (!Array.isArray(expected) || !Array.isArray(replacement) || expected.some(row => !normalizeStoredItem(row))) {
+      return { applied: false, reason: "invalid_basket", snapshot: getSnapshot() };
+    }
+    if (signature(expected) !== signature(items)) {
+      return { applied: false, reason: "stale_basket", snapshot: getSnapshot() };
+    }
+    const normalized = replacement.map(normalizeStoredItem);
+    if (normalized.some(row => !row) || new Set(normalized.map(row => row.id)).size !== normalized.length) {
+      return { applied: false, reason: "invalid_basket", snapshot: getSnapshot() };
+    }
+    if (signature(normalized) !== signature(items)) {
+      items = normalized;
+      notify();
+    }
+    return { applied: true, snapshot: getSnapshot(), rejectedRows: [] };
+  };
+
   return {
     getSnapshot,
     add,
@@ -281,6 +302,7 @@ export function createBasketStore(options = {}) {
     remove,
     clear,
     mergeValidatedBasket,
+    replaceReviewedBasket,
     subscribe
   };
 }

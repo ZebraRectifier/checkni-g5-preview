@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "0eeedcb51518b87ef1e305756d7560cd7b807f35",
+  "sourceCommit": "a84df166d2c101005b5a4b4d20b30bc897258061",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -70,5 +70,11 @@
     "fullCatalogCategories": 51,
     "availability": "unknown",
     "addressSelection": "user-visible"
+  },
+  "conversationMemory": {
+    "sourcePr": 415,
+    "scope": "session-only",
+    "rawTranscriptStored": false,
+    "preferenceDraftConfirmation": true
   }
 }
