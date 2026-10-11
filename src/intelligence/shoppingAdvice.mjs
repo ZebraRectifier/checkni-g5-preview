@@ -1,5 +1,6 @@
-import { shoppingTargetLabel, shoppingTargets } from "./shoppingConversation.mjs";
+import { shoppingTargetLabel, shoppingTargets, productShoppingTargets } from "./shoppingConversation.mjs";
 import { stripAssistantGreetingPrefix } from "./localAssistantDialogue.mjs";
+import { normalizeShoppingAdviceRequest, normalizeShoppingAdviceResponse } from "./shoppingAdviceContract.mjs";
 
 export function shoppingAdviceTopic(text) {
   const value = stripAssistantGreetingPrefix(String(text)).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е").trim();
@@ -20,6 +21,34 @@ export function shoppingAdviceInput(text, memory, catalog, plan) {
     cookingEffort: memory.facts.cookingEffort?.origin === "explicit" ? memory.facts.cookingEffort.value : null,
     excluded: Object.keys(memory.rejected), wishes: Object.keys(memory.wishes), selectedProductIds: selected.filter(id => hints.some(row => row.id === id))
   } };
+}
+
+// A small read-only recovery for everyday questions. Catalog hints are possible
+// choices, never proof of groceries at home or of a store's stock/composition.
+export function localShoppingAdvice(input) {
+  const request = normalizeShoppingAdviceRequest(input);
+  if (!request || shoppingAdviceTopic(request.text) !== "advice") return null;
+  const value = stripAssistantGreetingPrefix(request.text).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е");
+  const targets = shoppingTargets(value);
+  const allowed = request.catalog.filter(product => !productShoppingTargets(product).some(key => request.context.excluded.includes(key)));
+  const find = target => allowed.find(product => productShoppingTargets(product).includes(target));
+  let message;
+  if (/готов|поесть|перекус|ужин|завтрак/u.test(value) && !targets.length) {
+    const bread = find("bread"), cheese = find("cheese");
+    const fruit = find("apples") ?? find("bananas");
+    if (bread && cheese) {
+      message = `Можно сделать простой перекус: «${bread.name}» и «${cheese.name}». Нарежь хлеб и положи сверху сыр — плита не нужна.`;
+      if (fruit && request.context.wishes.includes("fruit")) message += ` Рядом можно подать «${fruit.name}».`;
+      message += " Что из этого уже дома?";
+    } else if (fruit) {
+      message = `Для перекуса без плиты можно выбрать «${fruit.name}». Это лёгкий вариант; для полноценного ужина нужно подобрать что-то ещё. Какие продукты ты хочешь использовать?`;
+    } else message = "Подберу вариант с минимумом готовки. Какие продукты ты хочешь использовать и есть ли микроволновка?";
+  } else if (/как.{0,20}выб|како[йея].{0,20}(?:сыр|выб)/u.test(value) && targets.includes("cheese") && !request.context.excluded.includes("cheese")) {
+    message = "Для простого перекуса удобны ломтики: меньше подготовки. Цельный кусок подойдёт, если хочешь нарезать сам. Сравни состав, массу упаковки и срок хранения на этикетке. По одному названию конкретный состав не определить.";
+  } else if (targets.includes("kefir") && targets.includes("milk") && !request.context.excluded.some(key => key === "kefir" || key === "milk")) {
+    message = "Кефир обычно кислее молока и гуще по текстуре. Для нейтрального вкуса чаще выбирают молоко, для кисломолочного — кефир. У конкретных упаковок сравни состав и жирность на этикетке. Для чего выбираешь: напиток или готовка?";
+  } else message = "Уточни, что важнее: вкус, размер упаковки или минимум готовки? Для точного совета о конкретном товаре нужен его состав с этикетки.";
+  return normalizeShoppingAdviceResponse({ kind: "advice", message }, request.context);
 }
 
 export function localShoppingExplanation(topic, memory, catalog, plan) {

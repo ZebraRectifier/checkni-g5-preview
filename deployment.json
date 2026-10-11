@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "e4b4b14cb7f627b091f6ea5453b5e4a25f20d255",
+  "sourceCommit": "8426edc7af8c3d2e2699ba0a019ed1c3786d7385",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -81,7 +81,8 @@
     "sourcePrs": [
       415,
       436,
-      496
+      496,
+      497
     ],
     "conversationMemory": "session-only",
     "readOnlyProductAdvice": true,
@@ -90,8 +91,18 @@
     "providerRoute": "zero-cost OpenRouter",
     "providerDeploymentVersion": 22,
     "validation": {
-      "unitAndGuardChecks": 1251,
-      "chromiumDesktopAndMobileCases": 210
+      "unitAndGuardChecks": 1254,
+      "chromiumDesktopAndMobileCases": 212
+    },
+    "localAdviceRecovery": {
+      "readOnly": true,
+      "scope": [
+        "quick meals",
+        "cheese selection",
+        "kefir and milk"
+      ],
+      "exclusionsEnforced": true,
+      "ingredientsAtHome": "ask, never infer"
     }
   }
 }

@@ -3,7 +3,7 @@ import { createShoppingConversation, extractShoppingDelta, updateShoppingConvers
 import { planConversationBasket, presentConversationBasket, knownPreparation } from "../intelligence/conversationBasket.mjs";
 import { validateBasketProposal } from "../core/ai-basket-proposal.mjs";
 import { parseLocalBasketText } from "../intelligence/localBasketParser.mjs";
-import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation } from "../intelligence/shoppingAdvice.mjs";
+import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation, localShoppingAdvice } from "../intelligence/shoppingAdvice.mjs";
 import { normalizeShoppingAdviceResponse } from "../intelligence/shoppingAdviceContract.mjs";
 
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -160,8 +160,9 @@ export function createShoppingConversationFlow(options) {
       catch { answer = null; }
       if (token !== epoch) return state;
       const reply = normalizeShoppingAdviceResponse(answer, input.context);
-      state = messageState(reply ? "Давай разберёмся." : "Сейчас могу опереться на твои условия.",
-        reply?.message ?? `Автоматический совет сейчас недоступен. ${explanation}`);
+      const recovery = reply ? null : localShoppingAdvice(input);
+      state = messageState(reply ? "Давай разберёмся." : recovery ? "Подскажу простой вариант." : "Сейчас могу опереться на твои условия.",
+        reply?.message ?? `Автоматический совет сейчас недоступен. ${recovery?.message ?? explanation}`);
       return state;
     }
     // Every new substantive message supersedes the previous reviewed candidate,
