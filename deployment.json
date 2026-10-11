@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "608d2136ba4ac8b8be82249c367f1ae62f078e4a",
+  "sourceCommit": "a1cb2c6404bdef88084d09ac480342895a4968fc",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -93,7 +93,8 @@
       496,
       497,
       499,
-      501
+      501,
+      502
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -103,11 +104,11 @@
     "providerDeploymentVersion": 22,
     "validation": {
       "unitAndGuardChecks": 1281,
-      "chromiumDesktopAndMobileCases": 220,
-      "exactHead": "ce9f77819c69d38942e3d888301fa925e5f4853e",
-      "sourceCommit": "608d2136ba4ac8b8be82249c367f1ae62f078e4a",
-      "exactHeadCiRun": 38130661681,
-      "mergedMainCiRun": 38132391839
+      "chromiumDesktopAndMobileCases": 234,
+      "exactHead": "6a69190290e92b98e8686c96eaf4ddd8f2b00e85",
+      "sourceCommit": "a1cb2c6404bdef88084d09ac480342895a4968fc",
+      "exactHeadCiRun": 38139887679,
+      "mergedMainCiRun": 38140432933
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -139,6 +140,17 @@
       "nutrition": "unknown",
       "pricesAndAvailabilityExcluded": true,
       "missingBrand": "unknown"
+    },
+    "shoppingDialogue": {
+      "sourcePr": 502,
+      "scope": "current tab until reload",
+      "maxPreviousTurns": 8,
+      "archivedReplies": "read-only text; no basket confirmation actions",
+      "transcriptStored": false,
+      "transcriptSentToProvider": false,
+      "clearPreservesBasketAndPreferences": true,
+      "staleRepliesDiscarded": true,
+      "quotesExplicitBudget": true
     }
   }
 }

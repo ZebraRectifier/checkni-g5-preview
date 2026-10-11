@@ -1,6 +1,7 @@
 import { shoppingTargetLabel, shoppingTargets, productShoppingTargets } from "./shoppingConversation.mjs";
 import { stripAssistantGreetingPrefix } from "./localAssistantDialogue.mjs";
 import { normalizeShoppingAdviceRequest, normalizeShoppingAdviceResponse } from "./shoppingAdviceContract.mjs";
+import { formatRubMinor } from "../components/ComparisonResult.mjs";
 
 export function shoppingAdviceTopic(text) {
   const value = stripAssistantGreetingPrefix(String(text)).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е").trim();
@@ -74,7 +75,8 @@ export function localShoppingExplanation(topic, memory, catalog, plan) {
     ? "ты просил минимум готовки" : "предположила, что сейчас удобнее минимум готовки; поправь, если ошиблась");
   if (Object.keys(memory.wishes).length) reasons.push(`учла пожелания: ${Object.keys(memory.wishes).map(shoppingTargetLabel).join(", ")}`);
   if (Object.keys(memory.rejected).length) reasons.push(`исключила: ${Object.keys(memory.rejected).map(shoppingTargetLabel).join(", ")}`);
-  if (memory.facts.budgetMinor) reasons.push("сохраняю заданный бюджет; текущую сумму ещё нужно проверить");
+  const budget = formatRubMinor(memory.facts.budgetMinor?.value);
+  if (budget) reasons.push(`твой бюджет — ${budget}; текущую сумму ещё нужно проверить`);
   if (memory.facts.brandStyle?.value === "specific") reasons.push("марки показываю только там, где они указаны в данных товара");
   if (memory.facts.unresolvedConstraints) reasons.push(`ещё нужно уточнить условие: ${memory.facts.unresolvedConstraints.value.join("; ")}`);
   if (topic === "preferences") return reasons.length ? `Помню твои условия: ${reasons.join("; ")}. Можно изменить любое из них или сказать «сбрось предпочтения».` : "Пока предпочтений нет. Скажи бюджет, что любишь есть и сколько готовки тебе подходит.";

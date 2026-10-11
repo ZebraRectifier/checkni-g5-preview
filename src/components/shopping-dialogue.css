@@ -1,0 +1,88 @@
+.shopping-dialogue {
+  min-width: 0;
+  margin-bottom: 16px;
+  color: #f8f8fc;
+  text-align: left;
+}
+
+.shopping-dialogue[hidden],
+.shopping-dialogue [hidden] { display: none; }
+
+.shopping-dialogue-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.shopping-dialogue-header button {
+  min-height: 44px;
+  margin: 0;
+  color: #d5c3ff;
+  font-size: 13px;
+}
+
+.shopping-dialogue-history {
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  list-style: none;
+  padding: 4px 4px 4px 0;
+  margin: 0 0 12px;
+  border-bottom: 1px solid #353144;
+}
+
+.shopping-dialogue-history > li { margin: 0 0 16px; }
+
+.shopping-dialogue-user,
+.shopping-dialogue-answer,
+.shopping-dialogue .proposal-status {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.shopping-dialogue-user {
+  width: fit-content;
+  margin: 0 0 10px auto;
+  background: #39245a;
+  color: #f8f8fc;
+}
+
+.shopping-dialogue-answer,
+.shopping-dialogue .proposal-status {
+  margin: 0 0 10px;
+  background: #1c2030;
+  color: #e2e5ef;
+}
+
+.shopping-dialogue-answer p { margin: 6px 0 0; }
+
+.shopping-dialogue-speaker {
+  display: block;
+  margin: 0 0 6px;
+  color: #cab4f3;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.shopping-dialogue-note {
+  margin: 8px 0 12px;
+  color: #aeb5c7;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.shopping-dialogue :focus-visible { outline: 2px solid #bd95ff; outline-offset: 3px; }
+
+@media (max-width: 480px) {
+  .shopping-dialogue-history { max-height: 220px; }
+  .shopping-dialogue-user { max-width: 95%; }
+}

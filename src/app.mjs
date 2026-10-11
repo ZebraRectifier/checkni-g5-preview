@@ -51,6 +51,7 @@ import {
   HYBRID_BASKET_FLOW_STATUS,
 } from "./runtime/hybridBasketFlow.mjs";
 import { createShoppingConversationFlow } from "./runtime/shoppingConversationFlow.mjs";
+import { createShoppingDialogue } from "./components/ShoppingDialogue.mjs";
 import {
   createHybridBasketInterpreterLoader
 } from "./runtime/hybridBasketLoader.mjs";
@@ -1754,6 +1755,8 @@ function focusProposalInput() {
 }
 
 function applyClarificationAction(mode) {
+  shoppingDialogue.begin(mode === HYBRID_DRAFT_CONFIRMATION.ADD_FOUND_ONLY
+    ? "Добавить только найденное" : "Применить изменения");
   const state = basketProposalFlow.confirm(mode);
 
   if (state.status === HYBRID_BASKET_FLOW_STATUS.SUCCESS) {
@@ -1777,7 +1780,25 @@ function applyClarificationAction(mode) {
   }
 }
 
+const shoppingDialogue = createShoppingDialogue({
+  form: elements.proposalForm,
+  input: elements.proposalInput,
+  output: elements.proposalStatus,
+  fallback: elements.proposalFallback,
+  onClear: () => {
+    basketProposalFlow.invalidate();
+    elements.proposalInput.value = "";
+    proposalInputRevision += 1;
+    renderBasketProposalState();
+  }
+});
+
 function renderBasketProposalState() {
+  renderBasketProposalOutput();
+  shoppingDialogue.sync(basketProposalFlow.getState());
+}
+
+function renderBasketProposalOutput() {
   const state = basketProposalFlow.getState();
   const conversationalMascotState = state.presentation?.mascotState;
   setMascotState(
@@ -1791,7 +1812,7 @@ function renderBasketProposalState() {
   elements.proposalSubmit.disabled = false;
   elements.proposalSubmit.textContent = isLoading
     ? "Обновить запрос"
-    : "Собрать корзину";
+    : "Отправить";
   elements.proposalStatus.replaceChildren();
   elements.proposalFallback.hidden = true;
 
@@ -1946,7 +1967,7 @@ function renderBasketProposalState() {
   }
 
   if (state.inputReason === "empty") {
-    message.textContent = "Введите продукты одной фразой.";
+    message.textContent = "Напиши покупки или вопрос о товарах.";
   } else if (state.inputReason === "too_long") {
     message.textContent =
       "Список слишком длинный. Сократите его и попробуйте снова.";
@@ -1980,6 +2001,7 @@ function renderBasketProposalState() {
 async function handleBasketProposal() {
   const submittedRevision = proposalInputRevision;
   const submittedText = elements.proposalInput.value;
+  shoppingDialogue.begin(submittedText);
   const pending = basketProposalFlow.run(submittedText);
   renderBasketProposalState();
 
@@ -1997,6 +2019,9 @@ async function handleBasketProposal() {
     showToast("Корзина обновлена");
   } else if (state.status === HYBRID_BASKET_FLOW_STATUS.PARTIAL) {
     showToast("Добавили только подтверждённые позиции");
+  } else if (state.result?.triggerReason === "smalltalk"
+    && proposalInputRevision === submittedRevision) {
+    elements.proposalInput.value = "";
   }
 }
 
