@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "4fa92db6f28982f8d676dfc745b47124f97c6476",
+  "sourceCommit": "608d2136ba4ac8b8be82249c367f1ae62f078e4a",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -73,9 +73,18 @@
   },
   "conversationMemory": {
     "sourcePr": 415,
-    "scope": "session-only",
+    "scope": "browser-local explicit preferences; session-only working context",
     "rawTranscriptStored": false,
-    "preferenceDraftConfirmation": true
+    "preferenceDraftConfirmation": true,
+    "persistenceSourcePr": 501,
+    "persistentPreferences": {
+      "storage": "localStorage",
+      "version": 1,
+      "maxBytes": 8192,
+      "explicitOnly": true,
+      "resetPreservesConfirmedBasket": true,
+      "pendingDraftRestored": false
+    }
   },
   "assistant": {
     "sourcePrs": [
@@ -83,17 +92,22 @@
       436,
       496,
       497,
-      499
+      499,
+      501
     ],
-    "conversationMemory": "session-only",
+    "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
     "commercialAnswers": "Core and selected-store observed catalog",
     "basketChangesRequireConfirmation": true,
     "providerRoute": "zero-cost OpenRouter",
     "providerDeploymentVersion": 22,
     "validation": {
-      "unitAndGuardChecks": 1270,
-      "chromiumDesktopAndMobileCases": 214
+      "unitAndGuardChecks": 1281,
+      "chromiumDesktopAndMobileCases": 220,
+      "exactHead": "ce9f77819c69d38942e3d888301fa925e5f4853e",
+      "sourceCommit": "608d2136ba4ac8b8be82249c367f1ae62f078e4a",
+      "exactHeadCiRun": 38130661681,
+      "mergedMainCiRun": 38132391839
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -112,6 +126,19 @@
       "scope": "general facts, no specific package composition",
       "source": "Tetra Pak Dairy Processing Handbook",
       "modelRequired": false
+    },
+    "currentCardFacts": {
+      "sourcePr": 501,
+      "fields": [
+        "name",
+        "unit"
+      ],
+      "scope": "currently displayed admitted catalog",
+      "modelRequired": false,
+      "composition": "unknown",
+      "nutrition": "unknown",
+      "pricesAndAvailabilityExcluded": true,
+      "missingBrand": "unknown"
     }
   }
 }

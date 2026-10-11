@@ -1,4 +1,5 @@
-// Bounded, session-only shopping memory. No transcript, identity or commerce facts.
+// Bounded shopping memory. Storage projects explicit preferences only;
+// transcripts, identity, commercial facts and inferred hypotheses stay out.
 export const CONVERSATION_LIMITS = Object.freeze({ facts: 16, rejected: 32, wishes: 16, exceptions: 8, bytes: 8192 });
 export const normalizeShoppingText = value => String(value ?? "").normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е").replace(/\s+/g, " ").trim();
 export const shoppingTargetLabel = key => ({ chicken_mince: "куриный фарш", chicken: "курица", nuggets: "наггетсы", chebureki: "чебуреки", eggs: "яйца", rice: "рис", pasta: "макароны", oatmeal: "овсянка", potatoes: "картофель", onions: "лук", carrots: "морковь", cabbage: "капуста", milk: "молоко", kefir: "кефир", vegetables: "овощи", fruit: "фрукты", tomatoes: "томаты", bread: "хлеб", cheese: "сыр", apples: "яблоки", bananas: "бананы", pelmeni: "пельмени", beef_mince: "говяжий фарш" }[key] ?? key);

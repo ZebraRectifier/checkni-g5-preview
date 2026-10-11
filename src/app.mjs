@@ -209,6 +209,9 @@ const basketProposalFlow = createShoppingConversationFlow({
   basket,
   loader: hybridInterpreterLoader,
   localCatalog: SHOP_CATALOG,
+  resolveProductFactsCatalog: () => publicRetailCatalogMode
+    ? catalogSearchState.status === "live" ? catalogSearchState.products : []
+    : SHOP_CATALOG,
   resolveLiveCatalog: resolveAiCatalog,
   requestAiProposal: requestBasketProposal,
   requestShoppingAdvice,
