@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "a1cb2c6404bdef88084d09ac480342895a4968fc",
+  "sourceCommit": "cd163f1b37198dbae3e328bff17689debebff02f",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -94,21 +94,22 @@
       497,
       499,
       501,
-      502
+      502,
+      503
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
     "commercialAnswers": "Core and selected-store observed catalog",
     "basketChangesRequireConfirmation": true,
     "providerRoute": "zero-cost OpenRouter",
-    "providerDeploymentVersion": 22,
+    "providerDeploymentVersion": 23,
     "validation": {
-      "unitAndGuardChecks": 1281,
+      "unitAndGuardChecks": 1286,
       "chromiumDesktopAndMobileCases": 234,
-      "exactHead": "6a69190290e92b98e8686c96eaf4ddd8f2b00e85",
-      "sourceCommit": "a1cb2c6404bdef88084d09ac480342895a4968fc",
-      "exactHeadCiRun": 38139887679,
-      "mergedMainCiRun": 38140432933
+      "exactHead": "0ef5f4cda8120a45e96e3877f75fb9515c7c09e1",
+      "sourceCommit": "cd163f1b37198dbae3e328bff17689debebff02f",
+      "exactHeadCiRun": 38143357812,
+      "mergedMainCiRun": 38143950123
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -151,6 +152,24 @@
       "clearPreservesBasketAndPreferences": true,
       "staleRepliesDiscarded": true,
       "quotesExplicitBudget": true
+    },
+    "providerRecovery": {
+      "sourcePr": 503,
+      "primaryTimeoutMs": 3000,
+      "fallbackTimeoutMs": 9000,
+      "maxRemoteRoutes": 2,
+      "attemptsPerRoute": 1,
+      "defaultRoutesShareProvider": true,
+      "independentProviderActive": false,
+      "responseBodyAbort": "typed timeout",
+      "liveCheck": {
+        "at": "2026-10-11T13:47:12Z",
+        "primary": "provider_timeout",
+        "primaryLatencyMs": 3003,
+        "fallback": "advice",
+        "fallbackLatencyMs": 1400,
+        "confirmedBasketChanged": false
+      }
     }
   }
 }
