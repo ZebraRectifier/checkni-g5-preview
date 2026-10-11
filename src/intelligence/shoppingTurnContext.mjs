@@ -2,17 +2,19 @@ import { parseLocalBasketText } from "./localBasketParser.mjs";
 import { planLocalSegments } from "./localIntentPlanner.mjs";
 import { extractShoppingDelta, normalizeShoppingText, shoppingClauses, shoppingTargets, shoppingTargetLabel } from "./shoppingConversation.mjs";
 import { stripAssistantGreetingPrefix } from "./localAssistantDialogue.mjs";
+import { shoppingReferenceSubject } from "./shoppingProductReference.mjs";
 
 // Only the current subject and admitted draft identities are retained in the
 // tab. No transcript, retailer facts or model-generated identities are stored.
 export function shoppingAdviceFocus(text) {
   const value = normalizeShoppingText(stripAssistantGreetingPrefix(text));
   const targets = shoppingTargets(value).slice(0, 2);
+  const subject = shoppingReferenceSubject(value);
   const topic = /состав|бренд|марк|вес|объем|упаковк/u.test(value) ? "facts"
     : /отлич|разниц|сравн/u.test(value) ? "comparison"
-    : /выб|како[йея]|какие/u.test(value) && targets.length ? "selection"
+    : /выб|како[йея]|какие/u.test(value) && (targets.length || subject) ? "selection"
     : /готов|поесть|перекус|ужин|завтрак|обед/u.test(value) ? "meal" : "general";
-  return Object.freeze({ topic, targets: Object.freeze(targets) });
+  return Object.freeze({ topic, targets: Object.freeze(targets), subject });
 }
 
 export function resolveShoppingAdviceFollowup(text, focus) {
@@ -23,17 +25,20 @@ export function resolveShoppingAdviceFollowup(text, focus) {
   const difference = /^(?:а\s+)?(?:чем (?:они|эти) отличаются|в чем (?:их )?разница)$/u.test(value);
   const storage = /^(?:а\s+)?(?:(?:как|сколько) (?:его |ее |их |это )?хранить(?: после (?:открытия|вскрытия))?|после (?:открытия|вскрытия))$/u.test(value);
   const exclusion = /^без\s+.{1,80}$/u.test(value);
-  if (!purpose && !another && !attribute && !difference && !storage && !exclusion) return null;
+  const mincePurpose = focus?.topic === "selection" && focus.subject === "фарш" && /^(?:котлеты|соус|начинка)$/u.test(value);
+  const heating = focus?.topic === "selection" && focus.subject === "готовую еду" && /^(?:без (?:разогрева|готовки)|(?:только )?разогреть|(?:в )?микроволновк[ае])$/u.test(value);
+  if (!purpose && !another && !attribute && !difference && !storage && !exclusion && !mincePurpose && !heating) return null;
   if (!focus) return purpose || exclusion ? null : { kind: "clarification", message: "О каком продукте или блюде речь?" };
-  const names = focus.targets.map(shoppingTargetLabel).join(" и ");
-  if (storage && focus.targets.length) return { kind: "question", text: `Как хранить ${names}${/после/u.test(value) ? " после вскрытия упаковки" : ""}?` };
-  if (attribute && focus.targets.length === 1) {
+  const names = focus.targets.map(shoppingTargetLabel).join(" и ") || focus.subject || "";
+  if (storage && names) return { kind: "question", text: `Как хранить ${names}${/после/u.test(value) ? " после вскрытия упаковки" : ""}?` };
+  if (attribute && (focus.targets.length === 1 || !focus.targets.length && focus.subject)) {
     const field = /состав/u.test(value) ? "состав" : /бренд|марк/u.test(value) ? "марка" : "вес";
     return { kind: "question", text: `Какой ${field} у товара: ${names}?` };
   }
   if (difference && focus.targets.length === 2) return { kind: "question", text: `Чем отличаются ${names}?` };
-  if ((purpose || another) && focus.targets.length === 1 && focus.topic === "selection") {
-    return { kind: "question", text: `Как выбрать ${names}? ${another ? "Хочется другой вариант." : value + "."}` };
+  if ((purpose || another || mincePurpose || heating) && (focus.targets.length === 1 || focus.subject) && focus.topic === "selection") {
+    const answer = mincePurpose ? { котлеты: "для котлет", соус: "для соуса", начинка: "для начинки" }[value] : value;
+    return { kind: "question", text: `Как выбрать ${names}? ${another ? "Хочется другой вариант." : answer + "."}` };
   }
   if ((purpose || exclusion || another) && focus.topic === "meal") {
     return { kind: "question", text: `Что можно быстро приготовить${names ? ` из продуктов: ${names}` : ""}? ${value}.` };

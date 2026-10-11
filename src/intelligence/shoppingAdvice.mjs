@@ -11,7 +11,7 @@ export function shoppingAdviceTopic(text) {
   return !/₽|руб|цен[ауы]|стоим|скидк|акци|дешев|налич/u.test(value)
     && (/^(?:а )?(?:как|како[йея]|какие|(?:в )?чем|расскажи|сколько.{0,30}хран|можно ли хран|что (?:можно|скажешь|посоветуешь|приготовить|съесть|выбрать))/u.test(value)
       || /^(?:а )?(?:подскажи|посоветуй|помоги)[,\s]+(?:как|како[йея]|какие|(?:в )?чем|что|выбрать|приготовить|съесть)(?=\s|$)/u.test(value))
-    && (shoppingTargets(value).length || /продукт|покуп|корзин|готов|хран|поесть|перекус|круп|ужин|завтрак|кофе|ча[йяю]|мяс|рыб/u.test(value)) ? "advice" : null;
+    && (shoppingTargets(value).length || /продукт|покуп|корзин|готов|хран|поесть|перекус|круп|ужин|завтрак|кофе|ча[йяю]|мяс|фарш|рыб/u.test(value)) ? "advice" : null;
 }
 
 export function shoppingAdviceInput(text, memory, catalog, plan) {
@@ -31,8 +31,8 @@ export function shoppingAdviceInput(text, memory, catalog, plan) {
 export function localShoppingReference(input) {
   const request = normalizeShoppingAdviceRequest(input);
   if (!request || shoppingAdviceTopic(request.text) !== "advice") return null;
-  if (shoppingTargets(request.text).some(key => request.context.excluded.includes(key))) return null;
-  const match = matchShoppingProductReference(request.text);
+  if (productShoppingTargets({ name: request.text }).some(key => request.context.excluded.includes(key))) return null;
+  const match = matchShoppingProductReference(request.text, request.context);
   if (!match) return null;
   const reply = normalizeShoppingAdviceResponse({ kind: "advice", message: match.message }, request.context);
   return reply ? Object.freeze({ reply, referenceKey: match.key }) : null;

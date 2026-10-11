@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "f4c3442097bf8a5f38e6196364a98bd1d3bd7a34",
+  "sourceCommit": "a22af6819c5206feedcf9e72856bc7ed87b09381",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -99,7 +99,8 @@
       504,
       505,
       506,
-      508
+      508,
+      509
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -108,12 +109,12 @@
     "providerRoute": "zero-cost OpenRouter",
     "providerDeploymentVersion": 27,
     "validation": {
-      "unitAndGuardChecks": 1345,
-      "chromiumDesktopAndMobileCases": 256,
-      "exactHead": "0c3893535ad3d0f08b3b3fd0a3d82e6e66d86c73",
-      "sourceCommit": "f4c3442097bf8a5f38e6196364a98bd1d3bd7a34",
-      "exactHeadCiRun": 38164772542,
-      "mergedMainCiRun": 38166052141,
+      "unitAndGuardChecks": 1365,
+      "chromiumDesktopAndMobileCases": 262,
+      "exactHead": "8fdc48ffb207243ef8feb3656ef2f83032ad2749",
+      "sourceCommit": "a22af6819c5206feedcf9e72856bc7ed87b09381",
+      "exactHeadCiRun": 38170322334,
+      "mergedMainCiRun": 38171016433,
       "validationScope": "exact-head checks passed; merged source tree identical; actual-main result tracked in implementation PR"
     },
     "localAdviceRecovery": {
@@ -127,28 +128,39 @@
       "ingredientsAtHome": "ask, never infer"
     },
     "localProductReference": {
-      "sourcePr": 505,
+      "sourcePr": 509,
       "topics": [
         "milk and kefir difference",
         "pasteurisation and UHT difference",
         "kefir and yoghurt difference",
         "cheese selection",
         "cheese types",
-        "dairy storage from package label"
+        "dairy storage from package label",
+        "mince selection",
+        "meat and poultry selection",
+        "ready food selection and heating choice",
+        "meat and ready-food storage from package label"
       ],
-      "scope": "curated general facts, no specific package composition or retailer assortment",
+      "scope": "ten narrow general topic groups; full supported questions only; no SKU composition or retailer-assortment claim",
       "checkedAt": "2026-10-11",
-      "source": "Tetra Pak Dairy Processing Handbook and Rospotrebnadzor label/storage guidance",
+      "source": "Tetra Pak Dairy Processing Handbook and Rospotrebnadzor product selection/label guidance",
       "sources": [
         "https://dairyprocessinghandbook.tetrapak.com/chapter/cheese",
         "https://dairyprocessinghandbook.tetrapak.com/chapter/fermented-milk-products",
         "https://dairyprocessinghandbook.tetrapak.com/chapter/heat-exchangers",
-        "https://04.rospotrebnadzor.ru/index.php/information-for-businesses/helpful-information/18632-27072023.html"
+        "https://04.rospotrebnadzor.ru/index.php/information-for-businesses/helpful-information/18632-27072023.html",
+        "https://zpp.rospotrebnadzor.ru/news/federal/248504",
+        "https://zpp.rospotrebnadzor.ru/news/federal/576105",
+        "https://zpp.rospotrebnadzor.ru/news/federal/323866"
       ],
       "modelRequired": false,
       "visibleSources": true,
       "sourceLinks": "allowlisted local references only",
-      "arbitraryFactCoverage": false
+      "arbitraryFactCoverage": false,
+      "sourcePrs": [
+        505,
+        509
+      ]
     },
     "currentCardFacts": {
       "sourcePr": 501,
@@ -252,7 +264,16 @@
       "cardQuestions": "current admitted catalogue fields",
       "transcriptStored": false,
       "transcriptSentToProvider": false,
-      "storageQuestions": "current subject; manufacturer package instructions required"
+      "storageQuestions": "current subject; manufacturer package instructions required",
+      "groundedSelectionSourcePr": 509,
+      "supportedSelectionAnswers": [
+        "котлеты",
+        "соус",
+        "начинка",
+        "только разогреть",
+        "без разогрева"
+      ],
+      "readyFoodQuestion": "read-only; does not create a draft or infer a stored preference"
     },
     "semanticValidation": {
       "sourcePr": 504,
@@ -295,7 +316,7 @@
       "negativeWordMatching": "whole word, not a substring of internet"
     },
     "adviceQuality": {
-      "localReferenceTopics": 6,
+      "localReferenceTopics": 10,
       "generalFreeProvider": "variable; full grocery expertise not established",
       "lastLiveReview": {
         "at": "2026-10-11T18:59:56.654Z",
@@ -304,7 +325,8 @@
         "grammar": "needs improvement",
         "selectionQuestion": "response drifted into home preparation"
       },
-      "arbitraryProseTruth": "not established"
+      "arbitraryProseTruth": "not established",
+      "groundedSelection": "source-linked local selection; generic free-generated prose remains variable"
     }
   }
 }

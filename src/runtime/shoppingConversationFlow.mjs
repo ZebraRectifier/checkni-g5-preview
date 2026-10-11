@@ -182,12 +182,17 @@ export function createShoppingConversationFlow(options) {
       return state;
     }
     const adviceTopic = isShoppingProductFactsQuestion(text) ? "product_facts" : shoppingAdviceTopic(text);
+    const questionFocus = adviceTopic === "advice" ? shoppingAdviceFocus(text) : null;
+    // "How to choose ready food without cooking?" is a selection question,
+    // even when the preference extractor notices cooking-effort vocabulary.
+    const cookingSelectionQuestion = questionFocus?.topic === "selection" && questionFocus.subject
+      && Object.keys(delta.facts).every(key => key === "cookingEffort");
     // Question words such as "можно" and mentions of mince can look like
     // permissions or preparation commands to the preference extractor.
     // A plain product question must stay read-only; explicit changes still
     // go through the existing preference/constraint path.
     const readOnlyQuestion = ["advice", "product_facts"].includes(adviceTopic)
-      && (adviceTopic === "product_facts" || !Object.keys(delta.facts).length)
+      && (adviceTopic === "product_facts" || !Object.keys(delta.facts).length || cookingSelectionQuestion)
       && !delta.want.length && !delta.unset.length
       && !delta.reset && !delta.undo && !delta.newGoal && !delta.clearUnresolved
       && !/убери|не надо|надоел|терпеть не могу|не\s+(?:хочу|нужн|ем|люблю|нрав|подход|перенош)/iu.test(text);
@@ -221,7 +226,7 @@ export function createShoppingConversationFlow(options) {
         const updated = updateShoppingConversation(memory, { ...delta, allow: [] });
         if (!updated.overflow) setMemory(updated.state);
       }
-      adviceFocus = shoppingAdviceFocus(text); referencePlan = [];
+      adviceFocus = questionFocus ?? shoppingAdviceFocus(text); referencePlan = [];
       if (memory.facts.unresolvedConstraints) {
         state = messageState("Осталось непонятое условие.", "Сначала уточни или явно отмени нераспознанное условие. Сохраняю его, чтобы не нарушить отказ.");
         return state;
