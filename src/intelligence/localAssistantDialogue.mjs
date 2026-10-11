@@ -6,6 +6,7 @@ import { MARTEN_STATE } from "./martenMind.mjs";
 
 const GREETING_PREFIX =
   /^(?:привет(?:ик)?|прив|превет|здравствуй(?:те)?|здрасте|здрасьте|здарова|здорово|доброе\s+утро|добрый\s+день|добрый\s+вечер|хай|hello|hi|privet(?:ik)?|zdraste|zdarova|ghbdtn(?:br)?)(?=$|[\s,!.—-])[\s,!.—-]*/iu;
+const ASSISTANT_ADDRESS = /^(?:мойра|мартен|checkni|чекни)(?=$|[\s,!?.:—-])[\s,!?.:—-]*/iu;
 
 const KEYBOARD_EN_TO_RU = Object.freeze({
   q:"й", w:"ц", e:"у", r:"к", t:"е", y:"н", u:"г", i:"ш", o:"щ", p:"з",
@@ -85,16 +86,20 @@ function reply(dialogueKind, mascotState, headline, message, actionLabel = "На
 }
 
 export function stripAssistantGreetingPrefix(text) {
-  const value = String(text ?? "").normalize("NFKC").trim();
-  const stripped = value.replace(GREETING_PREFIX, "").trim();
-  return stripped || value;
+  const original = String(text ?? "").normalize("NFKC").trim();
+  const value = original.replace(ASSISTANT_ADDRESS, "");
+  const stripped = value.replace(GREETING_PREFIX, "").replace(ASSISTANT_ADDRESS, "").trim();
+  return stripped || value || original;
 }
 
 export function resolveLocalAssistantDialogue(text) {
-  const raw = String(text ?? "").normalize("NFKC").trim();
+  const original = String(text ?? "").normalize("NFKC").trim();
+  const raw = original.replace(ASSISTANT_ADDRESS, "");
+  if (!normalize(raw) && ASSISTANT_ADDRESS.test(original)) return reply("attention", MARTEN_STATE.IDLE,
+    "Я здесь.", "Что обсудим: продукты, готовку или подбор корзины?");
   if (!normalize(raw)) return null;
 
-  const stripped = raw.replace(GREETING_PREFIX, "").trim();
+  const stripped = raw.replace(GREETING_PREFIX, "").replace(ASSISTANT_ADDRESS, "").trim();
   const utteranceCandidates = dialogueCandidates(stripped || raw);
 
   if (

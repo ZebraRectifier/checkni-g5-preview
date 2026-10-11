@@ -66,6 +66,168 @@ function freezeView(state, details = {}) {
   });
 }
 
+function commercialBasketItems(commercial) {
+  if (!Array.isArray(commercial?.basket)) return Object.freeze([]);
+
+  return Object.freeze(commercial.basket.map((row) => Object.freeze({
+    productId: row.id,
+    name: row.name,
+    unit: row.unit,
+    quantity: row.quantity
+  })));
+}
+
+function retailPriceSummary(products) {
+  if (!Array.isArray(products)) return "";
+  return products
+    .slice(0, 3)
+    .map((product) => {
+      const condition = product.priceConditionLabel
+        ? ` · ${product.priceConditionLabel}`
+        : "";
+      const pack = product.unit ? ` · ${product.unit}` : "";
+      const time = Number.isFinite(Date.parse(product.observedAt))
+        ? ` · наблюдение ${new Date(product.observedAt).toLocaleDateString("ru-RU", { timeZone: "UTC" })}`
+        : " · дата наблюдения неизвестна";
+      return `${product.name}${pack} — ${formatRubMinor(product.priceMinor)}${condition}${time}`;
+    })
+    .join("; ");
+}
+
+function catalogIdentitySummary(products) {
+  if (!Array.isArray(products)) return "";
+  return products
+    .slice(0, 4)
+    .map((product) => `${product.name} (${product.unit})`)
+    .join("; ");
+}
+
+function commercialView(commercial) {
+  const items = commercialBasketItems(commercial);
+  const comparison = commercial?.comparison;
+  const conclusion = comparison?.conclusion;
+
+  if (conclusion?.kind === "cheapest-proven" && comparison?.winner) {
+    const winner = comparison.winner;
+    const savings = Number.isSafeInteger(conclusion.savingsMinor)
+      ? ` Экономия против следующего сопоставимого варианта — ${formatRubMinor(conclusion.savingsMinor)}.`
+      : "";
+    return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+      headline: `По проверенным данным дешевле — ${winner.candidateName}.`,
+      message:
+        `Сумма по этой корзине — ${formatRubMinor(conclusion.totalMinor)}.`
+        + savings
+        + " Наличие по видимой цене не подтверждаю.",
+      items,
+      primaryAction: "Уточнить запрос",
+      secondaryAction: "Уточнить запрос",
+      focusClarification: true
+    });
+  }
+
+  if (conclusion?.kind === "lowest-tie") {
+    return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+      headline: "Минимальная подтверждённая сумма совпала.",
+      message:
+        `Сопоставимые варианты дают ${formatRubMinor(conclusion.totalMinor)}. `
+        + "Наличие по видимой цене не подтверждаю.",
+      items,
+      primaryAction: "Уточнить запрос",
+      secondaryAction: "Уточнить запрос",
+      focusClarification: true
+    });
+  }
+
+  if (conclusion?.kind === "observed-total-only" && comparison?.winner) {
+    return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+      headline: `Нашла подтверждённую сумму: ${comparison.winner.candidateName}.`,
+      message:
+        `${formatRubMinor(conclusion.totalMinor)} по наблюдаемым ценам. `
+        + "Другого сопоставимого полного варианта пока нет, поэтому победителя не объявляю. "
+        + "Наличие не подтверждено.",
+      items,
+      primaryAction: "Уточнить запрос",
+      secondaryAction: "Уточнить запрос",
+      focusClarification: true
+    });
+  }
+
+  const retailerObservation = commercial?.retailerObservation;
+  if (
+    retailerObservation
+    && Number.isSafeInteger(retailerObservation.totalMinor)
+    && retailerObservation.totalMinor > 0
+  ) {
+    return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+      headline: `Нашла подтверждённую цену для ${retailerObservation.candidateName}.`,
+      message:
+        `По сопоставимым наблюдениям: ${formatRubMinor(retailerObservation.totalMinor)}. `
+        + "Это не утверждение о наличии — наличие остаётся неизвестным.",
+      items,
+      primaryAction: "Уточнить запрос",
+      secondaryAction: "Уточнить запрос",
+      focusClarification: true
+    });
+  }
+
+  const retailSummary = retailPriceSummary(commercial?.retailProducts);
+  if (retailSummary) {
+    const retailerName = commercial.retailProducts[0]?.retailerDisplayName
+      ?? "магазине";
+    const storeName = commercial.retailProducts[0]?.storeName;
+    const scopeLabel = typeof storeName === "string" && storeName
+      ? storeName
+      : retailerName;
+    return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+      headline: `Нашла варианты для ${scopeLabel}.`,
+      message:
+        `${retailSummary}. Это публичные наблюдаемые цены именно этого каталога; `
+        + "наличие неизвестно. Разные бренды, состав и упаковки не считаю одним товаром "
+        + "и не называю победителя.",
+      items,
+      primaryAction: "Уточнить товар",
+      secondaryAction: "Искать вручную",
+      focusClarification: true
+    });
+  }
+
+  const catalogSummary = catalogIdentitySummary(commercial?.catalogProducts);
+  if (catalogSummary) {
+    return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+      headline: "Нашла похожие подтверждённые товары.",
+      message:
+        `${catalogSummary}. Выбери конкретный вариант — цену, наличие и магазин `
+        + "я не буду угадывать.",
+      items,
+      primaryAction: "Уточнить товар",
+      secondaryAction: "Искать вручную",
+      focusClarification: true
+    });
+  }
+
+  if (conclusion?.kind === "insufficient-coverage" || items.length > 0) {
+    return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+      headline: "Для честного сравнения данных пока не хватает.",
+      message:
+        "Товар поняла, но CHECKNI не видит достаточно сопоставимых текущих цен, "
+        + "чтобы назвать самый дешёвый вариант. Корзину не меняю.",
+      items,
+      primaryAction: "Уточнить запрос",
+      secondaryAction: "Искать вручную",
+      focusClarification: true
+    });
+  }
+
+  return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+    headline: "Для честного сравнения данных пока не хватает.",
+    message: "CHECKNI не видит достаточно сопоставимых текущих цен. Не все товары удалось точно сопоставить с каталогом — уточни название или упаковку. Корзину не меняю.",
+    items,
+    primaryAction: "Уточнить запрос",
+    secondaryAction: "Искать вручную",
+    focusClarification: true
+  });
+}
+
 export function presentHybridBasketResult(result) {
   if (!result || typeof result !== "object" || Array.isArray(result)) {
     return freezeView(HYBRID_PRESENTATION_STATE.ERROR, {
@@ -169,6 +331,15 @@ export function presentHybridBasketResult(result) {
         secondaryAction: "Искать вручную",
         focusClarification: true
       });
+    }
+
+    if (
+      result.triggerReason === "commercial_constraint"
+      && result.reason === "commercial_truth"
+      && result.commercial
+    ) {
+      const view = commercialView(result.commercial);
+      if (view) return view;
     }
 
     if (result.triggerReason === "commercial_constraint") {

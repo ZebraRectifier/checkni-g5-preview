@@ -66,6 +66,7 @@ import {
   updateMartenMindState
 } from "./intelligence/martenMind.mjs";
 import { requestBasketProposal } from "./ports/basketProposalPort.mjs";
+import { requestShoppingAdvice } from "./ports/shoppingAdvicePort.mjs";
 import { requestCatalogSearch } from "./ports/catalogGatewayPort.mjs";
 import {
   RETAIL_CATALOG_IDS,
@@ -76,6 +77,9 @@ import {
   createAiCatalogResolver,
   surfaceProductsFromCatalog
 } from "./runtime/liveCatalog.mjs";
+import {
+  createShoppingAssistantOrchestrator
+} from "./intelligence/shoppingAssistantOrchestrator.mjs";
 import {
   FOCUS_MODE,
   VIEW,
@@ -166,6 +170,34 @@ const resolveAiCatalog = createAiCatalogResolver(
   requestCatalogSearch,
   { fallbackCatalog: [] }
 );
+const shoppingAssistant = createShoppingAssistantOrchestrator({
+  searchCatalog: (queries, options) => requestCatalogSearch(queries, options),
+  searchRetailer: (retailerId, query, options) => {
+    const client = retailClientFor(retailerId);
+    return client
+      ? client.search(query, options)
+      : Promise.resolve({
+          kind: "unavailable",
+          code: "retailer_not_configured"
+        });
+  },
+  getObservedPrices: comparisonMode === COMPARISON_MODE.OBSERVED
+    ? (surfaceBasket) => comparisonPort.compare(surfaceBasket)
+    : null,
+  getProductDetails: (query) => requestCatalogSearch(
+    [query],
+    { limitPerQuery: 1 }
+  ),
+  compareBasket: comparisonMode === COMPARISON_MODE.OBSERVED
+    ? (surfaceBasket) => comparisonPort.compare(surfaceBasket)
+    : null,
+  getAlternatives: (queries, options) => requestCatalogSearch(
+    Array.isArray(queries) ? queries : [queries],
+    options
+  ),
+  getCurrentBasket: () => basket.getSnapshot(),
+  getRetailerContext: (retailerId) => retailClientFor(retailerId)?.definition ?? null
+});
 const hybridInterpreterLoader = createHybridBasketInterpreterLoader();
 const hybridBetaMetrics = createHybridBetaMetricsStore();
 let martenMindState = createMartenMindState();
@@ -179,6 +211,10 @@ const basketProposalFlow = createShoppingConversationFlow({
   localCatalog: SHOP_CATALOG,
   resolveLiveCatalog: resolveAiCatalog,
   requestAiProposal: requestBasketProposal,
+  requestShoppingAdvice,
+  resolveCommercialRequest: (text, catalog, context = {}) => shoppingAssistant.resolveCommercialRequest(text, catalog, {
+    retailer: context.retailer ?? (publicRetailCatalogMode ? retailDefinitionFor(retailBrowserState.retailerId)?.displayName : null)
+  }),
   priceHints: budgetPlannerHints,
   applyValidatedBasket: (validatedBasket) => (
     basket.mergeValidatedBasket(validatedBasket)
@@ -293,13 +329,12 @@ function currentRetailDefinition() {
     ?? getRetailCatalogDefinition(DEFAULT_RETAILER_ID);
 }
 
-function currentRetailClient() {
-  if (retailBrowserState.retailerId === "globus") return selectedGlobusClient();
-  if (retailBrowserState.retailerId === "metro") {
-    return selectedMetroClient()
-      ?? retailCatalogClients.get(DEFAULT_RETAILER_ID);
+function retailClientFor(retailerId) {
+  if (retailerId === "globus") return selectedGlobusClient();
+  if (retailerId === "metro") {
+    return selectedMetroClient();
   }
-  if (retailBrowserState.retailerId === "magnit") {
+  if (retailerId === "magnit") {
     const key = "magnit-" + selectedMagnitStore.shopCode;
     if (!retailCatalogClients.has(key)) {
       retailCatalogClients.set(key, createRetailCatalogClient({
@@ -308,7 +343,11 @@ function currentRetailClient() {
     }
     return retailCatalogClients.get(key);
   }
-  return retailCatalogClients.get(retailBrowserState.retailerId)
+  return retailCatalogClients.get(retailerId) ?? null;
+}
+
+function currentRetailClient() {
+  return retailClientFor(retailBrowserState.retailerId)
     ?? retailCatalogClients.get(DEFAULT_RETAILER_ID);
 }
 
@@ -978,6 +1017,9 @@ async function selectRetailer(retailerId, {
   const definition = retailDefinitionFor(retailerId);
   if (!publicRetailCatalogMode || !definition) return;
 
+  basketProposalFlow.setRetailer(definition.displayName);
+  renderBasketProposalState();
+
   retailBrowserRequestVersion += 1;
   catalogRequestVersion += 1;
   pendingCatalogSearch = null;
@@ -1330,6 +1372,10 @@ function restoreRetailNavigationFromHistory({ initial = false } = {}) {
   if (!definition) return;
 
   if (initial || retailerId !== retailBrowserState.retailerId || addressChanged) {
+    if (!initial) {
+      basketProposalFlow.setRetailer(definition.displayName);
+      renderBasketProposalState();
+    }
     retailBrowserRequestVersion += 1;
     catalogRequestVersion += 1;
     pendingCatalogSearch = null;
@@ -1734,7 +1780,8 @@ function renderBasketProposalState() {
   setMascotState(
     typeof conversationalMascotState === "string"
       ? conversationalMascotState
-      : mascotStateForHybrid(state.status)
+      : mascotStateForHybrid(state.status),
+    state.result?.triggerReason === "smalltalk" ? state.presentation?.headline : null
   );
   const isLoading = state.status === HYBRID_BASKET_FLOW_STATUS.LOADING;
 
@@ -2521,7 +2568,7 @@ elements.proposalInput.addEventListener("input", () => {
     === HYBRID_BASKET_FLOW_STATUS.CLARIFICATION
   ) {
     hybridBetaMetrics.recordAction("clarification_edit");
-    basketProposalFlow.invalidate();
+    basketProposalFlow.edit();
     renderBasketProposalState();
   }
 });

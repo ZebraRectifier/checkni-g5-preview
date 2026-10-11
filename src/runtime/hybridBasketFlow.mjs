@@ -98,6 +98,7 @@ export function createHybridBasketFlow(options = {}) {
     localCatalog,
     resolveLiveCatalog,
     requestAiProposal,
+    resolveCommercialRequest,
     priceHints,
     applyValidatedBasket,
     onMetric,
@@ -121,6 +122,12 @@ export function createHybridBasketFlow(options = {}) {
     && typeof requestAiProposal !== "function"
   ) {
     throw new TypeError("hybrid AI proposal requester must be a function");
+  }
+  if (
+    resolveCommercialRequest != null
+    && typeof resolveCommercialRequest !== "function"
+  ) {
+    throw new TypeError("hybrid commercial resolver must be a function");
   }
   if (typeof applyValidatedBasket !== "function") {
     throw new TypeError("hybrid basket flow requires a basket mutation function");
@@ -253,6 +260,9 @@ export function createHybridBasketFlow(options = {}) {
         {
           resolveLiveCatalog,
           requestAiProposal,
+          ...(typeof resolveCommercialRequest === "function"
+            ? { resolveCommercialRequest }
+            : {}),
           ...(priceHints instanceof Map ? { priceHints } : {})
         }
       );

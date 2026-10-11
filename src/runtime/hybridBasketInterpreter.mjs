@@ -45,11 +45,21 @@ function isLocalFallbackWithoutAi(result) {
   );
 }
 
-async function localOnly(text, catalogSnapshot, priceHints) {
+async function localOnly(
+  text,
+  catalogSnapshot,
+  priceHints,
+  resolveCommercialRequest
+) {
   return resolveHybridBasketProposal(
     text,
     catalogSnapshot,
-    priceHints instanceof Map ? { priceHints } : {}
+    {
+      ...(priceHints instanceof Map ? { priceHints } : {}),
+      ...(typeof resolveCommercialRequest === "function"
+        ? { resolveCommercialRequest }
+        : {})
+    }
   );
 }
 
@@ -67,7 +77,12 @@ export async function interpretHybridBasketText(
   options = {}
 ) {
   const localSnapshot = snapshotHybridCatalog(localCatalog);
-  const localResult = await localOnly(text, localSnapshot, options.priceHints);
+  const localResult = await localOnly(
+    text,
+    localSnapshot,
+    options.priceHints,
+    options.resolveCommercialRequest
+  );
 
   if (isLocalTerminal(localResult)) {
     return decorate(localResult, localSnapshot);
@@ -104,7 +119,8 @@ export async function interpretHybridBasketText(
         const liveLocalResult = await localOnly(
           text,
           selectedSnapshot,
-          options.priceHints
+          options.priceHints,
+          options.resolveCommercialRequest
         );
 
         if (isLocalTerminal(liveLocalResult)) {
@@ -144,6 +160,9 @@ export async function interpretHybridBasketText(
     selectedSnapshot,
     {
       requestAiProposal: options.requestAiProposal,
+      ...(typeof options.resolveCommercialRequest === "function"
+        ? { resolveCommercialRequest: options.resolveCommercialRequest }
+        : {}),
       ...(options.priceHints instanceof Map
         ? { priceHints: options.priceHints }
         : {})

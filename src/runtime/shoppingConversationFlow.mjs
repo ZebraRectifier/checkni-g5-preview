@@ -3,6 +3,8 @@ import { createShoppingConversation, extractShoppingDelta, updateShoppingConvers
 import { planConversationBasket, presentConversationBasket, knownPreparation } from "../intelligence/conversationBasket.mjs";
 import { validateBasketProposal } from "../core/ai-basket-proposal.mjs";
 import { parseLocalBasketText } from "../intelligence/localBasketParser.mjs";
+import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation } from "../intelligence/shoppingAdvice.mjs";
+import { normalizeShoppingAdviceResponse } from "../intelligence/shoppingAdviceContract.mjs";
 
 const copy = value => JSON.parse(JSON.stringify(value));
 const rowsOf = validation => (validation?.basket ?? []).map(row => ({ productId: row.product.id, quantity: row.quantity }));
@@ -16,6 +18,7 @@ export function createShoppingConversationFlow(options) {
   let managed = [];
   let lastPlan = [];
   let pending = null;
+  let suspendedDraft = null;
   let stagedByHybrid = null;
   let commercialTurn = false;
   let epoch = 0;
@@ -23,7 +26,11 @@ export function createShoppingConversationFlow(options) {
   let inFlight = null;
   const byId = new Map(localCatalog.map(product => [product.id, product]));
   const activeMemory = () => Object.keys(memory.facts).length || Object.keys(memory.rejected).length || Object.keys(memory.wishes).length;
-  const hybrid = createHybridBasketFlow({ ...options, applyValidatedBasket: rows => {
+  const hybrid = createHybridBasketFlow({ ...options,
+    resolveCommercialRequest: typeof options.resolveCommercialRequest === "function"
+      ? (text, catalog) => options.resolveCommercialRequest(text, catalog, { retailer: memory.facts.retailer?.value ?? null })
+      : undefined,
+    applyValidatedBasket: rows => {
     if (activeMemory() || commercialTurn) { stagedByHybrid = rowsOf({ basket: rows }); return { rejectedRows: [] }; }
     const result = basket.mergeValidatedBasket(rows);
     const rejected = new Set(result.rejectedRows.map(row => row.productId));
@@ -34,11 +41,18 @@ export function createShoppingConversationFlow(options) {
   } });
 
   function invalidate() {
-    epoch += 1; pending = null; inFlight = null; stagedByHybrid = null;
+    epoch += 1; pending = null; suspendedDraft = null; inFlight = null; stagedByHybrid = null;
     hybrid.invalidate(); state = { status: "idle" };
     return state;
   }
+  function edit() {
+    const draft = pending ? { pending, state } : suspendedDraft;
+    invalidate();
+    suspendedDraft = draft;
+    return state;
+  }
   function preview(plan, exactTarget = null) {
+    suspendedDraft = null;
     const base = basket.getSnapshot();
     const owned = new Map(managed.map(row => [row.productId, row.quantity]));
     const next = new Map();
@@ -70,6 +84,7 @@ export function createShoppingConversationFlow(options) {
     lastPlan = copy(plan.items);
     state = { status: "clarification", result: { kind: "clarification", triggerReason: "conversation_draft", reason: "confirmation_required", draftProposal: { items: plan.items }, validation }, validation,
       presentation: presentConversationBasket(memory, plan, localCatalog, priceHints, replacement, diff) };
+    pending.presentation = state.presentation;
     return state;
   }
   function confirm(mode) {
@@ -81,6 +96,7 @@ export function createShoppingConversationFlow(options) {
       return state;
     }
     if (mode !== "confirm_all" || pending.epoch !== epoch || pending.revision !== memory.revision) return state;
+    suspendedDraft = null;
     const draft = pending;
     pending = null;
     const applied = basket.replaceReviewedBasket(draft.base, draft.replacement);
@@ -98,6 +114,7 @@ export function createShoppingConversationFlow(options) {
     const delta = extractShoppingDelta(text);
     const affirmative = /^(?:го|ок|да|давай|применить|применяй|подтверждаю)$/iu.test(text.trim());
     if (affirmative) {
+      suspendedDraft = null;
       if (pending) return confirm("confirm_all");
       const result = hybrid.getState().result;
       if (result?.kind === "clarification" && result.triggerReason !== "smalltalk") return confirm("confirm_all");
@@ -105,9 +122,51 @@ export function createShoppingConversationFlow(options) {
       state = messageState("Продолжим.", "Черновика для подтверждения сейчас нет. Можно написать покупки или попросить перестроить набор.");
       return state;
     }
+    const adviceTopic = shoppingAdviceTopic(text);
+    // Question words such as "можно" and mentions of mince can look like
+    // permissions or preparation commands to the preference extractor.
+    // A plain product question must stay read-only; explicit changes still
+    // go through the existing preference/constraint path.
+    const readOnlyQuestion = adviceTopic === "advice" && !Object.keys(delta.facts).length
+      && !delta.reject.length && !delta.want.length && !delta.unset.length
+      && !delta.reset && !delta.undo && !delta.newGoal && !delta.clearUnresolved
+      && !/без\s|убери|не надо|надоел|терпеть не могу|не\s+(?:хочу|нужн|ем|люблю|нрав|подход|перенош)/iu.test(text);
+    if (adviceTopic && (!delta.recognized || readOnlyQuestion)) {
+      const explanation = localShoppingExplanation(adviceTopic, memory, localCatalog, lastPlan);
+      if (adviceTopic === "explanation" && !pending && suspendedDraft
+        && suspendedDraft.pending.revision === memory.revision
+        && JSON.stringify(suspendedDraft.pending.base) === JSON.stringify(basket.getSnapshot())) {
+        pending = suspendedDraft.pending;
+        pending.epoch = epoch;
+        state = suspendedDraft.state;
+      }
+      suspendedDraft = null;
+      if (adviceTopic !== "advice") {
+        if (pending && adviceTopic === "explanation") {
+          state = { ...state, presentation: { ...pending.presentation, headline: "Почему такой набор.",
+            message: `${explanation} ${pending.presentation.message}` } };
+        } else { pending = null; hybrid.invalidate(); state = messageState(adviceTopic === "explanation" ? "Объясню выбор." : "Помню, о чём договорились.", explanation); }
+        return state;
+      }
+      pending = null; hybrid.invalidate();
+      if (memory.facts.unresolvedConstraints) {
+        state = messageState("Осталось непонятое условие.", "Сначала уточни или явно отмени нераспознанное условие. Сохраняю его, чтобы не нарушить отказ.");
+        return state;
+      }
+      const input = shoppingAdviceInput(text, memory, localCatalog, lastPlan);
+      state = { status: "loading" };
+      let answer;
+      try { answer = typeof options.requestShoppingAdvice === "function" ? await options.requestShoppingAdvice(input) : null; }
+      catch { answer = null; }
+      if (token !== epoch) return state;
+      const reply = normalizeShoppingAdviceResponse(answer, input.context);
+      state = messageState(reply ? "Давай разберёмся." : "Сейчас могу опереться на твои условия.",
+        reply?.message ?? `Автоматический совет сейчас недоступен. ${explanation}`);
+      return state;
+    }
     // Every new substantive message supersedes the previous reviewed candidate,
     // including a price question or an unsupported specification.
-    pending = null;
+    pending = null; suspendedDraft = null;
     const rebuild = /перестрой|пересобери|обнови корзину/u.test(text.toLocaleLowerCase("ru-RU"));
     const onlyProductWish = delta.want.length && !delta.reject.length && !delta.allow.length && !Object.keys(delta.facts).length
       && !delta.reset && !delta.undo && !delta.newGoal && !delta.dissatisfaction && !delta.unresolved.length;
@@ -118,7 +177,7 @@ export function createShoppingConversationFlow(options) {
       && !delta.reject.length && !delta.allow.length && !/корзин|перестрой/u.test(text.toLocaleLowerCase("ru-RU"));
     const commercialQuery = retailerProductQuery || /где дешевле|цен[ау]|сколько сто|в наличии|скидк|акци|сам(?:ый|ая|ое|ые|ую|ого|ой)\s+деш[её]в/u.test(text.toLocaleLowerCase("ru-RU"));
     commercialTurn = Boolean(commercialQuery);
-    if (retailerProductQuery) {
+    if (commercialQuery && delta.facts.retailer) {
       const updated = updateShoppingConversation(memory, { ...extractShoppingDelta(""), facts: { retailer: delta.facts.retailer } });
       memory = updated.state;
     }
@@ -231,6 +290,14 @@ export function createShoppingConversationFlow(options) {
     promise.finally(() => { if (inFlight === flight) inFlight = null; });
     return promise;
   }
-  return Object.freeze({ run, confirm, invalidate, preload: hybrid.preload, getState: () => state,
-    getConversation: () => memory, getMartenPreferences: () => projectMartenConversation(memory) });
+  function setRetailer(retailer) {
+    if (typeof retailer !== "string" || !retailer.trim() || retailer.length > 80) return state;
+    invalidate();
+    const updated = updateShoppingConversation(memory, { ...extractShoppingDelta(""),
+      facts: { retailer: { value: retailer.trim(), scope: "goal" } } });
+    if (!updated.overflow) memory = updated.state;
+    return state;
+  }
+  return Object.freeze({ run, confirm, invalidate, edit, preload: hybrid.preload, getState: () => state,
+    setRetailer, getConversation: () => memory, getMartenPreferences: () => projectMartenConversation(memory) });
 }

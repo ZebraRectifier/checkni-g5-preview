@@ -287,6 +287,31 @@ export async function resolveHybridBasketProposal(
     }
   }
 
+  if (
+    triggerReason === "commercial_constraint"
+    && typeof options.resolveCommercialRequest === "function"
+  ) {
+    let commercial;
+    try {
+      commercial = await options.resolveCommercialRequest(
+        shoppingText,
+        catalogSnapshot
+      );
+    } catch { /* Report unavailable truth; a parser cannot replace it. */ }
+    if (!commercial || typeof commercial !== "object" || Array.isArray(commercial)
+      || commercial.kind !== "commercial-assistant-result") {
+      commercial = Object.freeze({ kind: "commercial-assistant-result", basket: [],
+        comparison: null, retailerObservation: null, retailProducts: [], catalogProducts: [],
+        toolTrace: [{ tool: "commercialRequest", status: "unavailable", code: "tool_unavailable" }] });
+    }
+    return typedResult(HYBRID_BASKET_RESULT.CLARIFICATION, {
+      source: HYBRID_BASKET_SOURCE.LOCAL,
+      reason: "commercial_truth",
+      triggerReason,
+      commercial
+    });
+  }
+
   // Mixed and meal phrases are planned locally, segment by segment:
   // instant, free and deterministic. Drafts always need the user's
   // confirmation. Phrases with unknown products keep the existing
