@@ -38,7 +38,11 @@ const MEDICAL = /пр[ое]биотик|иммунитет|усваива|пищ
 const INVENTORY = /(?:у тебя|у вас)\s+(?:уже\s+)?(?:есть|имеется)|(?:продукты|товары)\s+уже\s+(?:дома|куплены|в корзине)/iu;
 const COMPOSITION = /содерж(?:ит|ат)|вход(?:ит|ят)\s+в\s+состав|(?:состав|ингредиенты)\s*[:—-]|\d+(?:[.,]\d+)?\s*(?:ккал|г\s+белк)/iu;
 const BASKET_CHANGE = /(?:добавил[а]?|убрал[а]?|удалил[а]?|заменил[а]?|поменял[а]?|изменил[а]?|собрал[а]?|оформил[а]?).{0,50}(?:корзин|заказ)|(?:^|\s)я\s+(?:уже\s+)?(?:добавила|убрала|заменила|удалила)/iu;
-const ASSORTMENT = /(?:каталог|ассортимент|магазин).{0,60}(?:только|лишь|единствен|нет|отсутств|доступ|представлен|прода[её]т)|(?:доступ|представлен|прода[её]т|есть)\S*.{0,15}(?:только|лишь|единствен)/iu;
+const ASSORTMENT = /(?:каталог|ассортимент|магазин|спис(?:ок|к)|подсказк).{0,60}(?:только|лишь|единствен|(?<![а-я])нет(?![а-я])|отсутств|доступ|представлен|прода[её]т)|(?<![а-я])(?:нет(?![а-я])|отсутств[а-я]*).{0,45}(?:в|из)\s+(?:эт(?:ом|ого)\s+)?(?:спис(?:ок|к)|подсказк)|(?:доступ|представлен|прода[её]т|есть)\S*.{0,15}(?:только|лишь|единствен)/iu;
+// Reject untranslated phrases in provider prose, while leaving single brand
+// names/technical acronyms available. Card facts and source labels use their
+// separate local evidence path; this is not a general language classifier.
+const FOREIGN_PHRASE = /\b[a-z]{3,}(?:[ -]+[a-z]{3,})+\b/iu;
 const UNVERIFIED_RULE = /(?:выдержк|созреван).{0,35}(?:\d|двух|тр[её]х|четыр[её]х)|хран(?:и|ить|ится|ятся).{0,35}(?:\d+|два|две|три|четыре|пять).{0,12}(?:час|дн|дне|сут|недел|месяц)/iu;
 export function shoppingAdviceResponseIssue(value, context = {}) {
   if (!exactKeys(value, ["kind", "message"]) || value.kind !== "advice") return "invalid_provider_advice";
@@ -48,6 +52,7 @@ export function shoppingAdviceResponseIssue(value, context = {}) {
   if (MEDICAL.test(message)) return "provider_advice_medical_claim";
   if (BASKET_CHANGE.test(message)) return "provider_advice_basket_claim";
   if (ASSORTMENT.test(message)) return "provider_advice_assortment_claim";
+  if (FOREIGN_PHRASE.test(message)) return "provider_advice_foreign_phrase";
   if (UNVERIFIED_RULE.test(message)) return "provider_advice_unverified_rule";
   if (message.split(/(?<=[.!?])\s+/u).some(sentence => COMPOSITION.test(sentence)
     && !/^(?:проверь|посмотри|уточни).{0,40}содержит ли/iu.test(sentence)

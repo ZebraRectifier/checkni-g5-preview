@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "70e20b0b85ade1ebe048d3b317046a33a0e9ed65",
+  "sourceCommit": "f4c3442097bf8a5f38e6196364a98bd1d3bd7a34",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -97,22 +97,24 @@
       502,
       503,
       504,
-      505
+      505,
+      506,
+      508
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
     "commercialAnswers": "Core and selected-store observed catalog",
     "basketChangesRequireConfirmation": true,
     "providerRoute": "zero-cost OpenRouter",
-    "providerDeploymentVersion": 25,
+    "providerDeploymentVersion": 27,
     "validation": {
-      "unitAndGuardChecks": 1333,
+      "unitAndGuardChecks": 1345,
       "chromiumDesktopAndMobileCases": 256,
-      "exactHead": "5c86b92bae0abdc5313179a4031c71292e04ca98",
-      "sourceCommit": "70e20b0b85ade1ebe048d3b317046a33a0e9ed65",
-      "exactHeadCiRun": 38160113266,
-      "mergedMainCiRun": 38160841378,
-      "validationScope": "exact-head checks; merged source tree identical; actual-main result tracked in implementation PR"
+      "exactHead": "0c3893535ad3d0f08b3b3fd0a3d82e6e66d86c73",
+      "sourceCommit": "f4c3442097bf8a5f38e6196364a98bd1d3bd7a34",
+      "exactHeadCiRun": 38164772542,
+      "mergedMainCiRun": 38166052141,
+      "validationScope": "exact-head checks passed; merged source tree identical; actual-main result tracked in implementation PR"
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -188,7 +190,51 @@
         "fallback": "advice",
         "fallbackLatencyMs": 1400,
         "confirmedBasketChanged": false
-      }
+      },
+      "reasoningRecoverySourcePrs": [
+        506,
+        508
+      ],
+      "fallbackReasoningEffort": "low",
+      "fallbackReasoningExcluded": true,
+      "fallbackCombinedTokenCap": 2048,
+      "primaryTokenCaps": {
+        "proposal": 256,
+        "advice": 768
+      },
+      "liveRouteIdentities": "not established by the latest scoped logs",
+      "latestLiveProbes": [
+        {
+          "at": "2026-10-11T18:59:48.761Z",
+          "mode": "proposal",
+          "http": 200,
+          "kind": "proposal",
+          "items": [
+            {
+              "productId": "milk-25-900",
+              "quantity": 2
+            },
+            {
+              "productId": "eggs-c1-10",
+              "quantity": 1
+            },
+            {
+              "productId": "apples-1kg",
+              "quantity": 1
+            }
+          ],
+          "exact": true,
+          "latencyMs": 7893
+        },
+        {
+          "at": "2026-10-11T18:59:56.654Z",
+          "mode": "advice",
+          "http": 200,
+          "kind": "advice",
+          "guarded": true,
+          "latencyMs": 12126
+        }
+      ]
     },
     "shoppingFollowups": {
       "sourcePr": 504,
@@ -222,7 +268,7 @@
       "basketMutationClaims": "rejected",
       "arbitraryProseTruth": "not established",
       "liveProposal": {
-        "at": "2026-10-11T16:02:15.533Z",
+        "at": "2026-10-11T18:59:48.761Z",
         "http": 200,
         "items": [
           {
@@ -238,11 +284,27 @@
             "quantity": 1
           }
         ],
-        "latencyMs": 7497,
+        "latencyMs": 7893,
         "exact": true
       },
       "assortmentCompletenessClaims": "rejected",
-      "unsupportedNumericAgeingAndStorageRules": "rejected"
+      "unsupportedNumericAgeingAndStorageRules": "rejected",
+      "providerTextRecoverySourcePr": 508,
+      "partialHintAbsenceClaims": "rejected",
+      "untranslatedLatinPhrases": "bounded multiword detection; single terms allowed",
+      "negativeWordMatching": "whole word, not a substring of internet"
+    },
+    "adviceQuality": {
+      "localReferenceTopics": 6,
+      "generalFreeProvider": "variable; full grocery expertise not established",
+      "lastLiveReview": {
+        "at": "2026-10-11T18:59:56.654Z",
+        "http": 200,
+        "passedExistingGuards": true,
+        "grammar": "needs improvement",
+        "selectionQuestion": "response drifted into home preparation"
+      },
+      "arbitraryProseTruth": "not established"
     }
   }
 }
