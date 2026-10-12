@@ -15,13 +15,13 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
   const root = document.createElement("section");
   root.id = "shopping-dialogue";
   root.className = "shopping-dialogue";
-  root.setAttribute("aria-label", "Переписка с Мойрой о покупках");
+  root.setAttribute("aria-label", "Переписка с помощником CHECKNI о покупках");
   root.hidden = true;
 
   const header = document.createElement("div");
   header.className = "shopping-dialogue-header";
   const heading = document.createElement("strong");
-  heading.textContent = "Мойра · о покупках";
+  heading.textContent = "Помощник CHECKNI";
   const clear = document.createElement("button");
   clear.type = "button";
   clear.id = "shopping-dialogue-clear";
@@ -48,7 +48,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
   user.hidden = true;
   const speaker = document.createElement("span");
   speaker.className = "shopping-dialogue-speaker";
-  speaker.textContent = "Мойра";
+  speaker.textContent = "Помощник CHECKNI";
   speaker.hidden = true;
 
   const note = document.createElement("p");
@@ -59,7 +59,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
   form.prepend(root);
 
   const label = form.querySelector('label[for="basket-proposal-input"] .sr-only');
-  if (label) label.textContent = "Сообщение Мойре о покупках";
+  if (label) label.textContent = "Сообщение помощнику CHECKNI о покупках";
   input.placeholder = "Покупки или вопрос — например: как выбрать сыр?";
   const help = document.getElementById("basket-proposal-help");
   if (help) help.textContent = "Напиши список покупок, свои условия или вопрос о товарах. Можешь уточнять ответ следующим сообщением.";
@@ -98,7 +98,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
       answer.className = "shopping-dialogue-answer";
       const label = document.createElement("span");
       label.className = "shopping-dialogue-speaker";
-      label.textContent = "Мойра · прежний ответ";
+      label.textContent = "Помощник CHECKNI · прежний ответ";
       answer.append(label);
       for (const text of turn.reply) {
         const paragraph = document.createElement("p");

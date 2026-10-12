@@ -2,7 +2,9 @@ import { CANONICAL_PRODUCTS } from "../data/canonicalProductRegistry.mjs";
 
 export const BASKET_PROPOSAL_ENDPOINT = "https://cxpneczhczashanbetgj.supabase.co/functions/v1/ai-basket-proposal";
 export const BASKET_PROPOSAL_PUBLISHABLE_KEY = "sb_publishable_yyIT9Clu4jTphSdVLCVWFA_KQsZZ2rt";
-export const BASKET_PROPOSAL_TIMEOUT_MS = 14_000;
+// The server's two routes share a 12s budget. A valid live fallback arrived
+// after about 19s including transport/Edge overhead, so keep a bounded margin.
+export const BASKET_PROPOSAL_TIMEOUT_MS = 20_000;
 export const MAX_BROWSER_PROPOSAL_RESPONSE_BYTES = 65_536;
 export const MAX_BROWSER_PROPOSAL_TEXT_LENGTH = 300;
 export const MAX_BROWSER_CATALOG_ITEMS = 50;

@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "f22e85bde2bf7576ad8a39e8f2e9df7a4d96b1d0",
+  "sourceCommit": "661f025f8938642c354669d4794c4603e9008fa2",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -101,7 +101,8 @@
       506,
       508,
       509,
-      511
+      511,
+      513
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -110,13 +111,13 @@
     "providerRoute": "zero-cost OpenRouter",
     "providerDeploymentVersion": 28,
     "validation": {
-      "unitAndGuardChecks": 1381,
+      "unitAndGuardChecks": 1438,
       "chromiumDesktopAndMobileCases": 262,
-      "exactHead": "b7296112222f9ab0761da1ac1ecea7300c7b189a",
-      "sourceCommit": "f22e85bde2bf7576ad8a39e8f2e9df7a4d96b1d0",
-      "exactHeadCiRun": 38178328349,
-      "mergedMainCiRun": 38179099063,
-      "validationScope": "exact-head and actual-main checks passed without retries or skipped cases; merged source tree identical"
+      "exactHead": "7ac1763196f69c9308f55e2e7a6ae027c48dca2c",
+      "sourceCommit": "661f025f8938642c354669d4794c4603e9008fa2",
+      "exactHeadCiRun": 38198817718,
+      "mergedMainCiRun": 38199718906,
+      "validationScope": "exact-head checks passed without retries or skips; merged source tree identical; actual-main outcome recorded in PR #513"
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -218,21 +219,40 @@
       "liveRouteIdentities": "primary and fallback route IDs verified in v28 scoped logs; selected model identities not recorded",
       "latestLiveProbes": [
         {
-          "mode": "advice",
-          "at": "2026-10-11T22:08:21.523Z",
-          "http": 503,
-          "kind": "unavailable",
-          "code": "provider_timeout",
-          "latencyMs": 18625,
+          "at": "2026-10-12T02:39:04.225Z",
+          "mode": "proposal",
+          "http": 200,
+          "kind": "proposal",
+          "latencyMs": 10124,
+          "items": [
+            {
+              "productId": "milk-25-900",
+              "quantity": 2
+            },
+            {
+              "productId": "eggs-c1-10",
+              "quantity": 1
+            },
+            {
+              "productId": "apples-1kg",
+              "quantity": 1
+            }
+          ],
+          "exact": true,
+          "browserTimeoutMs": 14000,
+          "probeProfile": "before browser-budget correction",
           "basketMutationRequested": false
         },
         {
-          "mode": "proposal",
-          "at": "2026-10-11T22:08:40.148Z",
+          "at": "2026-10-12T02:54:51.351Z",
+          "mode": "advice",
+          "browserTimeoutMs": 20000,
           "http": 503,
+          "latencyMs": 17769,
+          "calls": 1,
           "kind": "unavailable",
-          "code": "provider_timeout",
-          "latencyMs": 12752,
+          "code": "provider_unavailable",
+          "probeProfile": "production browser client with 20s budget",
           "basketMutationRequested": false
         }
       ],
@@ -273,6 +293,32 @@
           "kind": "advice",
           "guarded": true,
           "latencyMs": 12126
+        },
+        {
+          "mode": "advice",
+          "at": "2026-10-11T22:08:21.523Z",
+          "http": 503,
+          "kind": "unavailable",
+          "code": "provider_timeout",
+          "latencyMs": 18625,
+          "basketMutationRequested": false
+        },
+        {
+          "mode": "proposal",
+          "at": "2026-10-11T22:08:40.148Z",
+          "http": 503,
+          "kind": "unavailable",
+          "code": "provider_timeout",
+          "latencyMs": 12752,
+          "basketMutationRequested": false
+        },
+        {
+          "at": "2026-10-12T02:38:50.220Z",
+          "mode": "advice",
+          "http": null,
+          "kind": "unavailable",
+          "code": "browser_budget_timeout",
+          "latencyMs": 14004
         }
       ],
       "latestLiveRoutes": {
@@ -298,7 +344,33 @@
           }
         }
       },
-      "liveReasoningCompatibility": "mandatory-reasoning parameter rejection absent in both v28 probes; both routes timed out"
+      "liveReasoningCompatibility": "mandatory-reasoning parameter rejection absent in both v28 probes; both routes timed out",
+      "latestScopedRouteReview": {
+        "from": "2026-10-12T02:38:50.220Z",
+        "until": "2026-10-12T02:39:14.280Z",
+        "deploymentVersion": 28,
+        "advice": {
+          "primary": {
+            "code": "provider_timeout",
+            "latencyMs": 3009
+          },
+          "fallback": {
+            "kind": "advice",
+            "latencyMs": 8518
+          }
+        },
+        "proposal": {
+          "primary": {
+            "code": "provider_timeout",
+            "latencyMs": 3003
+          },
+          "fallback": {
+            "kind": "proposal",
+            "latencyMs": 2211
+          }
+        },
+        "selectedModelIdentities": "not recorded"
+      }
     },
     "shoppingFollowups": {
       "sourcePr": 504,
@@ -341,7 +413,7 @@
       "basketMutationClaims": "rejected",
       "arbitraryProseTruth": "not established",
       "liveProposal": {
-        "at": "2026-10-11T18:59:48.761Z",
+        "at": "2026-10-12T02:39:04.225Z",
         "http": 200,
         "items": [
           {
@@ -357,7 +429,7 @@
             "quantity": 1
           }
         ],
-        "latencyMs": 7893,
+        "latencyMs": 10124,
         "exact": true
       },
       "assortmentCompletenessClaims": "rejected",
@@ -380,12 +452,37 @@
       "arbitraryProseTruth": "not established",
       "groundedSelection": "source-linked local selection; generic free-generated prose remains variable",
       "lastLiveAvailabilityReview": {
-        "at": "2026-10-11T22:08:21.523Z",
+        "at": "2026-10-12T02:54:51.351Z",
+        "mode": "advice",
+        "browserTimeoutMs": 20000,
         "http": 503,
-        "code": "provider_timeout",
-        "generatedAnswerAvailable": false,
-        "scope": "one advice probe on v28"
+        "latencyMs": 17769,
+        "calls": 1,
+        "kind": "unavailable",
+        "code": "provider_unavailable",
+        "generatedAnswerAvailable": false
       }
+    },
+    "displayLabel": "Помощник CHECKNI",
+    "displayLabelSourcePr": 513,
+    "browserTransport": {
+      "sourcePr": 513,
+      "totalTimeoutMs": 20000,
+      "serverRouteBudgetMs": 12000,
+      "measuredPriorDeadlineFailure": {
+        "at": "2026-10-12T02:38:50.220Z",
+        "mode": "advice",
+        "http": null,
+        "kind": "unavailable",
+        "code": "browser_budget_timeout",
+        "latencyMs": 14004,
+        "browserTimeoutMs": 14000,
+        "serverAdviceAcceptedAt": "2026-10-12T02:39:09.004Z",
+        "serverPrimaryLatencyMs": 3009,
+        "serverFallbackLatencyMs": 8518
+      },
+      "overheadCause": "individual transport/Edge startup cause not established",
+      "validation": "complete 18.9s responses accepted in virtual-clock tests; stalled responses remain bounded"
     }
   }
 }
