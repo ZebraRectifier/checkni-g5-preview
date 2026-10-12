@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "f0d4147116c8341db064ee9e374717624d53c206",
+  "sourceCommit": "a820c5e88fc58df675181c77597b77d85f0a2279",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -543,6 +543,26 @@
       "originalDatesPreserved": true,
       "imageRendering": "auto",
       "newSourceObservations": 0
+    }
+  },
+  "magnitDirectoryTextContrast": {
+    "sourcePr": 521,
+    "scope": "existing white Magnit directory only",
+    "textColour": "#152019",
+    "linkColour": "#b5161d",
+    "nativeControlColourScheme": "light",
+    "photoRenderingPreserved": true,
+    "surroundingThemePreserved": true,
+    "validation": {
+      "testedHead": "27cefa18faf1936d861af7cd8a349efdc0ae2086",
+      "unitAndGuardChecks": 1488,
+      "chromiumDesktopAndMobileCases": 262,
+      "minimumComputedTextContrast": 4.5,
+      "defaultAndHoverLinks": true,
+      "underlinesRetained": true,
+      "exactHeadCiRun": 38217303957,
+      "mergedMainCiRun": 38218372935,
+      "publicEvidence": "Actual computed styles and visual result recorded after publication in PR #521"
     }
   }
 }

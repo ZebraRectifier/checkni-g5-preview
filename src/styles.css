@@ -1234,6 +1234,8 @@ h1 {
   border-radius: 16px;
   padding: 14px 18px;
   background: #fff;
+  color: #152019;
+  color-scheme: light;
 }
 
 .magnit-directory summary {
@@ -1245,6 +1247,10 @@ h1 {
 }
 
 .magnit-directory summary strong { color: #d71920; }
+
+.magnit-directory a {
+  color: #b5161d;
+}
 
 .magnit-directory-note {
   margin: 12px 0;
