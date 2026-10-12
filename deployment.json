@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "a820c5e88fc58df675181c77597b77d85f0a2279",
+  "sourceCommit": "9dfeeaf336845f8b2e2def0f8e0002aa60cf257c",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -103,7 +103,8 @@
       509,
       511,
       513,
-      520
+      520,
+      523
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -112,13 +113,13 @@
     "providerRoute": "zero-cost OpenRouter",
     "providerDeploymentVersion": 28,
     "validation": {
-      "unitAndGuardChecks": 1488,
-      "chromiumDesktopAndMobileCases": 262,
-      "exactHead": "ab9e2cd0dafbb343ed7e02c357fc1b23be65014a",
-      "sourceCommit": "f0d4147116c8341db064ee9e374717624d53c206",
-      "exactHeadCiRun": 38214085965,
-      "mergedMainCiRun": 38215082241,
-      "validationScope": "exact-head and actual-main release gates; provider availability remains a separate measured limitation"
+      "unitAndGuardChecks": 1506,
+      "chromiumDesktopAndMobileCases": 266,
+      "exactHead": "31da5e073cc2b98da5b562a8615d3b5e9d0a85b8",
+      "sourceCommit": "9dfeeaf336845f8b2e2def0f8e0002aa60cf257c",
+      "exactHeadCiRun": 38276718436,
+      "mergedMainCiRun": 38303601647,
+      "validationScope": "exact-head and actual-main browser and Node gates passed; external provider remains v28"
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -504,6 +505,20 @@
       "standaloneAndMixedShoppingCommands": "previous routing",
       "providerChanges": false,
       "localCheeseProviderCalls": 0
+    },
+    "clientRequestRecognition": {
+      "sourcePr": 523,
+      "affirmativeRequests": [
+        "Я хочу кефир",
+        "Мне нужен кефир",
+        "Мне нужны яблоки"
+      ],
+      "negativeRequests": [
+        "Мне не нужен кефир"
+      ],
+      "quantitiesPreserved": true,
+      "modelRequired": false,
+      "retailSkuSelection": "separate work"
     }
   },
   "magnitAddressPhotos": {

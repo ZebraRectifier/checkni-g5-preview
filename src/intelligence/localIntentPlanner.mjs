@@ -2,6 +2,7 @@
 // without any server or paid AI. It never adds anything by itself — the
 // resolver returns its result as a clarification that the user confirms.
 // It only proposes canonical catalogue ids and never touches prices.
+import { stripShoppingRequestPrefix } from "./shoppingRequestText.mjs";
 
 const INTENTS = Object.freeze([
   { id: "breakfast", pattern: /завтрак/, items: ["eggs-c1-10", "milk-25-900", "bread-wheat-400", "butter-825-180", "cheese-semi-hard-200", "oat-flakes-400"] },
@@ -66,7 +67,7 @@ export function planLocalIntentBasket(text, catalogSnapshot) {
 const FILLER_WORDS = /^(?:купи(?:ть)?|возьми|взять|нужн[оаы]?|надо|хочу|добавь|ещ[её]|пожалуйста|мне|и|плюс|ну)\s+/;
 
 function splitPhrase(text) {
-  return normalize(text)
+  return normalize(stripShoppingRequestPrefix(text))
     .replace(/[;\n]+/g, ",")
     .replace(/\s+(?:и|плюс|а также)\s+/g, ",")
     .split(",")
@@ -75,7 +76,7 @@ function splitPhrase(text) {
 }
 
 function cleanTerm(segment) {
-  let term = segment;
+  let term = stripShoppingRequestPrefix(segment);
   for (let i = 0; i < 3; i += 1) term = term.replace(FILLER_WORDS, "");
   return term.replace(/[.!?]+$/g, "").trim() || segment;
 }

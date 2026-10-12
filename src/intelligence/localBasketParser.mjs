@@ -2,6 +2,7 @@ import {
   LOCAL_BASKET_PREFLIGHT,
   preflightLocalBasketText
 } from "./localBasketPreflight.mjs";
+import { stripShoppingRequestPrefix } from "./shoppingRequestText.mjs";
 
 export const LOCAL_BASKET_DECISION = Object.freeze({
   LOCAL: "local",
@@ -322,7 +323,7 @@ function extractQuantity(tokens) {
 }
 
 function meaningfulStems(segment) {
-  const normalizedSegment = normalizeText(segment);
+  const normalizedSegment = normalizeText(stripShoppingRequestPrefix(segment));
   const hasNegativeQuantity = /(?:^|\s)-+\s*\d+(?:$|\s)/.test(
     normalizedSegment
   );
@@ -530,7 +531,7 @@ function candidatesForSegment(segment, catalog) {
 function parseUniqueWhitespaceList(text, catalog) {
   if (/[;,\n]/.test(text)) return null;
 
-  const tokens = normalizeText(text).split(/\s+/).filter(Boolean);
+  const tokens = normalizeText(stripShoppingRequestPrefix(text)).split(/\s+/).filter(Boolean);
   if (tokens.length < 2 || tokens.length > 10) return null;
 
   const solutions = [];
@@ -867,8 +868,9 @@ export function parseLocalBasketText(text, catalog) {
   }
 
   const normalizedCatalog = normalizeCatalog(catalog);
+  const requestText = stripShoppingRequestPrefix(normalized);
 
-  const correction = parseInlineCorrections(normalized, normalizedCatalog);
+  const correction = parseInlineCorrections(requestText, normalizedCatalog);
   if (correction?.kind === "fallback") {
     return fallback(correction.reason);
   }
@@ -876,7 +878,7 @@ export function parseLocalBasketText(text, catalog) {
     return proposalFromTotals(correction.totals);
   }
 
-  const segments = splitSegments(normalized);
+  const segments = splitSegments(requestText);
   if (segments.length === 0) return reject("empty");
 
   const totals = new Map();

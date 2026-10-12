@@ -18,8 +18,9 @@ const TERMS = Object.freeze({
 });
 const VEGETABLES = new Set(["potatoes", "onions", "carrots", "cabbage", "tomatoes"]);
 const FRUITS = new Set(["apples", "bananas"]);
-const REFUSAL = /не\s+(?:хочу|нужн|ем|люблю|нрав[ия]\S*|подход\S*|переношу)|не надо|убери|надоел\S*|терпеть не могу|без\s+/u;
-const CLAUSE_PREDICATE = /хочу|нужн|можно|верни|добавь|не надо|не люблю|не нрав[ия]\S*|не подход\S*|не ем|убери|надоел\S*/u;
+const NEGATIVE_REQUEST = /(?:^|[^а-я])(?:не\s+(?:хочу|нуж(?:ен|н[аоы]?)|ем|люблю|нрав[ия]\S*|подход\S*|переношу)|не надо|убери|надоел\S*|терпеть не могу)/u;
+const REFUSAL = /(?:^|[^а-я])(?:не\s+(?:хочу|нуж(?:ен|н[аоы]?)|ем|люблю|нрав[ия]\S*|подход\S*|переношу)|не надо|убери|надоел\S*|терпеть не могу|без\s+)/u;
+const CLAUSE_PREDICATE = /хочу|нуж(?:ен|н[аоы])|можно|верни|добавь|не надо|не люблю|не нрав[ия]\S*|не подход\S*|не ем|убери|надоел\S*/u;
 const EXPLICIT_COUNT = /(?:^|\s)(?:\d{1,3}|один|одна|одну|два|две|три|четыре|пять|пару)(?=$|\s)/u;
 export function shoppingClauses(value) {
   return value.split(/[;!?\n]+|(?<!\d)\.|\.(?!\d)|,?\s+(?:но|зато|хотя)\s+/u).filter(Boolean).flatMap(clause => {
@@ -123,7 +124,7 @@ export function extractShoppingDelta(text) {
     if (except) { addTargets(except[1], "allow"); clause = clause.slice(0, except.index); }
     if (REFUSAL.test(clause)) {
       const without = clause.match(/без\s+(.+)/u);
-      const otherRefusal = /не\s+(?:хочу|нужн|ем|люблю|нрав[ия]\S*|подход\S*|переношу)|не надо|убери|надоел\S*|терпеть не могу/u.test(clause);
+      const otherRefusal = NEGATIVE_REQUEST.test(clause);
       const targets = shoppingTargets(without && !otherRefusal ? without[1] : clause);
       delta.reject.push(...targets);
       for (const target of targets) delta.rejectScopes[target] = /никогда|вообще не ем|всегда без/u.test(clause) ? "conversation" : "goal";
@@ -132,7 +133,7 @@ export function extractShoppingDelta(text) {
         delta.unresolved.push((without && !otherRefusal ? `без ${without[1]}` : clause).trim().slice(0, 80));
       }
     } else if (/можно|верни|передумал|снова хочу/u.test(clause)) addTargets(clause, "allow");
-    else if (/хочу|добавь|еще|нужен|возьми/u.test(clause)) {
+    else if (/хочу|добавь|еще|нуж(?:ен|н[аоы])|возьми/u.test(clause)) {
       const targets = shoppingTargets(clause);
       delta.want.push(...targets);
     }
