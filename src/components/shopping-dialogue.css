@@ -99,6 +99,14 @@
 
 .shopping-dialogue :focus-visible { outline: 2px solid #bd95ff; outline-offset: 3px; }
 
+.shopping-selection-cards { display: grid; gap: 10px; margin-top: 12px; }
+.shopping-selection-card { padding: 12px; border: 1px solid #49405d; border-radius: 12px; overflow-wrap: anywhere; }
+.shopping-selection-card img { float: right; width: 64px; height: 64px; object-fit: contain; margin: 0 0 8px 8px; image-rendering: auto; }
+.shopping-selection-card strong { display: block; }
+.shopping-selection-card p { margin: 6px 0; }
+.shopping-selection-card button, .shopping-selection-card a { min-height: 44px; display: inline-flex; align-items: center; margin: 4px 8px 0 0; }
+.shopping-selection-card a { color: #d5c3ff; text-decoration: underline; }
+
 @media (max-width: 480px) {
   .shopping-dialogue-history { max-height: 220px; }
   .shopping-dialogue-user { max-width: 95%; }

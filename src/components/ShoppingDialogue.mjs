@@ -1,4 +1,6 @@
 import { shoppingReferenceSources } from "../intelligence/shoppingProductReference.mjs";
+import { retailSelectionUrl } from "../intelligence/retailProductSelection.mjs";
+import { formatRubMinor } from "./ComparisonResult.mjs";
 
 const MAX_PREVIOUS_TURNS = 8;
 const MAX_REPLY_CHARACTERS = 6000;
@@ -138,6 +140,26 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
   }
 
   function sync(state) {
+    output.querySelectorAll(".shopping-selection-cards").forEach(node => node.remove());
+    if (Array.isArray(state.presentation?.selectionCards) && state.presentation.selectionCards.length) {
+      const list = document.createElement("div");
+      list.className = "shopping-selection-cards";
+      list.setAttribute("aria-label", "Варианты из выбранного каталога");
+      for (const [index, card] of state.presentation.selectionCards.slice(0, 5).entries()) {
+        const article = document.createElement("article"); article.className = "shopping-selection-card";
+        const imageUrl = retailSelectionUrl(card.imageUrl, card.retailerId, "imageUrlRules");
+        if (imageUrl) { const image = document.createElement("img"); image.src = imageUrl; image.alt = card.name; image.loading = "lazy"; image.decoding = "async"; image.referrerPolicy = "no-referrer"; image.addEventListener("error", () => image.remove(), { once: true }); article.append(image); }
+        const title = document.createElement("strong"); title.textContent = `${index + 1}. ${card.name}`; article.append(title);
+        const details = document.createElement("p"); details.textContent = `${card.unit ?? "Упаковка не уточнена"} · ${formatRubMinor(card.priceMinor)} · ${card.priceConditionLabel ?? "Условие цены неизвестно"}`; article.append(details);
+        const provenance = document.createElement("p"); provenance.textContent = `${card.storeName ?? card.retailerDisplayName} · наблюдение ${new Date(card.observedAt).toLocaleDateString("ru-RU", { timeZone: "UTC" })} · наличие неизвестно`; article.append(provenance);
+        const sourceUrl = retailSelectionUrl(card.sourceUrl, card.retailerId);
+        if (sourceUrl) { const source = document.createElement("a"); source.href = sourceUrl; source.textContent = "Источник"; source.target = "_blank"; source.rel = "noopener noreferrer"; article.append(source); }
+        const choice = document.createElement("button"); choice.type = "button"; choice.textContent = `Выбрать вариант ${index + 1}`;
+        choice.addEventListener("click", () => { input.value = `Выбираю вариант ${index + 1}`; input.dispatchEvent(new Event("input", { bubbles: true })); form.requestSubmit(); });
+        article.append(choice); list.append(article);
+      }
+      output.append(list);
+    }
     output.querySelectorAll(".shopping-dialogue-sources").forEach(node => node.remove());
     appendSources(output, state.presentation?.referenceKey);
     root.hidden = !active && !previous.length && !output.childElementCount;
@@ -148,7 +170,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
     if (active.pending) return;
     active.referenceKey = state.presentation?.referenceKey;
     let remaining = MAX_REPLY_CHARACTERS;
-    active.reply = [...output.querySelectorAll(".proposal-message, .proposal-detail, .proposal-preview-list li, .proposal-problems li")]
+    active.reply = [...output.querySelectorAll(".proposal-message, .proposal-detail, .proposal-preview-list li, .proposal-problems li, .shopping-selection-card")]
       .map(node => {
         const text = (node.textContent ?? "").trim().slice(0, remaining);
         remaining -= text.length;

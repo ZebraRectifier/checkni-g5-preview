@@ -7,6 +7,8 @@ import {
   parseLocalBasketText
 } from "./localBasketParser.mjs";
 import { extractCatalogQueries } from "../runtime/catalogQueries.mjs";
+import { stripShoppingRequestPrefix } from "./shoppingRequestText.mjs";
+import { preflightLocalBasketText } from "./localBasketPreflight.mjs";
 
 export const SHOPPING_ASSISTANT_TOOL = Object.freeze({
   SEARCH_CATALOG: "searchCatalog",
@@ -188,7 +190,10 @@ function normalizeRetailProduct(product) {
       : null,
     sourceUrl: typeof product.sourceUrl === "string"
       ? product.sourceUrl
-      : null
+      : null,
+    ...(typeof product.sourceProductId === "string" ? { sourceProductId: product.sourceProductId } : {}),
+    ...(typeof product.productUrl === "string" ? { productUrl: product.productUrl } : {}),
+    ...(typeof product.imageUrl === "string" ? { imageUrl: product.imageUrl } : {})
   });
 }
 
@@ -368,13 +373,15 @@ export function createShoppingAssistantOrchestrator(options = {}) {
       return null;
     }
 
+    const selectionOnly = preflightLocalBasketText(text).kind === "pass" && stripShoppingRequestPrefix(text) !== cleanText(text);
     const retailerId = detectRetailerId(text) ?? detectRetailerId(context?.retailer);
     let retailerContext = null;
     if (retailerId && getRetailerContext) {
       try {
         const value = getRetailerContext(retailerId);
         if (value?.retailerId === retailerId && typeof value.storeId === "string" && value.storeId) {
-          retailerContext = Object.freeze({ storeId: value.storeId, storeName: cleanText(value.storeName, 160) });
+          retailerContext = Object.freeze({ storeId: value.storeId, storeName: cleanText(value.storeName, 160),
+            ...(typeof value.shopCode === "string" && /^\d{4,12}$/u.test(value.shopCode) ? { shopCode: value.shopCode } : {}) });
         }
       } catch { /* A failed context lookup cannot authorize a regional price. */ }
     }
@@ -405,7 +412,7 @@ export function createShoppingAssistantOrchestrator(options = {}) {
     }
 
     let comparison = null;
-    if (basket.length > 0 && !retailerId) {
+    if (basket.length > 0 && !retailerId && !selectionOnly) {
       const compared = await runTool(
         SHOPPING_ASSISTANT_TOOL.COMPARE_BASKET,
         basket
@@ -421,7 +428,7 @@ export function createShoppingAssistantOrchestrator(options = {}) {
     }
 
     let retailerObservation = null;
-    if (retailerId && basket.length > 0 && (!getRetailerContext || retailerContext)) {
+    if (retailerId && basket.length > 0 && !selectionOnly && (!getRetailerContext || retailerContext)) {
       const observed = await runTool(
         SHOPPING_ASSISTANT_TOOL.GET_OBSERVED_PRICES,
         basket
@@ -443,7 +450,7 @@ export function createShoppingAssistantOrchestrator(options = {}) {
         // contiguous substring of branded retailer names. These are variants,
         // never an identity substitution or a comparable basket price.
         ? basket[0].name.replace(/\d+(?:[.,]\d+)?\s*%/gu, "").replace(/\s+/gu, " ").trim()
-        : identityText;
+        : selectionOnly ? extractCatalogQueries(identityText)[0] ?? identityText : identityText;
       const searched = await runTool(
         SHOPPING_ASSISTANT_TOOL.SEARCH_RETAILER,
         retailerId,
@@ -455,13 +462,13 @@ export function createShoppingAssistantOrchestrator(options = {}) {
       if (searched.value?.kind === "catalog" && Array.isArray(searched.value.products)) {
         retailProducts = searched.value.products
           .map(normalizeRetailProduct)
-          .filter(Boolean)
+          .filter(product => product && product.retailerId === retailerId)
           .slice(0, MAX_COMMERCIAL_RETAIL_PRODUCTS);
       }
     }
 
     let catalogProducts = [];
-    if (basket.length === 0 && identityText) {
+    if (basket.length === 0 && identityText && !selectionOnly) {
       const queries = extractCatalogQueries(identityText);
       if (queries.length > 0) {
         const searched = await runTool(

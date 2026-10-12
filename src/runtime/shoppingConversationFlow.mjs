@@ -9,6 +9,7 @@ import { isShoppingProductFactsQuestion, localShoppingProductFacts } from "../in
 import { createShoppingPreferenceStore } from "./shoppingPreferenceStorage.mjs";
 import { preflightLocalBasketText } from "../intelligence/localBasketPreflight.mjs";
 import { shoppingAdviceFocus, resolveShoppingAdviceFollowup, resolveShoppingBasketFollowup, resolveShoppingPriceFollowup, explicitShoppingItems } from "../intelligence/shoppingTurnContext.mjs";
+import { currentRetailSelectionScope, retailSelectionRequest, admittedRetailSelectionCards, retailSelectionView, reviewedRetailSelection } from "../intelligence/retailProductSelection.mjs";
 
 const copy = value => JSON.parse(JSON.stringify(value));
 const rowsOf = validation => (validation?.basket ?? []).map(row => ({ productId: row.product.id, quantity: row.quantity }));
@@ -25,6 +26,7 @@ export function createShoppingConversationFlow(options) {
   let lastPlan = [];
   let referencePlan = [];
   let adviceFocus = null;
+  let productSelection = null;
   let referenceAction = null;
   let pending = null;
   let suspendedDraft = null;
@@ -52,30 +54,41 @@ export function createShoppingConversationFlow(options) {
   function invalidate() {
     epoch += 1; pending = null; suspendedDraft = null; inFlight = null; stagedByHybrid = null;
     referencePlan = []; adviceFocus = null; referenceAction = null;
+    productSelection = null;
     hybrid.invalidate(); state = { status: "idle" };
     return state;
   }
   function edit() {
     const draft = pending ? { pending, state } : suspendedDraft;
     const references = referencePlan, focus = adviceFocus, action = referenceAction;
+    const selection = productSelection;
     invalidate();
     referencePlan = references; adviceFocus = focus; referenceAction = action;
+    productSelection = selection;
     suspendedDraft = draft;
     return state;
   }
   function preview(plan, exactTarget = null) {
     suspendedDraft = null;
     const base = basket.getSnapshot();
+    // A confirmed row keeps its chosen name/package when a later preference
+    // rebuilds the same product ID. The generic seed cannot relabel that row.
+    const planCatalog = localCatalog.map(product => {
+      const confirmed = base.find(row => row.id === product.id);
+      return confirmed && (confirmed.name !== product.name || confirmed.unit !== product.unit)
+        ? { ...product, name: confirmed.name, unit: confirmed.unit } : product;
+    });
+    const planById = new Map(planCatalog.map(product => [product.id, product]));
     const owned = new Map(managed.map(row => [row.productId, row.quantity]));
     const next = new Map();
     for (const row of base) {
-      const product = byId.get(row.id) ?? row;
+      const product = planById.get(row.id) ?? row;
       if (isShoppingProductRejected(product, memory)) continue;
       const quantity = row.quantity - (owned.get(row.id) ?? 0);
       if (quantity > 0) next.set(row.id, { ...row, quantity });
     }
     for (const row of plan.items) {
-      const product = byId.get(row.productId);
+      const product = planById.get(row.productId);
       if (!product || isShoppingProductRejected(product, memory)) continue;
       const prior = next.get(product.id);
       next.set(product.id, { id: product.id, name: product.name, unit: product.unit, quantity: (prior?.quantity ?? 0) + row.quantity });
@@ -85,7 +98,7 @@ export function createShoppingConversationFlow(options) {
       id, name: replacement.find(row => row.id === id)?.name ?? base.find(row => row.id === id)?.name,
       before: base.find(row => row.id === id)?.quantity ?? 0, after: replacement.find(row => row.id === id)?.quantity ?? 0
     })).filter(row => row.before !== row.after);
-    const validation = plan.items.length ? validateBasketProposal({ items: plan.items }, { catalog: localCatalog }) : { status: "accepted", basket: [], acceptedRows: [] };
+    const validation = plan.items.length ? validateBasketProposal({ items: plan.items }, { catalog: planCatalog }) : { status: "accepted", basket: [], acceptedRows: [] };
     const invalid = validation.status !== "accepted" || replacement.some(row => row.quantity > 99 || row.quantity < 1);
     if (invalid) {
       pending = null;
@@ -96,7 +109,7 @@ export function createShoppingConversationFlow(options) {
     lastPlan = copy(plan.items);
     referencePlan = copy(plan.items);
     state = { status: "clarification", result: { kind: "clarification", triggerReason: "conversation_draft", reason: "confirmation_required", draftProposal: { items: plan.items }, validation }, validation,
-      presentation: presentConversationBasket(memory, plan, localCatalog, priceHints, replacement, diff) };
+      presentation: presentConversationBasket(memory, plan, planCatalog, priceHints, replacement, diff) };
     pending.presentation = state.presentation;
     return state;
   }
@@ -117,10 +130,109 @@ export function createShoppingConversationFlow(options) {
       state = messageState("Корзина успела измениться.", "Старый черновик не применён. Напиши «перестрой», чтобы пересчитать изменения по текущей корзине.");
       return state;
     }
-    managed = copy(draft.plan.items);
+    if (typeof draft.selectionId === "string") {
+      const owned = new Map(managed.map(row => [row.productId,
+        Math.min(row.quantity, draft.base.find(item => item.id === row.productId)?.quantity ?? 0)]));
+      const chosen = draft.plan.items[0];
+      owned.set(chosen.productId, (owned.get(chosen.productId) ?? 0)
+        - (productSelection?.appliedQuantity ?? 0) + chosen.quantity);
+      managed = [...owned].filter(([, quantity]) => quantity > 0).map(([productId, quantity]) => ({ productId, quantity }));
+      lastPlan = copy(managed); referencePlan = copy(managed);
+    } else managed = copy(draft.plan.items);
+    if (typeof draft.selectionId === "string" && productSelection?.cards[0]?.id === draft.selectionId) productSelection = { ...productSelection,
+      appliedQuantity: draft.plan.items[0].quantity, appliedSnapshot: copy(applied.snapshot) };
     if (checkpoint) checkpoint.appliedSnapshot = copy(applied.snapshot);
     state = { status: "success", result: { kind: "proposal" }, validation: state.validation, presentation: { headline: "Применены показанные изменения. Теперь можно сравнить магазины.", mascotState: "found" }, mergeRejectedRows: [] };
     return state;
+  }
+  function selectRetailProduct(text, token) {
+    const scope = currentRetailSelectionScope(options.resolveProductFactsCatalog, localCatalog);
+    if (productSelection && productSelection.scope !== scope) {
+      productSelection = null; pending = null; suspendedDraft = null;
+    }
+    if (scope === null) return false;
+    const delta = extractShoppingDelta(text);
+    const turn = retailSelectionRequest(text, localCatalog, delta, productSelection);
+    if (!turn) {
+      if (!/^(?:го|ок|да|давай|применить|применяй|подтверждаю)$/iu.test(text.trim())) productSelection = null;
+      return false;
+    }
+    pending = null; suspendedDraft = null; referencePlan = []; referenceAction = null; adviceFocus = null;
+    hybrid.invalidate();
+    if (memory.facts.unresolvedConstraints) {
+      productSelection = null;
+      state = messageState("Осталось непонятое условие.", "Сначала уточни или явно отмени нераспознанное условие. Я сохранила его, чтобы не нарушить отказ.");
+      return true;
+    }
+    if (turn.kind === "clarification") { state = messageState("Уточню один момент.", turn.message); return true; }
+    if (turn.kind === "quantity") {
+      if (!Number.isSafeInteger(turn.quantity) || turn.quantity < 1 || turn.quantity > 99) {
+        state = messageState("Уточни количество.", "Можно выбрать от 1 до 99 упаковок. Предыдущий выбор сохранила."); return true;
+      }
+      productSelection = { ...productSelection, quantity: turn.quantity };
+      if (productSelection.selected) return selectRetailProduct("выбираю вариант 1", token);
+      state = retailSelectionView(productSelection); return true;
+    }
+    if (turn.kind === "sort") {
+      productSelection = { ...productSelection, cards: [...productSelection.cards].sort((a, b) => a.priceMinor - b.priceMinor) };
+      state = retailSelectionView(productSelection, "Показала по указанной цене упаковки; объём и условия могут отличаться."); return true;
+    }
+    if (turn.kind === "choice") {
+      const card = productSelection.cards[turn.index];
+      if (!card) { state = messageState("Уточни вариант.", "Такого номера среди показанных карточек нет."); return true; }
+      productSelection = { ...productSelection, cards: [card], selected: true };
+      const product = reviewedRetailSelection(card);
+      if (!product || !byId.has(product.id)) {
+        productSelection = { ...productSelection, cards: [card] };
+        state = retailSelectionView(productSelection, "Выбранную карточку пока нельзя безопасно добавить в расчётную корзину. Открой её источник или уточни другой вариант."); return true;
+      }
+      if (isShoppingProductRejected(product, memory)) {
+        state = messageState("Этот вариант конфликтует с сохранённым отказом.", "Если передумал, напиши, что этот продукт теперь можно."); return true;
+      }
+      const base = basket.getSnapshot();
+      const prior = base.find(row => row.id === product.id);
+      if (productSelection.appliedQuantity && JSON.stringify(base) !== JSON.stringify(productSelection.appliedSnapshot)) {
+        state = messageState("Корзина успела измениться.", "Напиши новый запрос на этот товар, чтобы я заново проверила количество. Старый выбор не применяю."); return true;
+      }
+      const quantity = (prior?.quantity ?? 0) - (productSelection.appliedQuantity ?? 0) + productSelection.quantity;
+      if (quantity > 99 || (prior && (prior.name !== product.name || prior.unit !== product.unit))) {
+        state = messageState("Уточню корзину.", "В корзине уже есть другая упаковка этого товара или количество слишком велико. Сначала исправь её, чтобы я не подменила выбранный вариант."); return true;
+      }
+      const replacement = [...base.filter(row => row.id !== product.id), { id: product.id, name: product.name, unit: product.unit, quantity }];
+      const validation = validateBasketProposal({ items: [{ productId: product.id, quantity: productSelection.quantity }] }, { catalog: [product] });
+      if (validation.status !== "accepted") { state = messageState("Не удалось проверить выбор.", "Корзина сохранилась. Уточни товар или количество."); return true; }
+      const plan = { items: [{ productId: product.id, quantity: productSelection.quantity }], unresolved: [], warnings: [] };
+      pending = { epoch, revision: memory.revision, base: copy(base), replacement: copy(replacement), plan: copy(plan), diff: [], selectionId: card.id };
+      checkpoint = { memory, plan: copy(lastPlan), basket: copy(base), appliedSnapshot: null };
+      state = { status: "clarification", result: { kind: "clarification", triggerReason: "conversation_draft", reason: "confirmation_required" }, validation,
+        presentation: { headline: "Этот вариант подходит по точной карточке.", message: `Добавить ${product.name}, ${product.unit} ×${productSelection.quantity}? Подтверди выбор. Цены корзины проверим отдельно.`,
+          items: [{ productId: product.id, name: product.name, unit: product.unit, quantity: productSelection.quantity }], primaryAction: "Применить изменения", mascotState: "checking" } };
+      pending.presentation = state.presentation;
+      return true;
+    }
+    productSelection = null;
+    state = { status: "loading" };
+    return (async () => {
+      let result = null, timeout;
+      try {
+        result = await Promise.race([
+          // The retail-mode callback supplies the currently selected store.
+          // A prior conversational store wish must not override that selection.
+          Promise.resolve().then(() => options.resolveCommercialRequest?.(`хочу ${turn.query}`, localCatalog, { retailer: null })),
+          new Promise(resolve => { timeout = setTimeout(() => resolve(null), 4500); })
+        ]);
+      } catch { /* A failed catalog must not fall through into a generic product. */ }
+      finally { clearTimeout(timeout); }
+      if (token !== epoch) return true;
+      const currentScope = currentRetailSelectionScope(options.resolveProductFactsCatalog, localCatalog);
+      if (currentScope === null || (scope.startsWith("[") && currentScope.startsWith("[") && scope !== currentScope)) {
+        productSelection = null; state = messageState("Каталог изменился.", "Повтори запрос для нового выбранного магазина. Корзина сохранилась."); return true;
+      }
+      const cards = admittedRetailSelectionCards(result, turn.query).filter(card => !isShoppingProductRejected(card, memory));
+      productSelection = { query: turn.query, quantity: turn.quantity, scope: currentScope, cards };
+      state = retailSelectionView(productSelection);
+      return true;
+    })();
   }
   async function execute(text, token) {
     commercialTurn = false;
@@ -130,6 +242,18 @@ export function createShoppingConversationFlow(options) {
       state = hybrid.getState();
       const next = await request;
       if (token === epoch) state = next;
+      return state;
+    }
+    // Retail selection uses admitted source cards before the generic seed
+    // proposal. Advice, refusals, budgets and commercial questions keep their
+    // established routes; a catalog outage cannot add a placeholder product.
+    const selectionQuestion = shoppingAdviceTopic(text) || isShoppingProductFactsQuestion(text);
+    if (selectionQuestion) productSelection = null;
+    const selection = (!selectionQuestion && preflightLocalBasketText(text).kind === "pass")
+      || (productSelection && /^(?:(?:тот|что-нибудь)\s+)?(?:подешевле|дешевле)$/iu.test(text.trim()))
+      ? selectRetailProduct(text, token) : false;
+    if (selection) {
+      if (typeof selection.then === "function") await selection;
       return state;
     }
     const priceTurn = resolveShoppingPriceFollowup(text, adviceFocus, referencePlan, localCatalog);
