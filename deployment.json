@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "661f025f8938642c354669d4794c4603e9008fa2",
+  "sourceCommit": "3e166642186fa7f7c839067b68455b6eb5f37e50",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -483,6 +483,29 @@
       },
       "overheadCause": "individual transport/Edge startup cause not established",
       "validation": "complete 18.9s responses accepted in virtual-clock tests; stalled responses remain bounded"
+    }
+  },
+  "magnitAddressPhotos": {
+    "sourcePr": 519,
+    "sourceCommit": "3e166642186fa7f7c839067b68455b6eb5f37e50",
+    "source": "saved image_url on the same admitted product row",
+    "host": "https://images-foodtech.magnit.ru",
+    "loading": "lazy",
+    "decoding": "async",
+    "imageRendering": "auto",
+    "missingUntrustedOrFailed": "Фото недоступно",
+    "addressPriceSourceDatePreserved": true,
+    "basketChangesAdded": false,
+    "newSourceObservations": 0,
+    "fullAssortmentProven": false,
+    "availability": "unknown",
+    "validation": {
+      "testedHead": "950652f1df8d73c1cffdbed37f5e7d5b22dd1975",
+      "unitAndGuardChecks": 1484,
+      "chromiumDesktopAndMobileCases": 262,
+      "exactHeadCiRun": 38211729869,
+      "mergedMainCiRun": 38213237045,
+      "actualImageLoadingEvidence": "Must be recorded after publication in PR #519; CI fixtures alone are insufficient"
     }
   }
 }

@@ -1305,6 +1305,62 @@ h1 {
   line-height: 1.35;
 }
 
+/* Saved same-product photos in the selected address's read-only price list. */
+.magnit-address-products {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+}
+
+.magnit-directory-list .magnit-address-product {
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.magnit-address-photo {
+  width: 64px;
+  height: 64px;
+  border: 1px solid rgba(21, 32, 25, 0.08);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.magnit-address-product-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+.magnit-address-photo-placeholder {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 4px;
+  color: rgba(21, 32, 25, 0.72);
+  font-size: 11px;
+  text-align: center;
+}
+
+.magnit-address-photo-placeholder[hidden] {
+  display: none;
+}
+
+.magnit-address-product-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.magnit-address-product-copy > span {
+  font-size: 12px;
+  color: rgba(21, 32, 25, 0.72);
+}
+
 .magnit-directory-more {
   min-height: 42px;
   margin-top: 12px;

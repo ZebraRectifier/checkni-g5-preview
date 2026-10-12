@@ -57,6 +57,46 @@ function element(tag, className, value) {
   return node;
 }
 
+export function getMagnitDirectoryPhotoUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:"
+        || url.hostname !== "images-foodtech.magnit.ru"
+        || url.username || url.password || url.port) return null;
+    url.hash = "";
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+function createProductPhoto(product) {
+  const visual = element("div", "magnit-address-photo");
+  const placeholder = element("span", "magnit-address-photo-placeholder", "Фото недоступно");
+  visual.append(placeholder);
+  const imageUrl = getMagnitDirectoryPhotoUrl(product.imageUrl);
+  if (!imageUrl) return visual;
+
+  const image = document.createElement("img");
+  image.className = "magnit-address-product-photo";
+  image.alt = `Фото: ${product.name}`;
+  image.title = "Фото официального каталога Магнита";
+  image.width = 64;
+  image.height = 64;
+  image.loading = "lazy";
+  image.decoding = "async";
+  image.referrerPolicy = "no-referrer";
+  placeholder.hidden = true;
+  image.addEventListener("error", () => {
+    image.remove();
+    placeholder.hidden = false;
+  }, { once: true });
+  image.src = imageUrl;
+  visual.append(image);
+  return visual;
+}
+
 export function createMagnitStoreDirectory() {
   const section = document.createElement("section");
   section.id = "magnit-directory";
@@ -188,6 +228,7 @@ function createAddressPrices(store) {
   const status = element("p", null, "");
   status.setAttribute("aria-live", "polite");
   const list = document.createElement("ul");
+  list.className = "magnit-address-products";
   const more = element("button", null, "Ещё цены");
   more.type = "button";
   more.hidden = true;
@@ -214,12 +255,15 @@ function createAddressPrices(store) {
     loaded = true;
     for (const product of result.products) {
       const row = document.createElement("li");
+      row.className = "magnit-address-product";
+      const copy = element("div", "magnit-address-product-copy");
       const source = element("a", null, product.name);
       source.href = product.productUrl;
       source.target = "_blank";
       source.rel = "noopener noreferrer";
-      row.append(source, element("strong", null, rubles.format(product.priceMinor/100)),
+      copy.append(source, element("strong", null, rubles.format(product.priceMinor/100)),
         element("span", null, "Проверено " + new Date(product.observedAt).toLocaleDateString("ru-RU")));
+      row.append(createProductPhoto(product), copy);
       list.append(row);
     }
     offset = result.nextOffset;
