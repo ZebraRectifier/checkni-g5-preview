@@ -167,6 +167,19 @@ export function createShoppingConversationFlow(options) {
     }
     if (followup) text = followup.text;
     const delta = extractShoppingDelta(text);
+    // "For guests" can answer the current product-selection question. Its
+    // occasion marker alone must not start a new basket goal or drop a budget.
+    // Keep explicit conversation commands and mixed shopping changes on their
+    // old path, including commands whose standalone parser uses an anchor.
+    const explicitConversationCommand = /новая корзина|новая задача|другая корзина/iu.test(text)
+      || /сбрось предпочтения|забудь (?:вс[её]|мои) предпочтения|начн[её]м с чистого листа|отмени последнее|откат|верни как было/iu.test(text)
+      || /перестрой|пересобери|обнови корзину/iu.test(text);
+    const advicePurposeOnly = adviceFocus !== null && followup?.kind === "question" && delta.newGoal
+      && !explicitConversationCommand
+      && !Object.keys(delta.facts).length && !delta.unset.length
+      && !delta.reject.length && !delta.allow.length && !delta.want.length
+      && !delta.reset && !delta.undo && !delta.clearUnresolved
+      && !delta.dissatisfaction && !delta.directions && !delta.unresolved.length;
     const affirmative = /^(?:го|ок|да|давай|применить|применяй|подтверждаю)$/iu.test(text.trim());
     if (affirmative) {
       if (!pending && suspendedDraft && suspendedDraft.pending.revision === memory.revision
@@ -194,7 +207,7 @@ export function createShoppingConversationFlow(options) {
     const readOnlyQuestion = ["advice", "product_facts"].includes(adviceTopic)
       && (adviceTopic === "product_facts" || !Object.keys(delta.facts).length || cookingSelectionQuestion)
       && !delta.want.length && !delta.unset.length
-      && !delta.reset && !delta.undo && !delta.newGoal && !delta.clearUnresolved
+      && !delta.reset && !delta.undo && (!delta.newGoal || advicePurposeOnly) && !delta.clearUnresolved
       && !/убери|не надо|надоел|терпеть не могу|не\s+(?:хочу|нужн|ем|люблю|нрав|подход|перенош)/iu.test(text);
     if (adviceTopic && (!delta.recognized || readOnlyQuestion)) {
       const explanation = localShoppingExplanation(adviceTopic, memory, localCatalog, lastPlan);

@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "3e166642186fa7f7c839067b68455b6eb5f37e50",
+  "sourceCommit": "f0d4147116c8341db064ee9e374717624d53c206",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -102,7 +102,8 @@
       508,
       509,
       511,
-      513
+      513,
+      520
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -111,13 +112,13 @@
     "providerRoute": "zero-cost OpenRouter",
     "providerDeploymentVersion": 28,
     "validation": {
-      "unitAndGuardChecks": 1438,
+      "unitAndGuardChecks": 1488,
       "chromiumDesktopAndMobileCases": 262,
-      "exactHead": "7ac1763196f69c9308f55e2e7a6ae027c48dca2c",
-      "sourceCommit": "661f025f8938642c354669d4794c4603e9008fa2",
-      "exactHeadCiRun": 38198817718,
-      "mergedMainCiRun": 38199718906,
-      "validationScope": "exact-head checks passed without retries or skips; merged source tree identical; actual-main outcome recorded in PR #513"
+      "exactHead": "ab9e2cd0dafbb343ed7e02c357fc1b23be65014a",
+      "sourceCommit": "f0d4147116c8341db064ee9e374717624d53c206",
+      "exactHeadCiRun": 38214085965,
+      "mergedMainCiRun": 38215082241,
+      "validationScope": "exact-head and actual-main release gates; provider availability remains a separate measured limitation"
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -483,6 +484,26 @@
       },
       "overheadCause": "individual transport/Edge startup cause not established",
       "validation": "complete 18.9s responses accepted in virtual-clock tests; stalled responses remain bounded"
+    },
+    "previousValidation": {
+      "unitAndGuardChecks": 1438,
+      "chromiumDesktopAndMobileCases": 262,
+      "exactHead": "7ac1763196f69c9308f55e2e7a6ae027c48dca2c",
+      "sourceCommit": "661f025f8938642c354669d4794c4603e9008fa2",
+      "exactHeadCiRun": 38198817718,
+      "mergedMainCiRun": 38199718906,
+      "validationScope": "exact-head checks passed without retries or skips; merged source tree identical; actual-main outcome recorded in PR #513"
+    },
+    "advicePurposeMemory": {
+      "sourcePr": 520,
+      "scope": "occasion-only answer within an active product-advice context",
+      "example": "budget 1300 ₽; cheese selection; for guests",
+      "completeMemoryPreserved": true,
+      "confirmedBasketPreserved": true,
+      "confirmationDraftCreated": false,
+      "standaloneAndMixedShoppingCommands": "previous routing",
+      "providerChanges": false,
+      "localCheeseProviderCalls": 0
     }
   },
   "magnitAddressPhotos": {
@@ -506,6 +527,22 @@
       "exactHeadCiRun": 38211729869,
       "mergedMainCiRun": 38213237045,
       "actualImageLoadingEvidence": "Must be recorded after publication in PR #519; CI fixtures alone are insufficient"
+    },
+    "liveImageLoading": {
+      "verifiedAt": "2026-10-12T07:05:07.788Z",
+      "stores": [
+        "503797",
+        "627402",
+        "503951",
+        "700335"
+      ],
+      "rows": 48,
+      "loaded": 48,
+      "sourceScopeCorrect": true,
+      "nameAltCorrect": true,
+      "originalDatesPreserved": true,
+      "imageRendering": "auto",
+      "newSourceObservations": 0
     }
   }
 }
