@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "aece398b5acbe167f500210829ef9f8c1fd9dcce",
+  "sourceCommit": "7fec4a115068e66f41e39e6b17cdf3aa3fb59fb9",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -658,5 +658,20 @@
       "skips": 0
     },
     "scope": "Intrinsic SVG dimensions only; archive truth/price contracts and retailer photos unchanged."
+  },
+  "productPhotoRecovery": {
+    "sourceCommit": "7fec4a115068e66f41e39e6b17cdf3aa3fb59fb9",
+    "sourcePr": 531,
+    "retryCooldownSeconds": 60,
+    "validCacheOnly": true,
+    "nameLimit": 120,
+    "comparisonBoundary": "photos are decorative; prices and availability unchanged",
+    "validation": {
+      "node": 1648,
+      "browser": 290,
+      "ciRun": 38347372236,
+      "actualMainCiRun": 38348552146,
+      "artifactRun": 38348552168
+    }
   }
 }

@@ -8,6 +8,8 @@
 // availability or store truth, and every failure falls back silently to
 // the pixel icon that is already rendered.
 
+import { isOpenFoodFactsImageUrl } from "../ports/catalogPhotosPort.mjs";
+
 const CACHE_KEY = "checkni.productPhotos.v1";
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const NEGATIVE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -16,6 +18,8 @@ const BATCH_SIZE = 6;
 // and, transitively, to Open Food Facts.
 const BATCH_INTERVAL_MS = 4_000;
 const MAX_FAILURES = 3;
+const FAILURE_COOLDOWN_MS = 60_000;
+const MAX_NAME_LENGTH = 120;
 
 export const PHOTO_ATTRIBUTION =
   "Фото товаров: Open Food Facts (CC-BY-SA); для демо-каталога — пример похожего товара";
@@ -51,6 +55,7 @@ export function createProductPhotoLoader({
   const queue = [];
   let draining = false;
   let failures = 0;
+  let retryAt = 0;
   let nextBatchAt = 0;
 
   function persist() {
@@ -65,9 +70,22 @@ export function createProductPhotoLoader({
   function cached(key) {
     const entry = cache[key];
     if (!entry || typeof entry !== "object") return undefined;
-    const ttl = entry.url ? CACHE_TTL_MS : NEGATIVE_TTL_MS;
-    if (typeof entry.at !== "number" || now() - entry.at > ttl) return undefined;
-    return entry.url ?? null;
+    if (!Number.isFinite(entry.at) || entry.at < 0) {
+      delete cache[key];
+      return undefined;
+    }
+    const age = now() - entry.at;
+    const ttl = entry.url === null ? NEGATIVE_TTL_MS : CACHE_TTL_MS;
+    if (
+      !Number.isFinite(age)
+      || age < 0
+      || age > ttl
+      || (entry.url !== null && !isOpenFoodFactsImageUrl(entry.url))
+    ) {
+      delete cache[key];
+      return undefined;
+    }
+    return entry.url;
   }
 
   function remember(key, url) {
@@ -97,14 +115,21 @@ export function createProductPhotoLoader({
         photos = await requestPhotos(
           batch.map(({ key, kind, value }) => ({ key, kind, value }))
         );
+        if (!(photos instanceof Map)) throw new Error("photos payload malformed");
         failures = 0;
+        retryAt = 0;
       } catch {
+        photos = null;
         failures += 1;
+        if (failures >= MAX_FAILURES) retryAt = now() + FAILURE_COOLDOWN_MS;
       }
 
       for (const task of batch) {
-        const url = photos instanceof Map ? photos.get(task.key) ?? null : null;
-        if (photos instanceof Map) remember(task.key, url);
+        const candidate = photos instanceof Map ? photos.get(task.key) : undefined;
+        const valid = candidate === null || isOpenFoodFactsImageUrl(candidate);
+        const url = valid ? candidate : null;
+        // Missing/malformed entries are not proof that an image is absent.
+        if (valid) remember(task.key, url);
         task.resolve(url);
         pending.delete(task.key);
       }
@@ -121,13 +146,19 @@ export function createProductPhotoLoader({
       ? request.code
       : null;
     const name = typeof request?.name === "string" ? request.name.trim() : "";
-    if (!code && !name) return Promise.resolve(null);
+    if (!code && (!name || name.length > MAX_NAME_LENGTH)) {
+      return Promise.resolve(null);
+    }
 
     const key = code ? `c:${code}` : `n:${name.toLocaleLowerCase("ru-RU")}`;
     const hit = cached(key);
     if (hit !== undefined) return Promise.resolve(hit);
     if (pending.has(key)) return pending.get(key);
-    if (failures >= MAX_FAILURES) return Promise.resolve(null);
+    if (failures >= MAX_FAILURES) {
+      if (now() < retryAt) return Promise.resolve(null);
+      failures = 0;
+      retryAt = 0;
+    }
 
     const promise = new Promise((resolve) => {
       queue.push({
@@ -144,3 +175,4 @@ export function createProductPhotoLoader({
 
   return Object.freeze({ load });
 }
+

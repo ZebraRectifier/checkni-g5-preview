@@ -12,6 +12,21 @@ export const MAX_CATALOG_PHOTOS_PER_REQUEST = 6;
 
 const IMAGE_HOST = "https://images.openfoodfacts.org/";
 
+export function isOpenFoodFactsImageUrl(value) {
+  if (
+    typeof value !== "string"
+    || !value.startsWith(IMAGE_HOST)
+    || /[\u0000-\u0020\u007f\\]/.test(value)
+  ) return false;
+  try {
+    const url = new URL(value);
+    return url.origin === "https://images.openfoodfacts.org"
+      && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}
+
 // requests: [{ key, kind: "code"|"name", value }]
 // Returns Map key -> url|null. Throws on transport failure so the
 // loader can count it as a failure and back off.
@@ -59,10 +74,11 @@ export async function requestCatalogPhotos(requests, {
   }
   for (const entry of payload.photos) {
     if (!entry || typeof entry.key !== "string") continue;
-    const url = typeof entry.url === "string" && entry.url.startsWith(IMAGE_HOST)
+    const url = isOpenFoodFactsImageUrl(entry.url)
       ? entry.url
       : null;
     photos.set(entry.key, url);
   }
   return photos;
 }
+
