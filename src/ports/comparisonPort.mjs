@@ -8,6 +8,7 @@ import {
 import { observedOffersPort } from "./observedOffersPort.mjs";
 import { selectStoreScopedOffers } from "../observations/selectedStoreScope.mjs";
 import { matchesReviewedRetailBasketIdentity } from "../catalog/reviewedRetailBasket.mjs";
+import { loadSelectedRetailCatalogOffers } from "./selectedRetailCatalogOffersPort.mjs";
 
 export const COMPARISON_MODE = Object.freeze({
   DEMO: "demo",
@@ -92,7 +93,7 @@ export function createObservedComparisonPort(
       const basket = reshapeSurfaceBasket(surfaceBasket);
       const storeScope = typeof getStoreScope === "function" ? getStoreScope() : null;
       if (getStoreScope && storeScope?.valid !== true) return coreCompare({ basket, offers: [] });
-      const offers = await loadObservedOffers(basket);
+      const offers = await loadObservedOffers(basket, storeScope);
 
       if (!Array.isArray(offers)) {
         throw new TypeError("observed offers port must return an array");
@@ -120,10 +121,16 @@ export const observedComparisonPort = createObservedComparisonPort(
 export function createSelectedAddressComparisonPort(getStoreScope, options = {}) {
   if (typeof getStoreScope !== "function") throw new TypeError("selected comparison requires a store scope");
   const load = options.loadObservedOffers ?? (coreBasket => observedOffersPort.load(coreBasket));
-  return createObservedComparisonPort(compareObservedBasket, async coreBasket => {
-    const offers = await load(coreBasket);
+  const loadCatalog = options.loadCatalogOffers
+    ?? (options.loadObservedOffers ? async () => [] : loadSelectedRetailCatalogOffers);
+  return createObservedComparisonPort(compareObservedBasket, async (coreBasket, storeScope) => {
+    const [offers, catalogOffers] = await Promise.all([
+      load(coreBasket),
+      Promise.resolve().then(() => loadCatalog(coreBasket, storeScope)).catch(() => [])
+    ]);
     if (!Array.isArray(offers)) return offers; // The base port rejects malformed results.
-    return offers.filter(offer => !["metro-public-live", "magnit-public-live"].includes(offer?.sourceId)
+    return [...offers, ...(Array.isArray(catalogOffers) ? catalogOffers : [])]
+      .filter(offer => !["metro-public-live", "magnit-public-live"].includes(offer?.sourceId)
       || matchesReviewedRetailBasketIdentity(coreBasket.find(row => row.product.id === offer.canonicalProductId)?.product));
   }, { getStoreScope });
 }

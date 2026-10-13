@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "7fec4a115068e66f41e39e6b17cdf3aa3fb59fb9",
+  "sourceCommit": "96f4f473b7dd5169e7e21f76db2f20beaa11cfec",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -673,5 +673,30 @@
       "actualMainCiRun": 38348552146,
       "artifactRun": 38348552168
     }
+  },
+  "selectedCatalogComparison": {
+    "sourcePr": 535,
+    "testedHead": "9ae46e5bf44b3af16336423971e2275edb830830",
+    "mergedSource": "96f4f473b7dd5169e7e21f76db2f20beaa11cfec",
+    "runtimeFiles": 154,
+    "status": "partial",
+    "scope": "Reviewed exact METRO SKUs at the selected Moscow address",
+    "identityConfirmationRequired": true,
+    "freshnessWindowMs": 300000,
+    "validation": {
+      "nodeChecks": 1673,
+      "desktopMobileCases": 302,
+      "exactHeadCI": 38436969029,
+      "package": 38436969039,
+      "retries": 0,
+      "skips": 0
+    },
+    "sourceCheckDate": "2026-10-13",
+    "sourceLimits": [
+      "Selected METRO catalogue observations from October 10 remain stale",
+      "METRO 10 product page showed a 2000 RUB minimum online order",
+      "Milk SKU 241097 displayed Only in the shopping centre"
+    ],
+    "truthBoundary": "No fresh-price import, checkout capability or current multi-store winner is claimed; unknown availability remains unknown."
   }
 }

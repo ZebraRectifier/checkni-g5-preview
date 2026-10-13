@@ -59,6 +59,13 @@ export function matchesReviewedRetailBasketIdentity(product) {
     && units.some(unit => normalizedUnit(unit) === normalizedUnit(product.unit));
 }
 
+export function getReviewedRetailSourceProductIds(retailerId, products) {
+  if (!Array.isArray(products)) return [];
+  const ids = new Set(products.filter(matchesReviewedRetailBasketIdentity).map(product => product.id));
+  return BINDINGS.filter(binding => binding.retailerId === retailerId && ids.has(binding.productId))
+    .map(binding => binding.sourceProductId);
+}
+
 export function getReviewedRetailBasketProduct(product) {
   if (!product || typeof product !== "object") return null;
   const binding = BINDINGS.find(candidate => (

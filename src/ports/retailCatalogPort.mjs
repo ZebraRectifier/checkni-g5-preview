@@ -711,6 +711,18 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
     imageUrl,
     sourceUrl,
     productUrl,
+    ...(options.includeComparisonEvidence === true && definition.retailerId === "metro" ? {
+      comparisonEvidence: Object.freeze({
+        storeId: row.store_id,
+        locationLabel: row.location_label,
+        salesChannel: row.sales_channel,
+        minimumQuantity: row.minimum_quantity,
+        scopeBinding: row.scope_binding,
+        bindingId: row.binding_id,
+        scopeEvidenceUrl: row.scope_evidence_url,
+        quantitySemantics: row.quantity_semantics
+      })
+    } : {}),
     observedAt: new Date(observedMs).toISOString()
   });
 }
@@ -767,12 +779,14 @@ export function createRetailCatalogClient(options = {}) {
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const timeoutMs = options.timeoutMs ?? RETAIL_CATALOG_TIMEOUT_MS;
   const definition = resolveDefinition({ ...options, retailerId: options.retailerId ?? "globus" });
-  const normalizeOptions = Number.isFinite(options.nowMs)
-    ? Object.freeze({ nowMs: options.nowMs })
-    : undefined;
+  const normalizeOptions = Object.freeze({
+    ...(Number.isFinite(options.nowMs) ? { nowMs: options.nowMs } : {}),
+    includeComparisonEvidence: options.includeComparisonEvidence === true
+  });
 
   async function requestRows({
     query = null,
+    sourceProductIds = null,
     categoryId = null,
     categoryUrlPrefix = null,
     limit = 24,
@@ -780,6 +794,9 @@ export function createRetailCatalogClient(options = {}) {
   } = {}) {
     if (
       !definition
+      || (sourceProductIds !== null && (!Array.isArray(sourceProductIds)
+        || sourceProductIds.length < 1 || sourceProductIds.length > MAX_RETAIL_CATALOG_PRODUCTS
+        || sourceProductIds.some(id => typeof id !== "string" || !/^[a-zA-Z0-9_-]{1,80}$/u.test(id))))
       || (query !== null && !query)
       || (categoryId !== null && (
         !Number.isSafeInteger(categoryId)
@@ -819,6 +836,9 @@ export function createRetailCatalogClient(options = {}) {
     url.searchParams.set("store_id", `eq.${definition.storeId}`);
     url.searchParams.set("locality_id", `eq.${definition.localityId}`);
     url.searchParams.set("active", "eq.true");
+    if (sourceProductIds !== null) {
+      url.searchParams.set("source_product_id", `in.(${sourceProductIds.join(",")})`);
+    }
     if (query !== null) {
       url.searchParams.set("name", `ilike.*${query}*`);
     }
@@ -971,6 +991,10 @@ export function createRetailCatalogClient(options = {}) {
 
   return Object.freeze({
     definition,
+    async bySourceProductIds(sourceProductIds) {
+      if (!Array.isArray(sourceProductIds)) return result("error", { code: "invalid_request" });
+      return requestRows({ sourceProductIds, limit: sourceProductIds?.length });
+    },
     async search(query, searchOptions = {}) {
       const normalizedQuery = cleanQuery(query);
       if (!normalizedQuery) {
