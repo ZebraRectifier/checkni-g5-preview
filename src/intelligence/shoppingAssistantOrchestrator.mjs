@@ -7,6 +7,17 @@ import {
   parseLocalBasketText
 } from "./localBasketParser.mjs";
 import { extractCatalogQueries } from "../runtime/catalogQueries.mjs";
+import { shoppingTargets } from "./shoppingConversation.mjs";
+
+// These seed descriptors contain defaults the shopper did not necessarily
+// request (C1, white rice, wheat bread, semi-hard cheese). Discovery searches
+// the family; retail selection still checks every explicit query token against
+// the source card before offering it. Commercial/price requests keep identity.
+const SEED_DISCOVERY_QUERIES = Object.freeze({
+  "eggs-c1-10": "Яйца", "butter-825-180": "Масло", "rice-900": "Рис",
+  "bread-wheat-400": "Хлеб", "cheese-semi-hard-200": "Сыр"
+});
+const TARGET_DISCOVERY_QUERIES = Object.freeze({ eggs: "Яйца" });
 import { stripShoppingRequestPrefix } from "./shoppingRequestText.mjs";
 import { preflightLocalBasketText } from "./localBasketPreflight.mjs";
 
@@ -445,12 +456,18 @@ export function createShoppingAssistantOrchestrator(options = {}) {
 
     let retailProducts = [];
     if (retailerId && identityText && retailerObservation === null) {
-      const retailerQuery = basket.length === 1
+      const singleDiscovery = selectionOnly && extractCatalogQueries(identityText).length === 1;
+      const targets = singleDiscovery ? shoppingTargets(identityText) : [];
+      const discoveryFamily = singleDiscovery
+        ? (basket.length === 1 ? SEED_DISCOVERY_QUERIES[basket[0].id] : null)
+          ?? (targets.length === 1 ? TARGET_DISCOVERY_QUERIES[targets[0]] : null)
+        : null;
+      const retailerQuery = discoveryFamily ?? (basket.length === 1
         // Generic canonical labels contain pack/fat hints that are not a
         // contiguous substring of branded retailer names. These are variants,
         // never an identity substitution or a comparable basket price.
         ? basket[0].name.replace(/\d+(?:[.,]\d+)?\s*%/gu, "").replace(/\s+/gu, " ").trim()
-        : selectionOnly ? extractCatalogQueries(identityText)[0] ?? identityText : identityText;
+        : selectionOnly ? extractCatalogQueries(identityText)[0] ?? identityText : identityText);
       const searched = await runTool(
         SHOPPING_ASSISTANT_TOOL.SEARCH_RETAILER,
         retailerId,
