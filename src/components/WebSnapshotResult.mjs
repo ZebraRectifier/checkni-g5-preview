@@ -96,7 +96,7 @@ function createStoreDetails(store) {
   dot.className = "sn-dot";
   dot.setAttribute("aria-hidden", "true");
   dot.style.background = STORE_COLORS[store.retailerId] ?? "#5b667e";
-  dot.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13v7h14v-7"/></svg>';
+  dot.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13v7h14v-7"/></svg>';
 
   const right = document.createElement("span");
   right.className = "snapshot-store-right";

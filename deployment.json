@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "f8f0d237d2d5c500b78499afb40dba0e01a991f0",
+  "sourceCommit": "aece398b5acbe167f500210829ef9f8c1fd9dcce",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -642,5 +642,21 @@
       "Core-based comparison feedback"
     ],
     "truthBoundary": "The loader still uses fixed reviewed profiles, not arbitrary-store collection. A fixed-profile offer from Magnit 777016 cannot enter comparison for selected 777312. Positive independent Magnit selected-control proof, fresh multi-retailer coverage, full assortment and physical Android evidence remain pending. Unknown availability remains unknown."
+  },
+  "archiveIconLayout": {
+    "sourcePR": 528,
+    "testedHead": "4cc67e18543bf5adc48dd4e370cf06371432cf15",
+    "mergedSource": "aece398b5acbe167f500210829ef9f8c1fd9dcce",
+    "expectedSizePx": 18,
+    "beforeMeasuredSizePx": 808,
+    "validation": {
+      "nodeChecks": 1615,
+      "desktopMobileCases": 286,
+      "exactHeadCI": 38330126423,
+      "actualMainCI": 38331441043,
+      "retries": 0,
+      "skips": 0
+    },
+    "scope": "Intrinsic SVG dimensions only; archive truth/price contracts and retailer photos unchanged."
   }
 }
