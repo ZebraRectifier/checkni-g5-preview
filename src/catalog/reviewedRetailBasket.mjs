@@ -1,6 +1,7 @@
 import {
   BETA_EVERYDAY_BINDINGS,
-  BETA_EVERYDAY_PROOF_PRODUCTS
+  BETA_EVERYDAY_PROOF_PRODUCTS,
+  BETA_REAL_PRODUCTS
 } from "../data/betaRealBasket.mjs";
 
 // Identity only. These are the reviewed SKUs from the existing live proof,
@@ -15,7 +16,9 @@ const BINDINGS = Object.freeze([
   ["magnit", "1899800733", "milk-25-900", "Молоко Простоквашино пастеризованное 2.5% 930мл",
     "/product/1899800733-moloko_prostokvashino_pasterizovannoe_2_5_930ml"],
   ["magnit", "1899800689", "kefir-1l", "Кефир Простоквашино 2.5% 930г",
-    "/product/1899800689-kefir_prostokvashino_2_5_930g"]
+    "/product/1899800689-kefir_prostokvashino_2_5_930g"],
+  ["magnit", "1000084229", "butter-825-180", "Масло сладко-сливочное Брест-Литовск 82.5% 180г",
+    "/product/1000084229-maslo_sladko_slivochnoe_brest_litovsk_82_5_180g"]
 ].map(([retailerId, sourceProductId, productId, name, path]) => Object.freeze({
   retailerId, sourceProductId, productId, name, path
 })));
@@ -31,6 +34,29 @@ function normalizedUnit(value) {
   return typeof value === "string"
     ? value.normalize("NFKC").toLocaleLowerCase("ru-RU").replace(/\s+/gu, "")
     : null;
+}
+
+// Fixed live profiles price these exact packs. A historical family ID alone
+// cannot turn a generic 900ml/1l basket row into the reviewed 930ml/930g SKU.
+export function getReviewedRetailBasketIdentity(productId) {
+  const display = BETA_EVERYDAY_BINDINGS.find(row => row.canonicalProductId === productId)?.displayName;
+  const separator = display?.lastIndexOf(", ") ?? -1;
+  if (separator >= 0) return Object.freeze({ id: productId,
+    name: display.slice(0, separator), unit: display.slice(separator + 2) });
+  const exact = BETA_REAL_PRODUCTS.find(row => row.id === productId);
+  return exact ? Object.freeze({ id: exact.id, name: exact.name, unit: exact.unit }) : null;
+}
+
+export function matchesReviewedRetailBasketIdentity(product) {
+  if (!product || typeof product !== "object") return false;
+  const exact = BETA_EVERYDAY_PROOF_PRODUCTS.find(row => row.id === product.id)
+    ?? BETA_REAL_PRODUCTS.find(row => row.id === product.id);
+  const display = BETA_EVERYDAY_BINDINGS.find(row => row.canonicalProductId === product.id)?.displayName;
+  const separator = display?.lastIndexOf(", ") ?? -1;
+  const names = [exact?.name, separator >= 0 ? display.slice(0, separator) : null].filter(Boolean);
+  const units = [exact?.unit, separator >= 0 ? display.slice(separator + 2) : null].filter(Boolean);
+  return names.some(name => normalizedName(name) === normalizedName(product.name))
+    && units.some(unit => normalizedUnit(unit) === normalizedUnit(product.unit));
 }
 
 export function getReviewedRetailBasketProduct(product) {
@@ -64,3 +90,4 @@ export function getReviewedRetailBasketProduct(product) {
     category: canonical.category
   });
 }
+

@@ -1,4 +1,5 @@
 import { searchMockCatalog } from "./data/mockCatalog.mjs";
+import { comparisonFeedback } from "./runtime/comparisonFeedback.mjs";
 import { SHOP_CATALOG } from "./data/shopCatalog.mjs";
 import {
   BETA_LIVE_PROOF_BASKET,
@@ -33,16 +34,17 @@ import { resolveMetroMoscowRegionStore } from "./data/metroMoscowRegionStores.mj
 import { resolveGlobusMoscowRegionStore } from "./data/globusMoscowRegionStores.mjs";
 import { createGlobusStorePicker } from "./components/GlobusStorePicker.mjs";
 import { createOkeyDeliveryCatalog } from "./components/OkeyDeliveryCatalog.mjs";
+import { createSelectedComparisonStores } from "./components/SelectedComparisonStores.mjs";
+import { createSelectedStoreScope, createLiveExampleStoreScope } from "./observations/selectedStoreScope.mjs";
+import { getReviewedRetailBasketIdentity, matchesReviewedRetailBasketIdentity } from "./catalog/reviewedRetailBasket.mjs";
 import {
   CATALOG_SORT,
   buildSnapshotPriceHints,
   dockPriceSuffix,
   sortCatalogProducts
 } from "./runtime/priceHints.mjs";
-import {
-  COMPARISON_MODE,
-  comparisonPort
-} from "./ports/comparisonPort.mjs";
+import * as comparisonPorts from "./ports/comparisonPort.mjs";
+const { COMPARISON_MODE, comparisonPort } = comparisonPorts;
 import {
   COMPARISON_STATUS,
   createComparisonFlow
@@ -165,7 +167,7 @@ const retailCatalogClients = new Map(
   ])
 );
 const comparisonFlow = createComparisonFlow((surfaceBasket) =>
-  comparisonPort.compare(surfaceBasket)
+  compareSurfaceBasket(surfaceBasket)
 );
 const resolveAiCatalog = createAiCatalogResolver(
   requestCatalogSearch,
@@ -183,14 +185,14 @@ const shoppingAssistant = createShoppingAssistantOrchestrator({
         });
   },
   getObservedPrices: comparisonMode === COMPARISON_MODE.OBSERVED
-    ? (surfaceBasket) => comparisonPort.compare(surfaceBasket)
+    ? (surfaceBasket) => compareSurfaceBasket(surfaceBasket)
     : null,
   getProductDetails: (query) => requestCatalogSearch(
     [query],
     { limitPerQuery: 1 }
   ),
   compareBasket: comparisonMode === COMPARISON_MODE.OBSERVED
-    ? (surfaceBasket) => comparisonPort.compare(surfaceBasket)
+    ? (surfaceBasket) => compareSurfaceBasket(surfaceBasket)
     : null,
   getAlternatives: (queries, options) => requestCatalogSearch(
     Array.isArray(queries) ? queries : [queries],
@@ -289,6 +291,29 @@ let magnitStorePicker = null;
 let metroStorePicker = null;
 let selectedGlobusStore = resolveGlobusMoscowRegionStore(history.state?.checkniGlobusStoreId ?? "5011") ?? resolveGlobusMoscowRegionStore("5011");
 let globusStorePicker = null;
+let comparisonAddressMode = history.state?.checkniComparisonAddressMode === "live-example"
+  ? "live-example" : "selected";
+const selectedAddressComparisonPort = typeof comparisonPorts.createSelectedAddressComparisonPort === "function"
+  ? comparisonPorts.createSelectedAddressComparisonPort(currentComparisonStoreScope) : null;
+
+function currentComparisonStoreScope() {
+  return comparisonAddressMode === "live-example" ? createLiveExampleStoreScope()
+    : createSelectedStoreScope({ magnit: selectedMagnitStore.shopCode,
+      metro: selectedMetroStore.storeNumber, globus: selectedGlobusStore.officialStoreId });
+}
+function compareSurfaceBasket(surfaceBasket) {
+  if (comparisonMode === COMPARISON_MODE.OBSERVED
+      && (publicRetailCatalogMode || comparisonAddressMode === "live-example")) {
+    if (!selectedAddressComparisonPort) throw new Error("Selected-address comparison is unavailable.");
+    return selectedAddressComparisonPort.compare(surfaceBasket);
+  }
+  return comparisonPort.compare(surfaceBasket);
+}
+function comparisonAddressChanged() {
+  comparisonAddressMode = "selected";
+  comparisonFlow.invalidate();
+  renderBasket();
+}
 
 function selectedGlobusClient() {
   const key = "globus-" + selectedGlobusStore.officialStoreId;
@@ -936,6 +961,7 @@ function createAppRouteState(
   retailerId = retailBrowserState.retailerId
 ) {
   const state = createRouteState(view, fromView, scrollY);
+  if (comparisonMode === COMPARISON_MODE.OBSERVED) state.checkniComparisonAddressMode = comparisonAddressMode;
 
   if (publicRetailCatalogMode) {
     state.checkniRetailNavigation = true;
@@ -1346,7 +1372,7 @@ async function loadMoreRetailCategoryProducts() {
   renderCatalog();
 }
 
-function restoreRetailNavigationFromHistory({ initial = false } = {}) {
+function restoreRetailNavigationFromHistory({ initial = false, forceAddressReload = false } = {}) {
   const retailerId = validRetailerId(history.state?.checkniRetailerId);
   const restoredMagnitStore = resolveMagnitMoscowStore({
     shopCode: history.state?.checkniMagnitShopCode
@@ -1375,7 +1401,7 @@ function restoreRetailNavigationFromHistory({ initial = false } = {}) {
 
   if (!definition) return;
 
-  if (initial || retailerId !== retailBrowserState.retailerId || addressChanged) {
+  if (initial || retailerId !== retailBrowserState.retailerId || addressChanged || forceAddressReload) {
     if (!initial) {
       basketProposalFlow.setRetailer(definition.displayName);
       renderBasketProposalState();
@@ -1436,6 +1462,7 @@ function setupRetailBrowser() {
       shopCode: selectedMagnitStore.shopCode,
       onSelect: (store) => {
         selectedMagnitStore = store;
+        comparisonAddressChanged();
         void selectRetailer("magnit");
       }
     });
@@ -1443,12 +1470,15 @@ function setupRetailBrowser() {
       storeNumber: selectedMetroStore.storeNumber,
       onSelect: (store) => {
         selectedMetroStore = store;
+        comparisonAddressChanged();
         void selectRetailer("metro");
       }
     });
     elements.retailCatalogNav.before(magnitStorePicker.element);
     elements.retailCatalogNav.before(metroStorePicker.element);
-    globusStorePicker = createGlobusStorePicker({ officialStoreId: selectedGlobusStore.officialStoreId, onSelect: store => { selectedGlobusStore = store; void selectRetailer("globus"); } });
+    globusStorePicker = createGlobusStorePicker({ officialStoreId: selectedGlobusStore.officialStoreId, onSelect: store => {
+      selectedGlobusStore = store; comparisonAddressChanged(); void selectRetailer("globus");
+    } });
     elements.retailCatalogNav.before(globusStorePicker.element);
   }
   renderRetailBrowser();
@@ -2088,6 +2118,13 @@ function createBetaIdentityPrompt() {
   ));
   if (bindings.length === 0) return null;
 
+  const reviewedSnapshot = basket.getSnapshot();
+  const reviewedScopeKey = currentComparisonStoreScope().key;
+  const bindingIds = new Set(bindings.map(binding => binding.canonicalProductId));
+  const needsIdentitySelection = publicRetailCatalogMode && reviewedSnapshot.some(row => (
+    bindingIds.has(row.id) && !matchesReviewedRetailBasketIdentity(row)
+  ));
+
   const section = document.createElement("section");
   section.className = "future-step comparison-result real-identity-prompt";
   section.setAttribute("aria-label", "Проверка реальных цен в Москве");
@@ -2101,6 +2138,8 @@ function createBetaIdentityPrompt() {
 
   const intro = document.createElement("p");
   intro.textContent = "Сравним одинаковые товары в обоих магазинах:";
+  if (needsIdentitySelection) intro.textContent =
+    "Для расчёта нужно выбрать конкретные товары. После подтверждения заменим общие названия и упаковки в корзине на перечисленные ниже; количество упаковок сохраним.";
 
   const list = document.createElement("ul");
   list.className = "real-identity-list";
@@ -2120,8 +2159,25 @@ function createBetaIdentityPrompt() {
   action.type = "button";
   action.className = "primary-button";
   action.textContent = "Подтвердить товары и сравнить";
+  if (needsIdentitySelection) action.textContent = "Выбрать эти товары и сравнить";
   action.addEventListener("click", async () => {
     action.disabled = true;
+    if (publicRetailCatalogMode && currentComparisonStoreScope().key !== reviewedScopeKey) {
+      showToast("Адреса изменились. Проверьте товары ещё раз.");
+      renderBasket();
+      return;
+    }
+    if (needsIdentitySelection) {
+      const replacement = reviewedSnapshot.map(row => {
+        const identity = bindingIds.has(row.id) ? getReviewedRetailBasketIdentity(row.id) : null;
+        return identity ? { ...row, name: identity.name, unit: identity.unit } : row;
+      });
+      if (!basket.replaceReviewedBasket(reviewedSnapshot, replacement).applied) {
+        showToast("Корзина изменилась. Проверьте товары ещё раз.");
+        renderBasket();
+        return;
+      }
+    }
     for (const profileId of unconfirmedProfileIds) {
       confirmBetaRetailIdentity(profileId);
     }
@@ -2270,6 +2326,7 @@ async function handleBetaLiveExample() {
   }
 
   const exampleBasket = BETA_LIVE_PROOF_BASKET;
+  comparisonAddressMode = "live-example";
   const merged = basket.mergeValidatedBasket(exampleBasket);
   if (merged.rejectedRows.length > 0) {
     elements.betaLiveButton.disabled = false;
@@ -2295,11 +2352,7 @@ async function handleBetaLiveExample() {
   await handleCompare();
 
   const state = comparisonFlow.getState();
-  showToast(
-    state.status === COMPARISON_STATUS.SUCCESS
-      ? "Свежие реальные цены проверены"
-      : "Показали только подтверждённые свежие данные"
-  );
+  showToast(comparisonFeedback(state));
 }
 
 function renderBasket() {
@@ -2324,6 +2377,17 @@ function renderBasket() {
       void handleCompare();
     }
   });
+  if (items.length > 0 && comparisonMode === COMPARISON_MODE.OBSERVED
+      && (publicRetailCatalogMode || comparisonAddressMode === "live-example")) {
+    const addresses = createSelectedComparisonStores(currentComparisonStoreScope(), {
+      onEdit: publicRetailCatalogMode ? retailerId => {
+        comparisonAddressChanged();
+        navigate(VIEW.SHOP, { focusMode: FOCUS_MODE.HEADING });
+        void selectRetailer(retailerId, { replaceHistory: true });
+      } : undefined
+    });
+    if (addresses) elements.basketContent.append(addresses);
+  }
   renderComparisonState();
 }
 
@@ -2666,6 +2730,18 @@ elements.backToShop.addEventListener("click", returnToShop);
 
 window.addEventListener("popstate", () => {
   const previousView = currentView;
+  const previousScopeKey = currentComparisonStoreScope().key;
+  if (publicRetailCatalogMode) {
+    const magnit = resolveMagnitMoscowStore({ shopCode: history.state?.checkniMagnitShopCode });
+    const metro = resolveMetroMoscowRegionStore({ storeNumber: history.state?.checkniMetroStoreNumber });
+    const globus = resolveGlobusMoscowRegionStore(history.state?.checkniGlobusStoreId);
+    if (magnit) selectedMagnitStore = magnit;
+    if (metro?.onlinePickupStatus === "proven") selectedMetroStore = metro;
+    if (globus?.priceStatus === "verified") selectedGlobusStore = globus;
+  }
+  comparisonAddressMode = history.state?.checkniComparisonAddressMode === "live-example" ? "live-example" : "selected";
+  const addressChanged = currentComparisonStoreScope().key !== previousScopeKey;
+  if (addressChanged) comparisonFlow.invalidate();
   currentView = viewFromHash(location.hash);
   renderView({
     focusMode: FOCUS_MODE.HEADING,
@@ -2674,10 +2750,10 @@ window.addEventListener("popstate", () => {
 
   if (
     publicRetailCatalogMode
-    && previousView === VIEW.SHOP
     && currentView === VIEW.SHOP
+    && (previousView === VIEW.SHOP || addressChanged)
   ) {
-    restoreRetailNavigationFromHistory();
+    restoreRetailNavigationFromHistory({ forceAddressReload: addressChanged });
   }
 });
 
@@ -2726,4 +2802,5 @@ renderDock();
 renderBetaLiveSection();
 renderBasketProposalState();
 renderView({ scrollY: scrollYFromState(history.state) });
+
 

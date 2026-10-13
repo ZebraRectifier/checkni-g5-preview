@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "332b10a0f9f8ff423d7549191b281c1328e853f0",
+  "sourceCommit": "f8f0d237d2d5c500b78499afb40dba0e01a991f0",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -604,5 +604,43 @@
       "mergedMainCiRun": 38218372935,
       "publicEvidence": "Actual computed styles and visual result recorded after publication in PR #521"
     }
+  },
+  "retailComparison": {
+    "sourcePR": 522,
+    "testedHead": "1dc03a233a69396864c37f188f0f8ad3a42f8e9d",
+    "mergedSource": "f8f0d237d2d5c500b78499afb40dba0e01a991f0",
+    "validation": {
+      "nodeChecks": 1615,
+      "desktopMobileCases": 286,
+      "exactHeadCI": 38323391914,
+      "exactHeadRetriedCases": 1,
+      "retailGate": 38323391947,
+      "retailGateRetriedCases": 0,
+      "actualMainCI": 38327086049,
+      "actualMainRetriedCases": 0,
+      "package": 38327086114
+    },
+    "runtimeFiles": 152,
+    "betaRetailPrices": {
+      "version": 18,
+      "allSevenFilesMatch": true,
+      "authenticationPreserved": true,
+      "fixedProfileProbe": {
+        "at": "2026-10-13T00:42:15.833Z",
+        "httpStatus": 200,
+        "kind": "insufficient",
+        "decodedOffers": 1,
+        "offerStoreId": "magnit-shop-777016",
+        "metroState": "source_maintenance"
+      }
+    },
+    "behavior": [
+      "selected registered addresses and full store identities",
+      "exact reviewed product-pack admission",
+      "explicit basket metadata replacement with quantities preserved",
+      "stale reply/result invalidation on address edits",
+      "Core-based comparison feedback"
+    ],
+    "truthBoundary": "The loader still uses fixed reviewed profiles, not arbitrary-store collection. A fixed-profile offer from Magnit 777016 cannot enter comparison for selected 777312. Positive independent Magnit selected-control proof, fresh multi-retailer coverage, full assortment and physical Android evidence remain pending. Unknown availability remains unknown."
   }
 }

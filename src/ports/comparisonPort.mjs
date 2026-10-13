@@ -6,6 +6,8 @@ import {
   reshapeSurfaceBasket
 } from "../adapters/coreComparisonAdapter.mjs";
 import { observedOffersPort } from "./observedOffersPort.mjs";
+import { selectStoreScopedOffers } from "../observations/selectedStoreScope.mjs";
+import { matchesReviewedRetailBasketIdentity } from "../catalog/reviewedRetailBasket.mjs";
 
 export const COMPARISON_MODE = Object.freeze({
   DEMO: "demo",
@@ -70,7 +72,7 @@ export function createComparisonPort(coreCompare, { mode = COMPARISON_MODE.DEMO 
 export function createObservedComparisonPort(
   coreCompare,
   loadObservedOffers,
-  { mode = COMPARISON_MODE.OBSERVED } = {}
+  { mode = COMPARISON_MODE.OBSERVED, getStoreScope = null } = {}
 ) {
   return Object.freeze({
     mode,
@@ -88,13 +90,18 @@ export function createObservedComparisonPort(
       }
 
       const basket = reshapeSurfaceBasket(surfaceBasket);
+      const storeScope = typeof getStoreScope === "function" ? getStoreScope() : null;
+      if (getStoreScope && storeScope?.valid !== true) return coreCompare({ basket, offers: [] });
       const offers = await loadObservedOffers(basket);
 
       if (!Array.isArray(offers)) {
         throw new TypeError("observed offers port must return an array");
       }
 
-      return coreCompare({ basket, offers });
+      if (getStoreScope && getStoreScope()?.key !== storeScope.key) {
+        throw new Error("Selected comparison addresses changed.");
+      }
+      return coreCompare({ basket, offers: getStoreScope ? selectStoreScopedOffers(offers, storeScope) : offers });
     }
   });
 }
@@ -109,6 +116,17 @@ export const observedComparisonPort = createObservedComparisonPort(
   compareObservedBasket,
   (coreBasket) => observedOffersPort.load(coreBasket)
 );
+
+export function createSelectedAddressComparisonPort(getStoreScope, options = {}) {
+  if (typeof getStoreScope !== "function") throw new TypeError("selected comparison requires a store scope");
+  const load = options.loadObservedOffers ?? (coreBasket => observedOffersPort.load(coreBasket));
+  return createObservedComparisonPort(compareObservedBasket, async coreBasket => {
+    const offers = await load(coreBasket);
+    if (!Array.isArray(offers)) return offers; // The base port rejects malformed results.
+    return offers.filter(offer => !["metro-public-live", "magnit-public-live"].includes(offer?.sourceId)
+      || matchesReviewedRetailBasketIdentity(coreBasket.find(row => row.product.id === offer.canonicalProductId)?.product));
+  }, { getStoreScope });
+}
 
 export function selectComparisonPort(mode, {
   demoPort = demoComparisonPort,
@@ -127,3 +145,4 @@ const runtimeMode = resolveRuntimeComparisonMode({
 });
 
 export const comparisonPort = selectComparisonPort(runtimeMode);
+

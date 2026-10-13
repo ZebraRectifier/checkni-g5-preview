@@ -141,8 +141,14 @@ function observedCandidateName(candidate) {
   );
 }
 
-function confirmedObservedPrices(candidate) {
+function confirmedObservedPrices(candidate, basket) {
   if (!Array.isArray(candidate?.lines)) return Object.freeze([]);
+
+  const labels = new Map((Array.isArray(basket) ? basket : [])
+    .filter(item => typeof item?.product?.id === "string"
+      && typeof item.product.name === "string" && item.product.name.trim())
+    .map(item => [item.product.id, [item.product.name, item.product.unit]
+      .filter(value => typeof value === "string" && value.trim()).join(", ")]));
 
   return Object.freeze(candidate.lines
     .filter((line) => (
@@ -152,7 +158,10 @@ function confirmedObservedPrices(candidate) {
     ))
     .map((line) => Object.freeze({
       productId: typeof line.productId === "string" ? line.productId : null,
-      priceLabel: formatRubMinor(line.unitPriceMinor)
+      priceLabel: formatRubMinor(line.unitPriceMinor),
+      ...(labels.has(line.productId) ? { productLabel: labels.get(line.productId) } : {}),
+      ...(formatObservedAt(line.observedAt)
+        ? { observedAtLabel: formatObservedAt(line.observedAt) } : {})
     }))
     .filter((line) => line.priceLabel !== null));
 }
@@ -196,7 +205,7 @@ export function buildObservedResultModel(result) {
       ? result.candidates
           .map((candidate) => Object.freeze({
             title: observedCandidateName(candidate),
-            prices: confirmedObservedPrices(candidate)
+            prices: confirmedObservedPrices(candidate, result.basket)
           }))
           .filter((candidate) => candidate.prices.length > 0)
       : [];
@@ -395,9 +404,8 @@ export function createObservedComparisonResult(result) {
     for (const candidate of model.confirmedCandidates ?? []) {
       const prices = candidate.prices
         .map((price, index) => (
-          price.productId
-            ? `${price.productId}: ${price.priceLabel}`
-            : `Позиция ${index + 1}: ${price.priceLabel}`
+          `${price.productLabel ?? `Позиция ${index + 1}`}: ${price.priceLabel}`
+          + (price.observedAtLabel ? ` · наблюдалась ${price.observedAtLabel}` : "")
         ))
         .join(" · ");
 
@@ -475,3 +483,4 @@ export function createObservedComparisonResult(result) {
 
   return section;
 }
+
