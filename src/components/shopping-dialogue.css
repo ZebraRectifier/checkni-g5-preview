@@ -111,3 +111,16 @@
   .shopping-dialogue-history { max-height: 220px; }
   .shopping-dialogue-user { max-width: 95%; }
 }
+.shopping-conversation-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-block: .75rem;
+}
+.shopping-conversation-choices button {
+  min-height: 44px;
+  max-width: 100%;
+  padding: .5rem .75rem;
+  white-space: normal;
+  text-align: left;
+}

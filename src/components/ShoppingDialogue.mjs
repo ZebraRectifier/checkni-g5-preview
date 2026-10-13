@@ -140,6 +140,18 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
   }
 
   function sync(state) {
+    output.querySelectorAll(".shopping-conversation-choices").forEach(node => node.remove());
+    if (Array.isArray(state.presentation?.conversationChoices)) {
+      const choices = document.createElement("div"); choices.className = "shopping-conversation-choices";
+      choices.setAttribute("aria-label", "Ответить помощнику");
+      for (const suggestion of state.presentation.conversationChoices.slice(0, 3)) {
+        if (typeof suggestion?.label !== "string" || typeof suggestion.text !== "string" || !suggestion.text.trim() || suggestion.text.length > 300) continue;
+        const button = document.createElement("button"); button.type = "button"; button.textContent = suggestion.label;
+        button.addEventListener("click", () => { input.value = suggestion.text; input.dispatchEvent(new Event("input", { bubbles: true })); form.requestSubmit(); });
+        choices.append(button);
+      }
+      if (choices.childElementCount) output.append(choices);
+    }
     output.querySelectorAll(".shopping-selection-cards").forEach(node => node.remove());
     if (Array.isArray(state.presentation?.selectionCards) && state.presentation.selectionCards.length) {
       const list = document.createElement("div");
