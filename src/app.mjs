@@ -36,7 +36,7 @@ import { createGlobusStorePicker, resolveGlobusComparisonPeer } from "./componen
 import { createOkeyDeliveryCatalog } from "./components/OkeyDeliveryCatalog.mjs";
 import { createSelectedComparisonStores } from "./components/SelectedComparisonStores.mjs";
 import { createSelectedStoreScope, createLiveExampleStoreScope } from "./observations/selectedStoreScope.mjs";
-import { getReviewedRetailBasketIdentity, matchesReviewedRetailBasketIdentity } from "./catalog/reviewedRetailBasket.mjs";
+import { getReviewedRetailBasketIdentity, getReviewedRetailBasketProduct, matchesReviewedRetailBasketIdentity } from "./catalog/reviewedRetailBasket.mjs";
 import {
   CATALOG_SORT,
   buildSnapshotPriceHints,
@@ -421,8 +421,18 @@ if (elements.basketModeCopy) {
     : "Проверьте состав и запустите сравнение по трём демонстрационным магазинам.";
 }
 
-function basketQuantityFor(productId) {
-  return basket.getSnapshot().find((item) => item.id === productId)?.quantity ?? 0;
+function matchingBasketItemFor(product) {
+  const reviewed = product.basketProductId ? getReviewedRetailBasketProduct(product) : null;
+  const identity = reviewed && reviewed.id === product.basketProductId ? reviewed : product;
+  const existing = basket.getSnapshot().find((item) => item.id === identity.id);
+  if (!existing) return null;
+
+  // A shared historical ID does not prove a shared pack. The reviewed matcher
+  // also accepts its already approved display aliases without rewriting them.
+  return (existing.name === identity.name && existing.unit === identity.unit)
+    || (matchesReviewedRetailBasketIdentity(existing) && matchesReviewedRetailBasketIdentity(identity))
+    ? existing
+    : null;
 }
 
 // Home "Пример сравнения": a real snapshot comparison of an everyday demo
@@ -1596,12 +1606,13 @@ function renderCatalog() {
   results.forEach((product) => {
     elements.productGrid.append(
       createProductCard(product, {
-        quantity: basketQuantityFor(product.basketProductId ?? product.id),
+        quantity: matchingBasketItemFor(product)?.quantity ?? 0,
         priceHint: live ? null : snapshotPriceHints.get(product.id),
         loadPhoto: loadProductPhoto,
         onAdd: (selectedProduct) => {
+          const existing = matchingBasketItemFor(selectedProduct);
           const merged = basket.mergeValidatedBasket([
-            { product: selectedProduct, quantity: 1 }
+            { product: existing ?? selectedProduct, quantity: 1 }
           ]);
           if (merged.rejectedRows.length > 0) {
             const reason = merged.rejectedRows[0].reason;

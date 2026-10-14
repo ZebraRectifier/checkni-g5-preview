@@ -63,11 +63,15 @@ test("catalogue add preserves a conflicting saved pack until the user removes it
   await search.press("Enter");
   const card = page.locator(`[data-product-id="${cardId}"]`);
   await expect(card).toContainText("930 мл");
+  await expect(card.getByRole("button")).toHaveText("Добавить");
+  await expect(card.getByRole("button")).not.toHaveClass(/is-added/);
   await card.getByRole("button").click();
   await expect(page.locator("#toast-region")).toHaveText(
     "В корзине уже другой товар или упаковка. Сначала проверьте его в корзине."
   );
   await expect(page.locator("#basket-dock-copy")).toContainText("1 шт. · 1 поз.");
+  await expect(card.getByRole("button")).toHaveText("Добавить");
+  await expect(card.getByRole("button")).not.toHaveClass(/is-added/);
   await page.locator("#open-basket").click();
   await expect(page.locator(".basket-item-info")).toContainText("Молоко 2,5%");
   await expect(page.locator(".basket-item-info")).toContainText("900 мл");
@@ -80,7 +84,10 @@ test("catalogue add preserves a conflicting saved pack until the user removes it
 
   // Rejecting another click must not invalidate the existing basket or result.
   await page.locator("#back-to-shop").click();
+  await expect(card.getByRole("button")).toHaveText("Добавить");
   await card.getByRole("button").click();
+  await expect(card.getByRole("button")).toHaveText("Добавить");
+  await expect(card.getByRole("button")).not.toHaveClass(/is-added/);
   await expect(page.locator("#toast-region")).not.toContainText("добавлено");
   await page.locator("#open-basket").click();
   await expect(result).toContainText("Недостаточно данных");
@@ -98,8 +105,11 @@ test("catalogue add preserves a conflicting saved pack until the user removes it
   await expect(page.getByLabel("Адрес METRO", { exact: true })).toHaveValue("11");
   await search.fill("Молоко Простоквашино");
   await search.press("Enter");
+  await expect(card.getByRole("button")).toHaveText("Добавить");
   await card.getByRole("button").click();
   await expect(page.locator("#toast-region")).toContainText("добавлено");
+  await expect(card.getByRole("button")).toHaveText("Добавить ещё · 1 в корзине");
+  await expect(card.getByRole("button")).toHaveClass(/is-added/);
   await page.locator("#open-basket").click();
   await expect(page.locator(".basket-item-info")).toContainText("930 мл");
   await expect(page.locator(".basket-item-info")).not.toContainText("900 мл");
@@ -115,6 +125,52 @@ test("catalogue add preserves a conflicting saved pack until the user removes it
   await page.reload();
   await expect(page.locator(".basket-item-info")).toContainText("930 мл");
   await expect(page.locator(".basket-summary")).toContainText("1 шт. · 1 позиция");
+  await page.locator("#back-to-shop").click();
+  await page.locator("#retail-store-card-metro").click();
+  await search.fill("Молоко Простоквашино");
+  await search.press("Enter");
+  await expect(card.getByRole("button")).toHaveText("Добавить ещё · 1 в корзине");
+  await expect(card.getByRole("button")).toHaveClass(/is-added/);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
+});
+
+test("catalogue add counts an already reviewed saved alias and preserves its exact metadata", async ({ page, baseURL }, testInfo) => {
+  if (testInfo.project.name === "chromium-mobile") {
+    await page.setViewportSize({ width: 390, height: 844 });
+  }
+  await isolateCatalogue(page, baseURL);
+  await page.goto("/?comparison=observed&catalog=retail#shop");
+  // This short name is an existing reviewed proof-product alias, not a new
+  // fuzzy match. Bootstrap only the retained basket, then use ordinary UI.
+  await page.evaluate(() => {
+    localStorage.setItem("checkni.surface.basket.v1", JSON.stringify([{
+      id: "milk-25-900", name: "Молоко Простоквашино", unit: "930 мл", quantity: 1
+    }]));
+  });
+  await page.reload();
+  await page.locator("#retail-store-card-metro").click();
+  await page.getByLabel("Адрес METRO", { exact: true }).selectOption("11");
+  const search = page.locator("#product-search");
+  await search.fill("Молоко Простоквашино");
+  await search.press("Enter");
+  const card = page.locator(`[data-product-id="${cardId}"]`);
+  await expect(card.getByRole("button")).toHaveText("Добавить ещё · 1 в корзине");
+  await card.getByRole("button").click();
+  await expect(page.locator("#toast-region")).toContainText("добавлено");
+  await expect(card.getByRole("button")).toHaveText("Добавить ещё · 2 в корзине");
+  await page.locator("#open-basket").click();
+  await expect(page.locator(".basket-item-info h2")).toHaveText("Молоко Простоквашино");
+  await expect(page.locator(".basket-item-info")).toContainText("930 мл");
+  await expect(page.locator(".basket-summary")).toContainText("2 шт. · 1 позиция");
+  await page.reload();
+  await expect(page.locator(".basket-item-info h2")).toHaveText("Молоко Простоквашино");
+  await expect(page.locator(".basket-item-info")).toContainText("930 мл");
+  await expect(page.locator(".basket-summary")).toContainText("2 шт. · 1 позиция");
+  await page.locator("#back-to-shop").click();
+  await page.locator("#retail-store-card-metro").click();
+  await search.fill("Молоко Простоквашино");
+  await search.press("Enter");
+  await expect(card.getByRole("button")).toHaveText("Добавить ещё · 2 в корзине");
+  await expect(card.getByRole("button")).toHaveClass(/is-added/);
 });
