@@ -27,6 +27,10 @@ async function routes(page, state) {
         quantity_semantics: { packageType: 'piece', basketStep: 1, basketMinVolume: 1, unitPriceText: '1 шт' },
         observed_at: new Date(Date.now() - (state.stale ? 7200000 : 1000)).toISOString() };
     }) : [];
+    const sourceIdsFilter = query.get('source_product_id');
+    if (sourceIdsFilter?.startsWith('in.')) {
+      rows = rows.filter(row => sourceIdsFilter.includes(row.source_product_id));
+    }
     const nameFilter = query.get('name');
     if (nameFilter?.startsWith('ilike.')) {
       const pattern = nameFilter.slice(6).split('*').map(part => part.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')).join('.*');
