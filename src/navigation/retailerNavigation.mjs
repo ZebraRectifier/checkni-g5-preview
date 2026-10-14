@@ -1,4 +1,5 @@
 import { getRetailerIdentity } from "../data/retailerRegistry.mjs";
+import { resolveGlobusMoscowRegionStore } from "../data/globusMoscowRegionStores.mjs";
 
 export const RETAILER_NAVIGATION_KIND = Object.freeze({
   OFFICIAL_PUBLIC_URL: "official-public-url"
@@ -77,7 +78,38 @@ const NAVIGATION_BY_RETAILER = new Map(
   RETAILER_NAVIGATIONS.map((entry) => [entry.retailerId, entry])
 );
 
-export function getRetailerNavigation(retailerId) {
+function globusPhysicalStoreNavigation(candidate) {
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)
+      || candidate.retailerId !== "globus" || candidate.salesChannel !== "store"
+      || candidate.granularity !== "exact-store" || candidate.locationTruthLevel !== "store"
+      || typeof candidate.storeId !== "string") return null;
+
+  const officialStoreId = /^globus-store-(\d+)$/u.exec(candidate.storeId)?.[1];
+  const store = officialStoreId && resolveGlobusMoscowRegionStore(officialStoreId);
+  if (!store || store.priceStatus !== "verified" || candidate.storeName !== store.name
+      || candidate.locationLabel !== store.address
+      || candidate.locationId !== `globus:${candidate.storeId}`) return null;
+
+  // The destination comes only from the reviewed physical-store directory.
+  // A caller's URL never becomes navigation, and online/PVZ contexts cannot
+  // borrow this physical-store target or its address.
+  let url;
+  try { url = new URL(store.officialUrl); } catch { return null; }
+  if (url.protocol !== "https:" || url.hostname !== "www.globus.ru"
+      || url.username || url.password || url.port || url.search || url.hash
+      || url.pathname !== `/store/${store.officialStoreId}`
+      || url.href !== store.officialUrl) return null;
+
+  return Object.freeze({
+    retailerId: "globus", retailerName: "Глобус",
+    kind: RETAILER_NAVIGATION_KIND.OFFICIAL_PUBLIC_URL,
+    url: store.officialUrl, label: `Открыть страницу «${store.name}»`,
+    capabilities: FAIL_CLOSED_CAPABILITIES
+  });
+}
+
+export function getRetailerNavigation(retailerId, candidate = null) {
   if (typeof retailerId !== "string") return null;
+  if (retailerId === "globus") return globusPhysicalStoreNavigation(candidate);
   return NAVIGATION_BY_RETAILER.get(retailerId) ?? null;
 }

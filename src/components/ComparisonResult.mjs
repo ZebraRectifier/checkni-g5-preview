@@ -281,7 +281,7 @@ export function buildObservedResultModel(result) {
     ? formatRubMinor(conclusion.savingsMinor)
     : null;
 
-  const navigation = getRetailerNavigation(candidate.retailerId);
+  const navigation = getRetailerNavigation(candidate.retailerId, candidate);
   const conditionLabel = priceConditionLabel(candidate);
   const conditionDetails = priceConditionDetails(candidate);
   const channelLabel = salesChannelLabel(candidate);

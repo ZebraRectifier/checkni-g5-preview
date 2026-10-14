@@ -1,6 +1,12 @@
 import { GLOBUS_MOSCOW_REGION_DIRECTORY as directory, resolveGlobusMoscowRegionStore } from '../data/globusMoscowRegionStores.mjs';
 const normalize = text => String(text ?? '').normalize('NFKC').toLocaleLowerCase('ru').replaceAll('ё','е');
-export function createGlobusStorePicker({ officialStoreId = '5011', onSelect }) {
+const reviewedBasketStores = Object.freeze(['5011', '5020']);
+export function resolveGlobusComparisonPeer(primaryId, peerId) {
+  if (!reviewedBasketStores.includes(primaryId) || !reviewedBasketStores.includes(peerId) || primaryId === peerId) return null;
+  const peer = resolveGlobusMoscowRegionStore(peerId);
+  return peer?.priceStatus === 'verified' && peer.scope === 'moscow-city' ? peer : null;
+}
+export function createGlobusStorePicker({ officialStoreId = '5011', onSelect, onCompareSelect }) {
   const section = document.createElement('section'); section.id = 'globus-store-picker';
   section.setAttribute('aria-label','Выбор адреса Глобус');
   Object.assign(section.style, { marginBlock: '16px', display: 'grid', gap: '8px' });
@@ -14,7 +20,31 @@ export function createGlobusStorePicker({ officialStoreId = '5011', onSelect }) 
   const select = document.createElement('select'); select.id = 'globus-store-address'; select.setAttribute('aria-label','Адрес Глобус');
   for (const el of [search,select]) Object.assign(el.style, { width: '100%', minHeight: '44px', boxSizing: 'border-box' });
   const note = document.createElement('p'); note.id = 'globus-store-note'; note.setAttribute('role','status');
+  const compareLabel = document.createElement('label'); compareLabel.htmlFor = 'globus-compare-address';
+  compareLabel.textContent = 'Второй адрес Глобус для сравнения корзины';
+  const compareSelect = document.createElement('select'); compareSelect.id = 'globus-compare-address';
+  compareSelect.setAttribute('aria-label', compareLabel.textContent);
+  Object.assign(compareSelect.style, { width: '100%', minHeight: '44px', boxSizing: 'border-box' });
+  const compareNote = document.createElement('p');
   let selected = String(officialStoreId);
+  let comparisonId = '';
+  function renderComparisonOptions() {
+    const primary = resolveGlobusMoscowRegionStore(selected);
+    compareSelect.replaceChildren();
+    const none = document.createElement('option'); none.value = ''; none.textContent = 'Выберите второй адрес';
+    compareSelect.append(none);
+    for (const store of directory.stores) {
+      if (!resolveGlobusComparisonPeer(selected, store.officialStoreId)) continue;
+      const option = document.createElement('option'); option.value = store.officialStoreId;
+      option.textContent = `${store.name} · ${store.address}`; compareSelect.append(option);
+    }
+    compareSelect.value = comparisonId;
+    if (compareSelect.value !== comparisonId) { comparisonId = ''; compareSelect.value = ''; }
+    compareSelect.disabled = !reviewedBasketStores.includes(primary?.officialStoreId);
+    compareNote.textContent = !compareSelect.disabled
+      ? 'Первая корзина для сравнения: кефир Простоквашино 3,2% 930 г, Добрый Cola 1 л и рис Увелка 800 г. Два физических адреса: Красногорск и Медведково. Наличие неизвестно; старые наблюдения в расчёт не входят.'
+      : 'Первое сравнение корзины доступно между Глобус Красногорск и Глобус Медведково. По выбранному адресу остаётся просмотр каталога.';
+  }
   function renderOptions() {
     const terms = normalize(search.value).trim().split(/\s+/u).filter(Boolean); select.replaceChildren();
     for (const store of directory.stores) {
@@ -30,10 +60,17 @@ export function createGlobusStorePicker({ officialStoreId = '5011', onSelect }) 
     const store = resolveGlobusMoscowRegionStore(select.value);
     if (store?.priceStatus === 'verified') onSelect(store);
   });
-  section.append(label,summary,search,select,note); renderOptions();
-  return { element: section, update({ visible, store, status, hasCategories }) {
+  compareSelect.addEventListener('change', () => {
+    comparisonId = compareSelect.value;
+    onCompareSelect?.(comparisonId ? resolveGlobusMoscowRegionStore(comparisonId) : null);
+  });
+  section.append(label,summary,search,select,note);
+  if (typeof onCompareSelect === 'function') section.append(compareLabel,compareSelect,compareNote);
+  renderOptions(); renderComparisonOptions();
+  return { element: section, update({ visible, store, comparisonStore = null, status, hasCategories }) {
     section.hidden = !visible; section.style.display = visible ? 'grid' : 'none';
     if (store && selected !== store.officialStoreId) { selected = store.officialStoreId; search.value = ''; renderOptions(); }
+    comparisonId = comparisonStore?.officialStoreId ?? ''; renderComparisonOptions();
     if (!visible || !store) return;
     note.textContent = status === 'loading' ? 'Загружаем цены выбранного адреса…'
       : store.priceStatus !== 'verified' ? 'По этому адресу цены пока не подтверждены.'
@@ -41,3 +78,4 @@ export function createGlobusStorePicker({ officialStoreId = '5011', onSelect }) 
       : 'Показаны обычные цены выбранного гипермаркета без карты. Ассортимент частичный; наличие неизвестно.';
   } };
 }
+

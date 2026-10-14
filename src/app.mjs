@@ -32,7 +32,7 @@ import { createMetroStorePicker } from "./components/MetroStorePicker.mjs";
 import { resolveMagnitMoscowStore } from "./data/magnitMoscowStores.mjs";
 import { resolveMetroMoscowRegionStore } from "./data/metroMoscowRegionStores.mjs";
 import { resolveGlobusMoscowRegionStore } from "./data/globusMoscowRegionStores.mjs";
-import { createGlobusStorePicker } from "./components/GlobusStorePicker.mjs";
+import { createGlobusStorePicker, resolveGlobusComparisonPeer } from "./components/GlobusStorePicker.mjs";
 import { createOkeyDeliveryCatalog } from "./components/OkeyDeliveryCatalog.mjs";
 import { createSelectedComparisonStores } from "./components/SelectedComparisonStores.mjs";
 import { createSelectedStoreScope, createLiveExampleStoreScope } from "./observations/selectedStoreScope.mjs";
@@ -294,6 +294,8 @@ let selectedMetroStore = resolveMetroMoscowRegionStore({
 let magnitStorePicker = null;
 let metroStorePicker = null;
 let selectedGlobusStore = resolveGlobusMoscowRegionStore(history.state?.checkniGlobusStoreId ?? "5011") ?? resolveGlobusMoscowRegionStore("5011");
+let comparedGlobusStore = resolveGlobusComparisonPeer(selectedGlobusStore.officialStoreId,
+  history.state?.checkniGlobusCompareStoreId);
 let globusStorePicker = null;
 let comparisonAddressMode = history.state?.checkniComparisonAddressMode === "live-example"
   ? "live-example" : "selected";
@@ -301,9 +303,12 @@ const selectedAddressComparisonPort = typeof comparisonPorts.createSelectedAddre
   ? comparisonPorts.createSelectedAddressComparisonPort(currentComparisonStoreScope) : null;
 
 function currentComparisonStoreScope() {
-  return comparisonAddressMode === "live-example" ? createLiveExampleStoreScope()
-    : createSelectedStoreScope({ magnit: selectedMagnitStore.shopCode,
-      metro: selectedMetroStore.storeNumber, globus: selectedGlobusStore.officialStoreId });
+  if (comparisonAddressMode === "live-example") return createLiveExampleStoreScope();
+  if (comparedGlobusStore) return createSelectedStoreScope({
+    globus: selectedGlobusStore.officialStoreId, globusCompare: comparedGlobusStore.officialStoreId
+  });
+  return createSelectedStoreScope({ magnit: selectedMagnitStore.shopCode,
+    metro: selectedMetroStore.storeNumber, globus: selectedGlobusStore.officialStoreId });
 }
 function compareSurfaceBasket(surfaceBasket) {
   if (comparisonMode === COMPARISON_MODE.OBSERVED
@@ -758,7 +763,9 @@ function renderRetailBrowser() {
     status: retailBrowserState.status,
     hasCategories: retailBrowserState.path.length > 0 || retailBrowserState.categories.length > 0
   });
-  globusStorePicker?.update({ visible: retailBrowserState.retailerId === "globus", store: selectedGlobusStore, status: retailBrowserState.status, hasCategories: retailBrowserState.path.length > 0 || retailBrowserState.categories.length > 0 });
+  globusStorePicker?.update({ visible: retailBrowserState.retailerId === "globus", store: selectedGlobusStore,
+    comparisonStore: comparedGlobusStore, status: retailBrowserState.status,
+    hasCategories: retailBrowserState.path.length > 0 || retailBrowserState.categories.length > 0 });
   elements.retailCategoryGrid.replaceChildren();
 
   const current = retailBrowserState.path.at(-1) ?? null;
@@ -974,6 +981,7 @@ function createAppRouteState(
     state.checkniMagnitShopCode = selectedMagnitStore.shopCode;
     state.checkniMetroStoreNumber = selectedMetroStore.storeNumber;
     state.checkniGlobusStoreId = selectedGlobusStore.officialStoreId;
+    state.checkniGlobusCompareStoreId = comparedGlobusStore?.officialStoreId ?? null;
   }
 
   return state;
@@ -1394,6 +1402,8 @@ function restoreRetailNavigationFromHistory({ initial = false, forceAddressReloa
         : false
   );
   if (restoredGlobusStore?.priceStatus === "verified") selectedGlobusStore = restoredGlobusStore;
+  comparedGlobusStore = resolveGlobusComparisonPeer(selectedGlobusStore.officialStoreId,
+    history.state?.checkniGlobusCompareStoreId);
   if (restoredMagnitStore) selectedMagnitStore = restoredMagnitStore;
   if (restoredMetroStore?.onlinePickupStatus === "proven") {
     selectedMetroStore = restoredMetroStore;
@@ -1480,9 +1490,19 @@ function setupRetailBrowser() {
     });
     elements.retailCatalogNav.before(magnitStorePicker.element);
     elements.retailCatalogNav.before(metroStorePicker.element);
-    globusStorePicker = createGlobusStorePicker({ officialStoreId: selectedGlobusStore.officialStoreId, onSelect: store => {
-      selectedGlobusStore = store; comparisonAddressChanged(); void selectRetailer("globus");
-    } });
+    globusStorePicker = createGlobusStorePicker({ officialStoreId: selectedGlobusStore.officialStoreId,
+      onSelect: store => {
+        selectedGlobusStore = store;
+        comparedGlobusStore = resolveGlobusComparisonPeer(store.officialStoreId, comparedGlobusStore?.officialStoreId);
+        comparisonAddressChanged(); void selectRetailer("globus");
+      },
+      onCompareSelect: store => {
+        comparedGlobusStore = store;
+        comparisonAddressChanged();
+        updateRetailHistory(retailBrowserState.path, { replace: true, retailerId: "globus" });
+        renderRetailBrowser();
+      }
+    });
     elements.retailCatalogNav.before(globusStorePicker.element);
   }
   renderRetailBrowser();
@@ -2742,6 +2762,8 @@ window.addEventListener("popstate", () => {
     if (magnit) selectedMagnitStore = magnit;
     if (metro?.onlinePickupStatus === "proven") selectedMetroStore = metro;
     if (globus?.priceStatus === "verified") selectedGlobusStore = globus;
+    comparedGlobusStore = resolveGlobusComparisonPeer(selectedGlobusStore.officialStoreId,
+      history.state?.checkniGlobusCompareStoreId);
   }
   comparisonAddressMode = history.state?.checkniComparisonAddressMode === "live-example" ? "live-example" : "selected";
   const addressChanged = currentComparisonStoreScope().key !== previousScopeKey;
@@ -2806,5 +2828,6 @@ renderDock();
 renderBetaLiveSection();
 renderBasketProposalState();
 renderView({ scrollY: scrollYFromState(history.state) });
+
 
 

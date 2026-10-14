@@ -25,7 +25,7 @@ function metroStore(store) {
 
 export function createSelectedStoreScope(selection) {
   if (!selection || typeof selection !== "object" || Array.isArray(selection)
-      || Object.keys(selection).some(key => !["magnit", "metro", "globus"].includes(key))) {
+      || Object.keys(selection).some(key => !["magnit", "metro", "globus", "globusCompare"].includes(key))) {
     return scope("selected", [], false);
   }
   const stores = [];
@@ -44,6 +44,16 @@ export function createSelectedStoreScope(selection) {
   if (Object.hasOwn(selection, "globus")) {
     const store = ref(selection.globus) && resolveGlobusMoscowRegionStore(selection.globus);
     if (!store || store.priceStatus !== "verified") return scope("selected", [], false);
+    stores.push({ retailerId: "globus", name: store.name, address: store.address,
+      storeIds: [`globus-store-${store.officialStoreId}`], addressKeys: [textKey(store.address)] });
+  }
+  if (Object.hasOwn(selection, "globusCompare")) {
+    const primary = ref(selection.globus) && resolveGlobusMoscowRegionStore(selection.globus);
+    const store = ref(selection.globusCompare) && resolveGlobusMoscowRegionStore(selection.globusCompare);
+    if (!primary || primary.scope !== "moscow-city" || !store || store.priceStatus !== "verified"
+        || primary.officialStoreId === store.officialStoreId || primary.scope !== store.scope) {
+      return scope("selected", [], false);
+    }
     stores.push({ retailerId: "globus", name: store.name, address: store.address,
       storeIds: [`globus-store-${store.officialStoreId}`], addressKeys: [textKey(store.address)] });
   }
@@ -86,3 +96,4 @@ export function selectStoreScopedOffers(offers, selectedScope) {
     && (store.retailerId !== "magnit" || magnitUrlMatches(offer, store))
   )));
 }
+
