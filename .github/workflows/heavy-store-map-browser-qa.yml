@@ -27,7 +27,7 @@ jobs:
           const actual = Object.fromEntries(execFileSync('git', ['ls-tree', '-r', '--format=%(objectname) %(path)', 'HEAD', '--', 'index.html', 'prices.html', 'src'], { encoding: 'utf8' }).trim().split('\n').map(line => [line.slice(41), line.slice(0, 40)]));
           assert.deepEqual(actual, expected);
           assert.equal(execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), process.env.GITHUB_SHA);
-          console.log('APPROVED_BROWSER_CLOSURE_OK', Object.keys(actual).length, 'private source 9271e5cc8c885c455c6594ae1024154db32ffd5f', 'QA commit', process.env.GITHUB_SHA);
+          console.log('APPROVED_BROWSER_CLOSURE_OK', Object.keys(actual).length, 'private source 7ac308b13c38bac0c6781fa31d5048455b2dec36', 'QA commit', process.env.GITHUB_SHA);
           console.log('Existing runner Node', process.version);
           assert.ok(Number(process.versions.node.split('.')[0]) >= 20);
           NODE
@@ -37,6 +37,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run map and basket specs on desktop and mobile without retries
         run: npx playwright test test/e2e/globus-basket-comparison.spec.mjs test/e2e/store-geolocation.spec.mjs --project=chromium-desktop --project=chromium-mobile --workers=1 --retries=0 --reporter=line
+      - name: Verify formerly date-sensitive cases on desktop and mobile without retries
+        run: npx playwright test test/e2e/g9-live-catalog.spec.mjs test/e2e/stores-and-photos.spec.mjs --grep 'DA promo catalog|Auchan promo catalog|stores section shows' --project=chromium-desktop --project=chromium-mobile --workers=1 --retries=0 --reporter=line
       - name: Upload controlled browser failure evidence
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

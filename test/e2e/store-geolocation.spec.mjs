@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
 
+test.beforeEach(async ({ page }, testInfo) => {
+  if (testInfo.project.name === "chromium-mobile") {
+    await page.setViewportSize({ width: 390, height: 844 });
+  }
+});
+
 // These tests exercise the public journey with synthetic device callbacks.
 // No retailer, tile, image, AI or live price service is contacted.
 async function isolateNetwork(page) {

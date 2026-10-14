@@ -1,6 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { resolveGlobusMoscowRegionStore } from '../../src/data/globusMoscowRegionStores.mjs';
 
+test.beforeEach(async ({ page }, testInfo) => {
+  if (testInfo.project.name === 'chromium-mobile') {
+    await page.setViewportSize({ width: 390, height: 844 });
+  }
+});
+
 // Synthetic transport observations prove the browser/Core boundary only.
 // Live retailer evidence is collected and verified separately.
 const products = [
