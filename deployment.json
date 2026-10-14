@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "414b0d18f9ae2ef36e7111b1d8288ffc68e7df39",
+  "sourceCommit": "34869f01315c449a172307f222901d5dbf137a9e",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -733,5 +733,41 @@
       "Milk SKU 241097 displayed Only in the shopping centre"
     ],
     "truthBoundary": "No fresh-price import, checkout capability or current multi-store winner is claimed; unknown availability remains unknown."
+  },
+  "catalogBasketBinding": {
+    "sourcePr": 542,
+    "testedHead": "4d2a948d0211d3384dea3777f9b0207d09b9103d",
+    "mergedSource": "34869f01315c449a172307f222901d5dbf137a9e",
+    "runtimeFiles": 158,
+    "reviewedRetailSkuLinks": 9,
+    "distinctBasketProducts": 6,
+    "manualAdd": "Conflicting saved product/pack and quantity are preserved; explicit user recovery required",
+    "metroComparison": "Loads the selected registered Moscow pickup; existing five-minute and commercial admission guards preserved",
+    "storeMap": {
+      "officialDatedGlobusPoints": 16,
+      "clearlyApproximateObservedPoints": 2,
+      "optionalDeviceOrManualReference": true,
+      "locationPersisted": false,
+      "distance": "Approximate straight-line reference; excluded from commercial Core",
+      "selectedBasketScope": "Explicit registered addresses; manual reference does not change selection"
+    },
+    "validation": {
+      "nodeChecks": 1787,
+      "desktopMobileCases": 330,
+      "exactHeadCI": 38644254901,
+      "actualMainCI": 38646213002,
+      "actualMainPackage": 38646213059,
+      "supplementalBrowserRun": 38643174578,
+      "supplementalCases": 24,
+      "retries": 0,
+      "skips": 0,
+      "mobile": {
+        "browser": "Android Chromium emulation",
+        "width": 390,
+        "height": 844,
+        "physicalDeviceGps": "unverified"
+      }
+    },
+    "sourceBoundary": "Mapping and fresh-price collection are not expanded. Original source timestamps and unknown stock remain authoritative; stale observations cannot create a current winner."
   }
 }

@@ -297,6 +297,7 @@ let selectedGlobusStore = resolveGlobusMoscowRegionStore(history.state?.checkniG
 let comparedGlobusStore = resolveGlobusComparisonPeer(selectedGlobusStore.officialStoreId,
   history.state?.checkniGlobusCompareStoreId);
 let globusStorePicker = null;
+let storesSection = null;
 let comparisonAddressMode = history.state?.checkniComparisonAddressMode === "live-example"
   ? "live-example" : "selected";
 const selectedAddressComparisonPort = typeof comparisonPorts.createSelectedAddressComparisonPort === "function"
@@ -322,6 +323,13 @@ function comparisonAddressChanged() {
   comparisonAddressMode = "selected";
   comparisonFlow.invalidate();
   renderBasket();
+}
+function renderStoreMapSelection() {
+  storesSection?.updateSelection(
+    comparisonMode === COMPARISON_MODE.OBSERVED
+      && (publicRetailCatalogMode || comparisonAddressMode === "live-example")
+      ? currentComparisonStoreScope() : null
+  );
 }
 
 function selectedGlobusClient() {
@@ -1408,6 +1416,7 @@ function restoreRetailNavigationFromHistory({ initial = false, forceAddressReloa
   if (restoredMetroStore?.onlinePickupStatus === "proven") {
     selectedMetroStore = restoredMetroStore;
   }
+  renderStoreMapSelection();
   const restoredPath = normalizeRetailHistoryPath(
     history.state?.checkniRetailPath
   ) ?? [];
@@ -1476,6 +1485,7 @@ function setupRetailBrowser() {
       shopCode: selectedMagnitStore.shopCode,
       onSelect: (store) => {
         selectedMagnitStore = store;
+        comparedGlobusStore = null;
         comparisonAddressChanged();
         void selectRetailer("magnit");
       }
@@ -1484,6 +1494,7 @@ function setupRetailBrowser() {
       storeNumber: selectedMetroStore.storeNumber,
       onSelect: (store) => {
         selectedMetroStore = store;
+        comparedGlobusStore = null;
         comparisonAddressChanged();
         void selectRetailer("metro");
       }
@@ -1589,8 +1600,19 @@ function renderCatalog() {
         priceHint: live ? null : snapshotPriceHints.get(product.id),
         loadPhoto: loadProductPhoto,
         onAdd: (selectedProduct) => {
+          const merged = basket.mergeValidatedBasket([
+            { product: selectedProduct, quantity: 1 }
+          ]);
+          if (merged.rejectedRows.length > 0) {
+            const reason = merged.rejectedRows[0].reason;
+            showToast(reason === VALIDATED_MERGE_REASON.METADATA_CONFLICT
+              ? "В корзине уже другой товар или упаковка. Сначала проверьте его в корзине."
+              : reason === VALIDATED_MERGE_REASON.QUANTITY_LIMIT
+                ? "Достигнут максимум количества этого товара в корзине."
+                : "Не удалось добавить товар. Корзина сохранена.");
+            return;
+          }
           invalidateHybridForManualTakeover();
-          basket.add(selectedProduct);
           showToast(`${selectedProduct.name} добавлено`);
         }
       })
@@ -2380,6 +2402,7 @@ async function handleBetaLiveExample() {
 }
 
 function renderBasket() {
+  renderStoreMapSelection();
   const items = basket.getSnapshot();
   renderBasketView(elements.basketContent, items, {
     onIncrement: (id) => {
@@ -2766,6 +2789,7 @@ window.addEventListener("popstate", () => {
       history.state?.checkniGlobusCompareStoreId);
   }
   comparisonAddressMode = history.state?.checkniComparisonAddressMode === "live-example" ? "live-example" : "selected";
+  renderStoreMapSelection();
   const addressChanged = currentComparisonStoreScope().key !== previousScopeKey;
   if (addressChanged) comparisonFlow.invalidate();
   currentView = viewFromHash(location.hash);
@@ -2818,11 +2842,39 @@ renderHomeExample();
 setupCatalogSort();
 setupSkyControls();
 setupRetailBrowser();
-// "Магазины": honest store map + list, mounted after the catalogue.
+// Map selections use the same exact-address registry and invalidation as the pickers.
 try {
-  document.querySelector(".catalog-section")?.after(createStoresSection());
+  storesSection = createStoresSection({
+    selectedScope: comparisonMode === COMPARISON_MODE.OBSERVED
+      && (publicRetailCatalogMode || comparisonAddressMode === "live-example")
+      ? currentComparisonStoreScope() : null,
+    onStoreSelect: publicRetailCatalogMode ? point => {
+      let retailerId;
+      if (point.retailerId === "globus") {
+        const store = resolveGlobusMoscowRegionStore(point.officialStoreId);
+        if (store?.priceStatus !== "verified") return;
+        selectedGlobusStore = store;
+        comparedGlobusStore = resolveGlobusComparisonPeer(store.officialStoreId, comparedGlobusStore?.officialStoreId);
+        retailerId = "globus";
+      } else if (point.retailerId === "metro") {
+        const store = resolveMetroMoscowRegionStore({ storeNumber: "10" });
+        if (point.id !== "metro-leningradskoe" || store?.onlinePickupStatus !== "proven") return;
+        selectedMetroStore = store;
+        comparedGlobusStore = null;
+        retailerId = "metro";
+      } else return;
+      comparisonAddressChanged();
+      void selectRetailer(retailerId);
+    } : undefined,
+    onEditStore: publicRetailCatalogMode ? retailerId => {
+      comparisonAddressChanged();
+      navigate(VIEW.SHOP, { focusMode: FOCUS_MODE.HEADING });
+      void selectRetailer(retailerId, { replaceHistory: true });
+    } : undefined
+  });
+  document.querySelector(".catalog-section")?.after(storesSection);
 } catch {
-  // The map is decoration; the shop must render without it.
+  // Address pickers and the basket remain usable when the optional map cannot mount.
 }
 renderDock();
 renderBetaLiveSection();

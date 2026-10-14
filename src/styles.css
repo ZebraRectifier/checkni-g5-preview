@@ -1223,6 +1223,87 @@ h1 {
 
 .stores-list-note { color: rgba(21, 32, 25, 0.62); }
 
+.stores-section .stores-controls,
+.stores-section .stores-map-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.stores-section button:not(.stores-pin),
+.stores-section .stores-location-directory summary {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface-soft);
+  font: inherit;
+  cursor: pointer;
+}
+.stores-section button:disabled { opacity: 0.6; cursor: default; }
+.stores-section button[aria-pressed="true"] { outline: 2px solid var(--accent); }
+.stores-section .stores-status,
+.stores-section .stores-list-note,
+.stores-section .stores-copy { color: var(--muted); margin: 0; }
+.stores-section .stores-status { min-height: 1.5em; line-height: 1.5; }
+.stores-section .stores-list { gap: 12px; }
+.stores-section .stores-list li { align-items: center; overflow-wrap: anywhere; }
+.stores-section .stores-list a { color: var(--ink); text-decoration: underline; }
+.stores-section .stores-location-directory { display: grid; gap: 12px; }
+.stores-section .stores-location-directory summary { margin-bottom: 12px; }
+.stores-section .stores-selected { display: grid; gap: 12px; }
+.stores-section .stores-selected h3 { margin: 8px 0 0; }
+.stores-section .stores-map { max-width: 640px; width: 100%; }
+.stores-section .stores-map:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.stores-section .stores-map-picking { cursor: crosshair; }
+.stores-section .stores-map-picking::after {
+  content: "+";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  color: #152019;
+  background: #fff;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  pointer-events: none;
+}
+.stores-section button.stores-pin {
+  padding: 0;
+  margin: 0;
+  min-width: 18px;
+  min-height: 18px;
+  color: #152019;
+  cursor: pointer;
+}
+.stores-section .stores-pin-selected { outline: 3px solid #6c35d7; z-index: 2; }
+.stores-section .stores-user-pin {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+  background: #184dd2;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(24, 77, 210, 0.2);
+  z-index: 3;
+}
+.stores-section .stores-user-pin-label {
+  position: absolute;
+  left: 22px;
+  top: -5px;
+  background: #fff;
+  color: #152019;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 
 
 
