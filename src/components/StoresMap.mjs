@@ -118,6 +118,7 @@ export function createStoresSection({
     manualButton.setAttribute("aria-pressed", String(manualPicking));
     map.classList.toggle("stores-map-picking", manualPicking);
     renderGeoStatus();
+    renderMap();
     if (manualPicking) map.focus({ preventScroll: true });
   });
   manualButton.id = "stores-manual-location"; manualButton.setAttribute("aria-pressed", "false");
@@ -170,7 +171,7 @@ export function createStoresSection({
     else if (manualPicking && event.key === "Enter") { event.preventDefault(); geo.setManual(center); }
     else if (event.key === "Escape" && manualPicking) {
       manualPicking = false; manualButton.setAttribute("aria-pressed", "false");
-      map.classList.remove("stores-map-picking"); renderGeoStatus(); manualButton.focus();
+      map.classList.remove("stores-map-picking"); renderGeoStatus(); renderMap(); manualButton.focus();
     }
   });
   const attribution = textEl("p", "stores-map-attribution", "Карта: ");
@@ -218,15 +219,20 @@ export function createStoresSection({
       if (!pin.inside) continue;
       const own = pin.id === "user-location";
       const marker = own ? textEl("span", "stores-user-pin", "")
-        : canSelect(pin) ? button("", event => { event.stopPropagation(); chooseStore(pin); }, "stores-pin")
+        : manualPicking || canSelect(pin) ? button("", event => {
+          event.stopPropagation();
+          if (manualPicking) geo.setManual({ lat: pin.lat, lon: pin.lon });
+          else chooseStore(pin);
+        }, "stores-pin")
           : externalLink("", pointMapUrl(pin));
       if (!own) {
         marker.className = "stores-pin"; marker.dataset.storeLocationId = pin.id;
         marker.style.background = COLORS[pin.retailerId] ?? pin.color ?? "#394e57";
         marker.classList.toggle("stores-pin-selected", Boolean(isSelected(pin)));
-        marker.setAttribute("aria-label", canSelect(pin)
-          ? `Выбрать для корзины: ${pin.name}, ${pin.address}`
-          : `${pin.name}, ${pin.address}, открыть точку на OpenStreetMap`);
+        marker.setAttribute("aria-label", manualPicking
+          ? `Указать ориентир: ${pin.name}, ${pin.address}`
+          : canSelect(pin) ? `Выбрать для корзины: ${pin.name}, ${pin.address}`
+            : `${pin.name}, ${pin.address}, открыть точку на OpenStreetMap`);
         marker.title = `${pin.name} · ${pin.address} · ${coordinateNote(pin)}`;
         marker.append(textEl("span", "stores-pin-label", pin.name));
       } else {

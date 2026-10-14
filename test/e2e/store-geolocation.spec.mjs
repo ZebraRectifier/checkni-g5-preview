@@ -178,6 +178,34 @@ test("denied device access recovers through a keyboard-picked manual point and c
   await expect(page.getByRole("button", { name: "К моему месту", exact: true })).toBeDisabled();
 });
 
+test("a manual reference on a store pin keeps the selected basket addresses unchanged", async ({ page }) => {
+  await isolateNetwork(page);
+  await stubDevice(page, "pending");
+  await page.goto("/?comparison=observed&catalog=retail#shop");
+  await page.locator("#globus-compare-address").selectOption("5020");
+  const selected = page.locator("#stores-selected-addresses");
+  const before = await basketSnapshot(page);
+  await page.locator("#stores-manual-location").click();
+  await page.locator('.stores-pin[data-store-location-id="globus-store-5020"]').click();
+  await expect(page.locator("#stores-location-status")).toHaveText("Ориентир указан вручную.");
+  await expect(page.locator(".stores-user-pin")).toContainText("Ваш ориентир");
+  await expect(page.locator("#globus-store-address")).toHaveValue("5011");
+  await expect(page.locator("#globus-compare-address")).toHaveValue("5020");
+  await expect(selected.locator("li")).toHaveCount(2);
+  expect(await basketSnapshot(page)).toBe(before);
+  expect(await page.evaluate(() => window.__checkniGeoProbe.requests)).toEqual([]);
+
+  await page.getByRole("button", { name: "Показать магазины", exact: true }).click();
+  await page.locator("#stores-manual-location").click();
+  await page.locator('.stores-pin[data-store-location-id="magnit-1812"]').click();
+  await expect(page.locator("#stores-location-status")).toHaveText("Ориентир указан вручную.");
+  await expect(page.locator("#globus-store-address")).toHaveValue("5011");
+  await expect(page.locator("#globus-compare-address")).toHaveValue("5020");
+  await expect(selected.locator("li")).toHaveCount(2);
+  await expect(page).toHaveURL(/#shop$/);
+  expect(await basketSnapshot(page)).toBe(before);
+});
+
 test("manual choice and clear reject late device callbacks while a request is pending", async ({ page }) => {
   await isolateNetwork(page);
   await stubDevice(page, "pending");
