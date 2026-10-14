@@ -219,7 +219,8 @@ const basketProposalFlow = createShoppingConversationFlow({
   requestAiProposal: requestBasketProposal,
   requestShoppingAdvice,
   resolveCommercialRequest: (text, catalog, context = {}) => shoppingAssistant.resolveCommercialRequest(text, catalog, {
-    retailer: context.retailer ?? (publicRetailCatalogMode ? retailDefinitionFor(retailBrowserState.retailerId)?.displayName : null)
+    retailer: context.retailer ?? (publicRetailCatalogMode ? retailDefinitionFor(retailBrowserState.retailerId)?.displayName : null),
+    selectionDiscovery: context.selectionDiscovery === true
   }),
   priceHints: budgetPlannerHints,
   applyValidatedBasket: (validatedBasket) => (

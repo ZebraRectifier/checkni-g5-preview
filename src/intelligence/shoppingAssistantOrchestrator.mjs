@@ -18,6 +18,8 @@ const SEED_DISCOVERY_QUERIES = Object.freeze({
   "bread-wheat-400": "Хлеб", "cheese-semi-hard-200": "Сыр"
 });
 const TARGET_DISCOVERY_QUERIES = Object.freeze({ eggs: "Яйца" });
+const SELECTION_DISCOVERY_QUERIES = Object.freeze({ milk: "Молоко", kefir: "Кефир", eggs: "Яйца", bread: "Хлеб",
+  cheese: "Сыр", butter: "Масло", rice: "Рис", pasta: "Макароны", tomatoes: "Томаты", apples: "Яблоки" });
 import { stripShoppingRequestPrefix } from "./shoppingRequestText.mjs";
 import { preflightLocalBasketText } from "./localBasketPreflight.mjs";
 
@@ -461,6 +463,7 @@ export function createShoppingAssistantOrchestrator(options = {}) {
       const discoveryFamily = singleDiscovery
         ? (basket.length === 1 ? SEED_DISCOVERY_QUERIES[basket[0].id] : null)
           ?? (targets.length === 1 ? TARGET_DISCOVERY_QUERIES[targets[0]] : null)
+          ?? (context.selectionDiscovery === true && targets.length === 1 ? SELECTION_DISCOVERY_QUERIES[targets[0]] : null)
         : null;
       const retailerQuery = discoveryFamily ?? (basket.length === 1
         // Generic canonical labels contain pack/fat hints that are not a

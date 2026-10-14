@@ -17,7 +17,7 @@ const number = value => /^\d+$/u.test(value) ? Number(value) : counts[value];
 const kinds = { завтрак: "Завтрак", обед: "Обед", ужин: "Ужин", перекус: "Перекус" };
 
 function startingKind(value) {
-  const match = value.match(/^(?:(?:давай|пожалуйста)\s+)?(?:(?:собери|подбери|предложи|посоветуй|(?:я )?хочу|(?:мне )?нужен|помоги (?:собрать|подобрать))\s+(?:мне\s+)?|что (?:купить|взять) на\s+|(?:я )?хочу что-(?:то|нибудь) на\s+)?(завтрак|обед|ужин|перекус)(?=$|[\s,.!?])/u);
+  const match = value.match(/^(?:(?:давай|пожалуйста)\s+)?(?:(?:собери|подбери|предложи|посоветуй|(?:я )?хочу|(?:мне )?нужен|помоги (?:собрать|подобрать))\s+(?:мне\s+)?|что (?:купить|взять) на\s+|(?:я )?хочу что-(?:то|нибудь) на\s+)?(?:(?:сытный|быстрый|легкий|вкусный|нормальный)\s+)*(завтрак|обед|ужин|перекус)(?=$|[\s,.!?])/u);
   return match?.[1] ?? null;
 }
 
@@ -41,12 +41,14 @@ export function advanceMealNeed(text, current, memory) {
   const focus = kind ? { kind, stage: "intake", people: null, cooking: knownCooking === "minimal" ? "none"
     : knownCooking === "normal" ? "quick" : null,
     budgetMinor: memory.facts.budgetMinor?.value, mealId: null, ingredientIndex: 0 } : { ...current };
-  if (current?.stage === "intake" && !kind && /^(?:го|да|давай|ок|угу)$/u.test(value)) return { kind: "message", focus, delta };
+  if (["intake", "custom"].includes(current?.stage) && !kind && /^(?:го|да|давай|ок|угу)$/u.test(value)) return { kind: "message", focus, delta };
 
-  if (kind && (/\s(?:с|из)\s+(?!готовкой(?:$|[\s,.]))/u.test(value)
-    || shoppingTargets(value).some(target => !delta.reject.includes(target) && !delta.allow.includes(target))
-    || /веган|вегетариан|постн|диет|белков|горяч/u.test(value))) return { kind: "clarification", focus: null,
-    message: "Если нужны конкретные продукты, напиши их отдельным списком — проверим реальные карточки. Для общего подбора напиши, например, «ужин на двоих без готовки до 700 ₽».", delta };
+  const positiveTargets = shoppingTargets(value).filter(target => !delta.reject.includes(target) && !delta.allow.includes(target));
+  const minutes = value.match(/(?:готовить|готовк\S*|уложиться|за)\s+(?:до\s+)?(\d{1,3})\s*(?:минут[уыа]?|мин\.?)(?=$|[\s,.])/u)
+    ?? value.match(/(?:готовить|готовк\S*)\s+минут\S*\s+(\d{1,3})(?=$|[\s,.])/u);
+  const customRequest = kind && (/\s(?:с|из)\s+(?!готовкой(?:$|[\s,.]))/u.test(value) || positiveTargets.length
+    || /веган|вегетариан|постн|диет|белков|горяч|сытн/u.test(value) || minutes)
+    || current && (positiveTargets.length && /(?:^|\s)(?:с|из)\s/u.test(value) || minutes || /сытн/u.test(value));
 
   if (current?.stage === "products" && !kind && /^(?:дальше|следующий(?: продукт| ингредиент)?)$/u.test(value)) {
     const meal = meals.find(row => row.id === focus.mealId);
@@ -81,7 +83,7 @@ export function advanceMealNeed(text, current, memory) {
   const cooking = delta.facts.cookingEffort?.value === "minimal" || /^(?:не хочу готовить|готовить не хочу|без плиты|готовить лень|лень готовить|не хочу возиться|без возни)$/u.test(value) ? "none"
     : delta.facts.cookingEffort?.value === "normal" || /^(?:быстро|быстренько|можно (?:быстро )?готовить|с готовкой|быстрая готовка)$/u.test(value) ? "quick" : null;
   const constraints = delta.reject.length || delta.allow.length || delta.unresolved.length || delta.clearUnresolved;
-  if (!kind && people === null && budgetMinor === null && !unlimited && !cooking && !constraints) return null;
+  if (!kind && people === null && budgetMinor === null && !unlimited && !cooking && !constraints && !customRequest) return null;
   if (peopleMatches.length > 1 || /ребен|детей|взросл\S*\s+и\s+\d/u.test(value)) return { kind: "clarification", focus,
     message: "На сколько человек всего подбираем? Здесь подбираю общие блюда; отдельное детское меню нужно уточнять.", delta };
   if (people !== null && (!Number.isSafeInteger(people) || people < 1 || people > 12)) return { kind: "clarification", focus,
@@ -96,6 +98,11 @@ export function advanceMealNeed(text, current, memory) {
   if (budgetMinor !== null) { focus.budgetMinor = budgetMinor; delta.facts.budgetMinor = { value: budgetMinor, scope: "goal" }; }
   if (unlimited) { focus.budgetMinor = null; if (!delta.unset.includes("budgetMinor")) delta.unset = [...delta.unset, "budgetMinor"]; }
   if (cooking) { focus.cooking = cooking; delta.facts = { ...delta.facts, cookingEffort: { value: cooking === "none" ? "minimal" : "normal", scope: "goal" } }; }
+  if (customRequest || current?.stage === "custom") {
+    focus.stage = "custom"; focus.mealId = null;
+    if (customRequest) focus.requirements = value;
+    return { kind: "clarification", focus, message: customMealQuestion(focus), delta };
+  }
   focus.stage = focus.people && focus.cooking && focus.budgetMinor !== undefined ? "menu" : "intake";
   focus.mealId = null;
   return { kind: "message", focus, delta };
@@ -106,6 +113,7 @@ export function mealNeedSummary(focus) {
 }
 
 export function mealNeedView(focus, memory) {
+  if (focus.stage === "custom") return { headline: "Условия сохранила, уточню подбор.", message: customMealQuestion(focus), choices: [] };
   const summary = mealNeedSummary(focus);
   if (!focus.people) return { headline: "Давай подберём, что поесть.", message: `${summary}. На сколько человек?`, choices: ["На одного", "На двоих", "На троих"] };
   if (!focus.cooking) return { headline: "Поняла, подберём под тебя.", message: `${summary}. Хочешь быстро приготовить или обойтись без готовки?`, choices: ["Быстро", "Без готовки"] };
@@ -114,6 +122,10 @@ export function mealNeedView(focus, memory) {
   if (!options.length) return { headline: "Нужен другой вариант.", message: `${summary}. Мои простые варианты не подходят под сохранённые отказы. Напиши, какие продукты тебе подходят; отказы сохраняю.`, choices: [] };
   return { headline: "Вот несколько идей под твои условия.", message: `${summary}. ${options.map((meal, i) => `${i + 1}. ${meal.title}${meal.snack && focus.kind !== "перекус" ? " (лёгкий вариант)" : ""}`).join("; ")}. Выбери блюдо — посмотрим его ингредиенты в магазине. Количество упаковок выберем отдельно. Попадание в бюджет проверим по корзине; стоимость блюд пока неизвестна.`,
     choices: options.map((meal, i) => ({ label: `${i + 1}. ${meal.title}`, text: `Выбираю блюдо ${i + 1}` })) };
+}
+
+function customMealQuestion(focus) {
+  return `${mealNeedSummary(focus)}. Учитываю запрос: «${focus.requirements}». Мои простые идеи пока не проверены под все эти условия, поэтому прежний вариант не подставляю. С какого конкретного продукта начнём? Напиши название и нужный вид, например «готовая курица» или «куриное филе».`;
 }
 
 export function mealNeedProductView(focus) {

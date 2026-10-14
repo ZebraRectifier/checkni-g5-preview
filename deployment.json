@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "96f4f473b7dd5169e7e21f76db2f20beaa11cfec",
+  "sourceCommit": "96f6060d452ab20c14046b221cf2be91175e85be",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -105,7 +105,10 @@
       513,
       520,
       523,
-      525
+      525,
+      532,
+      534,
+      537
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -114,13 +117,13 @@
     "providerRoute": "zero-cost OpenRouter",
     "providerDeploymentVersion": 28,
     "validation": {
-      "unitAndGuardChecks": 1575,
-      "chromiumDesktopAndMobileCases": 272,
-      "exactHead": "767d401df6254f17a382b1e52a179bf3ec6920cc",
-      "sourceCommit": "332b10a0f9f8ff423d7549191b281c1328e853f0",
-      "exactHeadCiRun": 38318655627,
-      "mergedMainCiRun": 38320693506,
-      "validationScope": "exact-head and actual-main Node/browser gates; selected retail source cards and reviewed basket confirmation; external provider remains v28"
+      "unitAndGuardChecks": 1695,
+      "chromiumDesktopAndMobileCases": 308,
+      "exactHead": "6098733e6c890a3c01ba046fd60d185d69569f6d",
+      "sourceCommit": "96f6060d452ab20c14046b221cf2be91175e85be",
+      "exactHeadCiRun": 38567963737,
+      "mergedMainCiRun": 38570182055,
+      "validationScope": "Exact-head and actual-main Node/browser gates; bounded natural retail intents, explicit source choices, reviewed contribution corrections, list budgets/skips and custom-meal clarification; external provider remains v28"
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -488,13 +491,13 @@
       "validation": "complete 18.9s responses accepted in virtual-clock tests; stalled responses remain bounded"
     },
     "previousValidation": {
-      "unitAndGuardChecks": 1506,
-      "chromiumDesktopAndMobileCases": 266,
-      "exactHead": "31da5e073cc2b98da5b562a8615d3b5e9d0a85b8",
-      "sourceCommit": "9dfeeaf336845f8b2e2def0f8e0002aa60cf257c",
-      "exactHeadCiRun": 38276718436,
-      "mergedMainCiRun": 38303601647,
-      "validationScope": "exact-head and actual-main browser and Node gates passed; external provider remains v28"
+      "unitAndGuardChecks": 1575,
+      "chromiumDesktopAndMobileCases": 272,
+      "exactHead": "767d401df6254f17a382b1e52a179bf3ec6920cc",
+      "sourceCommit": "332b10a0f9f8ff423d7549191b281c1328e853f0",
+      "exactHeadCiRun": 38318655627,
+      "mergedMainCiRun": 38320693506,
+      "validationScope": "exact-head and actual-main Node/browser gates; selected retail source cards and reviewed basket confirmation; external provider remains v28"
     },
     "advicePurposeMemory": {
       "sourcePr": 520,
@@ -544,6 +547,22 @@
       "coreComparisonReplaced": false,
       "transcriptStored": false,
       "transcriptSentToProvider": false
+    },
+    "retailShoppingIntent": {
+      "sourcePr": 537,
+      "maxListItems": 5,
+      "scope": "Currently selected retailer and address; session-only list progress",
+      "decimalCommas": "Preserved specifications",
+      "colloquialNeed": "Bounded aliases and locally proven noun typos",
+      "vagueFat": "Ask an explicit percentage",
+      "negativeQuantities": "Clarify; never infer an affirmative correction",
+      "listConfirmation": "Each exact reviewed source choice requires confirmation",
+      "nextIsConfirmation": false,
+      "unreviewedOrMissing": "Explicit skip; incomplete list remains visible",
+      "budget": "Objective only; Core checks qualified totals",
+      "specificMealConstraints": "Preserved and clarified instead of silently substituting a preset",
+      "modelRequired": false,
+      "sourceSkusExpanded": false
     }
   },
   "magnitAddressPhotos": {

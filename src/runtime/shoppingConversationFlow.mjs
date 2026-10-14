@@ -11,6 +11,7 @@ import { preflightLocalBasketText } from "../intelligence/localBasketPreflight.m
 import { shoppingAdviceFocus, resolveShoppingAdviceFollowup, resolveShoppingBasketFollowup, resolveShoppingPriceFollowup, explicitShoppingItems } from "../intelligence/shoppingTurnContext.mjs";
 import { currentRetailSelectionScope, retailSelectionRequest, admittedRetailSelectionCards, retailSelectionView, reviewedRetailSelection } from "../intelligence/retailProductSelection.mjs";
 import { advanceMealNeed, mealNeedView, mealNeedProductView } from "../intelligence/shoppingMealNeed.mjs";
+import { isRetailSortFollowup, normalizeRetailShoppingText, retailBudgetIntent } from "../intelligence/retailShoppingIntent.mjs";
 
 const copy = value => JSON.parse(JSON.stringify(value));
 const rowsOf = validation => (validation?.basket ?? []).map(row => ({ productId: row.product.id, quantity: row.quantity }));
@@ -28,6 +29,7 @@ export function createShoppingConversationFlow(options) {
   let referencePlan = [];
   let adviceFocus = null;
   let productSelection = null;
+  let retailList = null;
   let mealNeed = null;
   let referenceAction = null;
   let pending = null;
@@ -57,6 +59,7 @@ export function createShoppingConversationFlow(options) {
     epoch += 1; pending = null; suspendedDraft = null; inFlight = null; stagedByHybrid = null;
     referencePlan = []; adviceFocus = null; referenceAction = null;
     productSelection = null;
+    retailList = null;
     mealNeed = null;
     hybrid.invalidate(); state = { status: "idle" };
     return state;
@@ -65,10 +68,12 @@ export function createShoppingConversationFlow(options) {
     const draft = pending ? { pending, state } : suspendedDraft;
     const references = referencePlan, focus = adviceFocus, action = referenceAction;
     const selection = productSelection;
+    const list = retailList;
     const need = mealNeed;
     invalidate();
     referencePlan = references; adviceFocus = focus; referenceAction = action;
     productSelection = selection;
+    retailList = list;
     mealNeed = need;
     suspendedDraft = draft;
     return state;
@@ -146,10 +151,76 @@ export function createShoppingConversationFlow(options) {
     } else managed = copy(draft.plan.items);
     if (typeof draft.selectionId === "string" && productSelection?.cards[0]?.id === draft.selectionId) productSelection = { ...productSelection,
       appliedQuantity: draft.plan.items[0].quantity, appliedSnapshot: copy(applied.snapshot) };
+    if (typeof draft.selectionId === "string" && retailList && productSelection?.cards[0]?.id === draft.selectionId) {
+      retailList.items[retailList.index].status = "confirmed";
+      retailList.items[retailList.index].quantity = draft.plan.items[0].quantity;
+      retailList.items[retailList.index].confirmedQuantity = draft.plan.items[0].quantity;
+    }
     if (checkpoint) checkpoint.appliedSnapshot = copy(applied.snapshot);
     state = { status: "success", result: { kind: "proposal" }, validation: state.validation, presentation: { headline: "Применены показанные изменения. Теперь можно сравнить магазины.", mascotState: "found" }, mergeRejectedRows: [] };
     decorateMealProduct();
+    decorateRetailList();
     return state;
+  }
+  function decorateRetailList() {
+    if (!retailList || state.status === "loading" || !state.presentation) return;
+    const item = retailList.items[retailList.index];
+    const confirmed = item.status === "confirmed";
+    state = { ...state, presentation: { ...state.presentation,
+      message: `Товар ${retailList.index + 1}/${retailList.items.length}: ${item.query}.${retailList.budgetMinor ? ` Общий лимит списка: ${retailList.budgetMinor / 100} ₽; стоимость проверим по корзине.` : ""} ${state.presentation.message ?? ""}${confirmed
+        ? " Этот товар подтверждён. Перейдём к следующему?" : " Выбери и подтверди этот товар или явно пропусти его."}`,
+      conversationChoices: [...(state.presentation.conversationChoices ?? []).filter(choice => !/Следующий товар|Пропусти этот товар|Отмени изменение/u.test(choice.text)),
+        { label: confirmed ? retailList.index + 1 < retailList.items.length ? "Следующий товар" : "Завершить список"
+          : item.confirmedQuantity ? "Отменить изменение" : "Пропустить этот товар",
+        text: confirmed ? "Следующий товар" : item.confirmedQuantity ? "Отмени изменение" : "Пропусти этот товар" }] } };
+  }
+  function handleRetailList(text, token) {
+    if (!retailList) return false;
+    const value = text.trim().toLocaleLowerCase("ru-RU").replace(/[.!?]+$/u, "");
+    const skip = /^(?:пропусти(?: этот товар)?|пропустить(?: этот товар)?)$/u.test(value);
+    const next = /^(?:дальше|следующий товар|заверши(?:ть)? список)$/u.test(value);
+    const cancelChange = value === "отмени изменение";
+    if (!skip && !next && !cancelChange) return false;
+    if (retailList.scope !== currentRetailSelectionScope(options.resolveProductFactsCatalog, localCatalog)) {
+      retailList = null; productSelection = null; pending = null; suspendedDraft = null;
+      state = messageState("Магазин изменился.", "Напиши список заново для выбранного магазина. Подтверждённая корзина сохранилась."); return true;
+    }
+    const item = retailList.items[retailList.index];
+    if (cancelChange && item.confirmedQuantity) {
+      pending = null; suspendedDraft = null; item.quantity = item.confirmedQuantity; item.status = "confirmed";
+      if (productSelection) productSelection = { ...productSelection, quantity: item.quantity };
+      state = messageState("Изменение отменено.", "Подтверждённое количество в корзине сохранилось.");
+      decorateRetailList(); return true;
+    }
+    if (skip && item.confirmedQuantity) {
+      state = messageState("Этот товар уже в корзине.", "Для удаления напиши «убери» и название товара. Чтобы продолжить список, нажми «Следующий товар».");
+      decorateRetailList(); return true;
+    }
+    if (!skip && item.status !== "confirmed") {
+      if (!pending && suspendedDraft && suspendedDraft.pending.revision === memory.revision
+          && JSON.stringify(suspendedDraft.pending.base) === JSON.stringify(basket.getSnapshot())) {
+        pending = suspendedDraft.pending; pending.epoch = epoch; state = suspendedDraft.state;
+      }
+      if (pending) state = { ...state, presentation: { ...pending.presentation,
+        message: "Сначала подтверди показанный товар или явно пропусти его. " + pending.presentation.message } };
+      else state = messageState("Этот товар ещё не подтверждён.", "Выбери реальную карточку. Если подходящего варианта нет, можно явно пропустить товар; я отмечу неполный список.");
+      decorateRetailList(); return true;
+    }
+    if (skip) item.status = "skipped";
+    pending = null; suspendedDraft = null; productSelection = null; hybrid.invalidate();
+    if (retailList.index + 1 >= retailList.items.length) {
+      const skipped = retailList.items.filter(row => row.status === "skipped").map(row => row.query);
+      const count = retailList.items.filter(row => row.status === "confirmed").length;
+      retailList = null;
+      state = messageState(skipped.length ? "Список разобрали частично." : "Все товары списка разобрали.",
+        `Подтверждено товаров: ${count}.${skipped.length ? ` Пропущены: ${skipped.join(", ")}.` : ""} Проверь состав и количество в корзине. «Где дешевле?» проверит общую стоимость; попадание в бюджет и наличие пока не подтверждены.`);
+      return true;
+    }
+    retailList.index++;
+    const turn = { kind: "search", ...retailList.items[retailList.index] };
+    const result = selectRetailProduct(`хочу ${turn.query}`, token, turn);
+    if (result && typeof result.then === "function") return result.then(() => { if (token === epoch) decorateRetailList(); return true; });
+    decorateRetailList(); return true;
   }
   function decorateMealProduct() {
     if (mealNeed?.stage !== "products" || state.status === "loading") return;
@@ -162,6 +233,7 @@ export function createShoppingConversationFlow(options) {
   function handleMealNeed(text, token) {
     const turn = advanceMealNeed(text, mealNeed, memory);
     if (!turn) return false;
+    retailList = null;
     pending = null; suspendedDraft = null; productSelection = null;
     referencePlan = []; referenceAction = null; adviceFocus = null; hybrid.invalidate();
     if (turn.kind === "cancel") {
@@ -194,16 +266,16 @@ export function createShoppingConversationFlow(options) {
     state.presentation.conversationChoices = view.choices.map(choice => typeof choice === "string" ? { label: choice, text: choice } : choice);
     return true;
   }
-  function selectRetailProduct(text, token) {
+  function selectRetailProduct(text, token, suppliedTurn = null) {
     const scope = currentRetailSelectionScope(options.resolveProductFactsCatalog, localCatalog);
     if (productSelection && productSelection.scope !== scope) {
-      productSelection = null; pending = null; suspendedDraft = null;
+      productSelection = null; retailList = null; pending = null; suspendedDraft = null;
     }
     if (scope === null) return false;
-    const delta = extractShoppingDelta(text);
-    const turn = retailSelectionRequest(text, localCatalog, delta, productSelection);
+    const delta = extractShoppingDelta(normalizeRetailShoppingText(text));
+    const turn = suppliedTurn ?? retailSelectionRequest(text, localCatalog, delta, productSelection);
     if (!turn) {
-      if (!/^(?:го|ок|да|давай|применить|применяй|подтверждаю)$/iu.test(text.trim())) productSelection = null;
+      if (!/^(?:го|ок|да|давай|применить|применяй|подтверждаю)$/iu.test(text.trim())) { productSelection = null; retailList = null; }
       return false;
     }
     pending = null; suspendedDraft = null; referencePlan = []; referenceAction = null; adviceFocus = null;
@@ -213,12 +285,18 @@ export function createShoppingConversationFlow(options) {
       state = messageState("Осталось непонятое условие.", "Сначала уточни или явно отмени нераспознанное условие. Я сохранила его, чтобы не нарушить отказ.");
       return true;
     }
+    if (turn.budgetMinor && turn.kind === "search") {
+      const updated = updateShoppingConversation(memory, { ...extractShoppingDelta(""), facts: { budgetMinor: { value: turn.budgetMinor, scope: "goal" } } });
+      if (updated.overflow) { state = messageState("Условий уже много.", "Сохранила предыдущие условия; уточни запрос короче."); return true; }
+      setMemory(updated.state);
+    }
     if (turn.kind === "clarification") { state = messageState("Уточню один момент.", turn.message); return true; }
     if (turn.kind === "quantity") {
       if (!Number.isSafeInteger(turn.quantity) || turn.quantity < 1 || turn.quantity > 99) {
         state = messageState("Уточни количество.", "Можно выбрать от 1 до 99 упаковок. Предыдущий выбор сохранила."); return true;
       }
       productSelection = { ...productSelection, quantity: turn.quantity };
+      if (retailList) { retailList.items[retailList.index].quantity = turn.quantity; retailList.items[retailList.index].status = "waiting"; }
       if (productSelection.selected) return selectRetailProduct("выбираю вариант 1", token);
       state = retailSelectionView(productSelection); return true;
     }
@@ -259,6 +337,16 @@ export function createShoppingConversationFlow(options) {
       pending.presentation = state.presentation;
       return true;
     }
+    if (!suppliedTurn && !turn.refinement) retailList = turn.items?.length > 1
+      ? { items: turn.items.map(item => ({ ...item, status: "waiting" })), index: 0, scope, budgetMinor: turn.budgetMinor } : null;
+    if (retailList && turn.refinement) retailList.items[retailList.index] = { query: turn.query, quantity: turn.quantity, status: "waiting" };
+    if (turn.needsFat) {
+      productSelection = { query: turn.query, quantity: turn.quantity, scope, cards: [], needsFat: true };
+      state = messageState("Товар поняла, уточню жирность.", `Для «${turn.query}» какую жирность искать? Напиши процент, например «1%» или «2,5%». Слово «нежирный» не буду заменять случайным вариантом.`);
+      state.presentation.conversationChoices = [{ label: "1%", text: "1%" }, { label: "2,5%", text: "2,5%" }];
+      return true;
+    }
+    if (retailList) retailList.items[retailList.index].status = "waiting";
     productSelection = null;
     state = { status: "loading" };
     return (async () => {
@@ -267,7 +355,7 @@ export function createShoppingConversationFlow(options) {
         result = await Promise.race([
           // The retail-mode callback supplies the currently selected store.
           // A prior conversational store wish must not override that selection.
-          Promise.resolve().then(() => options.resolveCommercialRequest?.(`хочу ${turn.query}`, localCatalog, { retailer: null })),
+          Promise.resolve().then(() => options.resolveCommercialRequest?.(`хочу ${turn.query}`, localCatalog, { retailer: null, selectionDiscovery: true })),
           new Promise(resolve => { timeout = setTimeout(() => resolve(null), 4500); })
         ]);
       } catch { /* A failed catalog must not fall through into a generic product. */ }
@@ -278,7 +366,8 @@ export function createShoppingConversationFlow(options) {
         productSelection = null; state = messageState("Каталог изменился.", "Повтори запрос для нового выбранного магазина. Корзина сохранилась."); return true;
       }
       const cards = admittedRetailSelectionCards(result, turn.query).filter(card => !isShoppingProductRejected(card, memory));
-      productSelection = { query: turn.query, quantity: turn.quantity, scope: currentScope, cards };
+      productSelection = { query: turn.query, quantity: turn.quantity, scope: currentScope, cards, budgetMinor: turn.budgetMinor ?? retailList?.budgetMinor };
+      if (retailList && retailList.scope === scope) retailList.scope = currentScope;
       state = retailSelectionView(productSelection);
       return true;
     })();
@@ -287,6 +376,7 @@ export function createShoppingConversationFlow(options) {
     commercialTurn = false;
     if (preflightLocalBasketText(text).kind === "reject") {
       mealNeed = null;
+      retailList = null; productSelection = null;
       pending = null; suspendedDraft = null; referencePlan = []; adviceFocus = null; referenceAction = null;
       const request = hybrid.run(text);
       state = hybrid.getState();
@@ -300,17 +390,20 @@ export function createShoppingConversationFlow(options) {
     if (mealNeed && (mealNeed.stage !== "products" || extractShoppingDelta(text).reset || extractShoppingDelta(text).newGoal
       || extractShoppingDelta(text).undo || shoppingAdviceTopic(text) || isShoppingProductFactsQuestion(text)
       || /^(?:хочу|добавь|убери|верни|нужен|нужна|нужны|возьми)\s/iu.test(text))) mealNeed = null;
+    const listTurn = handleRetailList(text, token);
+    if (listTurn) { if (typeof listTurn.then === "function") await listTurn; return state; }
     // Retail selection uses admitted source cards before the generic seed
     // proposal. Advice, refusals, budgets and commercial questions keep their
     // established routes; a catalog outage cannot add a placeholder product.
     const selectionQuestion = shoppingAdviceTopic(text) || isShoppingProductFactsQuestion(text);
-    if (selectionQuestion) productSelection = null;
-    const selection = (!selectionQuestion && preflightLocalBasketText(text).kind === "pass")
-      || (productSelection && /^(?:(?:тот|что-нибудь)\s+)?(?:подешевле|дешевле)$/iu.test(text.trim()))
+    if (selectionQuestion) { productSelection = null; retailList = null; }
+    const selection = (!selectionQuestion && (preflightLocalBasketText(text).kind === "pass"
+      || currentRetailSelectionScope(options.resolveProductFactsCatalog, localCatalog) !== null && retailBudgetIntent(text, localCatalog)))
+      || (productSelection && isRetailSortFollowup(text))
       ? selectRetailProduct(text, token) : false;
     if (selection) {
       if (typeof selection.then === "function") await selection;
-      if (token === epoch) decorateMealProduct();
+      if (token === epoch) { decorateMealProduct(); decorateRetailList(); }
       return state;
     }
     const priceTurn = resolveShoppingPriceFollowup(text, adviceFocus, referencePlan, localCatalog);
@@ -373,6 +466,7 @@ export function createShoppingConversationFlow(options) {
       if (result?.kind === "clarification" && result.triggerReason !== "smalltalk") return confirm("confirm_all");
       hybrid.invalidate();
       state = messageState("Продолжим.", "Черновика для подтверждения сейчас нет. Можно написать покупки или попросить перестроить набор.");
+      decorateRetailList();
       return state;
     }
     const adviceTopic = isShoppingProductFactsQuestion(text) ? "product_facts" : shoppingAdviceTopic(text);

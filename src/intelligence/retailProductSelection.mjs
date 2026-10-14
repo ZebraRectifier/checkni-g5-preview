@@ -1,6 +1,5 @@
-import { parseLocalBasketText, stemRussianToken } from "./localBasketParser.mjs";
-import { stripShoppingRequestPrefix } from "./shoppingRequestText.mjs";
-import { extractCatalogQueries } from "../runtime/catalogQueries.mjs";
+import { stemRussianToken } from "./localBasketParser.mjs";
+import { normalizeRetailShoppingText, parseRetailShoppingIntent, retailQuantityFollowup, retailFatFollowup, isRetailSortFollowup, retailBudgetIntent } from "./retailShoppingIntent.mjs";
 import { getReviewedRetailBasketProduct } from "../catalog/reviewedRetailBasket.mjs";
 import { getRetailCatalogDefinition } from "../ports/retailCatalogPort.mjs";
 
@@ -16,29 +15,28 @@ export function currentRetailSelectionScope(readCatalog, localCatalog) {
 }
 
 export function retailSelectionRequest(text, catalog, delta, focus = null) {
-  const value = text.trim().toLocaleLowerCase("ru-RU");
+  const value = normalizeRetailShoppingText(text).toLocaleLowerCase("ru-RU");
   if (focus) {
     const chosen = value.match(/^(?:выбираю\s+(?:вариант\s+)?|вариант\s+)([1-5])$/u);
     const ordinal = { первый: 1, второй: 2, третий: 3, четвертый: 4, "четвёртый": 4, пятый: 5 }[value];
     if (chosen || ordinal) return { kind: "choice", index: Number(chosen?.[1] ?? ordinal) - 1 };
-    const count = value.match(/^(?:(?:нет,?\s+)?лучше\s+)?(один|одну|одна|две|два|три|четыре|пять|\d{1,3})(?:\s+(?:бутылк[ауи]|упаковк[ауи]|пачк[ауи]))?$/u);
+    const fat = retailFatFollowup(text, focus);
+    if (fat) return { kind: "search", ...fat, refinement: true };
+    const count = retailQuantityFollowup(text);
     if (count) {
-      if (!/бутыл|упаков|пачк/u.test(value) && focus.cards.length !== 1) return { kind: "clarification", message: "Это количество упаковок или номер варианта? Например: «две бутылки» или «вариант 2»." };
-      const quantity = Number(count[1]) || { один: 1, одну: 1, одна: 1, две: 2, два: 2, три: 3, четыре: 4, пять: 5 }[count[1]];
-      return { kind: "quantity", quantity };
+      if (count.ambiguous) return { kind: "clarification", message: "Уточни количество: сколько упаковок оставить? В этой фразе есть отрицание, поэтому прежний выбор пока сохраняю." };
+      if (!count.explicit && focus.cards.length !== 1) return { kind: "clarification", message: "Это количество упаковок или номер варианта? Например: «две бутылки» или «вариант 2»." };
+      return { kind: "quantity", quantity: count.quantity };
     }
     if (/^(?:\d{1,3}|один|два|две|три)$/u.test(value)) return { kind: "clarification", message: "Это количество упаковок или номер варианта? Например: «две бутылки» или «вариант 2»." };
-    if (/^(?:(?:тот|что-нибудь)\s+)?(?:подешевле|дешевле)$/u.test(value)) return { kind: "sort" };
-    if (/^(?:другой бренд|другая марка)$/u.test(value)) return { kind: "clarification", message: "Какую марку предпочитаешь? Напиши товар и марку в одном запросе, например «хочу кефир Простоквашино» — проверю подходящие карточки." };
+    if (isRetailSortFollowup(text)) return { kind: "sort" };
+    if (/^(?:а\s+)?(?:другой бренд|другая марка)$/u.test(value)) return { kind: "clarification", message: "Какую марку предпочитаешь? Напиши товар и марку в одном запросе, например «хочу кефир Простоквашино» — проверю подходящие карточки." };
   }
-  if (delta.reset || delta.undo || delta.newGoal || delta.reject.length || delta.allow.length || delta.unresolved.length || Object.keys(delta.facts).length) return null;
-  const parsed = parseLocalBasketText(text, catalog);
-  const terms = extractCatalogQueries(text);
-  if (terms.length !== 1) return null;
-  if (parsed.kind === "local" && parsed.proposal.items.length === 1) return { kind: "search", query: terms[0], quantity: parsed.proposal.items[0].quantity };
-  if (parsed.kind === "fallback" && ["unresolved_segment", "identity_specification"].includes(parsed.reason)
-      && stripShoppingRequestPrefix(text) !== text.trim()) return { kind: "search", query: terms[0], quantity: 1 };
-  return null;
+  if (delta.reset || delta.undo || delta.newGoal || delta.reject.length || delta.allow.length || delta.unresolved.length) return null;
+  const budget = retailBudgetIntent(text, catalog);
+  if (budget && Object.keys(delta.facts).every(key => key === "budgetMinor")) return budget;
+  if (Object.keys(delta.facts).length) return null;
+  return parseRetailShoppingIntent(text, catalog);
 }
 
 export function retailSelectionUrl(raw, retailerId, field = "sourceUrlRules") {
@@ -83,7 +81,7 @@ export function admittedRetailSelectionCards(result, query) {
 export function retailSelectionView(focus, extra = "") {
   return { status: "clarification", result: { kind: "clarification", triggerReason: "smalltalk" }, presentation: {
     headline: focus.cards.length ? "Посмотрим реальные варианты." : "Товар поняла, но карточки пока не получила.",
-    message: focus.cards.length ? `${extra ? extra + " " : ""}Количество: ${focus.quantity} уп. Выбери вариант или уточни упаковку. Наличие неизвестно; цены показаны на дату наблюдения.`
+    message: focus.cards.length ? `${extra ? extra + " " : ""}${focus.budgetMinor ? `Лимит запроса: ${focus.budgetMinor / 100} ₽; итог проверим по корзине. ` : ""}Количество: ${focus.quantity} уп. Выбери вариант или уточни упаковку. Наличие неизвестно; цены показаны на дату наблюдения.`
       : "Поиск не подтвердил варианты в выбранном каталоге. Это не означает, что товара нет в магазине. Можно уточнить марку или воспользоваться ручным поиском.",
     items: [], primaryAction: "Уточнить выбор", mascotState: "curious", selectionCards: focus.cards, selectionQuantity: focus.quantity
   } };
