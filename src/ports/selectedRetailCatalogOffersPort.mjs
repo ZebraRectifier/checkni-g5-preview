@@ -23,7 +23,7 @@ export async function loadSelectedRetailCatalogOffers(coreBasket, storeScope, op
   if (sourceProductIds.length === 0) return [];
 
   const createClient = options.createCatalogClient ?? createRetailCatalogClient;
-  const client = createClient({ retailerId: "metro", metroStoreNumber: store.storeNumber,
+  const client = createClient({ retailerId: "metro", store,
     includeComparisonEvidence: true });
   let response;
   try { response = await client.bySourceProductIds(sourceProductIds); } catch { return []; }

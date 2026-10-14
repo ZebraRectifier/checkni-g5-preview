@@ -1600,8 +1600,19 @@ function renderCatalog() {
         priceHint: live ? null : snapshotPriceHints.get(product.id),
         loadPhoto: loadProductPhoto,
         onAdd: (selectedProduct) => {
+          const merged = basket.mergeValidatedBasket([
+            { product: selectedProduct, quantity: 1 }
+          ]);
+          if (merged.rejectedRows.length > 0) {
+            const reason = merged.rejectedRows[0].reason;
+            showToast(reason === VALIDATED_MERGE_REASON.METADATA_CONFLICT
+              ? "В корзине уже другой товар или упаковка. Сначала проверьте его в корзине."
+              : reason === VALIDATED_MERGE_REASON.QUANTITY_LIMIT
+                ? "Достигнут максимум количества этого товара в корзине."
+                : "Не удалось добавить товар. Корзина сохранена.");
+            return;
+          }
           invalidateHybridForManualTakeover();
-          basket.add(selectedProduct);
           showToast(`${selectedProduct.name} добавлено`);
         }
       })
