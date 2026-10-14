@@ -711,7 +711,8 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
     imageUrl,
     sourceUrl,
     productUrl,
-    ...(options.includeComparisonEvidence === true && definition.retailerId === "metro" ? {
+    ...(options.includeComparisonEvidence === true && (definition.retailerId === "metro"
+      || (definition.retailerId === "globus" && definition.officialStoreId)) ? {
       comparisonEvidence: Object.freeze({
         storeId: row.store_id,
         locationLabel: row.location_label,
@@ -840,7 +841,7 @@ export function createRetailCatalogClient(options = {}) {
       url.searchParams.set("source_product_id", `in.(${sourceProductIds.join(",")})`);
     }
     if (query !== null) {
-      url.searchParams.set("name", `ilike.*${query}*`);
+      url.searchParams.set("name", `ilike.*${query.replace(/\s+/gu, "*")}*`);
     }
     if (categoryId !== null) {
       url.searchParams.set("main_category_id", `eq.${categoryId}`);
@@ -1085,4 +1086,5 @@ export {
   normalizeRetailRow,
   readBoundedJsonResponse
 };
+
 

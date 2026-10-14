@@ -9,6 +9,7 @@ import { observedOffersPort } from "./observedOffersPort.mjs";
 import { selectStoreScopedOffers } from "../observations/selectedStoreScope.mjs";
 import { matchesReviewedRetailBasketIdentity } from "../catalog/reviewedRetailBasket.mjs";
 import { loadSelectedRetailCatalogOffers } from "./selectedRetailCatalogOffersPort.mjs";
+import { loadSelectedGlobusCatalogOffers } from "./selectedGlobusCatalogOffersPort.mjs";
 
 export const COMPARISON_MODE = Object.freeze({
   DEMO: "demo",
@@ -123,13 +124,17 @@ export function createSelectedAddressComparisonPort(getStoreScope, options = {})
   const load = options.loadObservedOffers ?? (coreBasket => observedOffersPort.load(coreBasket));
   const loadCatalog = options.loadCatalogOffers
     ?? (options.loadObservedOffers ? async () => [] : loadSelectedRetailCatalogOffers);
+  const loadGlobus = options.loadGlobusOffers
+    ?? (options.loadObservedOffers ? async () => [] : loadSelectedGlobusCatalogOffers);
   return createObservedComparisonPort(compareObservedBasket, async (coreBasket, storeScope) => {
-    const [offers, catalogOffers] = await Promise.all([
+    const [offers, catalogOffers, globusOffers] = await Promise.all([
       load(coreBasket),
-      Promise.resolve().then(() => loadCatalog(coreBasket, storeScope)).catch(() => [])
+      Promise.resolve().then(() => loadCatalog(coreBasket, storeScope)).catch(() => []),
+      Promise.resolve().then(() => loadGlobus(coreBasket, storeScope)).catch(() => [])
     ]);
     if (!Array.isArray(offers)) return offers; // The base port rejects malformed results.
-    return [...offers, ...(Array.isArray(catalogOffers) ? catalogOffers : [])]
+    return [...offers, ...(Array.isArray(catalogOffers) ? catalogOffers : []),
+      ...(Array.isArray(globusOffers) ? globusOffers : [])]
       .filter(offer => !["metro-public-live", "magnit-public-live"].includes(offer?.sourceId)
       || matchesReviewedRetailBasketIdentity(coreBasket.find(row => row.product.id === offer.canonicalProductId)?.product));
   }, { getStoreScope });
@@ -152,4 +157,5 @@ const runtimeMode = resolveRuntimeComparisonMode({
 });
 
 export const comparisonPort = selectComparisonPort(runtimeMode);
+
 

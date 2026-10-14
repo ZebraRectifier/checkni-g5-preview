@@ -7,6 +7,12 @@ import {
 // Identity only. These are the reviewed SKUs from the existing live proof,
 // not a name search, a price observation or a retailer stock assertion.
 const BINDINGS = Object.freeze([
+  ["globus", "000000000000027692_ST", "globus-kefir-prostokvashino-32-930g", "Кефир Простоквашино 3,2%, 930г",
+    "/products/kefir-prostokvashino-32-930g-27692_ST/"],
+  ["globus", "000000000000712952_ST", "globus-dobry-cola-1l", "Напиток Добрый Cola, 1л",
+    "/products/napitok-dobryj-cola-1l-712952_ST/"],
+  ["globus", "000000000000754268_ST", "globus-rice-uvelka-round-800g", "Рис круглозерный Увелка, 800г",
+    "/products/ris-kruglozernyj-uvelka-800g-754268_ST/"],
   ["metro", "241097", "milk-25-900", "Молоко Простоквашино пастеризованное 2.5%, 930мл",
     "/products/moloko-prostokvashino-pasterizovannoye-2-5-930ml"],
   ["metro", "241096", "kefir-1l", "Кефир Простоквашино 2.5%, 930г",
@@ -22,6 +28,17 @@ const BINDINGS = Object.freeze([
 ].map(([retailerId, sourceProductId, productId, name, path]) => Object.freeze({
   retailerId, sourceProductId, productId, name, path
 })));
+
+// These physical-catalogue identities have their own exact pack IDs. They do
+// not inherit the historical kefir/rice family IDs or online beta profiles.
+const GLOBUS_PRODUCTS = Object.freeze([
+  Object.freeze({ id: "globus-kefir-prostokvashino-32-930g",
+    name: "Кефир Простоквашино 3,2%", unit: "930 г", category: "Молочные продукты" }),
+  Object.freeze({ id: "globus-dobry-cola-1l",
+    name: "Напиток Добрый Cola", unit: "1 л", category: "Газированные напитки" }),
+  Object.freeze({ id: "globus-rice-uvelka-round-800g",
+    name: "Рис круглозерный Увелка", unit: "800 г", category: "Бакалея" })
+]);
 
 function normalizedName(value) {
   return typeof value === "string"
@@ -39,6 +56,8 @@ function normalizedUnit(value) {
 // Fixed live profiles price these exact packs. A historical family ID alone
 // cannot turn a generic 900ml/1l basket row into the reviewed 930ml/930g SKU.
 export function getReviewedRetailBasketIdentity(productId) {
+  const physical = GLOBUS_PRODUCTS.find(row => row.id === productId);
+  if (physical) return physical;
   const display = BETA_EVERYDAY_BINDINGS.find(row => row.canonicalProductId === productId)?.displayName;
   const separator = display?.lastIndexOf(", ") ?? -1;
   if (separator >= 0) return Object.freeze({ id: productId,
@@ -49,6 +68,9 @@ export function getReviewedRetailBasketIdentity(productId) {
 
 export function matchesReviewedRetailBasketIdentity(product) {
   if (!product || typeof product !== "object") return false;
+  const physical = GLOBUS_PRODUCTS.find(row => row.id === product.id);
+  if (physical) return normalizedName(physical.name) === normalizedName(product.name)
+    && normalizedUnit(physical.unit) === normalizedUnit(product.unit);
   const exact = BETA_EVERYDAY_PROOF_PRODUCTS.find(row => row.id === product.id)
     ?? BETA_REAL_PRODUCTS.find(row => row.id === product.id);
   const display = BETA_EVERYDAY_BINDINGS.find(row => row.canonicalProductId === product.id)?.displayName;
@@ -75,18 +97,23 @@ export function getReviewedRetailBasketProduct(product) {
   ));
   if (!binding) return null;
 
-  const canonical = BETA_EVERYDAY_PROOF_PRODUCTS.find(item => item.id === binding.productId);
+  const physical = GLOBUS_PRODUCTS.find(item => item.id === binding.productId);
+  const canonical = physical ?? BETA_EVERYDAY_PROOF_PRODUCTS.find(item => item.id === binding.productId);
   const display = BETA_EVERYDAY_BINDINGS.find(item => item.canonicalProductId === binding.productId);
   // A missing separate unit is safe only because the exact reviewed title
   // above already proves this pack. A contradictory supplied unit fails closed.
-  if (!canonical || !display || (product.unit != null
+  if (!canonical || (!physical && !display) || (product.unit != null
       && normalizedUnit(product.unit) !== normalizedUnit(canonical.unit))) return null;
 
   let url;
   try { url = new URL(product.productUrl); } catch { return null; }
-  const host = binding.retailerId === "metro" ? "online.metro-cc.ru" : "magnit.ru";
+  const host = binding.retailerId === "globus" ? "www.globus.ru"
+    : binding.retailerId === "metro" ? "online.metro-cc.ru" : "magnit.ru";
   if (url.protocol !== "https:" || url.host !== host || url.username || url.password
-      || url.pathname !== binding.path) return null;
+      || url.pathname !== binding.path
+      || (physical && (url.search || url.hash))) return null;
+
+  if (physical) return physical;
 
   const suffix = ", " + canonical.unit;
   if (!display.displayName.endsWith(suffix)) return null;
@@ -97,4 +124,3 @@ export function getReviewedRetailBasketProduct(product) {
     category: canonical.category
   });
 }
-
