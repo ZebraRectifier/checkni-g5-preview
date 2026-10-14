@@ -102,6 +102,12 @@ export function resolveLocalAssistantDialogue(text) {
   const stripped = raw.replace(GREETING_PREFIX, "").replace(ASSISTANT_ADDRESS, "").trim();
   const utteranceCandidates = dialogueCandidates(stripped || raw);
 
+  if (matches(utteranceCandidates,
+    /^(?:помоги|помогите|поможешь|(?:можешь\s+)?помочь)(?:\s+(?:мне|нам))?\s+(?:с\s+(?:покупками|продуктами|корзиной)|(?:выбрать|подобрать)\s+продукты|(?:собрать|составить)\s+(?:корзину|список\s+покупок))$/u)) {
+    return reply("shopping_start", MARTEN_STATE.CURIOUS, "Давай помогу 🙂",
+      "Что хочешь купить? Если список уже есть, напиши продукты — начнём подбирать. Если списка пока нет, расскажи, для чего нужны покупки: например, быстрый ужин на двоих. Уточним только то, что нужно для выбора.");
+  }
+
   if (
     matches(
       utteranceCandidates,

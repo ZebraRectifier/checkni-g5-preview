@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "22bfcccbf6254af27131c201f46d813d95eec0c8",
+  "sourceCommit": "414b0d18f9ae2ef36e7111b1d8288ffc68e7df39",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -109,7 +109,8 @@
       532,
       534,
       537,
-      538
+      538,
+      540
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -118,13 +119,13 @@
     "providerRoute": "zero-cost OpenRouter",
     "providerDeploymentVersion": 28,
     "validation": {
-      "unitAndGuardChecks": 1704,
+      "unitAndGuardChecks": 1705,
       "chromiumDesktopAndMobileCases": 312,
-      "exactHead": "d5a53b3e8721e0f14776a63bb99f24d7d344be0a",
-      "sourceCommit": "22bfcccbf6254af27131c201f46d813d95eec0c8",
-      "exactHeadCiRun": 38580382131,
-      "mergedMainCiRun": 38583119448,
-      "validationScope": "Exact-head and actual-main Node/browser gates; selected-store context independent of loading and bounded source choice relevance; external provider remains v28"
+      "exactHead": "e451e00971d562384e64c769cb4d6dc2aabb57ae",
+      "sourceCommit": "414b0d18f9ae2ef36e7111b1d8288ffc68e7df39",
+      "exactHeadCiRun": 38584423415,
+      "mergedMainCiRun": 38588386316,
+      "validationScope": "Exact-head and actual-main Node/browser gates; complete shopping-help requests ask a local needs question, then proceed through real source selection; external provider remains v28"
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -492,13 +493,13 @@
       "validation": "complete 18.9s responses accepted in virtual-clock tests; stalled responses remain bounded"
     },
     "previousValidation": {
-      "unitAndGuardChecks": 1695,
-      "chromiumDesktopAndMobileCases": 308,
-      "exactHead": "6098733e6c890a3c01ba046fd60d185d69569f6d",
-      "sourceCommit": "96f6060d452ab20c14046b221cf2be91175e85be",
-      "exactHeadCiRun": 38567963737,
-      "mergedMainCiRun": 38570182055,
-      "validationScope": "Exact-head and actual-main Node/browser gates; bounded natural retail intents, explicit source choices, reviewed contribution corrections, list budgets/skips and custom-meal clarification; external provider remains v28"
+      "unitAndGuardChecks": 1704,
+      "chromiumDesktopAndMobileCases": 312,
+      "exactHead": "d5a53b3e8721e0f14776a63bb99f24d7d344be0a",
+      "sourceCommit": "22bfcccbf6254af27131c201f46d813d95eec0c8",
+      "exactHeadCiRun": 38580382131,
+      "mergedMainCiRun": 38583119448,
+      "validationScope": "Exact-head and actual-main Node/browser gates; selected-store context independent of loading and bounded source choice relevance; external provider remains v28"
     },
     "advicePurposeMemory": {
       "sourcePr": 520,
@@ -569,6 +570,15 @@
       "candidateLimit": 24,
       "selectionRelevance": "Bounded main-product title vocabulary and all explicit brand/fat/unit tokens before max-five display; ingredient mentions do not establish the product family",
       "searchWindowIsAssortmentProof": false
+    },
+    "shoppingStart": {
+      "sourcePr": 540,
+      "scope": "Bounded complete shopping-help request, with optional greeting and assistant address",
+      "modelRequired": false,
+      "sourceSearchRequired": false,
+      "createsBasketDraft": false,
+      "question": "What to buy, or what occasion needs shopping",
+      "namedProductsAndExclusions": "Original shopping routing"
     }
   },
   "magnitAddressPhotos": {
