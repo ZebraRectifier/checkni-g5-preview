@@ -92,3 +92,41 @@ test('changing the primary GLOBUS address clears a duplicate peer and forbids a 
   await page.reload(); await expect(page.locator('#globus-store-address')).toHaveValue('5001');
   await expect(peer).toBeDisabled();
 });
+
+test('map address choice invalidates a winner and restores exact scope on Back and reload', async ({ page }) => {
+  await page.route('**/tile.openstreetmap.org/**', route => route.abort());
+  await routes(page, { stale: false });
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  await page.locator('#globus-compare-address').selectOption('5020');
+  await page.locator('#product-search').fill('рис Увелка');
+  await page.locator('#product-search').press('Enter');
+  await page.locator('[data-product-id="retail:globus:globus-store-5011:000000000000754268_ST"]')
+    .getByRole('button').click();
+  await page.locator('#open-basket').click();
+  await page.locator('#compare-basket').click();
+  await expect(page.getByLabel('Результат по наблюдаемым ценам')).toContainText('90,00 ₽');
+  await page.locator('#back-to-shop').click();
+  const known = page.locator('.stores-location-directory');
+  await known.locator('summary').click();
+  await page.locator('#stores-known-locations [data-store-location-id="globus-store-5018"]')
+    .getByRole('button', { name: 'Выбрать для корзины', exact: true }).click();
+  await expect(page.locator('#globus-store-address')).toHaveValue('5018');
+  await expect(page.locator('#globus-compare-address')).toHaveValue('');
+  const mapScope = page.locator('#stores-selected-addresses');
+  await expect(mapScope.locator('li')).toHaveCount(3);
+  await expect(mapScope).toContainText('Саларьево');
+  await expect(mapScope).not.toContainText('Медведково');
+  await page.locator('#open-basket').click();
+  await expect(page.locator('#comparison-output')).not.toContainText('90,00 ₽');
+  await expect(page.locator('.basket-summary')).toContainText('1 шт.');
+  await page.goBack();
+  await expect(page.locator('#globus-store-address')).toHaveValue('5018');
+  await page.goBack();
+  await expect(page.locator('#globus-store-address')).toHaveValue('5011');
+  await expect(page.locator('#globus-compare-address')).toHaveValue('5020');
+  await expect(mapScope.locator('li')).toHaveCount(2);
+  await page.reload();
+  await expect(mapScope).toContainText('Медведково');
+  await expect(mapScope).not.toContainText('Саларьево');
+  await expect(page.locator('#globus-compare-address')).toHaveValue('5020');
+});
