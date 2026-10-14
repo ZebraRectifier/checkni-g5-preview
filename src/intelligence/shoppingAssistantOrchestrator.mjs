@@ -8,6 +8,7 @@ import {
 } from "./localBasketParser.mjs";
 import { extractCatalogQueries } from "../runtime/catalogQueries.mjs";
 import { shoppingTargets } from "./shoppingConversation.mjs";
+import { retailQueryMatchesProduct } from "./retailShoppingIntent.mjs";
 
 // These seed descriptors contain defaults the shopper did not necessarily
 // request (C1, white rice, wheat bread, semi-hard cheese). Discovery searches
@@ -34,6 +35,7 @@ export const SHOPPING_ASSISTANT_TOOL = Object.freeze({
 
 export const COMMERCIAL_ASSISTANT_RESULT_KIND = "commercial-assistant-result";
 export const MAX_COMMERCIAL_RETAIL_PRODUCTS = 5;
+const MAX_SELECTION_DISCOVERY_CANDIDATES = 24;
 export const MAX_COMMERCIAL_CATALOG_PRODUCTS = 5;
 
 const RETAILER_PATTERNS = Object.freeze([
@@ -471,18 +473,23 @@ export function createShoppingAssistantOrchestrator(options = {}) {
         // never an identity substitution or a comparable basket price.
         ? basket[0].name.replace(/\d+(?:[.,]\d+)?\s*%/gu, "").replace(/\s+/gu, " ").trim()
         : selectionOnly ? extractCatalogQueries(identityText)[0] ?? identityText : identityText);
+      const selectionQuery = selectionOnly && context.selectionDiscovery === true
+        ? extractCatalogQueries(identityText)[0] ?? identityText : null;
+      const candidateLimit = selectionQuery ? MAX_SELECTION_DISCOVERY_CANDIDATES : MAX_COMMERCIAL_RETAIL_PRODUCTS;
       const searched = await runTool(
         SHOPPING_ASSISTANT_TOOL.SEARCH_RETAILER,
         retailerId,
         retailerQuery,
-        { limit: MAX_COMMERCIAL_RETAIL_PRODUCTS }
+        { limit: candidateLimit }
       );
       trace.push(searched.trace);
 
       if (searched.value?.kind === "catalog" && Array.isArray(searched.value.products)) {
         retailProducts = searched.value.products
+          .slice(0, candidateLimit)
           .map(normalizeRetailProduct)
           .filter(product => product && product.retailerId === retailerId)
+          .filter(product => !selectionQuery || retailQueryMatchesProduct(selectionQuery, product))
           .slice(0, MAX_COMMERCIAL_RETAIL_PRODUCTS);
       }
     }

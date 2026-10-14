@@ -28,6 +28,29 @@ const discoveryFamilies = { "kefir-1l": "кефир", "milk-25-900": "молок
 const knownNoun = (product, word) => [product?.name, ...(product?.aliases ?? [])].some(name =>
   (String(name ?? "").match(/[а-яё]+/giu) ?? []).some(token => stemRussianToken(token) === stemRussianToken(word)));
 
+const selectionTokens = value => (String(value ?? "").normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е")
+  .replace(/(\d),(\d)/gu, "$1.$2").replace(/(\d)\s+%/gu, "$1%")
+  .match(/\d+(?:\.\d+)?%|[a-zа-я]+|\d+(?:\.\d+)?/gu) ?? [])
+  .map(token => /\d/u.test(token) ? token : stemRussianToken(token));
+// Bounded title vocabulary, not SKU or commercial identity. The first product
+// noun distinguishes milk from a curd bar or biscuit mentioning milk. A noun
+// after an ingredient connector cannot establish the product's main family.
+const titleFamilies = new Map([
+  "молоко", "кефир", "яйцо", "хлеб", "сыр", "сырок", "йогурт", "сметана", "творог", "ряженка", "сливки", "масло",
+  "рис", "макароны", "паста", "лапша", "печенье", "конфета", "шоколад", "мороженое", "пирожное", "бисквит", "торт", "кекс",
+  "коктейль", "напиток", "каша", "хлопья", "вода", "яблоко", "банан", "томат", "помидор", "картофель", "лук", "морковь", "капуста",
+  "пельмени", "котлета", "наггетсы", "фарш", "филе", "курица", "цыпленок", "колбаса", "сосиска", "сок", "чай", "кофе"
+].map(noun => [stemRussianToken(noun), noun]));
+const mainTitleFamily = value => selectionTokens(String(value ?? "").split(/\s+(?:с|со)\s+/iu)[0])
+  .map(token => titleFamilies.get(token)).find(Boolean) ?? null;
+
+export function retailQueryMatchesProduct(query, product) {
+  const wanted = selectionTokens(query), available = new Set(selectionTokens(`${product?.name ?? ""} ${product?.unit ?? ""}`));
+  const family = mainTitleFamily(query);
+  return wanted.length > 0 && wanted.every(token => available.has(token))
+    && (!family || mainTitleFamily(product?.name) === family);
+}
+
 export function isRetailSortFollowup(text) {
   return /^(?:а\s+)?(?:(?:тот|что-нибудь)\s*,?\s*(?:что\s+)?)?(?:подешевле|дешевле)$/iu.test(normalizeRetailShoppingText(text));
 }

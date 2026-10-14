@@ -1,9 +1,19 @@
-import { stemRussianToken } from "./localBasketParser.mjs";
-import { normalizeRetailShoppingText, parseRetailShoppingIntent, retailQuantityFollowup, retailFatFollowup, isRetailSortFollowup, retailBudgetIntent } from "./retailShoppingIntent.mjs";
+import { normalizeRetailShoppingText, parseRetailShoppingIntent, retailQuantityFollowup, retailFatFollowup, isRetailSortFollowup, retailBudgetIntent, retailQueryMatchesProduct } from "./retailShoppingIntent.mjs";
 import { getReviewedRetailBasketProduct } from "../catalog/reviewedRetailBasket.mjs";
 import { getRetailCatalogDefinition } from "../ports/retailCatalogPort.mjs";
 
-export function currentRetailSelectionScope(readCatalog, localCatalog) {
+export function currentRetailSelectionScope(readCatalog, localCatalog, readSelectedScope = null) {
+  if (typeof readSelectedScope === "function") {
+    try {
+      const selected = readSelectedScope();
+      if (selected === null) return null;
+      if (typeof selected?.retailerId !== "string" || !selected.retailerId.trim() || selected.retailerId.length > 80
+          || typeof selected.storeId !== "string" || !selected.storeId.trim() || selected.storeId.length > 160) return "retail:unavailable";
+      // UI selection identity only, never price/stock/address-price evidence.
+      // It stays stable while visible product rows load, filter or fail.
+      return JSON.stringify([selected.retailerId, selected.storeId]);
+    } catch { return "retail:unavailable"; }
+  }
   if (typeof readCatalog !== "function") return null;
   try {
     const products = readCatalog();
@@ -56,13 +66,6 @@ function sameMagnitScope(product, context) {
   catch { return false; }
 }
 
-function queryMatchesCard(query, card) {
-  const tokens = value => (String(value ?? "").normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е").replace(/(\d),(\d)/gu, "$1.$2").replace(/(\d)\s+%/gu, "$1%")
-    .match(/\d+(?:\.\d+)?%|[a-zа-я]+|\d+(?:\.\d+)?/gu) ?? []).map(token => /\d/u.test(token) ? token : stemRussianToken(token));
-  const wanted = tokens(query), available = new Set(tokens(`${card.name} ${card.unit ?? ""}`));
-  return wanted.length > 0 && wanted.every(token => available.has(token));
-}
-
 export function admittedRetailSelectionCards(result, query) {
   if (result?.kind !== "commercial-assistant-result" || !result.retailerContext?.storeId || !Array.isArray(result.retailProducts)) return [];
   const counts = new Map();
@@ -72,7 +75,7 @@ export function admittedRetailSelectionCards(result, query) {
       && Number.isSafeInteger(product.priceMinor) && product.priceMinor > 0 && product.currency === "RUB" && product.availability === "unknown"
       && Number.isFinite(Date.parse(product.observedAt)) && Date.parse(product.observedAt) <= Date.now() + 300000
       && retailSelectionUrl(product.sourceUrl, product.retailerId)
-      && sameMagnitScope(product, result.retailerContext) && queryMatchesCard(query, product))
+      && sameMagnitScope(product, result.retailerContext) && retailQueryMatchesProduct(query, product))
     .slice(0, 5).map(product => Object.freeze({ ...product, sourceUrl: retailSelectionUrl(product.sourceUrl, product.retailerId),
       imageUrl: retailSelectionUrl(product.imageUrl, product.retailerId, "imageUrlRules"), storeId: result.retailerContext.storeId,
       productUrl: retailSelectionUrl(product.productUrl, product.retailerId, "productUrlRules") }));

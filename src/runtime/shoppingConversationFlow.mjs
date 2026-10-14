@@ -40,6 +40,7 @@ export function createShoppingConversationFlow(options) {
   let state = { status: "idle" };
   let inFlight = null;
   const byId = new Map(localCatalog.map(product => [product.id, product]));
+  const retailScope = () => currentRetailSelectionScope(options.resolveProductFactsCatalog, localCatalog, options.resolveRetailSelectionScope);
   const activeMemory = () => Object.keys(memory.facts).length || Object.keys(memory.rejected).length || Object.keys(memory.wishes).length;
   const hybrid = createHybridBasketFlow({ ...options,
     resolveCommercialRequest: typeof options.resolveCommercialRequest === "function"
@@ -181,7 +182,7 @@ export function createShoppingConversationFlow(options) {
     const next = /^(?:дальше|следующий товар|заверши(?:ть)? список)$/u.test(value);
     const cancelChange = value === "отмени изменение";
     if (!skip && !next && !cancelChange) return false;
-    if (retailList.scope !== currentRetailSelectionScope(options.resolveProductFactsCatalog, localCatalog)) {
+    if (retailList.scope !== retailScope()) {
       retailList = null; productSelection = null; pending = null; suspendedDraft = null;
       state = messageState("Магазин изменился.", "Напиши список заново для выбранного магазина. Подтверждённая корзина сохранилась."); return true;
     }
@@ -253,7 +254,7 @@ export function createShoppingConversationFlow(options) {
       state = messageState("Ингредиенты посмотрели.", "В корзине остались только явно подтверждённые товары. Проверь, что удалось добавить, и количество упаковок. Затем «Где дешевле?» проверит стоимость и покрытие; полный набор и попадание в бюджет пока не подтверждены."); return true;
     }
     if (turn.kind === "search") {
-      if (currentRetailSelectionScope(options.resolveProductFactsCatalog, localCatalog) === null) {
+      if (retailScope() === null) {
         state = messageState("Начнём с ингредиентов.", "Выбери магазин в каталоге и напиши нужный продукт — посмотрим его реальные карточки. Подтверждённая корзина сохранилась.");
         decorateMealProduct(); return true;
       }
@@ -267,11 +268,15 @@ export function createShoppingConversationFlow(options) {
     return true;
   }
   function selectRetailProduct(text, token, suppliedTurn = null) {
-    const scope = currentRetailSelectionScope(options.resolveProductFactsCatalog, localCatalog);
+    const scope = retailScope();
     if (productSelection && productSelection.scope !== scope) {
       productSelection = null; retailList = null; pending = null; suspendedDraft = null;
     }
     if (scope === null) return false;
+    if (typeof options.resolveRetailSelectionScope === "function" && scope === "retail:unavailable") {
+      pending = null; suspendedDraft = null; productSelection = null; retailList = null; hybrid.invalidate();
+      state = messageState("Уточню выбранный магазин.", "Не удалось проверить текущий выбор каталога. Выбери магазин ещё раз; корзина сохранилась."); return true;
+    }
     const delta = extractShoppingDelta(normalizeRetailShoppingText(text));
     const turn = suppliedTurn ?? retailSelectionRequest(text, localCatalog, delta, productSelection);
     if (!turn) {
@@ -361,11 +366,13 @@ export function createShoppingConversationFlow(options) {
       } catch { /* A failed catalog must not fall through into a generic product. */ }
       finally { clearTimeout(timeout); }
       if (token !== epoch) return true;
-      const currentScope = currentRetailSelectionScope(options.resolveProductFactsCatalog, localCatalog);
+      const currentScope = retailScope();
       if (currentScope === null || (scope.startsWith("[") && currentScope.startsWith("[") && scope !== currentScope)) {
         productSelection = null; state = messageState("Каталог изменился.", "Повтори запрос для нового выбранного магазина. Корзина сохранилась."); return true;
       }
-      const cards = admittedRetailSelectionCards(result, turn.query).filter(card => !isShoppingProductRejected(card, memory));
+      const scopedResult = typeof options.resolveRetailSelectionScope !== "function"
+        || JSON.stringify([result?.retailerId, result?.retailerContext?.storeId]) === currentScope;
+      const cards = (scopedResult ? admittedRetailSelectionCards(result, turn.query) : []).filter(card => !isShoppingProductRejected(card, memory));
       productSelection = { query: turn.query, quantity: turn.quantity, scope: currentScope, cards, budgetMinor: turn.budgetMinor ?? retailList?.budgetMinor };
       if (retailList && retailList.scope === scope) retailList.scope = currentScope;
       state = retailSelectionView(productSelection);
@@ -398,7 +405,7 @@ export function createShoppingConversationFlow(options) {
     const selectionQuestion = shoppingAdviceTopic(text) || isShoppingProductFactsQuestion(text);
     if (selectionQuestion) { productSelection = null; retailList = null; }
     const selection = (!selectionQuestion && (preflightLocalBasketText(text).kind === "pass"
-      || currentRetailSelectionScope(options.resolveProductFactsCatalog, localCatalog) !== null && retailBudgetIntent(text, localCatalog)))
+      || retailScope() !== null && retailBudgetIntent(text, localCatalog)))
       || (productSelection && isRetailSortFollowup(text))
       ? selectRetailProduct(text, token) : false;
     if (selection) {
