@@ -141,6 +141,15 @@ const elements = {
 };
 
 const basket = createBasketStore();
+const basketPersistenceNotice = document.createElement("small");
+basketPersistenceNotice.id = "basket-persistence-status";
+basketPersistenceNotice.hidden = true;
+elements.basketDockCopy.after(basketPersistenceNotice);
+const basketPersistenceDetail = document.createElement("p");
+basketPersistenceDetail.id = "basket-persistence-detail";
+basketPersistenceDetail.setAttribute("role", "status");
+basketPersistenceDetail.hidden = true;
+elements.basketContent.before(basketPersistenceDetail);
 const comparisonMode = comparisonPort.mode === COMPARISON_MODE.OBSERVED
   ? COMPARISON_MODE.OBSERVED
   : COMPARISON_MODE.DEMO;
@@ -2460,6 +2469,16 @@ function renderDock() {
   elements.basketDockCopy.textContent = units === 0
     ? "Пока пусто"
     : `${units} шт. · ${items.length} поз.${priceSuffix}`;
+  const persistence = basket.getPersistenceStatus();
+  const persistenceMessage = persistence.reason === "conflict"
+    ? "В другой вкладке корзина изменилась. Несохранённые изменения остались здесь."
+    : units === 0
+      ? "Не удалось сохранить изменения корзины. После перезагрузки может вернуться прежний список."
+      : "Не удалось сохранить корзину. Перед перезагрузкой скопируй список товаров.";
+  for (const notice of [basketPersistenceNotice, basketPersistenceDetail]) {
+    notice.hidden = persistence.saved;
+    notice.textContent = persistenceMessage;
+  }
 
   elements.openBasket.classList.toggle("has-items", units > 0);
   elements.openBasket.setAttribute(
@@ -2818,7 +2837,12 @@ window.addEventListener("popstate", () => {
   }
 });
 
-basket.subscribe(() => {
+basket.subscribe((_, change) => {
+  if (change?.origin === "external") {
+    basketProposalFlow.invalidate();
+    renderBasketProposalState();
+    showToast("Корзина обновлена в другой вкладке");
+  }
   comparisonFlow.invalidate();
   renderCatalog();
   renderBasket();

@@ -89,47 +89,90 @@ function resolveStorage(explicitStorage) {
 }
 
 function safeRead(storage, key) {
-  if (!storage) return [];
+  if (!storage) return { ok: false, reason: "unavailable" };
 
+  let raw;
   try {
-    const raw = storage.getItem(key);
-    if (!raw) return [];
+    raw = storage.getItem(key);
+    if (raw === null) return { ok: true, raw, items: [] };
 
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
+    if (!Array.isArray(parsed)) return { ok: false, raw, reason: "read_failed" };
 
-    return normalizeStoredBasket(parsed);
+    return { ok: true, raw, items: normalizeStoredBasket(parsed) };
   } catch {
-    return [];
-  }
-}
-
-function safeWrite(storage, key, items) {
-  if (!storage) return;
-
-  try {
-    storage.setItem(key, JSON.stringify(items));
-  } catch {
-    // Storage can be unavailable in private/restricted browser contexts.
-    // The in-memory basket must remain usable even when persistence fails.
+    return { ok: false, raw, reason: "read_failed" };
   }
 }
 
 export function createBasketStore(options = {}) {
   const storage = resolveStorage(options.storage);
   const storageKey = options.storageKey ?? DEFAULT_STORAGE_KEY;
-  let items = safeRead(storage, storageKey);
+  const restored = safeRead(storage, storageKey);
+  let items = restored.items ?? [];
+  let lastRaw = restored.raw;
+  let dirty = false;
+  let persistence = restored.ok ? "saved" : restored.reason;
   const listeners = new Set();
+  const copyItems = () => items.map(item => ({ ...item }));
+  const signature = rows => JSON.stringify(rows.map(row => ({ id: row.id, name: row.name, unit: row.unit, quantity: row.quantity }))
+    .sort((a, b) => a.id.localeCompare(b.id)));
+  const emit = origin => {
+    const snapshot = copyItems();
+    listeners.forEach(listener => listener(snapshot, { origin }));
+  };
 
-  const getSnapshot = () => items.map((item) => ({ ...item }));
+  // Storage events may be delayed while a tab is suspended. Always read the
+  // current value, never an old event payload, and reconcile before mutations.
+  const refresh = () => {
+    const current = safeRead(storage, storageKey);
+    const previousStatus = persistence;
+    if (!current.ok) {
+      persistence = current.reason;
+    } else if (dirty) {
+      if (current.raw !== lastRaw) persistence = "conflict";
+    } else {
+      const changed = signature(items) !== signature(current.items);
+      lastRaw = current.raw;
+      items = current.items;
+      persistence = "saved";
+      if (changed) { emit("external"); return; }
+    }
+    if (persistence !== previousStatus) emit("persistence");
+  };
 
-  const notify = () => {
-    safeWrite(storage, storageKey, items);
-    const snapshot = getSnapshot();
-    listeners.forEach((listener) => listener(snapshot));
+  const getSnapshot = () => { refresh(); return copyItems(); };
+  const getPersistenceStatus = () => ({ saved: persistence === "saved", reason: persistence });
+
+  const notify = (rollbackOnConflict) => {
+    const current = safeRead(storage, storageKey);
+    if (current.raw !== undefined && current.raw !== lastRaw && rollbackOnConflict) {
+      rollbackOnConflict();
+      refresh();
+      return false;
+    }
+    dirty = true;
+    if (!storage || current.raw === undefined) {
+      persistence = current.reason ?? "unavailable";
+    } else if (current.raw !== lastRaw) {
+      persistence = "conflict";
+    } else {
+      try {
+        const raw = JSON.stringify(items);
+        storage.setItem(storageKey, raw);
+        lastRaw = raw;
+        dirty = false;
+        persistence = "saved";
+      } catch {
+        persistence = "write_failed";
+      }
+    }
+    emit("local");
+    return true;
   };
 
   const add = (product) => {
+    refresh();
     const normalized = normalizeStoredItem({ ...product, quantity: 1 });
     if (!normalized) return getSnapshot();
 
@@ -149,6 +192,7 @@ export function createBasketStore(options = {}) {
   };
 
   const setQuantity = (id, quantity) => {
+    refresh();
     const item = items.find((candidate) => candidate.id === id);
     if (!item) return getSnapshot();
 
@@ -161,18 +205,21 @@ export function createBasketStore(options = {}) {
   };
 
   const increment = (id) => {
+    refresh();
     const item = items.find((candidate) => candidate.id === id);
     if (!item) return getSnapshot();
     return setQuantity(id, item.quantity + 1);
   };
 
   const decrement = (id) => {
+    refresh();
     const item = items.find((candidate) => candidate.id === id);
     if (!item) return getSnapshot();
     return setQuantity(id, item.quantity - 1);
   };
 
   const remove = (id) => {
+    refresh();
     const nextItems = items.filter((item) => item.id !== id);
     if (nextItems.length === items.length) return getSnapshot();
 
@@ -182,6 +229,7 @@ export function createBasketStore(options = {}) {
   };
 
   const clear = () => {
+    refresh();
     if (items.length === 0) return getSnapshot();
     items = [];
     notify();
@@ -189,6 +237,7 @@ export function createBasketStore(options = {}) {
   };
 
   const mergeValidatedBasket = (validatedItems) => {
+    refresh();
     if (!Array.isArray(validatedItems) || validatedItems.length === 0) {
       return { snapshot: getSnapshot(), rejectedRows: [] };
     }
@@ -275,11 +324,11 @@ export function createBasketStore(options = {}) {
   // Compare-and-swap a reviewed full basket. All rows validate before any write.
   // Includes quantities and metadata in the lease: manual edits invalidate it.
   const replaceReviewedBasket = (expected, replacement) => {
-    const signature = rows => JSON.stringify(rows.map(row => ({ id: row.id, name: row.name, unit: row.unit, quantity: row.quantity })).sort((a, b) => a.id.localeCompare(b.id)));
+    refresh();
     if (!Array.isArray(expected) || !Array.isArray(replacement) || expected.some(row => !normalizeStoredItem(row))) {
       return { applied: false, reason: "invalid_basket", snapshot: getSnapshot() };
     }
-    if (signature(expected) !== signature(items)) {
+    if (persistence === "conflict" || signature(expected) !== signature(items)) {
       return { applied: false, reason: "stale_basket", snapshot: getSnapshot() };
     }
     const normalized = replacement.map(normalizeStoredItem);
@@ -287,14 +336,36 @@ export function createBasketStore(options = {}) {
       return { applied: false, reason: "invalid_basket", snapshot: getSnapshot() };
     }
     if (signature(normalized) !== signature(items)) {
+      const previousItems = items;
       items = normalized;
-      notify();
+      if (!notify(() => { items = previousItems; })) {
+        return { applied: false, reason: "stale_basket", snapshot: getSnapshot() };
+      }
     }
     return { applied: true, snapshot: getSnapshot(), rejectedRows: [] };
   };
 
+  const eventTarget = options.eventTarget === undefined
+    ? (typeof window !== "undefined" ? window : null) : options.eventTarget;
+  const onStorage = event => {
+    if (event.storageArea === storage && (event.key === storageKey || event.key === null)) refresh();
+  };
+  const onResume = () => refresh();
+  eventTarget?.addEventListener?.("storage", onStorage);
+  eventTarget?.addEventListener?.("pageshow", onResume);
+  eventTarget?.addEventListener?.("focus", onResume);
+  const dispose = () => {
+    eventTarget?.removeEventListener?.("storage", onStorage);
+    eventTarget?.removeEventListener?.("pageshow", onResume);
+    eventTarget?.removeEventListener?.("focus", onResume);
+    listeners.clear();
+  };
+
   return {
     getSnapshot,
+    getPersistenceStatus,
+    refresh,
+    dispose,
     add,
     setQuantity,
     increment,

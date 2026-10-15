@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "4a011cf25f5fb5d440d8c2f4e1538a8a6c893dd1",
+  "sourceCommit": "f95ef5043500b3f011dc4303db6917e8fd94f754",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -110,7 +110,8 @@
       534,
       537,
       538,
-      540
+      540,
+      544
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -119,13 +120,13 @@
     "providerRoute": "zero-cost OpenRouter",
     "providerDeploymentVersion": 28,
     "validation": {
-      "unitAndGuardChecks": 1705,
-      "chromiumDesktopAndMobileCases": 312,
-      "exactHead": "e451e00971d562384e64c769cb4d6dc2aabb57ae",
-      "sourceCommit": "414b0d18f9ae2ef36e7111b1d8288ffc68e7df39",
-      "exactHeadCiRun": 38584423415,
-      "mergedMainCiRun": 38588386316,
-      "validationScope": "Exact-head and actual-main Node/browser gates; complete shopping-help requests ask a local needs question, then proceed through real source selection; external provider remains v28"
+      "unitAndGuardChecks": 1803,
+      "chromiumDesktopAndMobileCases": 342,
+      "exactHead": "85f6538eb635aaa4b1b8ed2c298378e61f087fa2",
+      "sourceCommit": "f95ef5043500b3f011dc4303db6917e8fd94f754",
+      "exactHeadCiRun": 38681380731,
+      "mergedMainCiRun": 38683486485,
+      "validationScope": "Full regression suite for basket persistence across tabs, stale AI drafts/comparisons and explicit unsaved state; existing AI capability limits remain documented. External provider remains v28."
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -493,13 +494,13 @@
       "validation": "complete 18.9s responses accepted in virtual-clock tests; stalled responses remain bounded"
     },
     "previousValidation": {
-      "unitAndGuardChecks": 1704,
+      "unitAndGuardChecks": 1705,
       "chromiumDesktopAndMobileCases": 312,
-      "exactHead": "d5a53b3e8721e0f14776a63bb99f24d7d344be0a",
-      "sourceCommit": "22bfcccbf6254af27131c201f46d813d95eec0c8",
-      "exactHeadCiRun": 38580382131,
-      "mergedMainCiRun": 38583119448,
-      "validationScope": "Exact-head and actual-main Node/browser gates; selected-store context independent of loading and bounded source choice relevance; external provider remains v28"
+      "exactHead": "e451e00971d562384e64c769cb4d6dc2aabb57ae",
+      "sourceCommit": "414b0d18f9ae2ef36e7111b1d8288ffc68e7df39",
+      "exactHeadCiRun": 38584423415,
+      "mergedMainCiRun": 38588386316,
+      "validationScope": "Exact-head and actual-main Node/browser gates; complete shopping-help requests ask a local needs question, then proceed through real source selection; external provider remains v28"
     },
     "advicePurposeMemory": {
       "sourcePr": 520,
@@ -804,5 +805,43 @@
     "boundedWaits": true,
     "dateBoundaryAssertions": 35,
     "clockFrozen": false
+  },
+  "basketPersistence": {
+    "sourcePr": 544,
+    "testedHead": "85f6538eb635aaa4b1b8ed2c298378e61f087fa2",
+    "mergedSource": "f95ef5043500b3f011dc4303db6917e8fd94f754",
+    "runtimeFiles": 158,
+    "storage": "Browser localStorage; checkni.surface.basket.v1; same-origin tabs",
+    "reconcile": [
+      "Before reading or editing the basket",
+      "Before applying a reviewed replacement",
+      "storage event",
+      "focus",
+      "pageshow"
+    ],
+    "externalBasketEdits": {
+      "invalidateAiDraft": true,
+      "invalidatePreviousComparison": true,
+      "preserveExplicitPreferences": true
+    },
+    "storageFailures": {
+      "retainInMemoryBasket": true,
+      "visibleInShopAndBasket": true,
+      "failedFinalRemovalWarnsAboutOldSavedList": true,
+      "unsavedConflictDoesNotOverwriteNewerPersistedBasket": true
+    },
+    "validation": {
+      "nodeChecks": 1803,
+      "desktopMobileCases": 342,
+      "exactHeadCI": 38681380731,
+      "exactHeadPackage": 38681381187,
+      "actualMainCI": 38683486485,
+      "actualMainPackage": 38683486371,
+      "mobile": "Android Chromium emulation; physical-device verification unperformed"
+    },
+    "limits": [
+      "Reproduced stale-tab overwrite is addressed; the historical disappearance's cause is not established",
+      "Browser-local persistence only; no transactional simultaneous cross-tab write or cross-device sync guarantee"
+    ]
   }
 }
