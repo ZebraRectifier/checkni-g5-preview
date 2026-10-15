@@ -908,8 +908,8 @@
     "liveJourney": {
       "verifiedAt": "2026-10-15T19:55:00Z",
       "viewport": {
-        "width": 390,
-        "height": 844
+        "width": 462,
+        "height": 676
       },
       "physicalAndroid": false,
       "basketPositions": 6,
@@ -925,7 +925,13 @@
       "recovery": true,
       "previousStaleInsufficient": true,
       "availability": "unknown",
-      "officialHref": "https://www.globus.ru/store/5020"
+      "officialHref": "https://www.globus.ru/store/5020",
+      "automatedViewport": {
+        "width": 390,
+        "height": 844
+      },
+      "viewportNote": "Live UI dimensions measured from DOM; browser viewport override did not apply. Exact 390x844 coverage is automated CI, not a physical device.",
+      "officialDestinationOpened": true
     }
   }
 }
