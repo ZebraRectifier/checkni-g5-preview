@@ -887,9 +887,45 @@
       "retries": 0,
       "skips": 0,
       "actualMainCI": 38794507307,
-      "actualMainCIPending": true
+      "actualMainCIPending": false,
+      "actualMainPassed": true
     },
     "ingestVersion": 4,
-    "sourceBoundary": "Identity expansion; fresh six-product observations and operational availability remain unverified. Unknown stock stays unknown; stale observations cannot establish a winner."
+    "sourceBoundary": "Six reviewed products at two physical GLOBUS addresses; 12 source-observed rows imported and audited. Price observation age limits, unknown stock and partial assortment remain enforced. Other retailers and arbitrary baskets are not established by this release.",
+    "sourceRefresh": {
+      "run": 38795316369,
+      "event": "workflow_dispatch",
+      "checkpoint": "f56fb5e883c5ea956091016a3f31062afc139aa8",
+      "schemaVersion": 2,
+      "validated": 12,
+      "applied": 12,
+      "unobservedReviewedIds": [],
+      "importedAt": "2026-10-15T19:53:07.825Z",
+      "databaseRowsAudited": 12,
+      "fieldsPerRow": 29,
+      "mismatches": 0
+    },
+    "liveJourney": {
+      "verifiedAt": "2026-10-15T19:55:00Z",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "physicalAndroid": false,
+      "basketPositions": 6,
+      "basketUnits": 7,
+      "milkUnits": 2,
+      "winnerStoreId": "5020",
+      "totalMinor": 87093,
+      "savingsMinor": 1300,
+      "coverage": "6/6",
+      "reload": true,
+      "backForward": true,
+      "peerClearInvalidates": true,
+      "recovery": true,
+      "previousStaleInsufficient": true,
+      "availability": "unknown",
+      "officialHref": "https://www.globus.ru/store/5020"
+    }
   }
 }
