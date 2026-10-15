@@ -3,6 +3,7 @@ import { stripShoppingRequestPrefix } from "./shoppingRequestText.mjs";
 import { stripAssistantGreetingPrefix } from "./localAssistantDialogue.mjs";
 import { splitShoppingItems, MAX_AI_CATALOG_QUERIES } from "../runtime/catalogQueries.mjs";
 import { shoppingTargets } from "./shoppingConversation.mjs";
+import { extractShoppingNeedContext } from "./shoppingNeedContext.mjs";
 
 // Linguistic aliases only. These never select a source SKU, package or price.
 const aliases = [
@@ -127,7 +128,9 @@ function itemIntent(text, catalog) {
 }
 
 export function parseRetailShoppingIntent(text, catalog) {
-  const value = normalizeRetailShoppingText(text);
+  const need = extractShoppingNeedContext(normalizeRetailShoppingText(text));
+  if (need.clarification) return { kind: "clarification", message: need.clarification };
+  const value = need.text;
   const framed = stripShoppingRequestPrefix(value) !== value;
   let parts = splitShoppingItems(value);
   const listRequest = framed || parts.length > 1 && parts.some(part => shoppingTargets(part).length

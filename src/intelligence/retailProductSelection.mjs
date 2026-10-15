@@ -1,6 +1,7 @@
 import { normalizeRetailShoppingText, parseRetailShoppingIntent, retailQuantityFollowup, retailFatFollowup, isRetailSortFollowup, retailBudgetIntent, retailQueryMatchesProduct } from "./retailShoppingIntent.mjs";
 import { getReviewedRetailBasketProduct } from "../catalog/reviewedRetailBasket.mjs";
 import { getRetailCatalogDefinition } from "../ports/retailCatalogPort.mjs";
+import { extractShoppingNeedContext } from "./shoppingNeedContext.mjs";
 
 export function currentRetailSelectionScope(readCatalog, localCatalog, readSelectedScope = null) {
   if (typeof readSelectedScope === "function") {
@@ -25,6 +26,11 @@ export function currentRetailSelectionScope(readCatalog, localCatalog, readSelec
 }
 
 export function retailSelectionRequest(text, catalog, delta, focus = null) {
+  if (/цен[ауы]|стоим|сто[ия]т|скидк|акци|налич|доставк|заказ|где/iu.test(text)) return null;
+  const need = extractShoppingNeedContext(text);
+  if (need.clarification) return { kind: "clarification", message: need.clarification };
+  text = need.text;
+  if (need.recognized && !text.replace(/[.!?]+$/u, "").trim()) return { kind: "context" };
   const value = normalizeRetailShoppingText(text).toLocaleLowerCase("ru-RU");
   if (focus) {
     const chosen = value.match(/^(?:выбираю\s+(?:вариант\s+)?|вариант\s+)([1-5])$/u);

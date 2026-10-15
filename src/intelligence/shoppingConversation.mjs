@@ -2,9 +2,10 @@
 // transcripts, identity, commercial facts and inferred hypotheses stay out.
 export const CONVERSATION_LIMITS = Object.freeze({ facts: 16, rejected: 32, wishes: 16, exceptions: 8, bytes: 8192 });
 export const normalizeShoppingText = value => String(value ?? "").normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е").replace(/\s+/g, " ").trim();
-export const shoppingTargetLabel = key => ({ chicken_mince: "куриный фарш", chicken: "курица", nuggets: "наггетсы", chebureki: "чебуреки", eggs: "яйца", rice: "рис", pasta: "макароны", oatmeal: "овсянка", potatoes: "картофель", onions: "лук", carrots: "морковь", cabbage: "капуста", milk: "молоко", kefir: "кефир", vegetables: "овощи", fruit: "фрукты", tomatoes: "томаты", bread: "хлеб", cheese: "сыр", apples: "яблоки", bananas: "бананы", pelmeni: "пельмени", beef_mince: "говяжий фарш" }[key] ?? key);
+export const shoppingTargetLabel = key => ({ meat: "мясо и птица", chicken_mince: "куриный фарш", chicken: "курица", nuggets: "наггетсы", chebureki: "чебуреки", eggs: "яйца", rice: "рис", pasta: "макароны", oatmeal: "овсянка", potatoes: "картофель", onions: "лук", carrots: "морковь", cabbage: "капуста", milk: "молоко", kefir: "кефир", vegetables: "овощи", fruit: "фрукты", tomatoes: "томаты", bread: "хлеб", cheese: "сыр", apples: "яблоки", bananas: "бананы", pelmeni: "пельмени", beef_mince: "говяжий фарш" }[key] ?? key);
 
 const TERMS = Object.freeze({
+  meat: /(?:^|[^а-я])мяс(?:о|а|у|ом|ные|ной|ная|ное|ных|ным|ную)(?=$|[^а-я])/u,
   chicken_mince: /курин\S*\s+фарш|фарш\s+(?:из\s+куриц\S*|курин\S*)/u,
   chicken: /куриц\S*|цыплен\S*|курин\S*\s+филе|филе\s+курин\S*/u,
   nuggets: /наггетс\S*/u, chebureki: /чебурек\S*/u, eggs: /яйц\S*|яиц(?=$|[^а-я])/u,
@@ -18,6 +19,7 @@ const TERMS = Object.freeze({
 });
 const VEGETABLES = new Set(["potatoes", "onions", "carrots", "cabbage", "tomatoes"]);
 const FRUITS = new Set(["apples", "bananas"]);
+const MEAT_TARGETS = new Set(["chicken", "chicken_mince", "beef_mince", "nuggets", "chebureki", "pelmeni"]);
 const NEGATIVE_REQUEST = /(?:^|[^а-я])(?:не\s+(?:хочу|нуж(?:ен|н[аоы]?)|ем|люблю|нрав[ия]\S*|подход\S*|переношу)|не надо|убери|надоел\S*|терпеть не могу)/u;
 const REFUSAL = /(?:^|[^а-я])(?:не\s+(?:хочу|нуж(?:ен|н[аоы]?)|ем|люблю|нрав[ия]\S*|подход\S*|переношу)|не надо|убери|надоел\S*|терпеть не могу|без\s+)/u;
 const CLAUSE_PREDICATE = /хочу|нуж(?:ен|н[аоы])|можно|верни|добавь|не надо|не люблю|не нрав[ия]\S*|не подход\S*|не ем|убери|надоел\S*/u;
@@ -52,9 +54,14 @@ export function shoppingTargets(text) {
 }
 
 export function productShoppingTargets(product) {
-  const keys = shoppingTargets(product?.name);
+  const name = normalizeShoppingText(product?.name).replace(/(?:для|к)\s+мяс(?:а|у)(?=$|[\s,.])/gu, "");
+  const keys = shoppingTargets(name).filter(key => key !== "meat");
   if (keys.includes("chicken_mince")) keys.push("chicken");
   const category = normalizeShoppingText(product?.category);
+  if (!/без\s+мяса/u.test(name) && (TERMS.meat.test(name) || keys.some(key => MEAT_TARGETS.has(key))
+    || /говядин|свинин|индейк|бекон|ветчин|колбас|сосиск|баранин|теляти|ягнен|крольчат/u.test(name)
+    || /(?:^|[^а-я])(?:утк[ауои]|гусь|гуся|гуси|кролик[а-я]*|перепел(?:а|ку|ки|ок)?)(?=$|[^а-я])/u.test(name)
+    || ["мясо", "птица", "мясо и птица"].includes(category))) keys.push("meat");
   if (category === "овощи" || keys.some(key => VEGETABLES.has(key))) keys.push("vegetables");
   if (category === "фрукты" || keys.some(key => FRUITS.has(key))) keys.push("fruit");
   return [...new Set(keys)];
@@ -125,7 +132,12 @@ export function extractShoppingDelta(text) {
     if (REFUSAL.test(clause)) {
       const without = clause.match(/без\s+(.+)/u);
       const otherRefusal = NEGATIVE_REQUEST.test(clause);
-      const targets = shoppingTargets(without && !otherRefusal ? without[1] : clause);
+      const phrase = without && !otherRefusal ? without[1] : clause;
+      let targets = shoppingTargets(phrase);
+      if (targets.includes("meat") && /красн\S*\s+мяс|жирн\S*\s+мяс|переработан\S*\s+мяс|не\s+без\s+мяса/u.test(clause)) {
+        targets = targets.filter(key => key !== "meat");
+        delta.unresolved.push(clause.trim().slice(0, 80));
+      }
       delta.reject.push(...targets);
       for (const target of targets) delta.rejectScopes[target] = /никогда|вообще не ем|всегда без/u.test(clause) ? "conversation" : "goal";
       // Do not reinterpret unknown explicit refusals as a recommendation.
@@ -194,11 +206,19 @@ export function updateShoppingConversation(current, delta) {
 
 export function isShoppingProductRejected(product, state) {
   const targets = productShoppingTargets(product);
-  const broad = new Set(["vegetables", "fruit", "chicken"]);
+  // Wanting cheese/rice never authorises a meat filling. An explicit meat
+  // member exception (for example chicken) can narrow the broad refusal.
+  const name = normalizeShoppingText(product?.name);
+  const unexceptedMeat = /свинин|баранин|ягнен|теляти|индейк|утк[ауи]|гусь|гуся|кролик|крольчат|перепел/u.test(name)
+    || targets.includes("beef_mince") && !state.exceptions.beef_mince
+    || /говядин|говяж/u.test(name) && !targets.includes("beef_mince");
+  const meatException = !unexceptedMeat && targets.some(key => MEAT_TARGETS.has(key) && state.exceptions[key]);
+  if (targets.includes("meat") && state.rejected.meat && !meatException) return true;
+  const broad = new Set(["vegetables", "fruit", "chicken", "meat"]);
   const specific = targets.filter(key => !broad.has(key));
   if (specific.some(key => state.rejected[key])) return true;
   if (specific.some(key => state.exceptions[key])) return false;
-  return targets.some(key => state.rejected[key]);
+  return targets.some(key => state.rejected[key] && !(key === "meat" && meatException));
 }
 
 export function projectMartenConversation(state) {

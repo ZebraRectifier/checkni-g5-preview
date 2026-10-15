@@ -3,6 +3,7 @@ import { stripAssistantGreetingPrefix } from "./localAssistantDialogue.mjs";
 import { normalizeShoppingAdviceRequest, normalizeShoppingAdviceResponse } from "./shoppingAdviceContract.mjs";
 import { formatRubMinor } from "../components/ComparisonResult.mjs";
 import { matchShoppingProductReference } from "./shoppingProductReference.mjs";
+import { shoppingDaysText } from "./shoppingNeedContext.mjs";
 
 export function shoppingAdviceTopic(text) {
   const value = stripAssistantGreetingPrefix(String(text)).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е").trim();
@@ -77,6 +78,8 @@ export function localShoppingAdvice(input) {
 export function localShoppingExplanation(topic, memory, catalog, plan) {
   const names = plan.slice(0, 3).map(row => catalog.find(product => product.id === row.productId)?.name).filter(Boolean);
   const reasons = [];
+  if (memory.facts.peopleCount) reasons.push(`покупки для ${memory.facts.peopleCount.value} чел.`);
+  if (memory.facts.shoppingDays) reasons.push(`покупки на ${shoppingDaysText(memory.facts.shoppingDays.value)}`);
   if (memory.facts.cookingEffort?.value === "minimal") reasons.push(memory.facts.cookingEffort.origin === "explicit"
     ? "ты просил минимум готовки" : "предположила, что сейчас удобнее минимум готовки; поправь, если ошиблась");
   if (Object.keys(memory.wishes).length) reasons.push(`учла пожелания: ${Object.keys(memory.wishes).map(shoppingTargetLabel).join(", ")}`);

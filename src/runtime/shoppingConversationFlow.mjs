@@ -12,6 +12,7 @@ import { shoppingAdviceFocus, resolveShoppingAdviceFollowup, resolveShoppingBask
 import { currentRetailSelectionScope, retailSelectionRequest, admittedRetailSelectionCards, retailSelectionView, reviewedRetailSelection } from "../intelligence/retailProductSelection.mjs";
 import { advanceMealNeed, mealNeedView, mealNeedProductView } from "../intelligence/shoppingMealNeed.mjs";
 import { isRetailSortFollowup, normalizeRetailShoppingText, retailBudgetIntent } from "../intelligence/retailShoppingIntent.mjs";
+import { extractShoppingNeedContext, shoppingNeedContextSummary } from "../intelligence/shoppingNeedContext.mjs";
 
 const copy = value => JSON.parse(JSON.stringify(value));
 const rowsOf = validation => (validation?.basket ?? []).map(row => ({ productId: row.product.id, quantity: row.quantity }));
@@ -161,6 +162,7 @@ export function createShoppingConversationFlow(options) {
     state = { status: "success", result: { kind: "proposal" }, validation: state.validation, presentation: { headline: "Применены показанные изменения. Теперь можно сравнить магазины.", mascotState: "found" }, mergeRejectedRows: [] };
     decorateMealProduct();
     decorateRetailList();
+    decorateNeedContext();
     return state;
   }
   function decorateRetailList() {
@@ -231,6 +233,13 @@ export function createShoppingConversationFlow(options) {
       message: `${view.summary} ${state.presentation.message ?? ""} Напиши «дальше», чтобы посмотреть следующий ингредиент.`,
       conversationChoices: [{ label: view.next, text: "Следующий ингредиент" }] } };
   }
+  function decorateNeedContext() {
+    if (mealNeed || !productSelection || !state.presentation || state.status === "loading") return;
+    const summary = shoppingNeedContextSummary(memory);
+    if (!summary || state.presentation.message?.startsWith(summary)) return;
+    state = { ...state, presentation: { ...state.presentation, message: `${summary} ${state.presentation.message ?? ""}`.trim() } };
+    if (pending) pending.presentation = state.presentation;
+  }
   function handleMealNeed(text, token) {
     const turn = advanceMealNeed(text, mealNeed, memory);
     if (!turn) return false;
@@ -277,8 +286,14 @@ export function createShoppingConversationFlow(options) {
       pending = null; suspendedDraft = null; productSelection = null; retailList = null; hybrid.invalidate();
       state = messageState("Уточню выбранный магазин.", "Не удалось проверить текущий выбор каталога. Выбери магазин ещё раз; корзина сохранилась."); return true;
     }
+    const need = extractShoppingNeedContext(text);
     const delta = extractShoppingDelta(normalizeRetailShoppingText(text));
-    const turn = suppliedTurn ?? retailSelectionRequest(text, localCatalog, delta, productSelection);
+    const withoutMeat = need.text.replace(/(?:[,;]\s*)?\s*без\s+мяса[.!?]*$/iu, "").trim();
+    const simpleMeatRefusal = withoutMeat !== need.text.trim() && delta.reject.includes("meat")
+      && delta.reject.every(key => key === "meat") && !delta.allow.length && !delta.unresolved.length;
+    const selectionDelta = simpleMeatRefusal ? { ...delta, reject: [] } : delta;
+    const turn = suppliedTurn ?? (simpleMeatRefusal && !withoutMeat
+      ? { kind: "context" } : retailSelectionRequest(simpleMeatRefusal ? withoutMeat : text, localCatalog, selectionDelta, productSelection));
     if (!turn) {
       if (!/^(?:го|ок|да|давай|применить|применяй|подтверждаю)$/iu.test(text.trim())) { productSelection = null; retailList = null; }
       return false;
@@ -288,6 +303,22 @@ export function createShoppingConversationFlow(options) {
     if (memory.facts.unresolvedConstraints) {
       productSelection = null;
       state = messageState("Осталось непонятое условие.", "Сначала уточни или явно отмени нераспознанное условие. Я сохранила его, чтобы не нарушить отказ.");
+      return true;
+    }
+    if (!need.clarification && (Object.keys(need.facts).length || simpleMeatRefusal)) {
+      const updated = updateShoppingConversation(memory, { ...extractShoppingDelta(""), facts: need.facts,
+        reject: simpleMeatRefusal ? ["meat"] : [], rejectScopes: delta.rejectScopes, rejectionScope: delta.rejectionScope });
+      if (updated.overflow) { state = messageState("Условий уже много.", "Предыдущие условия сохранила. Уточни запрос короче."); return true; }
+      setMemory(updated.state);
+    }
+    if (turn.kind === "context") {
+      if (productSelection) {
+        const cards = productSelection.cards.filter(card => !isShoppingProductRejected(card, memory));
+        productSelection = { ...productSelection, cards, selected: productSelection.selected && cards.length > 0 };
+      }
+      if (productSelection?.selected) return selectRetailProduct("выбираю вариант 1", token);
+      state = productSelection ? retailSelectionView(productSelection)
+        : messageState("Условия покупки сохранила.", `${shoppingNeedContextSummary(memory)} Что хочешь купить?`.trim());
       return true;
     }
     if (turn.budgetMinor && turn.kind === "search") {
@@ -404,8 +435,24 @@ export function createShoppingConversationFlow(options) {
     // established routes; a catalog outage cannot add a placeholder product.
     const selectionQuestion = shoppingAdviceTopic(text) || isShoppingProductFactsQuestion(text);
     if (selectionQuestion) { productSelection = null; retailList = null; }
+    const needContext = extractShoppingNeedContext(text);
+    const needDelta = extractShoppingDelta(text);
+    const meatContext = /без\s+мяса[.!?]*$/iu.test(needContext.text)
+      && needDelta.reject.length === 1 && needDelta.reject[0] === "meat" && !needDelta.unresolved.length && !needDelta.allow.length;
+    const contextualShopping = (needContext.recognized || meatContext) && !selectionQuestion
+      && !/цен[ауы]|стоим|сто[ия]т|скидк|акци|дешев|налич|доставк|заказ|где/iu.test(text);
+    if (contextualShopping && retailScope() === null) {
+      pending = null; suspendedDraft = null; productSelection = null; retailList = null; hybrid.invalidate();
+      if (needContext.clarification) { state = messageState("Уточню условие.", needContext.clarification); return state; }
+      const updated = updateShoppingConversation(memory, { ...needDelta, facts: { ...needDelta.facts, ...needContext.facts } });
+      if (!updated.overflow) setMemory(updated.state);
+      state = memory.facts.unresolvedConstraints
+        ? messageState("Уточню ограничение.", `Не распознала: ${memory.facts.unresolvedConstraints.value.join("; ")}. Уточни эту часть; остальные условия сохранила.`)
+        : messageState("Условия покупки сохранила.", `${shoppingNeedContextSummary(memory)} Выбери магазин и напиши продукты — начнём с реальных карточек.`);
+      return state;
+    }
     const selection = (!selectionQuestion && (preflightLocalBasketText(text).kind === "pass"
-      || retailScope() !== null && retailBudgetIntent(text, localCatalog)))
+      || retailScope() !== null && (retailBudgetIntent(text, localCatalog) || contextualShopping)))
       || (productSelection && isRetailSortFollowup(text))
       ? selectRetailProduct(text, token) : false;
     if (selection) {
@@ -447,7 +494,9 @@ export function createShoppingConversationFlow(options) {
       return state;
     }
     if (followup) text = followup.text;
-    const delta = extractShoppingDelta(text);
+    const extractedDelta = extractShoppingDelta(text);
+    const delta = contextualShopping && !needContext.clarification
+      ? { ...extractedDelta, facts: { ...extractedDelta.facts, ...needContext.facts } } : extractedDelta;
     // "For guests" can answer the current product-selection question. Its
     // occasion marker alone must not start a new basket goal or drop a budget.
     // Keep explicit conversation commands and mixed shopping changes on their
@@ -542,7 +591,10 @@ export function createShoppingConversationFlow(options) {
       }
       state = { status: "loading" };
       let answer;
-      try { answer = typeof options.requestShoppingAdvice === "function" ? await options.requestShoppingAdvice(input) : null; }
+      // The deployed v28 advice contract does not yet know the new broad
+      // meat target. Keep its constrained recovery local instead of sending
+      // an unsupported target or dropping the refusal from a provider call.
+      try { answer = !memory.rejected.meat && !memory.wishes.meat && typeof options.requestShoppingAdvice === "function" ? await options.requestShoppingAdvice(input) : null; }
       catch { answer = null; }
       if (token !== epoch) return state;
       const reply = normalizeShoppingAdviceResponse(answer, input.context);
@@ -686,7 +738,10 @@ export function createShoppingConversationFlow(options) {
     epoch += 1;
     if (pending) pending.epoch = epoch;
     const token = epoch;
-    const promise = execute(key, token);
+    const promise = execute(key, token).then(() => {
+      if (token === epoch) decorateNeedContext();
+      return state;
+    });
     const flight = { key, promise };
     inFlight = flight;
     promise.finally(() => { if (inFlight === flight) inFlight = null; });

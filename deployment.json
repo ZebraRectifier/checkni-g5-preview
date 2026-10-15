@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "f95ef5043500b3f011dc4303db6917e8fd94f754",
+  "sourceCommit": "f8fb42155c0abaacfd04ec42c59b1083b62d6684",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -111,7 +111,8 @@
       537,
       538,
       540,
-      544
+      544,
+      545
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -120,13 +121,13 @@
     "providerRoute": "zero-cost OpenRouter",
     "providerDeploymentVersion": 28,
     "validation": {
-      "unitAndGuardChecks": 1803,
-      "chromiumDesktopAndMobileCases": 342,
-      "exactHead": "85f6538eb635aaa4b1b8ed2c298378e61f087fa2",
-      "sourceCommit": "f95ef5043500b3f011dc4303db6917e8fd94f754",
-      "exactHeadCiRun": 38681380731,
-      "mergedMainCiRun": 38683486485,
-      "validationScope": "Full regression suite for basket persistence across tabs, stale AI drafts/comparisons and explicit unsaved state; existing AI capability limits remain documented. External provider remains v28."
+      "unitAndGuardChecks": 1833,
+      "chromiumDesktopAndMobileCases": 348,
+      "exactHead": "68fb01355c10a8d735b73c6569a04367bd3865a5",
+      "sourceCommit": "f8fb42155c0abaacfd04ec42c59b1083b62d6684",
+      "exactHeadCiRun": 38688071359,
+      "mergedMainCiRun": 38689554737,
+      "validationScope": "Full regression suite for explicit household/period context, unchanged pack quantities, bounded meat refusals, unknown-constraint clarification and stale-draft rejection; full weekly menu and arbitrary grocery expertise remain unestablished. External provider remains v28."
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -494,13 +495,13 @@
       "validation": "complete 18.9s responses accepted in virtual-clock tests; stalled responses remain bounded"
     },
     "previousValidation": {
-      "unitAndGuardChecks": 1705,
-      "chromiumDesktopAndMobileCases": 312,
-      "exactHead": "e451e00971d562384e64c769cb4d6dc2aabb57ae",
-      "sourceCommit": "414b0d18f9ae2ef36e7111b1d8288ffc68e7df39",
-      "exactHeadCiRun": 38584423415,
-      "mergedMainCiRun": 38588386316,
-      "validationScope": "Exact-head and actual-main Node/browser gates; complete shopping-help requests ask a local needs question, then proceed through real source selection; external provider remains v28"
+      "unitAndGuardChecks": 1803,
+      "chromiumDesktopAndMobileCases": 342,
+      "exactHead": "85f6538eb635aaa4b1b8ed2c298378e61f087fa2",
+      "sourceCommit": "f95ef5043500b3f011dc4303db6917e8fd94f754",
+      "exactHeadCiRun": 38681380731,
+      "mergedMainCiRun": 38683486485,
+      "validationScope": "Full regression suite for basket persistence across tabs, stale AI drafts/comparisons and explicit unsaved state; existing AI capability limits remain documented. External provider remains v28."
     },
     "advicePurposeMemory": {
       "sourcePr": 520,
@@ -580,6 +581,30 @@
       "createsBasketDraft": false,
       "question": "What to buy, or what occasion needs shopping",
       "namedProductsAndExclusions": "Original shopping routing"
+    },
+    "shoppingNeedContext": {
+      "sourcePr": 545,
+      "scope": "current shopping goal; household and period are session-only",
+      "people": {
+        "min": 1,
+        "max": 12,
+        "explicitOnly": true
+      },
+      "days": {
+        "min": 1,
+        "max": 31,
+        "explicitOnly": true
+      },
+      "sourceQueries": "explicit context removed; brands, fat, units and pack counts preserved",
+      "packMultiplier": false,
+      "contextChanges": "refresh visible confirmation; ambiguous counts discard stale drafts",
+      "meatRefusal": "bounded title/category preference filter; meat fillings retained as rejected",
+      "compositionGuarantee": false,
+      "unknownCompositionConstraints": "clarification; no silent relaxation",
+      "weeklyMenu": "partial; household, whole-period budget and restrictions retained; full menu not built",
+      "providerDeploymentVersion": 28,
+      "broadMeatAdvice": "local only; deployed v28 advice contract unchanged",
+      "modelRequired": false
     }
   },
   "magnitAddressPhotos": {
