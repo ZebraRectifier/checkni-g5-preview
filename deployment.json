@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "f8fb42155c0abaacfd04ec42c59b1083b62d6684",
+  "sourceCommit": "20a3800465a1343c55365291b4c6d7d2e4ced248",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -868,5 +868,28 @@
       "Reproduced stale-tab overwrite is addressed; the historical disappearance's cause is not established",
       "Browser-local persistence only; no transactional simultaneous cross-tab write or cross-device sync guarantee"
     ]
+  },
+  "globusSixProductBasket": {
+    "sourcePr": 546,
+    "testedHead": "ccbcb3c6b2c8dbc0db80db56818ab163096dbf70",
+    "mergedSource": "20a3800465a1343c55365291b4c6d7d2e4ced248",
+    "runtimeFiles": 159,
+    "products": 6,
+    "exactStoreIds": [
+      "5011",
+      "5020"
+    ],
+    "validation": {
+      "nodeChecks": 1859,
+      "desktopMobileCases": 354,
+      "exactHeadCI": 38791537723,
+      "exactHeadPackage": 38791537746,
+      "retries": 0,
+      "skips": 0,
+      "actualMainCI": 38794507307,
+      "actualMainCIPending": true
+    },
+    "ingestVersion": 4,
+    "sourceBoundary": "Identity expansion; fresh six-product observations and operational availability remain unverified. Unknown stock stays unknown; stale observations cannot establish a winner."
   }
 }

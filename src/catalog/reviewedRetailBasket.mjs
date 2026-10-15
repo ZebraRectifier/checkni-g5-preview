@@ -13,6 +13,12 @@ const BINDINGS = Object.freeze([
     "/products/napitok-dobryj-cola-1l-712952_ST/"],
   ["globus", "000000000000754268_ST", "globus-rice-uvelka-round-800g", "Рис круглозерный Увелка, 800г",
     "/products/ris-kruglozernyj-uvelka-800g-754268_ST/"],
+  ["globus", "000000000000026730_ST", "globus-milk-parmalat-35-1l", "Молоко Parmalat 3,5%, 1л",
+    "/products/moloko-parmalat-35-1l-26730_ST/"],
+  ["globus", "000000000000000965_ST", "globus-water-shishkin-les-still-1l", "Вода питьевая Шишкин Лес негазированная, 1л",
+    "/products/voda-pitevaya-shishkin-les-negazirovannaya-1l-965_ST/"],
+  ["globus", "000000000000022104_ST", "globus-buckwheat-agro-alliance-extra-elite-900g", "Крупа гречневая Агро-Альянс Экстра Элитная, 900г",
+    "/products/krupa-grechnevaya-agro-alyans-ekstra-elitnaya-900g-22104_ST/"],
   ["metro", "241097", "milk-25-900", "Молоко Простоквашино пастеризованное 2.5%, 930мл",
     "/products/moloko-prostokvashino-pasterizovannoye-2-5-930ml"],
   ["metro", "241096", "kefir-1l", "Кефир Простоквашино 2.5%, 930г",
@@ -37,7 +43,13 @@ const GLOBUS_PRODUCTS = Object.freeze([
   Object.freeze({ id: "globus-dobry-cola-1l",
     name: "Напиток Добрый Cola", unit: "1 л", category: "Газированные напитки" }),
   Object.freeze({ id: "globus-rice-uvelka-round-800g",
-    name: "Рис круглозерный Увелка", unit: "800 г", category: "Бакалея" })
+    name: "Рис круглозерный Увелка", unit: "800 г", category: "Бакалея" }),
+  Object.freeze({ id: "globus-milk-parmalat-35-1l",
+    name: "Молоко Parmalat 3,5%", unit: "1 л", category: "Молочные продукты" }),
+  Object.freeze({ id: "globus-water-shishkin-les-still-1l",
+    name: "Вода питьевая Шишкин Лес негазированная", unit: "1 л", category: "Вода" }),
+  Object.freeze({ id: "globus-buckwheat-agro-alliance-extra-elite-900g",
+    name: "Крупа гречневая Агро-Альянс Экстра Элитная", unit: "900 г", category: "Бакалея" })
 ]);
 
 function normalizedName(value) {

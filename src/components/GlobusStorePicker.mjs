@@ -42,7 +42,7 @@ export function createGlobusStorePicker({ officialStoreId = '5011', onSelect, on
     if (compareSelect.value !== comparisonId) { comparisonId = ''; compareSelect.value = ''; }
     compareSelect.disabled = !reviewedBasketStores.includes(primary?.officialStoreId);
     compareNote.textContent = !compareSelect.disabled
-      ? 'Первая корзина для сравнения: кефир Простоквашино 3,2% 930 г, Добрый Cola 1 л и рис Увелка 800 г. Два физических адреса: Красногорск и Медведково. Наличие неизвестно; старые наблюдения в расчёт не входят.'
+      ? 'Сопоставлены шесть точных товаров: кефир Простоквашино, молоко Parmalat, Добрый Cola, вода Шишкин Лес, рис Увелка и гречка Агро-Альянс. Два физических адреса: Красногорск и Медведково. Для расчёта нужны свежие цены; наличие неизвестно.'
       : 'Первое сравнение корзины доступно между Глобус Красногорск и Глобус Медведково. По выбранному адресу остаётся просмотр каталога.';
   }
   function renderOptions() {
