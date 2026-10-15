@@ -81,6 +81,7 @@ jobs:
           set -euo pipefail
           node <<'NODE'
           const { chromium } = require("playwright-core");
+          const deployment = require("./deployment.json");
 
           const url =
             "https://zebrarectifier.github.io/checkni-g5-preview/?comparison=observed&catalog=retail";
@@ -88,6 +89,44 @@ jobs:
           function assert(condition, message) {
             if (!condition) throw new Error(message);
           }
+
+          function validDateKey(value, label) {
+            assert(typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/u.test(value),
+              `Invalid ${label}`);
+            const parsed = Date.parse(value + "T00:00:00.000Z");
+            assert(Number.isFinite(parsed) && new Date(parsed).toISOString().slice(0, 10) === value,
+              `Invalid ${label}`);
+            return value;
+          }
+
+          function promoPeriod(definition, retailerId) {
+            const from = validDateKey(definition?.validFrom, retailerId + ".validFrom");
+            const through = validDateKey(definition?.validTo, retailerId + ".validTo");
+            assert(from <= through, `Invalid ${retailerId} promo interval`);
+            return { from, through };
+          }
+
+          function moscowDateKey(nowMs = Date.now()) {
+            assert(Number.isFinite(nowMs), "Invalid Moscow date clock");
+            const parts = new Intl.DateTimeFormat("en-US", {
+              timeZone: "Europe/Moscow", year: "numeric", month: "2-digit", day: "2-digit"
+            }).formatToParts(new Date(nowMs));
+            const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+            return validDateKey(`${values.year}-${values.month}-${values.day}`, "Moscow day");
+          }
+
+          function promoCurrent(period, today = moscowDateKey()) {
+            return today >= period.from && today <= period.through;
+          }
+
+          function stage(name) {
+            console.log("LIVE_RETAIL_STAGE", name, new Date().toISOString());
+          }
+
+          const promoPeriods = {
+            da: promoPeriod(deployment.da, "da"),
+            auchan: promoPeriod(deployment.auchan, "auchan")
+          };
 
           (async () => {
             const browser = await chromium.launch({
@@ -102,6 +141,9 @@ jobs:
             const racePage = await browser.newPage({
               viewport: { width: 390, height: 844 }
             });
+            racePage.setDefaultTimeout(15000);
+            racePage.setDefaultNavigationTimeout(30000);
+            stage("race:start");
             let releaseGlobusRoot;
             let globusRootHeld = false;
             const globusRootGate = new Promise((resolve) => {
@@ -165,10 +207,14 @@ jobs:
               "Late GLOBUS response repainted Lenta categories"
             );
             await racePage.close();
+            stage("race:ok");
 
             const page = await browser.newPage({
               viewport: { width: 390, height: 844 }
             });
+            page.setDefaultTimeout(15000);
+            page.setDefaultNavigationTimeout(30000);
+            stage("published-page:start");
 
             const pageErrors = [];
             page.on("pageerror", (error) => pageErrors.push(error.message));
@@ -215,6 +261,7 @@ jobs:
 
 
             const globus = page.locator("#retail-store-card");
+            stage("globus:start");
             assert(await globus.getAttribute("aria-pressed") === "true", "GLOBUS must be initially selected");
             const picker = page.locator("#globus-store-address");
             await picker.waitFor({state:"visible",timeout:15000});
@@ -238,8 +285,10 @@ jobs:
               await page.locator('#product-grid [data-product-id^="retail:globus:globus-store-'+code+':"]').first().waitFor({state:"visible",timeout:15000});
             }
             await page.screenshot({path:"globus-exact-address-smoke.png",fullPage:true});
+            stage("globus:ok");
 
             const lenta = page.locator("#retail-store-card-lenta");
+            stage("lenta:start");
             await lenta.click();
             await page.waitForFunction(() => (
               document.querySelector("#retail-store-card-lenta")
@@ -536,6 +585,8 @@ jobs:
               "Forward to Lenta leaf left stale GLOBUS products visible"
             );
 
+            stage("lenta:ok");
+            stage("magnit:start");
             const magnit = page.locator("#retail-store-card-magnit");
             await magnit.waitFor({ state: "visible", timeout: 15000 });
             await magnit.click();
@@ -635,172 +686,200 @@ jobs:
               "Display-only Magnit observation must not enter the comparison basket"
             );
 
-            // Verify the dated public-network DA promo catalog only after the
-            // corresponding Pages artifact is actually published.
-            let daPublished = false;
-            for (let attempt = 0; attempt < 16; attempt += 1) {
-              const daSelector = page.locator("#retail-store-card-da");
-              const daText = await daSelector.innerText().catch(() => "");
-              if (
-                daText.includes("ДА! · публичный промо-каталог")
-                && daText.includes("1 категория · 94 товара")
-                && daText.includes("Промо 1–14 октября")
-              ) {
-                daPublished = true;
-                break;
+            stage("magnit:ok");
+
+            const daDay = moscowDateKey();
+            stage("da:start:" + daDay);
+            if (promoCurrent(promoPeriods.da, daDay)) {
+              // Verify the dated public-network DA promo catalog only after the
+              // corresponding Pages artifact is actually published.
+              let daPublished = false;
+              for (let attempt = 0; attempt < 16; attempt += 1) {
+                const daSelector = page.locator("#retail-store-card-da");
+                const daText = await daSelector.innerText({ timeout: 2000 }).catch(() => "");
+                if (
+                  daText.includes("ДА! · публичный промо-каталог")
+                  && daText.includes("1 категория · 94 товара")
+                  && daText.includes("Промо 1–14 октября")
+                ) {
+                  daPublished = true;
+                  break;
+                }
+                await page.waitForTimeout(2500);
+                await page.goto(
+                  url + "&da_release=7bc40759&attempt=" + attempt,
+                  { waitUntil: "domcontentloaded", timeout: 30000 }
+                );
+                await page.waitForTimeout(900);
               }
-              await page.waitForTimeout(2500);
-              await page.goto(
-                url + "&da_release=7bc40759&attempt=" + attempt,
-                { waitUntil: "domcontentloaded", timeout: 30000 }
+              assert(
+                daPublished,
+                "GitHub Pages did not publish DA 94-product promo artifact"
               );
-              await page.waitForTimeout(900);
-            }
-            assert(
-              daPublished,
-              "GitHub Pages did not publish DA 94-product promo artifact"
-            );
 
-            const da = page.locator("#retail-store-card-da");
-            await da.click();
-            await page.waitForFunction(() => (
-              document.querySelector("#retail-store-card-da")
-                ?.getAttribute("aria-pressed") === "true"
-              && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
-              ).length === 1
-            ), null, { timeout: 15000 });
+              const da = page.locator("#retail-store-card-da");
+              await da.click();
+              await page.waitForFunction(() => (
+                document.querySelector("#retail-store-card-da")
+                  ?.getAttribute("aria-pressed") === "true"
+                && document.querySelectorAll(
+                  "#retail-category-grid .retail-category-button:not(.is-loading)"
+                ).length === 1
+              ), null, { timeout: 15000 });
 
-            const daCategory = page.getByRole("button", {
-              name: /Текущий промо-каталог/
-            });
-            await daCategory.waitFor({ state: "visible", timeout: 15000 });
-            await daCategory.click();
+              const daCategory = page.getByRole("button", {
+                name: /Текущий промо-каталог/
+              });
+              await daCategory.waitFor({ state: "visible", timeout: 15000 });
+              await daCategory.click();
 
-            await page.waitForFunction(() => (
-              document.querySelectorAll(
+              await page.waitForFunction(() => (
+                document.querySelectorAll(
+                  '#product-grid [data-product-id^="retail:da:da-public-promo:"]'
+                ).length > 0
+              ), null, { timeout: 15000 });
+
+              const daCard = page.locator(
                 '#product-grid [data-product-id^="retail:da:da-public-promo:"]'
-              ).length > 0
-            ), null, { timeout: 15000 });
-
-            const daCard = page.locator(
-              '#product-grid [data-product-id^="retail:da:da-public-promo:"]'
-            ).first();
-            await daCard.waitFor({ state: "visible", timeout: 15000 });
-            const daCardText = await daCard.innerText();
-            assert(
-              /\d[\d\s]*,\d{2} ₽/u.test(daCardText),
-              "Published DA card is missing an observed RUB promo price"
-            );
-            assert(
-              daCardText.includes("Промо-цена каталога"),
-              "Published DA card lost promo price condition"
-            );
-            assert(
-              /до (?:07|14)\.10/u.test(daCardText),
-              "Published DA card lost promo validity"
-            );
-            assert(
-              daCardText.includes("ДА! · публичный промо-каталог · источник"),
-              "Published DA card lost network/source provenance"
-            );
-
-            const daImage = daCard.locator("img.product-photo");
-            await daImage.waitFor({ state: "visible", timeout: 15000 });
-            const daImageState = await daImage.evaluate((node) => ({
-              src: node.currentSrc || node.src,
-              complete: node.complete,
-              naturalWidth: node.naturalWidth
-            }));
-            assert(
-              daImageState.src.startsWith("https://market-da.ru/assets/"),
-              "DA card is not using the official image host"
-            );
-            assert(
-              daImageState.complete && daImageState.naturalWidth > 0,
-              "Official DA promo image did not load"
-            );
-            assert(
-              await daCard.getByRole("button").isDisabled(),
-              "Display-only DA promo observation must not enter the comparison basket"
-            );
-
-            // Verify the dated Auchan Moscow public promo catalog on the
-            // actually published Pages artifact.
-            let auchanPublished = false;
-            for (let attempt = 0; attempt < 16; attempt += 1) {
-              const liveAuchanText = await page.locator(
-                "#retail-store-card-auchan"
-              ).innerText().catch(() => "");
-              if (
-                liveAuchanText.includes("АШАН · Москва · публичный промо-каталог")
-                && liveAuchanText.includes("1 категория · 312 товаров")
-                && liveAuchanText.includes("промо 1–14 октября")
-              ) {
-                auchanPublished = true;
-                break;
-              }
-              await page.waitForTimeout(2500);
-              await page.goto(
-                url + "&auchan_release=0da8c263&attempt=" + attempt,
-                { waitUntil: "domcontentloaded", timeout: 30000 }
+              ).first();
+              await daCard.waitFor({ state: "visible", timeout: 15000 });
+              const daCardText = await daCard.innerText();
+              assert(
+                /\d[\d\s]*,\d{2} ₽/u.test(daCardText),
+                "Published DA card is missing an observed RUB promo price"
               );
-              await page.waitForTimeout(900);
+              assert(
+                daCardText.includes("Промо-цена каталога"),
+                "Published DA card lost promo price condition"
+              );
+              assert(
+                /до (?:07|14)\.10/u.test(daCardText),
+                "Published DA card lost promo validity"
+              );
+              assert(
+                daCardText.includes("ДА! · публичный промо-каталог · источник"),
+                "Published DA card lost network/source provenance"
+              );
+
+              const daImage = daCard.locator("img.product-photo");
+              await daImage.waitFor({ state: "visible", timeout: 15000 });
+              const daImageState = await daImage.evaluate((node) => ({
+                src: node.currentSrc || node.src,
+                complete: node.complete,
+                naturalWidth: node.naturalWidth
+              }));
+              assert(
+                daImageState.src.startsWith("https://market-da.ru/assets/"),
+                "DA card is not using the official image host"
+              );
+              assert(
+                daImageState.complete && daImageState.naturalWidth > 0,
+                "Official DA promo image did not load"
+              );
+              assert(
+                await daCard.getByRole("button").isDisabled(),
+                "Display-only DA promo observation must not enter the comparison basket"
+              );
+            } else {
+              assert(await page.locator("#retail-store-card-da").count() === 0,
+                "Non-current da promo selector must be absent on " + daDay);
+              assert(await page.locator('.product-card[data-product-id^="retail:da:"]').count() === 0,
+                "Non-current da promo cards must be absent on " + daDay);
+              stage("da:not-current:absent");
             }
-            assert(
-              auchanPublished,
-              "Published Auchan selector does not expose the current 312-product Moscow promo"
-            );
+            assert(moscowDateKey() === daDay,
+              "Moscow date changed during da promo smoke; rerun on the new day");
+            stage("da:ok");
 
-            const auchanStore = page.locator("#retail-store-card-auchan");
-            await auchanStore.click();
-            await page.waitForFunction(() => (
-              document.querySelector("#retail-store-card-auchan")
-                ?.getAttribute("aria-pressed") === "true"
-              && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
-              ).length === 1
-            ), null, { timeout: 15000 });
+            const auchanDay = moscowDateKey();
+            stage("auchan:start:" + auchanDay);
+            if (promoCurrent(promoPeriods.auchan, auchanDay)) {
+              // Verify the dated Auchan Moscow public promo catalog on the
+              // actually published Pages artifact.
+              let auchanPublished = false;
+              for (let attempt = 0; attempt < 16; attempt += 1) {
+                const liveAuchanText = await page.locator(
+                  "#retail-store-card-auchan"
+                ).innerText({ timeout: 2000 }).catch(() => "");
+                if (
+                  liveAuchanText.includes("АШАН · Москва · публичный промо-каталог")
+                  && liveAuchanText.includes("1 категория · 312 товаров")
+                  && liveAuchanText.includes("промо 1–14 октября")
+                ) {
+                  auchanPublished = true;
+                  break;
+                }
+                await page.waitForTimeout(2500);
+                await page.goto(
+                  url + "&auchan_release=0da8c263&attempt=" + attempt,
+                  { waitUntil: "domcontentloaded", timeout: 30000 }
+                );
+                await page.waitForTimeout(900);
+              }
+              assert(
+                auchanPublished,
+                "Published Auchan selector does not expose the current 312-product Moscow promo"
+              );
 
-            const auchanCategory = page.locator(
-              '#retail-category-grid [data-category-id="950001"]'
-            );
-            await auchanCategory.waitFor({ state: "visible", timeout: 15000 });
-            await auchanCategory.click();
+              const auchanStore = page.locator("#retail-store-card-auchan");
+              await auchanStore.click();
+              await page.waitForFunction(() => (
+                document.querySelector("#retail-store-card-auchan")
+                  ?.getAttribute("aria-pressed") === "true"
+                && document.querySelectorAll(
+                  "#retail-category-grid .retail-category-button:not(.is-loading)"
+                ).length === 1
+              ), null, { timeout: 15000 });
 
-            await page.waitForFunction(() => (
-              document.querySelectorAll(
+              const auchanCategory = page.locator(
+                '#retail-category-grid [data-category-id="950001"]'
+              );
+              await auchanCategory.waitFor({ state: "visible", timeout: 15000 });
+              await auchanCategory.click();
+
+              await page.waitForFunction(() => (
+                document.querySelectorAll(
+                  '#product-grid [data-product-id^="retail:auchan:auchan-msk-public-promo:"]'
+                ).length > 0
+              ), null, { timeout: 15000 });
+
+              const auchanCard = page.locator(
                 '#product-grid [data-product-id^="retail:auchan:auchan-msk-public-promo:"]'
-              ).length > 0
-            ), null, { timeout: 15000 });
-
-            const auchanCard = page.locator(
-              '#product-grid [data-product-id^="retail:auchan:auchan-msk-public-promo:"]'
-            ).first();
-            await auchanCard.waitFor({ state: "visible", timeout: 15000 });
-            const auchanCardText = await auchanCard.innerText();
-            assert(
-              /\d[\d\s]*,\d{2} ₽/u.test(auchanCardText),
-              "Published Auchan card is missing an observed RUB promo price"
-            );
-            assert(
-              (
-                auchanCardText.includes("Промо-цена каталога")
-                || auchanCardText.includes("По карте АШАН")
-              )
-              && auchanCardText.includes("до 14.10"),
-              "Published Auchan card lost promo/card validity truth"
-            );
-            assert(
-              auchanCardText.includes(
-                "АШАН · Москва · публичный промо-каталог · источник"
-              ),
-              "Published Auchan card lost Moscow promo/source provenance"
-            );
-            assert(
-              await auchanCard.getByRole("button").isDisabled(),
-              "Display-only Auchan promo observation must not enter the comparison basket"
-            );
+              ).first();
+              await auchanCard.waitFor({ state: "visible", timeout: 15000 });
+              const auchanCardText = await auchanCard.innerText();
+              assert(
+                /\d[\d\s]*,\d{2} ₽/u.test(auchanCardText),
+                "Published Auchan card is missing an observed RUB promo price"
+              );
+              assert(
+                (
+                  auchanCardText.includes("Промо-цена каталога")
+                  || auchanCardText.includes("По карте АШАН")
+                )
+                && auchanCardText.includes("до 14.10"),
+                "Published Auchan card lost promo/card validity truth"
+              );
+              assert(
+                auchanCardText.includes(
+                  "АШАН · Москва · публичный промо-каталог · источник"
+                ),
+                "Published Auchan card lost Moscow promo/source provenance"
+              );
+              assert(
+                await auchanCard.getByRole("button").isDisabled(),
+                "Display-only Auchan promo observation must not enter the comparison basket"
+              );
+            } else {
+              assert(await page.locator("#retail-store-card-auchan").count() === 0,
+                "Non-current auchan promo selector must be absent on " + auchanDay);
+              assert(await page.locator('.product-card[data-product-id^="retail:auchan:"]').count() === 0,
+                "Non-current auchan promo cards must be absent on " + auchanDay);
+              stage("auchan:not-current:absent");
+            }
+            assert(moscowDateKey() === auchanDay,
+              "Moscow date changed during auchan promo smoke; rerun on the new day");
+            stage("auchan:ok");
 
             assert(
               pageErrors.length === 0,
@@ -811,6 +890,7 @@ jobs:
               path: "live-retail-smoke.png",
               fullPage: true
             });
+            stage("all:ok");
             await browser.close();
           })().catch((error) => {
             console.error(error);
@@ -828,3 +908,4 @@ jobs:
             globus-exact-address-smoke.png
           if-no-files-found: ignore
           retention-days: 3
+

@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "34869f01315c449a172307f222901d5dbf137a9e",
+  "sourceCommit": "4a011cf25f5fb5d440d8c2f4e1538a8a6c893dd1",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -769,5 +769,40 @@
       }
     },
     "sourceBoundary": "Mapping and fresh-price collection are not expanded. Original source timestamps and unknown stock remain authoritative; stale observations cannot create a current winner."
+  },
+  "catalogBasketQuantityIdentity": {
+    "sourcePr": 543,
+    "testedHead": "5eabdd5bea45ba1a181ba707147e831dc71f7794",
+    "mergedSource": "4a011cf25f5fb5d440d8c2f4e1538a8a6c893dd1",
+    "runtimeFiles": 158,
+    "identity": "Same saved ID and exact name/unit, or both already approved by the unchanged reviewed matcher. Raw retail cards must first pass the existing SKU identity getter.",
+    "counter": "An incompatible saved pack is not counted on the retail card, including quantity99.",
+    "add": "Approved aliases increment without rewriting saved name/unit; incompatible products and packs remain unchanged.",
+    "validation": {
+      "nodeChecks": 1787,
+      "desktopMobileCases": 332,
+      "exactHeadCI": 38649203418,
+      "exactHeadPackage": 38649203538,
+      "actualMainCI": 38677284498,
+      "actualMainPackage": 38677284490,
+      "supplementalBrowserRun": 38649268848,
+      "supplementalCases": 26,
+      "retries": 0,
+      "skips": 0,
+      "mobile": {
+        "browser": "Android Chromium emulation",
+        "width": 390,
+        "height": 844,
+        "physicalDeviceGps": "unverified"
+      }
+    },
+    "sourceBoundary": "No new SKU equivalences, prices, stock claims or source collection. Original source freshness and commercial admission rules remain authoritative."
+  },
+  "retailSmokePromoValidity": {
+    "workflowBlob": "f54b6865e8aa60bb6e999f6353388ed594ab4a55",
+    "policy": "Real Europe/Moscow date with strict deployment promo bounds; all original active-period checks retained; non-current selectors and cards must be absent.",
+    "boundedWaits": true,
+    "dateBoundaryAssertions": 35,
+    "clockFrozen": false
   }
 }
