@@ -7,6 +7,10 @@ import { MARTEN_STATE } from "./martenMind.mjs";
 const GREETING_PREFIX =
   /^(?:привет(?:ик)?|прив|превет|здравствуй(?:те)?|здрасте|здрасьте|здарова|здорово|доброе\s+утро|добрый\s+день|добрый\s+вечер|хай|hello|hi|privet(?:ik)?|zdraste|zdarova|ghbdtn(?:br)?|слушай|смотри|эй)(?=$|[\s,!.—-])[\s,!.—-]*/iu;
 const ASSISTANT_ADDRESS = /^(?:мойра|мартен|checkni|чекни)(?=$|[\s,!?.:—-])[\s,!?.:—-]*/iu;
+const DISCOURSE_PREFIX = /^(?:ну|короче|пожалуйста)(?=[\s,!?.:—-])[\s,!?.:—-]*/iu;
+// "Скажи сыр" is not an unambiguous shopping request. Remove this wrapper
+// only when the remaining text is itself a question, preserving its subject.
+const QUESTION_PREFIX = /^скажи(?:[\s,]+пожалуйста)?[\s,]+(?=(?:а\s+)?(?:как(?:ой|ая|ое|ие|ую|ого|их)?|что|чем|сколько|почему|зачем|где|поч[её]м|можно\s+ли|в\s+ч[её]м)(?=$|\s))/iu;
 
 const KEYBOARD_EN_TO_RU = Object.freeze({
   q:"й", w:"ц", e:"у", r:"к", t:"е", y:"н", u:"г", i:"ш", o:"щ", p:"з",
@@ -85,11 +89,21 @@ function reply(dialogueKind, mascotState, headline, message, actionLabel = "На
   });
 }
 
+function stripLeadingAssistantWrappers(text) {
+  let value = text;
+  // Each pass removes a nonempty leading wrapper, so even repeated attention
+  // calls are bounded by the input length. Never filter words inside a request.
+  for (;;) {
+    const next = value.replace(ASSISTANT_ADDRESS, "").replace(GREETING_PREFIX, "")
+      .replace(DISCOURSE_PREFIX, "").replace(QUESTION_PREFIX, "").trim();
+    if (next === value) return value;
+    value = next;
+  }
+}
+
 export function stripAssistantGreetingPrefix(text) {
   const original = String(text ?? "").normalize("NFKC").trim();
-  const value = original.replace(ASSISTANT_ADDRESS, "");
-  const stripped = value.replace(GREETING_PREFIX, "").replace(ASSISTANT_ADDRESS, "").trim();
-  return stripped || value || original;
+  return stripLeadingAssistantWrappers(original) || original.replace(ASSISTANT_ADDRESS, "").trim() || original;
 }
 
 export function resolveLocalAssistantDialogue(text) {
@@ -99,11 +113,11 @@ export function resolveLocalAssistantDialogue(text) {
     "Я здесь.", "Что обсудим: продукты, готовку или подбор корзины?");
   if (!normalize(raw)) return null;
 
-  const stripped = raw.replace(GREETING_PREFIX, "").replace(ASSISTANT_ADDRESS, "").trim();
+  const stripped = stripLeadingAssistantWrappers(raw);
   const utteranceCandidates = dialogueCandidates(stripped || raw);
 
   if (matches(utteranceCandidates,
-    /^(?:помоги|помогите|поможешь|(?:можешь\s+)?помочь)(?:\s+(?:мне|нам))?\s+(?:с\s+(?:покупками|продуктами|корзиной)|(?:выбрать|подобрать)\s+продукты|(?:собрать|составить)\s+(?:корзину|список\s+покупок))$/u)) {
+    /^(?:помоги|помогите|поможешь|(?:можешь\s+)?помочь)(?:\s+(?:мне|нам))?\s+(?:с\s+(?:покупками|продуктами|корзиной)|(?:выбрать|подобрать|купить)\s+продукты|(?:собрать|составить)\s+(?:корзину|список\s+покупок))$/u)) {
     return reply("shopping_start", MARTEN_STATE.CURIOUS, "Давай помогу 🙂",
       "Что хочешь купить? Если список уже есть, напиши продукты — начнём подбирать. Если списка пока нет, расскажи, для чего нужны покупки: например, быстрый ужин на двоих. Уточним только то, что нужно для выбора.");
   }

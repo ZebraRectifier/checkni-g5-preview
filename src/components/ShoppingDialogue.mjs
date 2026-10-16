@@ -5,8 +5,9 @@ import { formatRubMinor } from "./ComparisonResult.mjs";
 const MAX_PREVIOUS_TURNS = 8;
 const MAX_REPLY_CHARACTERS = 6000;
 
-// Presentation only. Historical messages contain text, never live basket
-// actions, and are not submitted to the AI or saved in browser storage.
+// Presentation only. These archived views never contain live basket actions
+// or enter browser storage. The conversation flow separately retains a small
+// set of validated advice exchanges for contextual provider questions.
 export function createShoppingDialogue({ form, input, output, fallback, onClear }) {
   const document = form.ownerDocument;
   const stylesheet = document.createElement("link");

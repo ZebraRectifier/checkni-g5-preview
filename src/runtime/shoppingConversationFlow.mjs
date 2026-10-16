@@ -4,7 +4,7 @@ import { planConversationBasket, presentConversationBasket, knownPreparation } f
 import { validateBasketProposal } from "../core/ai-basket-proposal.mjs";
 import { parseLocalBasketText } from "../intelligence/localBasketParser.mjs";
 import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation, localShoppingComparisonExplanation, localShoppingAdvice, localShoppingReference } from "../intelligence/shoppingAdvice.mjs";
-import { normalizeShoppingAdviceResponse } from "../intelligence/shoppingAdviceContract.mjs";
+import { normalizeShoppingAdviceResponse, normalizeShoppingAdviceHistory } from "../intelligence/shoppingAdviceContract.mjs";
 import { isShoppingProductFactsQuestion, localShoppingProductFacts } from "../intelligence/shoppingProductFacts.mjs";
 import { createShoppingPreferenceStore } from "./shoppingPreferenceStorage.mjs";
 import { preflightLocalBasketText } from "../intelligence/localBasketPreflight.mjs";
@@ -31,6 +31,19 @@ export function createShoppingConversationFlow(options) {
   let lastPlan = [];
   let referencePlan = [];
   let adviceFocus = null;
+  // Advice exchanges belong only to this tab. Preference persistence receives
+  // the typed shopping memory, never these messages or a model-made summary.
+  let adviceHistory = [];
+  let adviceHistoryBasket = null;
+  let adviceExclusionPending = false;
+  function rememberAdvice(text, message) {
+    const pair = [{ role: "user", text }, { role: "assistant", text: message }]
+      .map(row => ({ ...row, text: row.text.replace(/\s+/gu, " ").trim() }));
+    let next = [...adviceHistory, ...pair].slice(-6);
+    while (next.length && !normalizeShoppingAdviceHistory(next)) next = next.slice(2);
+    adviceHistory = normalizeShoppingAdviceHistory(next) ?? [];
+    adviceHistoryBasket = JSON.stringify(basket.getSnapshot());
+  }
   let productSelection = null;
   let retailList = null;
   let mealNeed = null;
@@ -62,6 +75,7 @@ export function createShoppingConversationFlow(options) {
   function invalidate() {
     epoch += 1; pending = null; suspendedDraft = null; inFlight = null; stagedByHybrid = null;
     referencePlan = []; adviceFocus = null; referenceAction = null;
+    adviceHistory = []; adviceHistoryBasket = null; adviceExclusionPending = false;
     productSelection = null;
     retailList = null;
     mealNeed = null;
@@ -71,11 +85,15 @@ export function createShoppingConversationFlow(options) {
   function edit() {
     const draft = pending ? { pending, state } : suspendedDraft;
     const references = referencePlan, focus = adviceFocus, action = referenceAction;
+    const history = adviceHistory, historyBasket = adviceHistoryBasket;
+    const exclusionPending = adviceExclusionPending;
     const selection = productSelection;
     const list = retailList;
     const need = mealNeed;
     invalidate();
     referencePlan = references; adviceFocus = focus; referenceAction = action;
+    adviceHistory = history; adviceHistoryBasket = historyBasket;
+    adviceExclusionPending = exclusionPending;
     productSelection = selection;
     retailList = list;
     mealNeed = need;
@@ -413,16 +431,22 @@ export function createShoppingConversationFlow(options) {
     })();
   }
   async function execute(text, token) {
+    const utterance = text;
     commercialTurn = false;
+    if (adviceHistoryBasket !== null && adviceHistoryBasket !== JSON.stringify(basket.getSnapshot())) {
+      adviceHistory = []; adviceHistoryBasket = null; adviceFocus = null;
+      adviceExclusionPending = false;
+    }
     // Complete greetings and attention calls take precedence over fuzzy SKU
     // matching: "хай" must not become tea in the selected retailer catalog.
     const dialogue = resolveLocalAssistantDialogue(text);
-    if (dialogue && ["greeting", "attention"].includes(dialogue.dialogueKind)) {
+    if (dialogue && (["greeting", "attention", "thanks"].includes(dialogue.dialogueKind)
+      || dialogue.dialogueKind === "acknowledgement" && adviceFocus && !pending && !suspendedDraft)) {
       // Social replies consume a turn too: expire one-turn facts and age
       // hypotheses through the same empty-delta update as ordinary fallback.
       setMemory(updateShoppingConversation(memory, extractShoppingDelta("")).state);
       mealNeed = null; retailList = null; productSelection = null; stagedByHybrid = null;
-      pending = null; suspendedDraft = null; referencePlan = []; adviceFocus = null; referenceAction = null;
+      pending = null; suspendedDraft = null; referencePlan = []; referenceAction = null;
       const request = hybrid.run(text);
       state = hybrid.getState();
       const next = await request;
@@ -433,24 +457,51 @@ export function createShoppingConversationFlow(options) {
       mealNeed = null;
       retailList = null; productSelection = null;
       pending = null; suspendedDraft = null; referencePlan = []; adviceFocus = null; referenceAction = null;
+      adviceHistory = []; adviceHistoryBasket = null;
+      adviceExclusionPending = false;
       const request = hybrid.run(text);
       state = hybrid.getState();
       const next = await request;
       if (token === epoch) state = next;
       return state;
     }
+    if (adviceExclusionPending) {
+      const explicit = extractShoppingDelta(text);
+      const newRequest = shoppingAdviceTopic(text) || isShoppingProductFactsQuestion(text)
+        || explicit.reset || explicit.newGoal || explicit.undo
+        || /^(?:добавь|положи|убери|удали|замени|возьми|купи|собери|закажи)\s/iu.test(text)
+        || resolveShoppingPriceFollowup(text, adviceFocus, referencePlan, localCatalog);
+      if (newRequest) adviceExclusionPending = false;
+      else if (text.length <= 80 && !/^(?:да|нет|го|ок|давай|не знаю)[.!?]*$/iu.test(text)
+        && !/[?!]/u.test(text)) {
+        text = /^без\s/iu.test(text) ? text : `без ${text}`;
+        adviceExclusionPending = false;
+      } else {
+        state = messageState("Уточню один момент.", "Назови продукт, который исключаем, например «сыр» или «без сыра». Корзину не меняю.");
+        return state;
+      }
+    }
+    const possibleContinuation = adviceFocus ? resolveShoppingAdviceFollowup(text, adviceFocus) : null;
+    const adviceContinuation = possibleContinuation?.adviceExplanation && !adviceHistory.length ? null : possibleContinuation;
+    if (adviceContinuation?.kind === "clarification") {
+      adviceExclusionPending = adviceContinuation.exclusion === true;
+      pending = null; suspendedDraft = null; hybrid.invalidate();
+      state = messageState("Уточню один момент.", adviceContinuation.message);
+      return state;
+    }
+    const continuingAdvice = adviceContinuation?.readOnly === true;
     const mealBasketRemoval = mealNeed?.stage === "products" && /^убери\s/iu.test(text);
-    const need = handleMealNeed(text, token);
+    const need = continuingAdvice ? null : handleMealNeed(text, token);
     if (need) { if (typeof need.then === "function") await need; return state; }
     if (mealNeed && (mealNeed.stage !== "products" || extractShoppingDelta(text).reset || extractShoppingDelta(text).newGoal
       || extractShoppingDelta(text).undo || shoppingAdviceTopic(text) || isShoppingProductFactsQuestion(text)
       || /^(?:хочу|добавь|убери|верни|нужен|нужна|нужны|возьми)\s/iu.test(text))) mealNeed = null;
-    const listTurn = handleRetailList(text, token);
+    const listTurn = continuingAdvice ? null : handleRetailList(text, token);
     if (listTurn) { if (typeof listTurn.then === "function") await listTurn; return state; }
     // Retail selection uses admitted source cards before the generic seed
     // proposal. Advice, refusals, budgets and commercial questions keep their
     // established routes; a catalog outage cannot add a placeholder product.
-    const selectionQuestion = shoppingAdviceTopic(text) || isShoppingProductFactsQuestion(text);
+    const selectionQuestion = continuingAdvice || shoppingAdviceTopic(text) || isShoppingProductFactsQuestion(text);
     if (selectionQuestion) { productSelection = null; retailList = null; }
     const needContext = extractShoppingNeedContext(text);
     const needDelta = extractShoppingDelta(text);
@@ -504,15 +555,21 @@ export function createShoppingConversationFlow(options) {
     }
     const inferredFocus = referencePlan.length === 1
       ? shoppingAdviceFocus(`Как выбрать ${byId.get(referencePlan[0].productId)?.name ?? ""}?`) : null;
-    const followup = resolveShoppingAdviceFollowup(text, adviceFocus ?? inferredFocus);
+    const possibleFollowup = resolveShoppingAdviceFollowup(text, adviceFocus ?? inferredFocus);
+    const followup = possibleFollowup?.adviceExplanation && !adviceHistory.length ? null : possibleFollowup;
     if (followup?.kind === "clarification") {
+      adviceExclusionPending = followup.exclusion === true;
       pending = null; suspendedDraft = null; hybrid.invalidate();
       state = messageState("Уточню один момент.", followup.message);
       return state;
     }
     if (followup) text = followup.text;
-    const extractedDelta = extractShoppingDelta(text);
-    const delta = contextualShopping && !needContext.clarification
+    // Exact heating answers belong to the source-backed ready-food reference.
+    // "Без разогрева" is a preparation question, not an unknown food refusal
+    // or a request to persist a new cooking preference.
+    const extracted = extractShoppingDelta(text);
+    const extractedDelta = followup?.referenceOnly ? { ...extracted, facts: {}, unresolved: [] } : extracted;
+    const delta = (contextualShopping || continuingAdvice) && !needContext.clarification
       ? { ...extractedDelta, facts: { ...extractedDelta.facts, ...needContext.facts } } : extractedDelta;
     // "For guests" can answer the current product-selection question. Its
     // occasion marker alone must not start a new basket goal or drop a budget.
@@ -542,8 +599,8 @@ export function createShoppingConversationFlow(options) {
       decorateRetailList();
       return state;
     }
-    const adviceTopic = isShoppingProductFactsQuestion(text) ? "product_facts" : shoppingAdviceTopic(text);
-    const questionFocus = adviceTopic === "advice" ? shoppingAdviceFocus(text) : null;
+    const adviceTopic = isShoppingProductFactsQuestion(text) ? "product_facts" : followup?.readOnly ? "advice" : shoppingAdviceTopic(text);
+    const questionFocus = adviceTopic === "advice" ? followup?.focus ?? (followup?.readOnly && adviceFocus ? adviceFocus : shoppingAdviceFocus(text)) : null;
     // "How to choose ready food without cooking?" is a selection question,
     // even when the preference extractor notices cooking-effort vocabulary.
     const cookingSelectionQuestion = questionFocus?.topic === "selection" && questionFocus.subject
@@ -553,10 +610,10 @@ export function createShoppingConversationFlow(options) {
     // A plain product question must stay read-only; explicit changes still
     // go through the existing preference/constraint path.
     const readOnlyQuestion = ["advice", "product_facts"].includes(adviceTopic)
-      && (adviceTopic === "product_facts" || !Object.keys(delta.facts).length || cookingSelectionQuestion)
+      && (followup?.readOnly || adviceTopic === "product_facts" || !Object.keys(delta.facts).length || cookingSelectionQuestion)
       && !delta.want.length && !delta.unset.length
       && !delta.reset && !delta.undo && (!delta.newGoal || advicePurposeOnly) && !delta.clearUnresolved
-      && !/убери|не надо|надоел|терпеть не могу|не\s+(?:хочу|нужн|ем|люблю|нрав|подход|перенош)/iu.test(text);
+      && (followup?.readOnly || !/убери|не надо|надоел|терпеть не могу|не\s+(?:хочу|нужн|ем|люблю|нрав|подход|перенош)/iu.test(text));
     let comparisonExplanation = adviceTopic === "explanation" ? localShoppingComparisonExplanation(text, basket.getSnapshot()) : null;
     let hasCurrentComparison = false;
     if (comparisonExplanation && typeof options.getCurrentComparison === "function") {
@@ -572,6 +629,7 @@ export function createShoppingConversationFlow(options) {
       if (pending && !currentDraft(pending)) pending = null;
       if (comparisonExplanation) {
         pending = null; suspendedDraft = null; referencePlan = []; adviceFocus = null; hybrid.invalidate();
+        adviceHistory = []; adviceHistoryBasket = null;
         state = messageState("Объяснение сравнения.", comparisonExplanation);
         if (hasCurrentComparison) state.result.currentComparisonExplanation = true;
         return state;
@@ -585,6 +643,7 @@ export function createShoppingConversationFlow(options) {
       suspendedDraft = null;
       const explanation = localShoppingExplanation(adviceTopic, memory, localCatalog, pending?.plan.items ?? [], pending ? undefined : currentBasket);
       if (["explanation", "preferences"].includes(adviceTopic)) {
+        adviceHistory = []; adviceHistoryBasket = null; adviceFocus = null;
         if (pending && adviceTopic === "explanation") {
           state = { ...state, presentation: { ...pending.presentation, headline: "Почему такой набор.",
             message: `${explanation} ${pending.presentation.message}` } };
@@ -600,9 +659,15 @@ export function createShoppingConversationFlow(options) {
       pending = null; hybrid.invalidate();
       // A question with a food exclusion stays an advice turn. Never let
       // "можно" authorize an excluded food or turn a question into a draft.
-      if (readOnlyQuestion && delta.reject.length) {
-        const updated = updateShoppingConversation(memory, { ...delta, allow: [] });
+      if (continuingAdvice && needContext.clarification) {
+        state = messageState("Уточню условие.", needContext.clarification); return state;
+      }
+      if (readOnlyQuestion && (delta.reject.length || delta.unresolved.length || continuingAdvice && Object.keys(delta.facts).length)) {
+        const updated = updateShoppingConversation(memory, { ...delta, allow: [], want: [] });
         if (!updated.overflow) setMemory(updated.state);
+      }
+      if (!followup && adviceFocus && questionFocus && JSON.stringify([questionFocus.targets, questionFocus.subject]) !== JSON.stringify([adviceFocus.targets, adviceFocus.subject])) {
+        adviceHistory = []; adviceHistoryBasket = null;
       }
       adviceFocus = questionFocus ?? shoppingAdviceFocus(text); referencePlan = [];
       if (memory.facts.unresolvedConstraints) {
@@ -610,13 +675,17 @@ export function createShoppingConversationFlow(options) {
         return state;
       }
       if (adviceTopic === "product_facts") {
+        // Card facts have their own evidence path. Keep only the explicit
+        // product focus for the next question, never feed facts or an unrelated
+        // old advice answer into the model's temporary exchange history.
+        adviceHistory = []; adviceHistoryBasket = null;
         let catalog = localCatalog;
         try { if (typeof options.resolveProductFactsCatalog === "function") catalog = options.resolveProductFactsCatalog(); }
         catch { catalog = []; }
         state = messageState("Посмотрю на карточки.", localShoppingProductFacts(text, catalog, memory).message);
         return state;
       }
-      const input = shoppingAdviceInput(text, memory, localCatalog, [], currentBasket);
+      const input = shoppingAdviceInput(text, memory, localCatalog, [], currentBasket, adviceHistory);
       if (!input.catalog.length) {
         state = messageState("В корзине пока нет товаров.", "Добавь покупки, и я помогу выбрать вариант готовки из этого набора. Это не требует менять твои предпочтения.");
         return state;
@@ -625,18 +694,17 @@ export function createShoppingConversationFlow(options) {
       if (reference) {
         state = messageState("Давай разберёмся.", reference.reply.message);
         state.presentation.referenceKey = reference.referenceKey;
+        rememberAdvice(utterance, reference.reply.message);
         return state;
       }
       state = { status: "loading" };
       let answer;
-      // The deployed v28 advice contract does not yet know the new broad
-      // meat target. Keep its constrained recovery local instead of sending
-      // an unsupported target or dropping the refusal from a provider call.
-      try { answer = !memory.rejected.meat && !memory.wishes.meat && typeof options.requestShoppingAdvice === "function" ? await options.requestShoppingAdvice(input) : null; }
+      try { answer = typeof options.requestShoppingAdvice === "function" ? await options.requestShoppingAdvice(input) : null; }
       catch { answer = null; }
       if (token !== epoch) return state;
       if (JSON.stringify(currentBasket) !== JSON.stringify(basket.getSnapshot())) {
         adviceFocus = null;
+        adviceHistory = []; adviceHistoryBasket = null;
         state = messageState("Корзина изменилась.", "Совет относился к прежнему набору. Повтори вопрос — учту текущие товары. Корзина сохранена.");
         return state;
       }
@@ -644,12 +712,16 @@ export function createShoppingConversationFlow(options) {
       const recovery = reply ? null : localShoppingAdvice(input);
       state = messageState(reply ? "Давай разберёмся." : recovery ? "Подскажу простой вариант." : "Сейчас могу опереться на твои условия.",
         reply?.message ?? `Автоматический совет сейчас недоступен. ${recovery?.message ?? explanation}`);
+      if ((reply || recovery) && normalizeShoppingAdviceResponse({ kind: "advice", message: state.presentation.message }, input.context)) {
+        rememberAdvice(utterance, state.presentation.message);
+      }
       return state;
     }
     // Every new substantive message supersedes the previous reviewed candidate,
     // including a price question or an unsupported specification.
     pending = null; suspendedDraft = null;
     adviceFocus = null;
+    adviceHistory = []; adviceHistoryBasket = null;
     const rebuild = /перестрой|пересобери|обнови корзину/u.test(text.toLocaleLowerCase("ru-RU"));
     const onlyProductWish = delta.want.length && !delta.reject.length && !delta.allow.length && !Object.keys(delta.facts).length
       && !delta.reset && !delta.undo && !delta.newGoal && !delta.dissatisfaction && !delta.unresolved.length;
@@ -693,7 +765,7 @@ export function createShoppingConversationFlow(options) {
         state = messageState("Не всё условие удалось понять.", `Не распознала: ${memory.facts.unresolvedConstraints.value.join("; ")}. Уточни именно эту часть, чтобы я не нарушила отказ. Можно явно написать «забудь нераспознанное условие». Другие пожелания сохранила; корзина не изменилась.`);
         return state;
       }
-      const explicit = delta.reject.length ? explicitShoppingItems(text, localCatalog) : null;
+      const explicit = delta.reject.length ? explicitShoppingItems(text, localCatalog, lastPlan) : null;
       if (explicit) {
         const items = new Map(lastPlan.map(row => [row.productId, row]));
         for (const row of explicit.items) items.set(row.productId, row);

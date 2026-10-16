@@ -22,7 +22,8 @@ const FRUITS = new Set(["apples", "bananas"]);
 const MEAT_TARGETS = new Set(["chicken", "chicken_mince", "beef_mince", "nuggets", "chebureki", "pelmeni"]);
 const NEGATIVE_REQUEST = /(?:^|[^а-я])(?:не\s+(?:хочу|нуж(?:ен|н[аоы]?)|ем|люблю|нрав[ия]\S*|подход\S*|переношу)|не надо|убери|надоел\S*|терпеть не могу)/u;
 const REFUSAL = /(?:^|[^а-я])(?:не\s+(?:хочу|нуж(?:ен|н[аоы]?)|ем|люблю|нрав[ия]\S*|подход\S*|переношу)|не надо|убери|надоел\S*|терпеть не могу|без\s+)/u;
-const CLAUSE_PREDICATE = /хочу|нуж(?:ен|н[аоы])|можно|верни|добавь|не надо|не люблю|не нрав[ия]\S*|не подход\S*|не ем|убери|надоел\S*/u;
+const CLAUSE_PREDICATE = /хочу|нуж(?:ен|н[аоы])|можно|верни|добавь|не надо|не люблю|не нрав[ия]\S*|не подход\S*|не ем|убери|надоел\S*|(?:^|\s)(?:оставь|оставить|сохрани)(?=$|[\s,])/u;
+const PERMISSION_QUESTION = /(?:^|[\s,])(?:что|как(?:ой|ая|ое|ие|ую|ого|их)?|где|когда|сколько|почему|зачем|чем)\s+(?:\S+\s+){0,3}можно(?=$|[\s,])|(?:^|\s)можно\s+ли(?=$|\s)/u;
 const EXPLICIT_COUNT = /(?:^|\s)(?:\d{1,3}|один|одна|одну|два|две|три|четыре|пять|пару)(?=$|\s)/u;
 export function shoppingClauses(value) {
   return value.split(/[;!?\n]+|(?<!\d)\.|\.(?!\d)|,?\s+(?:но|зато|хотя)\s+/u).filter(Boolean).flatMap(clause => {
@@ -118,6 +119,8 @@ export function extractShoppingDelta(text) {
   };
   const clauses = shoppingClauses(value);
   for (let clause of clauses) {
+    const permissionQuestion = PERMISSION_QUESTION.test(clause)
+      || value.replace(/\s+\?/gu, "?").includes(`${clause.trim()}?`);
     const replacement = clause.match(/вместо\s+(.+?)\s+(?:хочу|нужен|возьми|давай|добавь)\s+(.+)/u);
     if (replacement) {
       addTargets(replacement[1], "reject");
@@ -140,12 +143,26 @@ export function extractShoppingDelta(text) {
       }
       delta.reject.push(...targets);
       for (const target of targets) delta.rejectScopes[target] = /никогда|вообще не ем|всегда без/u.test(clause) ? "conversation" : "goal";
+      if (without && !otherRefusal && targets.length) {
+        // A known member must not hide an unsupported neighbouring refusal:
+        // "без яиц и глютена" still needs clarification about gluten.
+        const parts = without[1].split(/\s*,\s*|\s+и\s+/u).map(part => part.trim()).filter(Boolean);
+        if (parts.length > 1) for (const part of parts) {
+          if (!shoppingTargets(part).length && !/^(?:готовк[аиу]|пожалуйста|пж|плиз|спасибо)$/u.test(part)) {
+            delta.unresolved.push(`без ${part.replace(/^без\s+/u, "")}`.slice(0, 80));
+          }
+        }
+      }
       // Do not reinterpret unknown explicit refusals as a recommendation.
       if (!targets.length && !/готов|бренд|марк|самое дешев|не знаю/u.test(clause)) {
         delta.unresolved.push((without && !otherRefusal ? `без ${without[1]}` : clause).trim().slice(0, 80));
       }
-    } else if (/можно|верни|передумал|снова хочу/u.test(clause)) addTargets(clause, "allow");
-    else if (/хочу|добавь|еще|нуж(?:ен|н[аоы])|возьми/u.test(clause)) {
+    } else if (/верни|передумал|снова хочу/u.test(clause)
+      || /можно/u.test(clause) && !permissionQuestion) {
+      // Asking what is possible is not permission to reintroduce a refused
+      // food, nor an unknown restriction that should block the next question.
+      addTargets(clause, "allow");
+    } else if (/хочу|добавь|еще|нуж(?:ен|н[аоы])|возьми/u.test(clause)) {
       const targets = shoppingTargets(clause);
       delta.want.push(...targets);
     }

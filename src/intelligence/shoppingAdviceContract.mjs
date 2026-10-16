@@ -1,6 +1,7 @@
 import { shoppingTargetLabel, productShoppingTargets } from "./shoppingConversation.mjs";
 
 export const MAX_ADVICE_MESSAGE_LENGTH = 1000;
+export const MAX_ADVICE_HISTORY_LENGTH = 2400;
 export const SHOPPING_ADVICE_SCHEMA = Object.freeze({ name: "checkni_shopping_advice", strict: true,
   schema: { type: "object", additionalProperties: false, required: ["message"],
     properties: { message: { type: "string", minLength: 1, maxLength: MAX_ADVICE_MESSAGE_LENGTH } } } });
@@ -10,8 +11,26 @@ const boundedString = (value, max) => typeof value === "string" && value.length 
 const targetList = (value, max) => Array.isArray(value) && value.length <= max && new Set(value).size === value.length
   && value.every(key => boundedString(key, 40) && shoppingTargetLabel(key) !== key);
 
+// Only previously displayed, validated advice belongs here. It is temporary
+// conversation data, never privileged messages or a source of commerce facts.
+export function normalizeShoppingAdviceHistory(value) {
+  if (!Array.isArray(value) || value.length > 6 || value.length % 2 !== 0) return null;
+  let length = 0;
+  const history = [];
+  for (const [index, entry] of value.entries()) {
+    const role = index % 2 === 0 ? "user" : "assistant";
+    if (!exactKeys(entry, ["role", "text"]) || entry.role !== role
+      || !boundedString(entry.text, role === "user" ? 300 : MAX_ADVICE_MESSAGE_LENGTH)) return null;
+    length += entry.text.length;
+    if (length > MAX_ADVICE_HISTORY_LENGTH) return null;
+    history.push({ role, text: entry.text });
+  }
+  return history;
+}
+
 export function normalizeShoppingAdviceRequest(input) {
-  if (!exactKeys(input, ["mode", "text", "catalog", "context"]) || input.mode !== "advice"
+  if (!(exactKeys(input, ["mode", "text", "catalog", "context"])
+      || exactKeys(input, ["mode", "text", "catalog", "context", "history"])) || input.mode !== "advice"
     || !boundedString(input.text, 300) || !Array.isArray(input.catalog) || input.catalog.length < 1 || input.catalog.length > 20) return null;
   const ids = new Set();
   const catalog = [];
@@ -21,15 +40,25 @@ export function normalizeShoppingAdviceRequest(input) {
     ids.add(row.id); catalog.push({ id: row.id, name: row.name, unit: row.unit });
   }
   const context = input.context;
-  if (!exactKeys(context, ["budgetMinor", "cookingEffort", "excluded", "wishes", "selectedProductIds"])
+  const required = ["budgetMinor", "cookingEffort", "excluded", "wishes", "selectedProductIds"];
+  if (!record(context) || required.some(key => !Object.hasOwn(context, key))
+    || Object.keys(context).some(key => ![...required, "peopleCount", "shoppingDays"].includes(key))
     || !(context.budgetMinor === null || (Number.isSafeInteger(context.budgetMinor) && context.budgetMinor >= 1000 && context.budgetMinor <= 99999900))
     || ![null, "minimal", "normal"].includes(context.cookingEffort)
     || !targetList(context.excluded, 32) || !targetList(context.wishes, 16)
     || !Array.isArray(context.selectedProductIds) || context.selectedProductIds.length > 8
     || new Set(context.selectedProductIds).size !== context.selectedProductIds.length
     || context.selectedProductIds.some(id => !ids.has(id))) return null;
+  for (const [key, max] of [["peopleCount", 12], ["shoppingDays", 31]]) {
+    if (Object.hasOwn(context, key) && !(context[key] === null || (Number.isSafeInteger(context[key]) && context[key] >= 1 && context[key] <= max))) return null;
+  }
+  const history = Object.hasOwn(input, "history") ? normalizeShoppingAdviceHistory(input.history) : undefined;
+  if (history === null) return null;
   return { mode: "advice", text: input.text, catalog, context: { budgetMinor: context.budgetMinor,
-    cookingEffort: context.cookingEffort, excluded: [...context.excluded], wishes: [...context.wishes], selectedProductIds: [...context.selectedProductIds] } };
+    cookingEffort: context.cookingEffort, excluded: [...context.excluded], wishes: [...context.wishes], selectedProductIds: [...context.selectedProductIds],
+    ...(Object.hasOwn(context, "peopleCount") ? { peopleCount: context.peopleCount } : {}),
+    ...(Object.hasOwn(context, "shoppingDays") ? { shoppingDays: context.shoppingDays } : {}) },
+    ...(history === undefined ? {} : { history }) };
 }
 
 // Advice is a separate read-only surface. Commercial answers belong to Core/tools.

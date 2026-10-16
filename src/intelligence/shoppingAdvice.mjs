@@ -7,16 +7,24 @@ import { shoppingDaysText } from "./shoppingNeedContext.mjs";
 import { detectRetailerId } from "./shoppingAssistantOrchestrator.mjs";
 
 export function shoppingAdviceTopic(text) {
-  const value = stripAssistantGreetingPrefix(String(text)).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е").trim();
+  const value = stripAssistantGreetingPrefix(String(text)).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е")
+    .replace(/\s+/gu, " ").trim().replace(/^(?:(?:ну|короче|блин|бля(?:ть)?)\s*[,—-]?\s+)+/u, "");
   if (/^(?:а )?(?:почему|зачем|объясни).*(?:выбр|так|это|эти|именно|набор|корзин|подбор|дешев|побед|сравнен|магазин|адрес|выгод|итог|сумм|стоим)/u.test(value)) return "explanation";
   if (/^(?:а )?(?:что ты помнишь|какие (?:мои )?пожелания|что мы решили)/u.test(value)) return "preferences";
-  return !/₽|руб|цен[ауы]|стоим|скидк|акци|дешев|налич/u.test(value)
-    && (/^(?:а )?(?:как|како[йея]|какие|(?:в )?чем|расскажи|сколько.{0,30}хран|можно ли хран|что (?:можно|скажешь|посоветуешь|приготовить|съесть|выбрать))/u.test(value)
-      || /^(?:а )?(?:подскажи|посоветуй|помоги)[,\s]+(?:как|како[йея]|какие|(?:в )?чем|что|выбрать|приготовить|съесть)(?=\s|$)/u.test(value))
-    && (shoppingTargets(value).length || /продукт|покуп|корзин|готов|хран|поесть|перекус|круп|ужин|завтрак|кофе|ча[йяю]|мяс|фарш|рыб/u.test(value)) ? "advice" : null;
+  // A question can be conversational without becoming permission to change a
+  // basket. Mixed commands and commercial questions keep their existing tools.
+  if (/₽|руб|цен[ауы]|стоим|скидк|акци|дешев|налич/u.test(value)
+    || /(?:^|[.!?;,]\s*|\sи\s)(?:а\s+)?(?:добавь|положи|убери|удали|замени|собери|составь|закажи|купи)(?=\s|$)/u.test(value)) return null;
+  const subject = shoppingTargets(value).length || /продукт|покуп|корзин|готов|хран|поесть|перекус|круп|ужин|завтрак|обед|кофе|ча[йяю]|мяс|фарш|рыб/u.test(value);
+  const question = /^(?:а )?(?:как|како[йея]|какую|какие|(?:в )?чем|расскажи|сколько.{0,30}хран|можно ли хран|что (?:можно|скажешь|посоветуешь|приготовить|съесть|выбрать))/u.test(value)
+    || /^(?:а )?(?:(?:можешь|могла бы)\s+)?(?:подскажи|подсказать|посоветуй|посоветовать|помоги)[,\s]+(?:как|како[йея]|какую|какие|(?:в )?чем|что(?:-нибудь|-то)?|выбрать|приготовить|съесть)(?=[,\s]|$)/u.test(value)
+    || /^(?:а )?(?:я )?хочу (?:понять|разобраться|узнать)[,:\s]+(?:как|како[йея]|какую|какие|что|(?:в )?чем)(?=\s|$)/u.test(value)
+    || /^(?:а )?можно (?:мне |нам )?(?:что(?:-нибудь|-то)?|чего-нибудь)(?=\s|$)/u.test(value)
+    || /(?:^|[,;.!?]\s*|\s)(?:что (?:скажешь|думаешь|посоветуешь)|как думаешь)[?!\.]*$/u.test(value);
+  return subject && question ? "advice" : null;
 }
 
-export function shoppingAdviceInput(text, memory, catalog, plan, confirmedBasket) {
+export function shoppingAdviceInput(text, memory, catalog, plan, confirmedBasket, history = []) {
   // Confirmed rows carry the shopper's chosen identity/name/package. Project
   // only those fields; prices, addresses and stock never enter provider advice.
   const actual = Array.isArray(confirmedBasket) ? confirmedBasket : null;
@@ -31,11 +39,24 @@ export function shoppingAdviceInput(text, memory, catalog, plan, confirmedBasket
   const choices = basketScoped ? products : source;
   const hints = [...choices.filter(row => preferred.has(row.id)), ...choices.filter(row => !preferred.has(row.id))]
     .slice(0, 20).map(({ id, name, unit }) => ({ id, name, unit }));
-  return { mode: "advice", text, catalog: hints, context: {
+  const request = { mode: "advice", text, catalog: hints, context: {
     budgetMinor: memory.facts.budgetMinor?.value ?? null,
     cookingEffort: memory.facts.cookingEffort?.origin === "explicit" ? memory.facts.cookingEffort.value : null,
-    excluded: Object.keys(memory.rejected), wishes: Object.keys(memory.wishes), selectedProductIds: selected.filter(id => hints.some(row => row.id === id))
-  } };
+    excluded: Object.keys(memory.rejected), wishes: Object.keys(memory.wishes), selectedProductIds: selected.filter(id => hints.some(row => row.id === id)),
+    peopleCount: memory.facts.peopleCount?.value ?? null,
+    shoppingDays: memory.facts.shoppingDays?.value ?? null
+  }, ...(history.length ? { history: history.map(({ role, text }) => ({ role, text })) } : {}) };
+  // Preserve active facts and selected identities. Evict complete oldest
+  // exchanges first, then optional hints, to fit the existing Edge byte limit.
+  const bytes = () => new TextEncoder().encode(JSON.stringify(request)).length;
+  while (bytes() > 8192 && request.history?.length) request.history.splice(0, 2);
+  if (request.history?.length === 0) delete request.history;
+  while (bytes() > 8192) {
+    const index = request.catalog.findLastIndex(row => !request.context.selectedProductIds.includes(row.id));
+    if (index < 0 || request.catalog.length <= 1) break;
+    request.catalog.splice(index, 1);
+  }
+  return request;
 }
 
 export function localShoppingComparisonExplanation(text, confirmedBasket) {
@@ -77,7 +98,17 @@ export function localShoppingAdvice(input) {
   const allowed = request.catalog.filter(product => !productShoppingTargets(product).some(key => request.context.excluded.includes(key)));
   const find = target => allowed.find(product => productShoppingTargets(product).includes(target));
   let message;
-  if (/готов|поесть|перекус|ужин|завтрак/u.test(value) && !targets.length) {
+  // Narrow outage recovery for a reproduced apple-selection error. Colour and
+  // firmness are variety-dependent, not universal tests of ripeness:
+  // https://blog-fruit-vegetable-ipm.extension.umn.edu/2018/08/check-apple-ripeness-with-starch-iodine.html
+  // Undamaged produce selection:
+  // https://www.fda.gov/food/buy-store-serve-safe-food/selecting-and-serving-produce-safely
+  // Match the whole supported question so a second product, medical condition
+  // or cooking purpose cannot disappear into this general selection answer.
+  const appleSelection = /^(?:(?:а|подскажи|посоветуй|помоги)[,\s]+)?(?:как (?:правильно )?выбрать (?:спелые |хорошие )?яблоки|какие яблоки (?:лучше (?:взять|выбрать)|выбрать|взять))[?!\.]*$/u.test(value);
+  if (appleSelection && !request.context.excluded.includes("apples") && !request.context.excluded.includes("fruit")) {
+    message = "Выбирай яблоки без вмятин и повреждений кожуры. Цвет и плотность зависят от сорта: зелёная кожура сама по себе не означает, что яблоко неспелое, а мягкость не обязательна. Если можно попробовать, оцени вкус и текстуру; спелое яблоко тоже может быть кислым. Для чего выбираешь: съесть свежими или для блюда?";
+  } else if (/готов|поесть|перекус|ужин|завтрак/u.test(value) && !targets.length) {
     const bread = find("bread"), cheese = find("cheese");
     const fruit = find("apples") ?? find("bananas");
     if (bread && cheese) {
