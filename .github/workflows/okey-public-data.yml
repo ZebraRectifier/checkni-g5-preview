@@ -52,7 +52,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp index.html prices.html _site/
+          cp index.html prices.html deployment.json _site/
           cp -a src _site/src
           touch _site/.nojekyll
           if grep -RIE --exclude='*.map' '(OPENROUTER_API_KEY|service[_-]?role[^a-z]|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})' _site; then
