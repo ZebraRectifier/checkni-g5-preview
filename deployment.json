@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "a955429081a1617fd71ad640fa7badf29ef51207",
+  "sourceCommit": "7e4cb804fefa7d4c4d2721b4e6e1c0e220da77b1",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -112,7 +112,8 @@
       538,
       540,
       544,
-      545
+      545,
+      555
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -605,6 +606,29 @@
       "providerDeploymentVersion": 28,
       "broadMeatAdvice": "local only; deployed v28 advice contract unchanged",
       "modelRequired": false
+    },
+    "greetingAttentionRouting": {
+      "sourcePr": 555,
+      "completeSocialTurnsBeforeRetailLookup": true,
+      "examples": [
+        "Хай",
+        "hi",
+        "Слушай"
+      ],
+      "localOnly": true,
+      "oneTurnFactsExpire": true,
+      "retiredChoicesCannotConfirm": true,
+      "confirmedBasketPreserved": true,
+      "shoppingPrefixExample": "Слушай, хочу чай"
+    },
+    "gptunnel": {
+      "sourcePr": 555,
+      "sourceAdapter": "integrated; disabled by default",
+      "activation": "pending creation of separate AI-only project in accessible owner account",
+      "newKeyCreated": false,
+      "paidLiveProbeVerified": false,
+      "globalRequestsPerUtcDay": 20,
+      "quotaIsRubCap": false
     }
   },
   "magnitAddressPhotos": {
@@ -936,16 +960,17 @@
   },
   "runtimeValidation": {
     "runtimeFiles": 162,
-    "exactHead": "9c89da449150088d49d13023822598e86c1de1b8",
-    "exactHeadCI": 38835752731,
+    "exactHead": "3a68df85fa2cc1836f812487def592cf9fb071a0",
+    "exactHeadCI": 38958968427,
     "exactHeadCIConclusion": "success",
-    "actualMain": "a955429081a1617fd71ad640fa7badf29ef51207",
-    "actualMainTree": "38519a7ad9494d9e2cd489c2ba57b64c03d0751b",
-    "actualMainCI": 38837810143,
-    "actualMainCIStatus": "rerun-in-progress",
-    "actualMainFirstAttempt": "baseline 2170 passed; browser 370 passed then job cancelled near 20-minute cap",
-    "nodeChecks": 2170,
-    "desktopMobileCases": 370,
+    "exactHeadPackage": 38958968405,
+    "actualMain": "7e4cb804fefa7d4c4d2721b4e6e1c0e220da77b1",
+    "actualMainTree": "6041d8f3fbc46ac7ace6e65e2360a39e8094066e",
+    "actualMainVerification": "Git tree identical to tested exact PR head",
+    "actualMainCI": 38961995627,
+    "actualMainCIStatus": "in_progress",
+    "nodeChecks": 2187,
+    "desktopMobileCases": 374,
     "retries": 0,
     "skips": 0
   },

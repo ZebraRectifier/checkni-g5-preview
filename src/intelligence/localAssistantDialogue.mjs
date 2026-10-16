@@ -5,7 +5,7 @@ import { MARTEN_STATE } from "./martenMind.mjs";
 // This layer never mutates the basket or authors commercial truth.
 
 const GREETING_PREFIX =
-  /^(?:привет(?:ик)?|прив|превет|здравствуй(?:те)?|здрасте|здрасьте|здарова|здорово|доброе\s+утро|добрый\s+день|добрый\s+вечер|хай|hello|hi|privet(?:ik)?|zdraste|zdarova|ghbdtn(?:br)?)(?=$|[\s,!.—-])[\s,!.—-]*/iu;
+  /^(?:привет(?:ик)?|прив|превет|здравствуй(?:те)?|здрасте|здрасьте|здарова|здорово|доброе\s+утро|добрый\s+день|добрый\s+вечер|хай|hello|hi|privet(?:ik)?|zdraste|zdarova|ghbdtn(?:br)?|слушай|смотри|эй)(?=$|[\s,!.—-])[\s,!.—-]*/iu;
 const ASSISTANT_ADDRESS = /^(?:мойра|мартен|checkni|чекни)(?=$|[\s,!?.:—-])[\s,!?.:—-]*/iu;
 
 const KEYBOARD_EN_TO_RU = Object.freeze({
@@ -167,7 +167,7 @@ export function resolveLocalAssistantDialogue(text) {
   if (
     matches(
       utteranceCandidates,
-      /^(?:ау|алло|ты\s+(?:тут|здесь)|есть\s+кто)$/u
+      /^(?:ау|алло|слушай|смотри|эй|ты\s+(?:тут|здесь)|есть\s+кто)$/u
     )
   ) {
     return reply(

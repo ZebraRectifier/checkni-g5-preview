@@ -14,6 +14,7 @@ import { advanceMealNeed, mealNeedView, mealNeedProductView } from "../intellige
 import { isRetailSortFollowup, normalizeRetailShoppingText, retailBudgetIntent } from "../intelligence/retailShoppingIntent.mjs";
 import { extractShoppingNeedContext, shoppingNeedContextSummary } from "../intelligence/shoppingNeedContext.mjs";
 import { currentComparisonExplanation } from "../intelligence/currentComparisonExplanation.mjs";
+import { resolveLocalAssistantDialogue } from "../intelligence/localAssistantDialogue.mjs";
 
 const copy = value => JSON.parse(JSON.stringify(value));
 const rowsOf = validation => (validation?.basket ?? []).map(row => ({ productId: row.product.id, quantity: row.quantity }));
@@ -413,6 +414,21 @@ export function createShoppingConversationFlow(options) {
   }
   async function execute(text, token) {
     commercialTurn = false;
+    // Complete greetings and attention calls take precedence over fuzzy SKU
+    // matching: "хай" must not become tea in the selected retailer catalog.
+    const dialogue = resolveLocalAssistantDialogue(text);
+    if (dialogue && ["greeting", "attention"].includes(dialogue.dialogueKind)) {
+      // Social replies consume a turn too: expire one-turn facts and age
+      // hypotheses through the same empty-delta update as ordinary fallback.
+      setMemory(updateShoppingConversation(memory, extractShoppingDelta("")).state);
+      mealNeed = null; retailList = null; productSelection = null; stagedByHybrid = null;
+      pending = null; suspendedDraft = null; referencePlan = []; adviceFocus = null; referenceAction = null;
+      const request = hybrid.run(text);
+      state = hybrid.getState();
+      const next = await request;
+      if (token === epoch) state = next;
+      return state;
+    }
     if (preflightLocalBasketText(text).kind === "reject") {
       mealNeed = null;
       retailList = null; productSelection = null;
