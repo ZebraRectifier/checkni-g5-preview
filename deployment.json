@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "20a3800465a1343c55365291b4c6d7d2e4ced248",
+  "sourceCommit": "ce59e78706c1526dcffd7a89cd574576daf136f2",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -933,5 +933,37 @@
       "viewportNote": "Live UI dimensions measured from DOM; browser viewport override did not apply. Exact 390x844 coverage is automated CI, not a physical device.",
       "officialDestinationOpened": true
     }
+  },
+  "runtimeValidation": {
+    "runtimeFiles": 160,
+    "exactHead": "cb5b18cfd710320164ff0c79751f946a2eb2820c",
+    "exactHeadCI": 38824134619,
+    "actualMain": "ce59e78706c1526dcffd7a89cd574576daf136f2",
+    "actualMainCI": 38826405622,
+    "nodeChecks": 2010,
+    "desktopMobileCases": 358,
+    "retries": 0,
+    "skips": 0
+  },
+  "observedPriceExpiry": {
+    "sourcePr": 548,
+    "maximumGlobusAgeMs": 3600000,
+    "boundary": "At the first millisecond after the earliest applicable observation expires, remove the current result, winner and savings; focus/pageshow also recheck.",
+    "confirmedBasketPreserved": true,
+    "automaticSourceRequests": false,
+    "physicalAndroid": "unverified"
+  },
+  "globusPriceRefresh": {
+    "status": "source-failed",
+    "nativeClockInstalled": true,
+    "unattendedAttempts": 3,
+    "healthyCycles": 0,
+    "latestRun": 38826683319,
+    "latestFinishedAt": "2026-10-15T23:59:01.573Z",
+    "nextEligibleAt": "2026-10-16T00:59:01.573Z",
+    "freshRowsAtLastAudit": 0,
+    "auditedAt": "2026-10-16T00:02:04.966Z",
+    "availability": "unknown",
+    "fullAssortmentProven": false
   }
 }

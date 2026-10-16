@@ -49,6 +49,8 @@ import {
   COMPARISON_STATUS,
   createComparisonFlow
 } from "./runtime/comparisonFlow.mjs";
+import { observedComparisonExpiresAt } from "./runtime/observedComparisonExpiry.mjs";
+import { GLOBUS_CATALOG_PRICE_MAX_AGE_MS } from "./ports/selectedGlobusCatalogOffersPort.mjs";
 import {
   HYBRID_BASKET_FLOW_STATUS,
 } from "./runtime/hybridBasketFlow.mjs";
@@ -176,8 +178,11 @@ const retailCatalogClients = new Map(
   ])
 );
 const comparisonFlow = createComparisonFlow((surfaceBasket) =>
-  compareSurfaceBasket(surfaceBasket)
-);
+  compareSurfaceBasket(surfaceBasket), {
+    getResultExpiresAt: result => observedComparisonExpiresAt(result, sourceId =>
+      sourceId === "globus-physical-catalog" ? GLOBUS_CATALOG_PRICE_MAX_AGE_MS : null),
+    onExpire: () => renderComparisonState()
+  });
 const resolveAiCatalog = createAiCatalogResolver(
   requestCatalogSearch,
   { fallbackCatalog: [] }
@@ -2305,6 +2310,11 @@ function renderComparisonState({ focusResult = false } = {}) {
           "Полного варианта нет",
           "В тестовых данных нет магазина с подтверждённым полным покрытием этой корзины. Итог и экономию не показываем."
         );
+  } else if (state.status === COMPARISON_STATUS.STALE) {
+    resultNode = createComparisonMessage(
+      "Цены устарели",
+      "Корзина и выбранные адреса сохранены. Запустите сравнение ещё раз, чтобы проверить свежие наблюдения."
+    );
   } else if (state.status === COMPARISON_STATUS.ERROR) {
     resultNode = createComparisonMessage(
       "Не удалось сравнить",
@@ -2369,6 +2379,7 @@ async function handleCompare() {
     focusResult:
       state.status === COMPARISON_STATUS.SUCCESS ||
       state.status === COMPARISON_STATUS.NO_WINNER ||
+      state.status === COMPARISON_STATUS.STALE ||
       state.status === COMPARISON_STATUS.ERROR
   });
 }
@@ -2805,6 +2816,15 @@ elements.brandHome.addEventListener("click", (event) => {
 elements.openBasket.addEventListener("click", () => navigate(VIEW.BASKET));
 elements.backToShop.addEventListener("click", returnToShop);
 
+// Background throttling, sleep and the back/forward cache can defer timers.
+// These checks clear expired commercial output without fetching or changing
+// basket/address state; the user's compare action remains the retry path.
+window.addEventListener("focus", () => comparisonFlow.checkExpiry());
+window.addEventListener("pageshow", () => comparisonFlow.checkExpiry());
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) comparisonFlow.checkExpiry();
+});
+
 window.addEventListener("popstate", () => {
   const previousView = currentView;
   const previousScopeKey = currentComparisonStoreScope().key;
@@ -2915,6 +2935,3 @@ renderDock();
 renderBetaLiveSection();
 renderBasketProposalState();
 renderView({ scrollY: scrollYFromState(history.state) });
-
-
-
