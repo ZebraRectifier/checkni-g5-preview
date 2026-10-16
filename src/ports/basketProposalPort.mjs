@@ -1,7 +1,7 @@
 import { CANONICAL_PRODUCTS } from "../data/canonicalProductRegistry.mjs";
 
-export const BASKET_PROPOSAL_ENDPOINT = "https://cxpneczhczashanbetgj.supabase.co/functions/v1/ai-basket-proposal";
-export const BASKET_PROPOSAL_PUBLISHABLE_KEY = "sb_publishable_yyIT9Clu4jTphSdVLCVWFA_KQsZZ2rt";
+export const BASKET_PROPOSAL_ENDPOINT = "https://gcdigtvknihwytbuzaga.supabase.co/functions/v1/ai-basket-proposal";
+export const BASKET_PROPOSAL_PUBLISHABLE_KEY = "sb_publishable__kqzgIiufVoU2hRtagN96g_9UOZ6d__";
 // The server's two routes share a 12s budget. A valid live fallback arrived
 // after about 19s including transport/Edge overhead, so keep a bounded margin.
 export const BASKET_PROPOSAL_TIMEOUT_MS = 20_000;

@@ -33,7 +33,10 @@ export function normalizeShoppingAdviceRequest(input) {
 }
 
 // Advice is a separate read-only surface. Commercial answers belong to Core/tools.
-const COMMERCIAL = /₽|[$€]|\b(?:rub|rur|usd|eur)\b|руб(?:л|лей|ля)?|\d\s*р\.(?:$|\s)|(?:^|[^а-я])цен[а-я]*|стоимост|стоит\s*(?:всего\s*|от\s*|около\s*)?\d|скидк|акци[яию]|налич[а-я]*|эконом|деш[её]в|выгод|сбереж|куп(?:и|ить).{0,40}за\s*\d|https?:\/\/|магнит|глобус|вкусвилл|пят[её]рочк|перекр[её]сток|чижик|(?:^|[^а-я])метро(?:$|[^а-я])/iu;
+// Only defect-associated presence loses its ambiguous token for this one check.
+// Stock wording and every other guard still inspect the complete original text.
+const QUALITY_PRESENCE = /(?<![а-яё])наличи[ея](?=\s+(?:(?:т[её]мных|мягких|грубых|видимых)\s+)?(?:вмятин|пятен|повреждений)(?![а-яё]))/giu;
+const COMMERCIAL = /₽|[$€]|\b(?:rub|rur|usd|eur)\b|(?<!\p{L})руб(?:л|ль|ля|лю|ли|лей|ле|л[её]м|лями|лях|лям|л[её]в[а-яё]*)?(?!\p{L})|\d\s*р\.(?:$|\s)|(?:^|[^а-я])цен[а-я]*|стоимост|стоит\s*(?:всего\s*|от\s*|около\s*)?\d|скидк|акци[яию]|налич[а-я]*|(?<![а-яё])(?:в\s+продаже|на\s+складе)(?![а-яё])|эконом|деш[её]в|выгод|сбереж|куп(?:и|ить).{0,40}за\s*\d|https?:\/\/|магнит|глобус|вкусвилл|пят[её]рочк|перекр[её]сток|чижик|(?:^|[^а-я])метро(?:$|[^а-я])/iu;
 const MEDICAL = /пр[ое]биотик|иммунитет|усваива|пищевар|(?:^|[^а-я])леч(?:ит|ени|ебн)|диабет|холестерин|(?:полез|польз|вред|безопас|улучш|укрепл|восстанавл).{0,40}(?:здоров|кишеч|желуд|микрофлор|бактери|культур)|(?:кишеч|желуд|микрофлор).{0,40}(?:полез|польз|вред|улучш|укрепл|восстанавл)/iu;
 const INVENTORY = /(?:у тебя|у вас)\s+(?:уже\s+)?(?:есть|имеется)|(?:продукты|товары)\s+уже\s+(?:дома|куплены|в корзине)/iu;
 const COMPOSITION = /содерж(?:ит|ат)|вход(?:ит|ят)\s+в\s+состав|(?:состав|ингредиенты)\s*[:—-]|\d+(?:[.,]\d+)?\s*(?:ккал|г\s+белк)/iu;
@@ -48,7 +51,7 @@ export function shoppingAdviceResponseIssue(value, context = {}) {
   if (!exactKeys(value, ["kind", "message"]) || value.kind !== "advice") return "invalid_provider_advice";
   const message = typeof value.message === "string" ? value.message.trim() : "";
   if (!message || message.length > MAX_ADVICE_MESSAGE_LENGTH || /[<>\u0000-\u0008\u000b\u000c\u000e-\u001f]/u.test(message)) return "provider_advice_invalid_text";
-  if (COMMERCIAL.test(message)) return "provider_advice_commercial_claim";
+  if (COMMERCIAL.test(message.replace(QUALITY_PRESENCE, ""))) return "provider_advice_commercial_claim";
   if (MEDICAL.test(message)) return "provider_advice_medical_claim";
   if (BASKET_CHANGE.test(message)) return "provider_advice_basket_claim";
   if (ASSORTMENT.test(message)) return "provider_advice_assortment_claim";

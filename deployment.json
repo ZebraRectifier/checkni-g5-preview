@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "7e4cb804fefa7d4c4d2721b4e6e1c0e220da77b1",
+  "sourceCommit": "fe030d587a84be8076a2e78be098641763a7ae38",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -113,14 +113,15 @@
       540,
       544,
       545,
-      555
+      555,
+      556
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
     "commercialAnswers": "Core and selected-store observed catalog",
     "basketChangesRequireConfirmation": true,
-    "providerRoute": "Repository default OpenRouter free-only; current deployed provider/model configuration was not revalidated overnight.",
-    "providerDeploymentVersion": 28,
+    "providerRoute": "GPTunnel primary with explicit paid opt-in; gpt-4o-mini; one attempt and no automatic paid fallback",
+    "providerDeploymentVersion": 4,
     "validation": {
       "unitAndGuardChecks": 1833,
       "chromiumDesktopAndMobileCases": 348,
@@ -381,7 +382,8 @@
           }
         },
         "selectedModelIdentities": "not recorded"
-      }
+      },
+      "scope": "Historical OpenRouter v28 evidence; the current active route is recorded in activeProvider."
     },
     "shoppingFollowups": {
       "sourcePr": 504,
@@ -479,7 +481,7 @@
     "browserTransport": {
       "sourcePr": 513,
       "totalTimeoutMs": 20000,
-      "serverRouteBudgetMs": 12000,
+      "serverRouteBudgetMs": 9000,
       "measuredPriorDeadlineFailure": {
         "at": "2026-10-12T02:38:50.220Z",
         "mode": "advice",
@@ -622,13 +624,47 @@
       "shoppingPrefixExample": "Слушай, хочу чай"
     },
     "gptunnel": {
-      "sourcePr": 555,
-      "sourceAdapter": "integrated; disabled by default",
-      "activation": "pending creation of separate AI-only project in accessible owner account",
-      "newKeyCreated": false,
-      "paidLiveProbeVerified": false,
+      "sourcePrs": [
+        555,
+        556
+      ],
+      "sourceAdapter": "integrated with explicit opt-in",
+      "activation": "active in separate owner-controlled AI project",
+      "projectRef": "gcdigtvknihwytbuzaga",
+      "model": "gpt-4o-mini",
+      "keyStorage": "server-side Edge Function secret only",
+      "newKeyCreated": true,
+      "paidLiveProbeVerified": true,
       "globalRequestsPerUtcDay": 20,
-      "quotaIsRubCap": false
+      "quotaIsRubCap": false,
+      "deploymentVersion": 4,
+      "latestServerProbe": {
+        "at": "2026-10-16T21:24:33.166Z",
+        "mode": "advice",
+        "http": 200,
+        "kind": "advice",
+        "latencyMs": 5035,
+        "attempts": 1
+      },
+      "adviceGuard": {
+        "sourcePr": 556,
+        "qualityPresenceAndOrdinaryWordsAccepted": true,
+        "commercialClaimsRejected": true
+      },
+      "publicUiEvidence": "Recorded separately in source PR #556 after publication"
+    },
+    "activeProvider": {
+      "provider": "gptunnel",
+      "model": "gpt-4o-mini",
+      "projectRef": "gcdigtvknihwytbuzaga",
+      "maxRemoteRoutes": 1,
+      "attemptsPerRoute": 1,
+      "timeoutMs": 9000,
+      "browserTimeoutMs": 20000,
+      "globalRequestsPerUtcDay": 20,
+      "quotaIsRubCap": false,
+      "deploymentVersion": 4,
+      "verifiedAt": "2026-10-16T21:24:38.201Z"
     }
   },
   "magnitAddressPhotos": {
@@ -960,19 +996,21 @@
   },
   "runtimeValidation": {
     "runtimeFiles": 162,
-    "exactHead": "3a68df85fa2cc1836f812487def592cf9fb071a0",
-    "exactHeadCI": 38958968427,
+    "exactHead": "68a412bd6eddf7d3ee1df375e0e757e32b1134d2",
+    "exactHeadCI": 38966085113,
     "exactHeadCIConclusion": "success",
-    "exactHeadPackage": 38958968405,
-    "actualMain": "7e4cb804fefa7d4c4d2721b4e6e1c0e220da77b1",
-    "actualMainTree": "6041d8f3fbc46ac7ace6e65e2360a39e8094066e",
-    "actualMainVerification": "Git tree identical to tested exact PR head",
-    "actualMainCI": 38961995627,
-    "actualMainCIStatus": "in_progress",
-    "nodeChecks": 2187,
+    "exactHeadPackage": 38966085101,
+    "nodeChecks": 2191,
     "desktopMobileCases": 374,
     "retries": 0,
-    "skips": 0
+    "skips": 0,
+    "additionalFocusedUiCases": 4,
+    "actualMain": "fe030d587a84be8076a2e78be098641763a7ae38",
+    "actualMainTree": "0afb91553854aef959cfd4718252b31a0fd6075d",
+    "actualMainVerification": "Git tree identical to fully tested PR head; deployed function source read back and verified",
+    "actualMainCI": 38968878948,
+    "actualMainCIStatus": "in_progress_at_release",
+    "actualMainPackage": 38968878752
   },
   "observedPriceExpiry": {
     "sourcePr": 548,
