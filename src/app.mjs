@@ -43,6 +43,7 @@ import {
   dockPriceSuffix,
   sortCatalogProducts
 } from "./runtime/priceHints.mjs";
+import { sortObservedCatalogProducts } from "./runtime/observedCatalogSort.mjs";
 import * as comparisonPorts from "./ports/comparisonPort.mjs";
 const { COMPARISON_MODE, comparisonPort } = comparisonPorts;
 import {
@@ -179,9 +180,14 @@ const retailCatalogClients = new Map(
 );
 const comparisonFlow = createComparisonFlow((surfaceBasket) =>
   compareSurfaceBasket(surfaceBasket), {
+    getContext: () => ({ mode: comparisonMode, scope: currentComparisonStoreScope() }),
     getResultExpiresAt: result => observedComparisonExpiresAt(result, sourceId =>
       sourceId === "globus-physical-catalog" ? GLOBUS_CATALOG_PRICE_MAX_AGE_MS : null),
-    onExpire: () => renderComparisonState()
+    onExpire: () => renderComparisonState(),
+    onReceiptInvalidated: () => {
+      if (basketProposalFlow.checkCurrentComparisonExplanation()) renderBasketProposalState();
+      renderComparisonState();
+    }
   });
 const resolveAiCatalog = createAiCatalogResolver(
   requestCatalogSearch,
@@ -224,6 +230,7 @@ let martenMindState = createMartenMindState();
 const budgetPlannerHints = buildSnapshotPriceHints();
 const basketProposalFlow = createShoppingConversationFlow({
   basket,
+  getCurrentComparison: () => comparisonFlow.getCurrentComparison(basket.getSnapshot()),
   loader: hybridInterpreterLoader,
   localCatalog: SHOP_CATALOG,
   resolveProductFactsCatalog: () => publicRetailCatalogMode
@@ -1565,11 +1572,14 @@ function setupCatalogSort() {
 
   const select = document.createElement("select");
   select.id = "catalog-sort";
-  for (const [value, text] of [
+  const sortOptions = [
     [CATALOG_SORT.DEFAULT, "По каталогу"],
-    [CATALOG_SORT.CHEAPEST, "Сначала дешевле"],
-    [CATALOG_SORT.PER_UNIT, "Выгоднее за кг/л"]
-  ]) {
+    [CATALOG_SORT.CHEAPEST, "Сначала дешевле"]
+  ];
+  if (comparisonMode !== COMPARISON_MODE.OBSERVED) {
+    sortOptions.push([CATALOG_SORT.PER_UNIT, "Выгоднее за кг/л"]);
+  }
+  for (const [value, text] of sortOptions) {
     const option = document.createElement("option");
     option.value = value;
     option.textContent = text;
@@ -1604,7 +1614,7 @@ function renderCatalog() {
   );
 
   const results = live
-    ? catalogSearchState.products
+    ? sortObservedCatalogProducts(catalogSearchState.products, catalogSort)
     : loading
       ? []
       : publicRetailCatalogMode

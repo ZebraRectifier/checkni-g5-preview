@@ -4,19 +4,35 @@
 // It only proposes canonical catalogue ids and never touches prices.
 import { stripShoppingRequestPrefix } from "./shoppingRequestText.mjs";
 
+// These generic recipe templates describe one particular simple dish. Match
+// the complete meal phrase, including ordinary request scaffolding, rather
+// than treating any occurrence of a stem as proof of that recipe. Unknown
+// variants keep the existing clarification/AI path instead of losing words.
+const TEMPLATE_PREFIX = String.raw`(?:(?:купи(?:ть)?|возьми|взять|нуж(?:но|на|ны|ен)|надо|хочу|добавь|мне|пожалуйста|собери|подбери|предложи|составь|сделай|приготовь|приготовить|приготовления|готовить|свари|сварить|испечь|продукт(?:ы|ов)?|ингредиент(?:ы|ов)?|корзин(?:а|у|ы)|набор|список|чтобы|для|на)[\s,:]+)*`;
+const PIE = String.raw`пирог(?:а|у|ом|е|и|ов|ам|ами|ах)?`;
+const CHARLOTTE = String.raw`(?:шарлотк(?:а|и|е|у|ой|ою|ам|ами|ах)|шарлоток)`;
+const APPLE_PIE = String.raw`(?:${CHARLOTTE}(?:\s+(?:с\s+яблоками|из\s+яблок))?|яблочн(?:ая|ой|ую|ые|ых|ыми)\s+${CHARLOTTE}|яблочн(?:ый|ого|ому|ым|ом|ые|ых|ыми)\s+${PIE}|${PIE}\s+(?:с\s+яблоками|из\s+яблок|${CHARLOTTE}))`;
+const mealPhrase = source => new RegExp(`^${TEMPLATE_PREFIX}(?:${source})[.!?]*$`, "u");
+const APPLE_PIE_TEMPLATE = mealPhrase(APPLE_PIE);
+const PIE_MENTION = new RegExp(String.raw`(?:^|[^\p{L}\p{N}_])(?:${PIE}|${CHARLOTTE})(?=$|[^\p{L}\p{N}_])`, "u");
+const SOUP = String.raw`суп(?:а|у|ом|е|ы|ов|ам|ами|ах)?`;
+const SALAD = String.raw`салат(?:а|у|ом|е|ы|ов|ам|ами|ах)?`;
+const SOUP_MENTION = new RegExp(String.raw`(?:^|[^\p{L}\p{N}_])${SOUP}(?=$|[^\p{L}\p{N}_])`, "u");
+const SALAD_MENTION = new RegExp(String.raw`(?:^|[^\p{L}\p{N}_])${SALAD}(?=$|[^\p{L}\p{N}_])`, "u");
+
 const INTENTS = Object.freeze([
   { id: "breakfast", pattern: /завтрак/, items: ["eggs-c1-10", "milk-25-900", "bread-wheat-400", "butter-825-180", "cheese-semi-hard-200", "oat-flakes-400"] },
   { id: "borscht", pattern: /борщ/, items: ["beets-1kg", "cabbage-1kg", "potatoes-1kg", "carrots-1kg", "onions-1kg", "pork-1kg", "sour-cream-20-300"] },
   { id: "shchi", pattern: /(?:^|[^а-я])щи(?:$|[^а-я])/, items: ["cabbage-1kg", "potatoes-1kg", "carrots-1kg", "onions-1kg", "pork-1kg", "sour-cream-20-300"] },
-  { id: "soup", pattern: /суп/, items: ["whole-chicken-1kg", "potatoes-1kg", "carrots-1kg", "onions-1kg", "pasta-450"] },
+  { id: "soup", pattern: mealPhrase(SOUP), items: ["whole-chicken-1kg", "potatoes-1kg", "carrots-1kg", "onions-1kg", "pasta-450"] },
   { id: "pancakes", pattern: /блин|оладь/, items: ["milk-25-900", "eggs-c1-10", "flour-2kg", "sugar-1kg", "sunflower-oil-1l", "sour-cream-20-300"] },
   { id: "syrniki", pattern: /сырник/, items: ["cottage-cheese-5-200", "eggs-c1-10", "flour-2kg", "sugar-1kg", "sour-cream-20-300"] },
   { id: "omelet", pattern: /омлет|яичниц/, items: ["eggs-c1-10", "milk-25-900", "tomatoes-600", "cheese-semi-hard-200"] },
   { id: "olivier", pattern: /оливье/, items: ["potatoes-1kg", "carrots-1kg", "eggs-c1-10", "doctor-sausage-400", "green-peas-400", "cucumbers-1kg", "mayonnaise-400"] },
   { id: "pilaf", pattern: /плов/, items: ["rice-900", "pork-1kg", "carrots-1kg", "onions-1kg", "sunflower-oil-1l"] },
   { id: "navy-pasta", pattern: /по[-\s]?флотски/, items: ["pasta-450", "ground-beef-400", "onions-1kg"] },
-  { id: "salad", pattern: /салат/, items: ["tomatoes-600", "cucumbers-1kg", "bell-pepper-1kg", "onions-1kg", "sunflower-oil-1l"] },
-  { id: "charlotte", pattern: /шарлотк|пирог/, items: ["apples-1kg", "eggs-c1-10", "flour-2kg", "sugar-1kg"] },
+  { id: "salad", pattern: mealPhrase(String.raw`(?:овощн(?:ой|ого|ому|ым|ом|ые|ых|ыми)\s+${SALAD}|${SALAD}(?:\s+из\s+овощей)?)`), items: ["tomatoes-600", "cucumbers-1kg", "bell-pepper-1kg", "onions-1kg", "sunflower-oil-1l"] },
+  { id: "charlotte", pattern: APPLE_PIE_TEMPLATE, items: ["apples-1kg", "eggs-c1-10", "flour-2kg", "sugar-1kg"] },
   { id: "dinner", pattern: /ужин|обед/, items: ["chicken-fillet-600", "potatoes-1kg", "buckwheat-800", "cucumbers-1kg", "tomatoes-600"] },
   { id: "tea-time", pattern: /к\s+(?:чаю|кофе)|перекус|сладк/, items: ["oat-cookies-300", "milk-chocolate-90", "black-tea-25", "bananas-1kg"] },
   { id: "fruit", pattern: /фрукт/, items: ["apples-1kg", "bananas-1kg", "oranges-1kg", "mandarins-1kg", "pears-1kg"] },
@@ -40,9 +56,19 @@ function normalize(text) {
 export function planLocalIntentBasket(text, catalogSnapshot) {
   const normalized = normalize(text);
   if (!normalized || !Array.isArray(catalogSnapshot)) return null;
+  // An unsupported pie filling must not fall through to another occasion
+  // template merely because the same clause also mentions breakfast/dinner.
+  if (PIE_MENTION.test(normalized) && !APPLE_PIE_TEMPLATE.test(normalized)) return null;
 
   const known = new Set(catalogSnapshot.map((product) => product.id));
-  const matched = INTENTS.filter((intent) => intent.pattern.test(normalized));
+  let matched = INTENTS.filter((intent) => intent.pattern.test(normalized));
+  // A named variant cannot become an occasion/category basket after its full
+  // meal phrase failed recognition. Specific known recipes keep precedence.
+  if (SOUP_MENTION.test(normalized) && !matched.some(intent => ["soup", "borscht", "shchi"].includes(intent.id))) return null;
+  if (SALAD_MENTION.test(normalized) && !matched.some(intent => ["salad", "olivier"].includes(intent.id))) return null;
+  // "Vegetable" describes this salad; it is not a second request for a
+  // general potato/carrot assortment alongside the selected meal template.
+  if (matched.some(intent => intent.id === "salad")) matched = matched.filter(intent => intent.id !== "vegetables");
   if (matched.length === 0) return null;
 
   const ids = [];
@@ -182,3 +208,4 @@ export function planLocalSegments(text, catalogSnapshot, parseSegment) {
     })
   });
 }
+

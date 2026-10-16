@@ -4,10 +4,11 @@ import { normalizeShoppingAdviceRequest, normalizeShoppingAdviceResponse } from 
 import { formatRubMinor } from "../components/ComparisonResult.mjs";
 import { matchShoppingProductReference } from "./shoppingProductReference.mjs";
 import { shoppingDaysText } from "./shoppingNeedContext.mjs";
+import { detectRetailerId } from "./shoppingAssistantOrchestrator.mjs";
 
 export function shoppingAdviceTopic(text) {
   const value = stripAssistantGreetingPrefix(String(text)).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е").trim();
-  if (/^(?:а )?(?:почему|зачем|объясни).*(?:выбр|так|это|эти|именно|набор|корзин|подбор)/u.test(value)) return "explanation";
+  if (/^(?:а )?(?:почему|зачем|объясни).*(?:выбр|так|это|эти|именно|набор|корзин|подбор|дешев|побед|сравнен|магазин|адрес|выгод|итог|сумм|стоим)/u.test(value)) return "explanation";
   if (/^(?:а )?(?:что ты помнишь|какие (?:мои )?пожелания|что мы решили)/u.test(value)) return "preferences";
   return !/₽|руб|цен[ауы]|стоим|скидк|акци|дешев|налич/u.test(value)
     && (/^(?:а )?(?:как|како[йея]|какие|(?:в )?чем|расскажи|сколько.{0,30}хран|можно ли хран|что (?:можно|скажешь|посоветуешь|приготовить|съесть|выбрать))/u.test(value)
@@ -15,16 +16,37 @@ export function shoppingAdviceTopic(text) {
     && (shoppingTargets(value).length || /продукт|покуп|корзин|готов|хран|поесть|перекус|круп|ужин|завтрак|кофе|ча[йяю]|мяс|фарш|рыб/u.test(value)) ? "advice" : null;
 }
 
-export function shoppingAdviceInput(text, memory, catalog, plan) {
-  const selected = plan.map(row => row.productId).slice(0, 8);
+export function shoppingAdviceInput(text, memory, catalog, plan, confirmedBasket) {
+  // Confirmed rows carry the shopper's chosen identity/name/package. Project
+  // only those fields; prices, addresses and stock never enter provider advice.
+  const actual = Array.isArray(confirmedBasket) ? confirmedBasket : null;
+  const products = actual?.map(({ id, name, unit }) => ({ id, name, unit })) ?? [];
+  const actualIds = new Set(products.map(row => row.id));
+  const source = actual ? [...products, ...catalog.filter(row => !actualIds.has(row.id))] : catalog;
+  const selected = [...new Set(actual ? actual.map(row => row.id) : plan.map(row => row.productId))].slice(0, 8);
   const preferred = new Set(selected);
-  const hints = [...catalog.filter(row => preferred.has(row.id)), ...catalog.filter(row => !preferred.has(row.id))]
+  // "From my basket" must not quietly acquire unrelated seed ingredients.
+  // The basket records intended purchases, never groceries already at home.
+  const basketScoped = actual !== null && /из\s+(?:(?:моей|этой|текущей|подтвержд[её]нной)\s+)?корзины/iu.test(text);
+  const choices = basketScoped ? products : source;
+  const hints = [...choices.filter(row => preferred.has(row.id)), ...choices.filter(row => !preferred.has(row.id))]
     .slice(0, 20).map(({ id, name, unit }) => ({ id, name, unit }));
   return { mode: "advice", text, catalog: hints, context: {
     budgetMinor: memory.facts.budgetMinor?.value ?? null,
     cookingEffort: memory.facts.cookingEffort?.origin === "explicit" ? memory.facts.cookingEffort.value : null,
     excluded: Object.keys(memory.rejected), wishes: Object.keys(memory.wishes), selectedProductIds: selected.filter(id => hints.some(row => row.id === id))
   } };
+}
+
+export function localShoppingComparisonExplanation(text, confirmedBasket) {
+  const value = stripAssistantGreetingPrefix(String(text)).normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е");
+  if (!/^(?:а )?(?:почему|зачем|объясни)/u.test(value)
+    || !/магазин|адрес|дешев|выгод|побед|сравнен|итог|сумм|стоим/u.test(value) && !detectRetailerId(value)) return null;
+  // This flow has no address/freshness-bound Core receipt. An old draft or
+  // provider prose cannot explain a current winner. Keep that limit explicit.
+  return confirmedBasket.length
+    ? "Чтобы объяснить выбор магазина, нужен актуальный результат для текущей корзины и выбранных адресов. Нажми «Где дешевле?» ещё раз: сравнение проверит суммы и покрытие. Товары в корзине сохранены."
+    : "Сначала добавь товары в корзину и нажми «Где дешевле?». Выбор магазина можно объяснить только по актуальному сравнению выбранных адресов.";
 }
 
 // References run before the provider, share the same prose/exclusion guards,
@@ -75,8 +97,10 @@ export function localShoppingAdvice(input) {
   return normalizeShoppingAdviceResponse({ kind: "advice", message }, request.context);
 }
 
-export function localShoppingExplanation(topic, memory, catalog, plan) {
-  const names = plan.slice(0, 3).map(row => catalog.find(product => product.id === row.productId)?.name).filter(Boolean);
+export function localShoppingExplanation(topic, memory, catalog, plan, confirmedBasket) {
+  const actual = Array.isArray(confirmedBasket) ? confirmedBasket : null;
+  const names = actual ? actual.slice(0, 3).map(row => `${row.name} ×${row.quantity}`)
+    : plan.slice(0, 3).map(row => catalog.find(product => product.id === row.productId)?.name).filter(Boolean);
   const reasons = [];
   if (memory.facts.peopleCount) reasons.push(`покупки для ${memory.facts.peopleCount.value} чел.`);
   if (memory.facts.shoppingDays) reasons.push(`покупки на ${shoppingDaysText(memory.facts.shoppingDays.value)}`);
@@ -89,6 +113,9 @@ export function localShoppingExplanation(topic, memory, catalog, plan) {
   if (memory.facts.brandStyle?.value === "specific") reasons.push("марки показываю только там, где они указаны в данных товара");
   if (memory.facts.unresolvedConstraints) reasons.push(`ещё нужно уточнить условие: ${memory.facts.unresolvedConstraints.value.join("; ")}`);
   if (topic === "preferences") return reasons.length ? `Помню твои условия: ${reasons.join("; ")}. Можно изменить любое из них или сказать «сбрось предпочтения».` : "Пока предпочтений нет. Скажи бюджет, что любишь есть и сколько готовки тебе подходит.";
+  if (actual?.length) return `В подтверждённой корзине сейчас: ${names.join(", ")}${actual.length > names.length ? ` и ещё ${actual.length - names.length} позиций` : ""}. `
+    + (reasons.length ? `Сохранённые условия: ${reasons.join("; ")}. ` : "")
+    + "Это твой текущий выбор. Актуальную стоимость и покрытие проверяем через «Где дешевле?»; по составу корзины нельзя объяснить победителя среди магазинов.";
   return names.length ? `Начала с ${names.join(", ")}${reasons.length ? `, потому что ${reasons.join("; ")}` : ": это простой стартовый набор, который можно изменить"}. Это предложение — конкретные товары и стоимость проверяем по каталогу и сравнению.`
     : "Пока набора нет. Скажи бюджет и хочется ли готовить — тогда предложу варианты и объясню выбор.";
 }

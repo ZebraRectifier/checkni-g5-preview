@@ -12,16 +12,18 @@ function freezeState(status, result = null) {
 }
 
 export function createComparisonFlow(compare, {
+  getContext = () => null,
   getResultExpiresAt = () => null,
   now = () => Date.now(),
   schedule = (callback, delay) => setTimeout(callback, delay),
   cancel = (timer) => clearTimeout(timer),
-  onExpire = () => {}
+  onExpire = () => {},
+  onReceiptInvalidated = () => {}
 } = {}) {
   if (typeof compare !== "function") {
     throw new TypeError("comparison flow requires a compare function");
   }
-  if ([getResultExpiresAt, now, schedule, cancel, onExpire].some(value => typeof value !== "function")) {
+  if ([getContext, getResultExpiresAt, now, schedule, cancel, onExpire, onReceiptInvalidated].some(value => typeof value !== "function")) {
     throw new TypeError("comparison expiry requires lifecycle functions");
   }
 
@@ -30,6 +32,25 @@ export function createComparisonFlow(compare, {
   let pendingRun = null;
   let expiresAt = null;
   let expiryTimer = null;
+  let receipt = null;
+  const basketKey = rows => JSON.stringify(Array.isArray(rows) ? rows.map(({ id, name, unit, quantity }) => ({ id, name, unit, quantity })) : null);
+  const contextSnapshot = () => {
+    try {
+      const value = getContext();
+      if (!value || typeof value !== "object") return null;
+      const key = JSON.stringify(value);
+      const freeze = item => {
+        if (item && typeof item === "object") { Object.values(item).forEach(freeze); Object.freeze(item); }
+        return item;
+      };
+      return { key, value: freeze(JSON.parse(key)) };
+    } catch { return null; }
+  };
+  const clearReceipt = () => {
+    if (!receipt) return;
+    receipt = null;
+    try { onReceiptInvalidated(); } catch { /* Presentation cannot change comparison truth. */ }
+  };
 
   const clearExpiry = () => {
     if (expiryTimer !== null) cancel(expiryTimer);
@@ -42,6 +63,7 @@ export function createComparisonFlow(compare, {
       clearExpiry();
       requestVersion += 1;
       state = freezeState(COMPARISON_STATUS.STALE);
+      clearReceipt();
       onExpire();
     }
     return state;
@@ -68,6 +90,7 @@ export function createComparisonFlow(compare, {
     requestVersion += 1;
     pendingRun = null;
     state = freezeState(COMPARISON_STATUS.IDLE);
+    clearReceipt();
     return state;
   };
 
@@ -77,7 +100,8 @@ export function createComparisonFlow(compare, {
     }
 
     const snapshot = surfaceBasket.map((item) => ({ ...item }));
-    const requestKey = JSON.stringify(snapshot);
+    const context = contextSnapshot();
+    const requestKey = JSON.stringify([snapshot, context?.key ?? null]);
 
     if (
       pendingRun
@@ -90,6 +114,7 @@ export function createComparisonFlow(compare, {
     const requestId = ++requestVersion;
     clearExpiry();
     state = freezeState(COMPARISON_STATUS.LOADING);
+    clearReceipt();
 
     const token = {
       requestId,
@@ -105,6 +130,7 @@ export function createComparisonFlow(compare, {
         if (requestId !== requestVersion) {
           return state;
         }
+        if (context?.key !== contextSnapshot()?.key) return invalidate();
 
         const hasAuthoritativeObservedConclusion = (
           result?.kind === "observed-price-comparison"
@@ -120,6 +146,9 @@ export function createComparisonFlow(compare, {
           expiresAt = deadline === null ? null : Number.isSafeInteger(deadline) ? deadline : 0;
           checkExpiry();
           armExpiry();
+          if (state.status === COMPARISON_STATUS.SUCCESS && context) receipt = Object.freeze({
+            result, context: context.value, basketKey: basketKey(snapshot), expiresAt
+          });
         }
 
         return state;
@@ -141,9 +170,19 @@ export function createComparisonFlow(compare, {
     return executionPromise;
   };
 
+  const getCurrentComparison = surfaceBasket => {
+    checkExpiry();
+    if (state.status !== COMPARISON_STATUS.SUCCESS || !receipt) return null;
+    if (receipt.basketKey !== basketKey(surfaceBasket) || JSON.stringify(receipt.context) !== contextSnapshot()?.key) {
+      invalidate(); return null;
+    }
+    return receipt;
+  };
+
   return Object.freeze({
     getState,
     checkExpiry,
+    getCurrentComparison,
     invalidate,
     run
   });

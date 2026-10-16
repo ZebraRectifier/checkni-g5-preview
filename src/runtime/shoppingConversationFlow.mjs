@@ -3,7 +3,7 @@ import { extractShoppingDelta, updateShoppingConversation, isShoppingProductReje
 import { planConversationBasket, presentConversationBasket, knownPreparation } from "../intelligence/conversationBasket.mjs";
 import { validateBasketProposal } from "../core/ai-basket-proposal.mjs";
 import { parseLocalBasketText } from "../intelligence/localBasketParser.mjs";
-import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation, localShoppingAdvice, localShoppingReference } from "../intelligence/shoppingAdvice.mjs";
+import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation, localShoppingComparisonExplanation, localShoppingAdvice, localShoppingReference } from "../intelligence/shoppingAdvice.mjs";
 import { normalizeShoppingAdviceResponse } from "../intelligence/shoppingAdviceContract.mjs";
 import { isShoppingProductFactsQuestion, localShoppingProductFacts } from "../intelligence/shoppingProductFacts.mjs";
 import { createShoppingPreferenceStore } from "./shoppingPreferenceStorage.mjs";
@@ -13,6 +13,7 @@ import { currentRetailSelectionScope, retailSelectionRequest, admittedRetailSele
 import { advanceMealNeed, mealNeedView, mealNeedProductView } from "../intelligence/shoppingMealNeed.mjs";
 import { isRetailSortFollowup, normalizeRetailShoppingText, retailBudgetIntent } from "../intelligence/retailShoppingIntent.mjs";
 import { extractShoppingNeedContext, shoppingNeedContextSummary } from "../intelligence/shoppingNeedContext.mjs";
+import { currentComparisonExplanation } from "../intelligence/currentComparisonExplanation.mjs";
 
 const copy = value => JSON.parse(JSON.stringify(value));
 const rowsOf = validation => (validation?.basket ?? []).map(row => ({ productId: row.product.id, quantity: row.quantity }));
@@ -540,16 +541,33 @@ export function createShoppingConversationFlow(options) {
       && !delta.want.length && !delta.unset.length
       && !delta.reset && !delta.undo && (!delta.newGoal || advicePurposeOnly) && !delta.clearUnresolved
       && !/убери|не надо|надоел|терпеть не могу|не\s+(?:хочу|нужн|ем|люблю|нрав|подход|перенош)/iu.test(text);
-    if (adviceTopic && (!delta.recognized || readOnlyQuestion)) {
-      const explanation = localShoppingExplanation(adviceTopic, memory, localCatalog, lastPlan);
+    let comparisonExplanation = adviceTopic === "explanation" ? localShoppingComparisonExplanation(text, basket.getSnapshot()) : null;
+    let hasCurrentComparison = false;
+    if (comparisonExplanation && typeof options.getCurrentComparison === "function") {
+      try {
+        const current = currentComparisonExplanation(options.getCurrentComparison());
+        if (current) { comparisonExplanation = current; hasCurrentComparison = true; }
+      } catch { /* An unavailable local receipt keeps the existing honest retry. */ }
+    }
+    if (adviceTopic && (!delta.recognized || readOnlyQuestion || comparisonExplanation)) {
+      const currentBasket = basket.getSnapshot();
+      const currentDraft = draft => draft && draft.revision === memory.revision
+        && JSON.stringify(draft.base) === JSON.stringify(currentBasket);
+      if (pending && !currentDraft(pending)) pending = null;
+      if (comparisonExplanation) {
+        pending = null; suspendedDraft = null; referencePlan = []; adviceFocus = null; hybrid.invalidate();
+        state = messageState("Объяснение сравнения.", comparisonExplanation);
+        if (hasCurrentComparison) state.result.currentComparisonExplanation = true;
+        return state;
+      }
       if (adviceTopic === "explanation" && !pending && suspendedDraft
-        && suspendedDraft.pending.revision === memory.revision
-        && JSON.stringify(suspendedDraft.pending.base) === JSON.stringify(basket.getSnapshot())) {
+        && currentDraft(suspendedDraft.pending)) {
         pending = suspendedDraft.pending;
         pending.epoch = epoch;
         state = suspendedDraft.state;
       }
       suspendedDraft = null;
+      const explanation = localShoppingExplanation(adviceTopic, memory, localCatalog, pending?.plan.items ?? [], pending ? undefined : currentBasket);
       if (["explanation", "preferences"].includes(adviceTopic)) {
         if (pending && adviceTopic === "explanation") {
           state = { ...state, presentation: { ...pending.presentation, headline: "Почему такой набор.",
@@ -582,7 +600,11 @@ export function createShoppingConversationFlow(options) {
         state = messageState("Посмотрю на карточки.", localShoppingProductFacts(text, catalog, memory).message);
         return state;
       }
-      const input = shoppingAdviceInput(text, memory, localCatalog, lastPlan);
+      const input = shoppingAdviceInput(text, memory, localCatalog, [], currentBasket);
+      if (!input.catalog.length) {
+        state = messageState("В корзине пока нет товаров.", "Добавь покупки, и я помогу выбрать вариант готовки из этого набора. Это не требует менять твои предпочтения.");
+        return state;
+      }
       const reference = localShoppingReference(input);
       if (reference) {
         state = messageState("Давай разберёмся.", reference.reply.message);
@@ -597,6 +619,11 @@ export function createShoppingConversationFlow(options) {
       try { answer = !memory.rejected.meat && !memory.wishes.meat && typeof options.requestShoppingAdvice === "function" ? await options.requestShoppingAdvice(input) : null; }
       catch { answer = null; }
       if (token !== epoch) return state;
+      if (JSON.stringify(currentBasket) !== JSON.stringify(basket.getSnapshot())) {
+        adviceFocus = null;
+        state = messageState("Корзина изменилась.", "Совет относился к прежнему набору. Повтори вопрос — учту текущие товары. Корзина сохранена.");
+        return state;
+      }
       const reply = normalizeShoppingAdviceResponse(answer, input.context);
       const recovery = reply ? null : localShoppingAdvice(input);
       state = messageState(reply ? "Давай разберёмся." : recovery ? "Подскажу простой вариант." : "Сейчас могу опереться на твои условия.",
@@ -755,6 +782,14 @@ export function createShoppingConversationFlow(options) {
     if (!updated.overflow) setMemory(updated.state);
     return state;
   }
-  return Object.freeze({ run, confirm, invalidate, edit, preload: hybrid.preload, getState: () => state,
+  const checkCurrentComparisonExplanation = () => {
+    if (state.result?.currentComparisonExplanation !== true) return false;
+    let current = null;
+    try { current = currentComparisonExplanation(options.getCurrentComparison?.()); } catch { /* Read only, fail closed. */ }
+    if (current) return false;
+    state = messageState("Сравнение нужно обновить.", localShoppingComparisonExplanation("Почему этот магазин дешевле?", basket.getSnapshot()));
+    return true;
+  };
+  return Object.freeze({ run, confirm, invalidate, edit, preload: hybrid.preload, getState: () => state, checkCurrentComparisonExplanation,
     setRetailer, getConversation: () => memory, getMartenPreferences: () => projectMartenConversation(memory) });
 }

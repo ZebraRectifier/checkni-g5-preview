@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "ce59e78706c1526dcffd7a89cd574576daf136f2",
+  "sourceCommit": "a955429081a1617fd71ad640fa7badf29ef51207",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -118,7 +118,7 @@
     "readOnlyProductAdvice": true,
     "commercialAnswers": "Core and selected-store observed catalog",
     "basketChangesRequireConfirmation": true,
-    "providerRoute": "zero-cost OpenRouter",
+    "providerRoute": "Repository default OpenRouter free-only; current deployed provider/model configuration was not revalidated overnight.",
     "providerDeploymentVersion": 28,
     "validation": {
       "unitAndGuardChecks": 1833,
@@ -935,13 +935,17 @@
     }
   },
   "runtimeValidation": {
-    "runtimeFiles": 160,
-    "exactHead": "cb5b18cfd710320164ff0c79751f946a2eb2820c",
-    "exactHeadCI": 38824134619,
-    "actualMain": "ce59e78706c1526dcffd7a89cd574576daf136f2",
-    "actualMainCI": 38826405622,
-    "nodeChecks": 2010,
-    "desktopMobileCases": 358,
+    "runtimeFiles": 162,
+    "exactHead": "9c89da449150088d49d13023822598e86c1de1b8",
+    "exactHeadCI": 38835752731,
+    "exactHeadCIConclusion": "success",
+    "actualMain": "a955429081a1617fd71ad640fa7badf29ef51207",
+    "actualMainTree": "38519a7ad9494d9e2cd489c2ba57b64c03d0751b",
+    "actualMainCI": 38837810143,
+    "actualMainCIStatus": "rerun-in-progress",
+    "actualMainFirstAttempt": "baseline 2170 passed; browser 370 passed then job cancelled near 20-minute cap",
+    "nodeChecks": 2170,
+    "desktopMobileCases": 370,
     "retries": 0,
     "skips": 0
   },
@@ -954,16 +958,31 @@
     "physicalAndroid": "unverified"
   },
   "globusPriceRefresh": {
-    "status": "source-failed",
+    "status": "healthy-at-audit",
     "nativeClockInstalled": true,
-    "unattendedAttempts": 3,
-    "healthyCycles": 0,
-    "latestRun": 38826683319,
-    "latestFinishedAt": "2026-10-15T23:59:01.573Z",
-    "nextEligibleAt": "2026-10-16T00:59:01.573Z",
-    "freshRowsAtLastAudit": 0,
-    "auditedAt": "2026-10-16T00:02:04.966Z",
+    "unattendedAttempts": 5,
+    "healthyCycles": 1,
+    "latestRun": 38838191011,
+    "latestCheckpoint": "02f0ee799ceb39da5a5c9241ada3ad9ea0f2be72",
+    "latestImportedAt": "2026-10-16T02:03:04.881Z",
+    "nextEligibleAt": "2026-10-16T02:56:20.836Z",
+    "freshRowsAtLastAudit": 12,
+    "auditedAt": "2026-10-16T02:05:50.839Z",
+    "transferAuditedAt": "2026-10-16T02:15:40.246Z",
+    "transferFieldsMatched": 348,
+    "transferMismatches": 0,
+    "collectionMode": "reviewed-category-subset",
+    "physicalStores": 2,
+    "reviewedProductsPerStore": 6,
     "availability": "unknown",
     "fullAssortmentProven": false
+  },
+  "currentBasketAdvice": {
+    "pullRequest": 549,
+    "localIntentCoverage": "reviewed recipes and exclusions; ambiguous unsupported dishes require clarification or provider",
+    "adviceBasket": "current confirmed basket with stale-reply guard",
+    "priceExplanation": "current UI-owned Core result; no independent winner calculation",
+    "catalogSort": "nominal package price, stable ties and unknown prices last",
+    "liveExternalProviderVerifiedOvernight": false
   }
 }
