@@ -1233,5 +1233,23 @@
     "cardAndNoCardPrices": "unknown",
     "fullAssortment": false,
     "validationChecks": 18
+  },
+  "okeyPublishedCityPrices": {
+    "codeVersion": "20261017.2",
+    "basePublicCommit": "e0673b4",
+    "sourceUrl": "https://mos.proshoper.ru/actions/okej/moskva/",
+    "publisher": "proshoper",
+    "scope": "third-party-moscow-city-promotion-not-exact-store",
+    "runtimeExtensions": [
+      "src/observations/okeyPublishedPromotions.mjs"
+    ],
+    "sourceBlocksPreserved": true,
+    "scheduleUtc": "30 0 * * *",
+    "maximumObservationAgeHours": 24,
+    "promotionExpiryTimezone": "Europe/Moscow",
+    "stock": "unknown",
+    "cardAndNoCardPrices": "unknown",
+    "fullAssortment": false,
+    "validationChecks": 25
   }
 }
