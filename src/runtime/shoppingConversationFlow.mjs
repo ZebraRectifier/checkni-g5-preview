@@ -4,7 +4,7 @@ import { planConversationBasket, presentConversationBasket, knownPreparation } f
 import { validateBasketProposal } from "../core/ai-basket-proposal.mjs";
 import { parseLocalBasketText } from "../intelligence/localBasketParser.mjs";
 import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation, localShoppingComparisonExplanation, localShoppingAdvice, localShoppingReference } from "../intelligence/shoppingAdvice.mjs";
-import { localShoppingDialogueReference } from "../intelligence/shoppingDialogueReference.mjs";
+import { localShoppingDialogueReference, hasPendingShoppingVolumeQuestion } from "../intelligence/shoppingDialogueReference.mjs";
 import { normalizeShoppingAdviceResponse, normalizeShoppingAdviceHistory } from "../intelligence/shoppingAdviceContract.mjs";
 import { isShoppingProductFactsQuestion, localShoppingProductFacts } from "../intelligence/shoppingProductFacts.mjs";
 import { createShoppingPreferenceStore } from "./shoppingPreferenceStorage.mjs";
@@ -482,7 +482,10 @@ export function createShoppingConversationFlow(options) {
         return state;
       }
     }
-    const possibleContinuation = adviceFocus ? resolveShoppingAdviceFollowup(text, adviceFocus) : null;
+    // The accepted history supplies the pending question, so edit preserves it
+    // and clearing the dialogue/store cannot leave a separate stale flag.
+    const volumeQuestionPending = hasPendingShoppingVolumeQuestion(adviceHistory, memory.facts.peopleCount?.value);
+    const possibleContinuation = adviceFocus ? resolveShoppingAdviceFollowup(text, adviceFocus, volumeQuestionPending) : null;
     const adviceContinuation = possibleContinuation?.adviceExplanation && !adviceHistory.length ? null : possibleContinuation;
     if (adviceContinuation?.kind === "clarification") {
       adviceExclusionPending = adviceContinuation.exclusion === true;
@@ -556,7 +559,7 @@ export function createShoppingConversationFlow(options) {
     }
     const inferredFocus = referencePlan.length === 1
       ? shoppingAdviceFocus(`Как выбрать ${byId.get(referencePlan[0].productId)?.name ?? ""}?`) : null;
-    const possibleFollowup = resolveShoppingAdviceFollowup(text, adviceFocus ?? inferredFocus);
+    const possibleFollowup = resolveShoppingAdviceFollowup(text, adviceFocus ?? inferredFocus, volumeQuestionPending);
     const followup = possibleFollowup?.adviceExplanation && !adviceHistory.length ? null : possibleFollowup;
     if (followup?.kind === "clarification") {
       adviceExclusionPending = followup.exclusion === true;

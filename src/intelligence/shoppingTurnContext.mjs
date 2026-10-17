@@ -19,8 +19,13 @@ export function shoppingAdviceFocus(text) {
   return Object.freeze({ topic, targets: Object.freeze(targets), subject });
 }
 
-export function resolveShoppingAdviceFollowup(text, focus) {
+export function resolveShoppingAdviceFollowup(text, focus, volumeQuestionPending = false) {
   const value = normalizeShoppingText(stripAssistantGreetingPrefix(text)).replace(/[.!?]+$/u, "");
+  const volumeLiteral = /^(?:на\s+)?(?:\d{1,2}(?:[.,]\d{1,2})?\s*|(?:один|одна|одно|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|полтора|полторы)\s+)(?:л|литр|литра|литров)$/u.test(value);
+  if (focus && volumeQuestionPending === true && volumeLiteral) {
+    const subject = focus.targets.map(shoppingTargetLabel).join(" и ") || focus.subject;
+    return { kind: "question", text: subject ? `Про ${subject}: ${text}` : text, readOnly: true };
+  }
   const purpose = /^(?:а\s+)?(?:для|на|к|в)\s+.{1,100}$/u.test(value);
   const another = /^(?:а\s+)?(?:другой|другая|другое|другие|еще вариант|что еще)(?:\s+вариант)?$/u.test(value);
   const attribute = /^(?:а\s+)?(?:что (?:с|насчет) (?:состава|составом|бренда|веса)|како[йея] (?:у него |у нее |там )?(?:состав|бренд|марка|вес)|сколько (?:там )?грамм)$/u.test(value);

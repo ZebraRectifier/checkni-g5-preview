@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "81095946eb4ab21b59dc903bc242333ccd31eaaa",
+  "sourceCommit": "4ba67caefe9da413f1aa9b2ea0bd04d34ddebf67",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -123,7 +123,8 @@
       556,
       557,
       558,
-      559
+      559,
+      560
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -132,13 +133,13 @@
     "providerRoute": "GPTunnel primary with explicit paid opt-in; gpt-4o-mini; one attempt and no automatic paid fallback",
     "providerDeploymentVersion": 6,
     "validation": {
-      "unitAndGuardChecks": 2243,
+      "unitAndGuardChecks": 2253,
       "chromiumDesktopAndMobileCases": 380,
-      "exactHead": "bd7cdf718415d4fcd7992bc05fdd7a2fd9125199",
-      "sourceCommit": "81095946eb4ab21b59dc903bc242333ccd31eaaa",
-      "exactHeadCiRun": 38989054387,
-      "mergedMainCiRun": 38990675403,
-      "validationScope": "Complete exact-head CI passed; actual-main tree identical. Grounded follow-up runtime probe pending."
+      "exactHead": "969e287d01acaf5520050700e56759fa21c2fe2b",
+      "sourceCommit": "4ba67caefe9da413f1aa9b2ea0bd04d34ddebf67",
+      "exactHeadCiRun": 38993358621,
+      "mergedMainCiRun": 38994830195,
+      "validationScope": "Complete exact-head CI passed; actual-main tree identical. Full selection to standalone litre-answer journey verified locally; final public UI probe pending."
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -165,9 +166,10 @@
         "ready food selection and heating choice",
         "meat and ready-food storage from package label",
         "scoped frozen-fish packaging and storage-sign explanation",
-        "scoped apple colour, variety and recipe clarification"
+        "scoped apple colour, variety and recipe clarification",
+        "fully matched general chilled-fish selection"
       ],
-      "scope": "Twelve narrow general topic groups; two new groups require matching prior advice; no arbitrary fact, SKU composition or retailer-assortment claim",
+      "scope": "Thirteen narrow general topic groups; scoped follow-ups require matching accepted advice. No arbitrary fact, SKU composition or retailer-assortment claim.",
       "checkedAt": "2026-10-17",
       "source": "Tetra Pak Dairy Processing Handbook and Rospotrebnadzor product selection/label guidance",
       "sources": [
@@ -189,8 +191,10 @@
       "sourcePrs": [
         505,
         509,
-        559
-      ]
+        559,
+        560
+      ],
+      "checkScope": "Original ten topics checked 2026-10-11; FDA/UMN/UMD additions checked 2026-10-17."
     },
     "currentCardFacts": {
       "sourcePr": 501,
@@ -434,7 +438,14 @@
       "providerHistoryScope": "Bounded accepted advice pairs as untrusted data",
       "attentionAndThanksPreserveSubject": true,
       "hypotheticalAdviceRemainsReadOnly": true,
-      "ambiguousExclusionRequiresNamedProduct": true
+      "ambiguousExclusionRequiresNamedProduct": true,
+      "volumeAnswers": {
+        "sourcePr": 560,
+        "pendingSignal": "Exact accepted own question and matching current people count, derived from existing volatile history",
+        "literalAnswers": "Standalone litres only; original scoped text; read-only advice",
+        "basketCommands": "Named products, mixed commands and commercial/new-topic requests retain their routes",
+        "newStoredField": false
+      }
     },
     "semanticValidation": {
       "sourcePr": 504,
@@ -477,7 +488,7 @@
       "negativeWordMatching": "whole word, not a substring of internet"
     },
     "adviceQuality": {
-      "localReferenceTopics": 12,
+      "localReferenceTopics": 13,
       "generalFreeProvider": "Historical OpenRouter route; current active provider is recorded separately",
       "lastLiveReview": {
         "at": "2026-10-11T18:59:56.654Z",
@@ -654,7 +665,8 @@
         556,
         557,
         558,
-        559
+        559,
+        560
       ],
       "sourceAdapter": "integrated with explicit opt-in",
       "activation": "active in separate owner-controlled AI project",
@@ -681,7 +693,7 @@
         "attempts": 1,
         "deploymentVersion": 4
       },
-      "currentRuntimeProbe": "Pending final grounded-followup public UI check recorded in source PR #559"
+      "currentRuntimeProbe": "Pending final public selection/household/litre-answer dialogue in source PR #560"
     },
     "activeProvider": {
       "provider": "gptunnel",
@@ -694,11 +706,11 @@
       "globalRequestsPerUtcDay": 20,
       "quotaIsRubCap": false,
       "deploymentVersion": 6,
-      "verificationScope": "Complete source readback: 11 files and 20 editor aliases; custom auth and legacy JWT setting preserved. Public UI probe pending."
+      "verificationScope": "Complete v6 server source readback: 11 files and 20 editor aliases; custom auth and legacy JWT setting preserved. Client-only PR #560 public UI probe pending."
     },
     "contextualDialogue": {
       "sourcePr": 557,
-      "exactHead": "bd7cdf718415d4fcd7992bc05fdd7a2fd9125199",
+      "exactHead": "969e287d01acaf5520050700e56759fa21c2fe2b",
       "contextFields": [
         "budgetMinor",
         "cookingEffort",
@@ -731,16 +743,23 @@
       },
       "correctiveSourcePrs": [
         558,
-        559
+        559,
+        560
       ],
       "groundedFollowups": {
-        "sourcePr": 559,
-        "scope": [
-          "Pure people-count follow-up asks one question about volume or portions",
-          "Scoped frozen-fish packaging and its explanation",
-          "Scoped apple-colour question"
+        "sourcePrs": [
+          559,
+          560
         ],
-        "noInventedQuantities": true,
+        "scope": [
+          "Fully matched general fish selection",
+          "Scoped frozen-fish packaging and its explanation",
+          "Pure people-count follow-up asks about volume/portions",
+          "Qualitative pot size answers ask for litres or recipe",
+          "Standalone litre answer to the actual pending question continues scoped original advice",
+          "Scoped apple colour/variety/recipe clarification"
+        ],
+        "quantities": "No amount inferred from people count or qualitative pan size",
         "sourceLinks": "FDA; UMN Extension; UMD Extension",
         "history": "Accepted displayed local advice enters the bounded next remote request",
         "runtimeProbe": "pending"
@@ -1076,23 +1095,23 @@
   },
   "runtimeValidation": {
     "runtimeFiles": 163,
-    "exactHead": "bd7cdf718415d4fcd7992bc05fdd7a2fd9125199",
-    "exactHeadCI": 38989054387,
+    "exactHead": "969e287d01acaf5520050700e56759fa21c2fe2b",
+    "exactHeadCI": 38993358621,
     "exactHeadCIConclusion": "success",
-    "exactHeadPackage": 38989054380,
-    "nodeChecks": 2243,
+    "exactHeadPackage": 38993358662,
+    "nodeChecks": 2253,
     "desktopMobileCases": 380,
     "retries": 0,
     "skips": 0,
     "additionalFocusedUiCases": 6,
-    "actualMain": "81095946eb4ab21b59dc903bc242333ccd31eaaa",
-    "actualMainTree": "d805596c11d9ab87eb24b813838c365446ea88e4",
+    "actualMain": "4ba67caefe9da413f1aa9b2ea0bd04d34ddebf67",
+    "actualMainTree": "c91fab98ea22dd4db1ac9343a335136cca1a7889",
     "actualMainVerification": "Git tree identical to fully tested PR head; final public UI probe pending",
-    "actualMainCI": 38990675403,
+    "actualMainCI": 38994830195,
     "actualMainCIStatus": "in_progress_at_release",
-    "actualMainPackage": 38990675405,
+    "actualMainPackage": 38994830239,
     "priorMainCI": {
-      "run": 38986062212,
+      "run": 38990675403,
       "conclusion": "success"
     },
     "backend": {
@@ -1100,7 +1119,10 @@
       "deploymentVersion": 6,
       "closureFiles": 11,
       "readbackAliases": 20,
-      "unchangedBySourcePr": 559
+      "unchangedBySourcePrs": [
+        559,
+        560
+      ]
     }
   },
   "observedPriceExpiry": {

@@ -25,6 +25,7 @@ const SOURCES = Object.freeze({
   "meat-selection": Object.freeze([MEAT, MARKING]),
   "ready-meal-selection": Object.freeze([READY, MARKING]),
   "food-label-storage": Object.freeze([MARKING]),
+  "fish-selection": Object.freeze([FROZEN_FISH]),
   "dialogue-fish-frozen-packaging": Object.freeze([FROZEN_FISH]),
   "dialogue-apple-colour": Object.freeze([APPLE_MATURITY, APPLE_VARIETIES])
 });
@@ -39,6 +40,7 @@ const selection = (subject, purpose = "") => new RegExp("^(?:(?:подскажи
 const MINCE_SELECTION = selection(MINCE_SUBJECT, "(?: (?:а )?(?:для (?:котлет|соуса|начинки)|на котлеты))?");
 const MEAT_SELECTION = selection(MEAT_SUBJECT);
 const READY_SELECTION = selection(READY_SUBJECT, "(?: (?:а )?(?:без (?:готовки|разогрева)|только разогреть|разогреть|(?:в )?микроволновк[ае]))?");
+const FISH_SELECTION = /^(?:(?:подскажи|посоветуй|помоги) )?как (?:правильно )?выбрать рыбу(?: для супа)?$/u;
 const FOOD_STORAGE = new RegExp("^(?:(?:подскажи|помоги) )?(?:как|сколько) (?:его )?хранить (?:" + MINCE_SUBJECT + "|" + MEAT_SUBJECT + "|" + READY_SUBJECT
   + ")(?: после (?:открытия|вскрытия)(?: упаковки)?)?$", "u");
 const READY_DIFFERENCE = /^(?:чем готовое блюдо отличается от сырого полуфабриката|в чем разница между готовым блюдом и сырым полуфабрикатом)$/u;
@@ -47,6 +49,7 @@ function everydayQuestion(text) {
   if (MINCE_SELECTION.test(value)) return { subject: "фарш", key: "mince-selection", value };
   if (MEAT_SELECTION.test(value)) return { subject: "мясо", key: "meat-selection", value };
   if (READY_SELECTION.test(value) || READY_DIFFERENCE.test(value)) return { subject: "готовую еду", key: "ready-meal-selection", value };
+  if (FISH_SELECTION.test(value)) return { subject: "рыбу", key: "fish-selection", value };
   if (FOOD_STORAGE.test(value)) return { subject: /фарш/u.test(value) ? "фарш" : /готов|полуфабрикат/u.test(value) ? "готовую еду" : "мясо", key: "food-label-storage", value };
   return null;
 }
@@ -71,6 +74,10 @@ function everydayReference(question, context) {
         : " Для чего выбираешь: котлеты, соус или начинка?";
   } else if (key === "meat-selection") {
     message = "Сначала реши, нужен целый кусок или уже подготовленные порции. Проверь вид мяса, дату изготовления, срок годности и условия хранения. Упаковка должна быть целой; состав маринованного продукта смотри на этикетке. Готовишь сегодня или берёшь в запас?";
+  } else if (key === "fish-selection") {
+    // FDA selection guidance checked 2026-10-17. These observations do not
+    // identify a species' fat content or establish an unseen pack's freshness.
+    message = "У охлаждённой рыбы проверь, что её держат в холодильнике или на льду; запах — слабый и свежий, без кислого или аммиачного оттенка. Если рыба в упаковке, осмотри её целостность. Эти признаки сами по себе не гарантируют свежесть. Ты выбираешь охлаждённую или замороженную рыбу?";
   } else if (key === "food-label-storage") {
     message = "Смотри срок годности и условия хранения на этикетке именно этой упаковки. После вскрытия проверь отдельные указания производителя: срок закрытой упаковки нельзя автоматически переносить на открытую. Напиши указания с этикетки — помогу их разобрать.";
   } else {

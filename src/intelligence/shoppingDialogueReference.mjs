@@ -1,4 +1,4 @@
-import { normalizeShoppingAdviceRequest, normalizeShoppingAdviceResponse } from "./shoppingAdviceContract.mjs";
+import { normalizeShoppingAdviceRequest, normalizeShoppingAdviceResponse, normalizeShoppingAdviceHistory } from "./shoppingAdviceContract.mjs";
 import { shoppingTargets, shoppingTargetLabel } from "./shoppingConversation.mjs";
 
 const normalize = text => text.normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е")
@@ -23,6 +23,23 @@ const people = new Map([
 const WHY = /^(?:(?:почему|зачем)(?: ты)?(?: (?:это|так)(?: (?:советуешь|предлагаешь|рекомендуешь|выбрала|нужно|лучше))?)?|объясни почему)$/u;
 const GREEN = /^(?:зеленые(?: тоже)? можно|можно(?: ли)? зеленые|если зеленые|почему зеленые|цвет (?:важен|имеет значение)|что насчет цвета|чем красные отличаются от зеленых|чем зеленые отличаются от красных)$/u;
 const FROZEN = /^(?:если замороженная|если замороженную|замороженная|замороженную|как выбрать замороженную рыбу(?: для супа)?)$/u;
+const householdQuestion = count => `Для ${count} человек количество зависит от объёма блюда и порций. Какой объём или сколько порций планируешь приготовить?`;
+const potQuestion = count => `Для ${count} человек уточню объём блюда. Сколько литров у кастрюли или какой рецепт используешь?`;
+const qualitativePot = /^(?:(?:если )?(?:я )?(?:варю|готовлю) (?:суп |блюдо )?в (?:маленькой|небольшой|средней|большой) кастрюле|(?:если )?(?:у меня )?(?:(?:маленькая|небольшая|средняя|большая) кастрюля|кастрюля (?:маленькая|небольшая|средняя|большая)))$/u;
+
+function householdCount(text) {
+  const countWord = /^(?:на|для|нас) ([а-я]+|\d{1,2})(?: (?:человек[а]?|людей))?$/u.exec(text)?.[1];
+  return people.get(countWord) ?? (/^[1-9]\d?$/u.test(countWord ?? "") ? Number(countWord) : null);
+}
+
+export function hasPendingShoppingVolumeQuestion(history, peopleCount) {
+  const accepted = normalizeShoppingAdviceHistory(history);
+  if (!accepted?.length || !Number.isSafeInteger(peopleCount) || peopleCount < 1 || peopleCount > 12) return false;
+  const lastUser = question(accepted.at(-2).text).text;
+  const lastReply = accepted.at(-1).text;
+  return lastReply === householdQuestion(peopleCount) && householdCount(lastUser) === peopleCount
+    || lastReply === potQuestion(peopleCount) && qualitativePot.test(lastUser);
+}
 
 function question(text) {
   const value = normalize(text);
@@ -40,7 +57,7 @@ function matchingScope(scope, lastUser, lastReply) {
     && shoppingTargets(`${lastUser} ${lastReply}`).includes(scopedTargets[0]);
 }
 
-// These are three exact, read-only follow-ups to a displayed advice exchange.
+// These are bounded, read-only follow-ups to a displayed advice exchange.
 // History supplies only a bounded subject/match signal; its instructions and
 // claims are never executed, copied into replies or used as commercial facts.
 export function localShoppingDialogueReference(input) {
@@ -50,19 +67,31 @@ export function localShoppingDialogueReference(input) {
   const lastReply = normalize(request.history.at(-1).text);
   if (!normalizeShoppingAdviceResponse({ kind: "advice", message: request.history.at(-1).text })) return null;
   const current = question(request.text);
-  if (current.scope !== null && !matchingScope(current.scope, lastUser, lastReply)) return null;
   const finish = (message, referenceKey) => {
     const reply = normalizeShoppingAdviceResponse({ kind: "advice", message }, request.context);
     return reply ? Object.freeze({ reply, ...(referenceKey ? { referenceKey } : {}) }) : null;
   };
 
-  const countWord = /^(?:на|для|нас) ([а-я]+|\d{1,2})(?: (?:человек[а]?|людей))?$/u.exec(current.text)?.[1];
-  const count = people.get(countWord) ?? (/^[1-9]\d?$/u.test(countWord ?? "") ? Number(countWord) : null);
-  if (count !== null && count === request.context.peopleCount) {
-    return finish(`Для ${count} человек количество зависит от объёма блюда и порций. Какой объём или сколько порций планируешь приготовить?`);
+  // A qualitative pot size does not answer our own pending volume question.
+  // Match that exact displayed question and typed count, rather than treating
+  // arbitrary prior prose as permission to estimate ingredient quantities.
+  const previous = question(request.history.at(-2).text);
+  const priorCount = householdCount(previous.text);
+  if (priorCount !== null && priorCount === request.context.peopleCount
+    && lastReply === normalize(householdQuestion(priorCount)) && qualitativePot.test(current.text)) {
+    const priorSubjectPair = request.history.slice(0, -2).slice(-2);
+    if (current.scope === null || priorSubjectPair.length === 2
+      && matchingScope(current.scope, normalize(priorSubjectPair[0].text), normalize(priorSubjectPair[1].text))) {
+      return finish(potQuestion(priorCount));
+    }
   }
 
-  const previous = question(request.history.at(-2).text);
+  if (current.scope !== null && !matchingScope(current.scope, lastUser, lastReply)) return null;
+  const count = householdCount(current.text);
+  if (count !== null && count === request.context.peopleCount) {
+    return finish(householdQuestion(count));
+  }
+
   if (current.scope !== null && fishScope(current.scope) && FROZEN.test(current.text) && (fish.test(lastUser) || fish.test(lastReply))) {
     return finish("Для замороженной рыбы проверь целостность упаковки и чтобы рыба оставалась твёрдой, а не мягкой и гнущейся. Иней и кристаллы льда могут указывать на длительное хранение либо оттаивание и повторную заморозку, но не доказывают её.", "dialogue-fish-frozen-packaging");
   }
