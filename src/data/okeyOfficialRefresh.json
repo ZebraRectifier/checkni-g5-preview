@@ -1,1 +1,7 @@
-{"status":"unavailable","reason":"initial_collection_not_yet_verified"}
+{
+  "status": "blocked",
+  "lastAttemptAt": "2026-10-17T20:21:49.064Z",
+  "sourceUrl": "https://www.okmarket.ru/catalogs/",
+  "scope": "moscow-city-promotion-not-exact-store",
+  "reason": "source_challenge"
+}
