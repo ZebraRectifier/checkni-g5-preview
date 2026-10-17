@@ -1214,5 +1214,24 @@
     "priceExplanation": "current UI-owned Core result; no independent winner calculation",
     "catalogSort": "nominal package price, stable ties and unknown prices last",
     "liveExternalProviderVerifiedOvernight": false
+  },
+  "okeyOfficialCityPrices": {
+    "codeVersion": "20261017.1",
+    "basePublicCommit": "1d9f519d949bfc4bfdf44063808e779840a65e4f",
+    "sourceUrl": "https://www.okmarket.ru/catalogs/",
+    "scope": "moscow-city-promotion-not-exact-store",
+    "runtimeExtensions": [
+      "src/components/OkeyOfficialCatalog.mjs",
+      "src/observations/okeyOfficialPromotions.mjs"
+    ],
+    "deliveryChallengePausePreserved": true,
+    "maximumObservedProducts": 24,
+    "sourceAttemptBudgetMinutes": 5,
+    "maximumObservationAgeHours": 24,
+    "promotionExpiryTimezone": "Europe/Moscow",
+    "stock": "unknown",
+    "cardAndNoCardPrices": "unknown",
+    "fullAssortment": false,
+    "validationChecks": 18
   }
 }
