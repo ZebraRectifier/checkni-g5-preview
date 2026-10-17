@@ -5,6 +5,13 @@ on:
     paths:
       - 'tools/okey-public-catalog/collect-eda.mjs'
       - 'tools/okey-public-catalog/eda-parser.mjs'
+      - 'tools/okey-public-catalog/verify-refresh.mjs'
+      - 'tests/okeyRefreshVerification.test.mjs'
+      - '.github/workflows/okey-public-data.yml'
+  pull_request:
+    paths:
+      - 'tools/okey-public-catalog/verify-refresh.mjs'
+      - 'tests/okeyRefreshVerification.test.mjs'
       - '.github/workflows/okey-public-data.yml'
   schedule:
     - cron: '30 0 * * *'
@@ -15,9 +22,21 @@ concurrency:
 permissions:
   contents: read
 jobs:
-  publish:
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Verify history and freshness safeguards without source requests
+        run: node --test tests/addressPriceHistory.test.mjs tests/okeyRefreshVerification.test.mjs
+  publish:
+    if: github.event_name != 'pull_request'
+    needs: verify
+    runs-on: ubuntu-latest
+    # Collector is bounded to twelve minutes; leave time for validation and Pages.
+    timeout-minutes: 20
     permissions:
       contents: write
       pages: write
@@ -35,17 +54,26 @@ jobs:
       - name: Install pinned Chromium
         run: npx playwright install --with-deps chromium
       - name: Collect visible address-bound observations
-        run: node tools/okey-public-catalog/collect-eda.mjs
+        run: |
+          node tools/okey-public-catalog/verify-refresh.mjs --start
+          node tools/okey-public-catalog/collect-eda.mjs
+      - name: Verify newly measured address-bound prices
+        id: freshness
+        continue-on-error: true
+        run: node tools/okey-public-catalog/verify-refresh.mjs
       - name: Validate measured history
         run: node --test tests/addressPriceHistory.test.mjs
       - name: Commit changed observations only
         run: |
           set -euo pipefail
+          expected_base="$(git rev-parse HEAD)"
           git add src/data/okeyDeliveryHistory.json src/data/okeyDeliveryRefresh.json
           if ! git diff --cached --quiet; then
             git config user.name "CHECKNI Price History"
             git config user.email "actions@users.noreply.github.com"
-            git commit -m "DATA: publish verified OKEY delivery history"
+            git commit -m "DATA: publish OKEY collection result"
+            read -r remote_base _ <<< "$(git ls-remote origin refs/heads/main)"
+            test "$remote_base" = "$expected_base"
             git push origin HEAD:main
           fi
       - name: Package static browser artifact
@@ -64,3 +92,8 @@ jobs:
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
       - id: deploy
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
+      - name: Require fresh prices for a successful update
+        if: always() && steps.freshness.outcome != 'success'
+        run: |
+          echo 'No verified fresh OKEY prices. Inspect the freshness summary; source protection remains enabled.'
+          exit 1
