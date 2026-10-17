@@ -4,6 +4,7 @@ import { planConversationBasket, presentConversationBasket, knownPreparation } f
 import { validateBasketProposal } from "../core/ai-basket-proposal.mjs";
 import { parseLocalBasketText } from "../intelligence/localBasketParser.mjs";
 import { shoppingAdviceTopic, shoppingAdviceInput, localShoppingExplanation, localShoppingComparisonExplanation, localShoppingAdvice, localShoppingReference } from "../intelligence/shoppingAdvice.mjs";
+import { localShoppingDialogueReference } from "../intelligence/shoppingDialogueReference.mjs";
 import { normalizeShoppingAdviceResponse, normalizeShoppingAdviceHistory } from "../intelligence/shoppingAdviceContract.mjs";
 import { isShoppingProductFactsQuestion, localShoppingProductFacts } from "../intelligence/shoppingProductFacts.mjs";
 import { createShoppingPreferenceStore } from "./shoppingPreferenceStorage.mjs";
@@ -701,11 +702,12 @@ export function createShoppingConversationFlow(options) {
         state = messageState("В корзине пока нет товаров.", "Добавь покупки, и я помогу выбрать вариант готовки из этого набора. Это не требует менять твои предпочтения.");
         return state;
       }
-      const reference = localShoppingReference(input);
-      if (reference) {
-        state = messageState("Давай разберёмся.", reference.reply.message);
-        state.presentation.referenceKey = reference.referenceKey;
-        rememberAdvice(utterance, reference.reply.message);
+      const reference = localShoppingDialogueReference(input) ?? localShoppingReference(input);
+      const referenceReply = reference ? normalizeShoppingAdviceResponse(reference.reply, input.context) : null;
+      if (referenceReply) {
+        state = messageState("Давай разберёмся.", referenceReply.message);
+        if (typeof reference.referenceKey === "string") state.presentation.referenceKey = reference.referenceKey;
+        rememberAdvice(utterance, referenceReply.message);
         return state;
       }
       state = { status: "loading" };

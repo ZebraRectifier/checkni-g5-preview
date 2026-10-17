@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "469af44d8c001c7baab8a9a871718fb97baeda16",
+  "sourceCommit": "81095946eb4ab21b59dc903bc242333ccd31eaaa",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -122,7 +122,8 @@
       555,
       556,
       557,
-      558
+      558,
+      559
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -131,13 +132,13 @@
     "providerRoute": "GPTunnel primary with explicit paid opt-in; gpt-4o-mini; one attempt and no automatic paid fallback",
     "providerDeploymentVersion": 6,
     "validation": {
-      "unitAndGuardChecks": 2238,
+      "unitAndGuardChecks": 2243,
       "chromiumDesktopAndMobileCases": 380,
-      "exactHead": "98ff481ca15ccf4efb4705b5a41ef8599109aa82",
-      "sourceCommit": "469af44d8c001c7baab8a9a871718fb97baeda16",
-      "exactHeadCiRun": 38983399032,
-      "mergedMainCiRun": 38986062212,
-      "validationScope": "Fixed current-question guidance for reasons and explicit people count; scoped household follow-ups; prior conversational history and commercial/security boundaries retained. Actual provider quality recheck pending."
+      "exactHead": "bd7cdf718415d4fcd7992bc05fdd7a2fd9125199",
+      "sourceCommit": "81095946eb4ab21b59dc903bc242333ccd31eaaa",
+      "exactHeadCiRun": 38989054387,
+      "mergedMainCiRun": 38990675403,
+      "validationScope": "Complete exact-head CI passed; actual-main tree identical. Grounded follow-up runtime probe pending."
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -162,10 +163,12 @@
         "mince selection",
         "meat and poultry selection",
         "ready food selection and heating choice",
-        "meat and ready-food storage from package label"
+        "meat and ready-food storage from package label",
+        "scoped frozen-fish packaging and storage-sign explanation",
+        "scoped apple colour, variety and recipe clarification"
       ],
-      "scope": "ten narrow general topic groups; full supported questions only; no SKU composition or retailer-assortment claim",
-      "checkedAt": "2026-10-11",
+      "scope": "Twelve narrow general topic groups; two new groups require matching prior advice; no arbitrary fact, SKU composition or retailer-assortment claim",
+      "checkedAt": "2026-10-17",
       "source": "Tetra Pak Dairy Processing Handbook and Rospotrebnadzor product selection/label guidance",
       "sources": [
         "https://dairyprocessinghandbook.tetrapak.com/chapter/cheese",
@@ -174,7 +177,10 @@
         "https://04.rospotrebnadzor.ru/index.php/information-for-businesses/helpful-information/18632-27072023.html",
         "https://zpp.rospotrebnadzor.ru/news/federal/248504",
         "https://zpp.rospotrebnadzor.ru/news/federal/576105",
-        "https://zpp.rospotrebnadzor.ru/news/federal/323866"
+        "https://zpp.rospotrebnadzor.ru/news/federal/323866",
+        "https://www.fda.gov/food/buy-store-serve-safe-food/selecting-and-serving-fresh-and-frozen-seafood-safely",
+        "https://blog-fruit-vegetable-ipm.extension.umn.edu/2018/08/check-apple-ripeness-with-starch-iodine.html",
+        "https://extension.umd.edu/resource/important-apple-cultivars-mid-atlantic-region-eb-2023-0684"
       ],
       "modelRequired": false,
       "visibleSources": true,
@@ -182,7 +188,8 @@
       "arbitraryFactCoverage": false,
       "sourcePrs": [
         505,
-        509
+        509,
+        559
       ]
     },
     "currentCardFacts": {
@@ -470,7 +477,7 @@
       "negativeWordMatching": "whole word, not a substring of internet"
     },
     "adviceQuality": {
-      "localReferenceTopics": 10,
+      "localReferenceTopics": 12,
       "generalFreeProvider": "Historical OpenRouter route; current active provider is recorded separately",
       "lastLiveReview": {
         "at": "2026-10-11T18:59:56.654Z",
@@ -646,7 +653,8 @@
         555,
         556,
         557,
-        558
+        558,
+        559
       ],
       "sourceAdapter": "integrated with explicit opt-in",
       "activation": "active in separate owner-controlled AI project",
@@ -673,7 +681,7 @@
         "attempts": 1,
         "deploymentVersion": 4
       },
-      "currentRuntimeProbe": "Pending corrected real-dialogue validation in source PR #558"
+      "currentRuntimeProbe": "Pending final grounded-followup public UI check recorded in source PR #559"
     },
     "activeProvider": {
       "provider": "gptunnel",
@@ -690,7 +698,7 @@
     },
     "contextualDialogue": {
       "sourcePr": 557,
-      "exactHead": "98ff481ca15ccf4efb4705b5a41ef8599109aa82",
+      "exactHead": "bd7cdf718415d4fcd7992bc05fdd7a2fd9125199",
       "contextFields": [
         "budgetMinor",
         "cookingEffort",
@@ -720,6 +728,22 @@
         "reason": "One practical cause; correct inaccurate prior advice",
         "household": "Validated people count; clarify volume/portions; never multiply packages",
         "historyTrust": "data only"
+      },
+      "correctiveSourcePrs": [
+        558,
+        559
+      ],
+      "groundedFollowups": {
+        "sourcePr": 559,
+        "scope": [
+          "Pure people-count follow-up asks one question about volume or portions",
+          "Scoped frozen-fish packaging and its explanation",
+          "Scoped apple-colour question"
+        ],
+        "noInventedQuantities": true,
+        "sourceLinks": "FDA; UMN Extension; UMD Extension",
+        "history": "Accepted displayed local advice enters the bounded next remote request",
+        "runtimeProbe": "pending"
       }
     }
   },
@@ -1051,25 +1075,32 @@
     }
   },
   "runtimeValidation": {
-    "runtimeFiles": 162,
-    "exactHead": "98ff481ca15ccf4efb4705b5a41ef8599109aa82",
-    "exactHeadCI": 38983399032,
+    "runtimeFiles": 163,
+    "exactHead": "bd7cdf718415d4fcd7992bc05fdd7a2fd9125199",
+    "exactHeadCI": 38989054387,
     "exactHeadCIConclusion": "success",
-    "exactHeadPackage": 38983399036,
-    "nodeChecks": 2238,
+    "exactHeadPackage": 38989054380,
+    "nodeChecks": 2243,
     "desktopMobileCases": 380,
     "retries": 0,
     "skips": 0,
-    "additionalFocusedUiCases": 4,
-    "actualMain": "469af44d8c001c7baab8a9a871718fb97baeda16",
-    "actualMainTree": "9801ae7cd4daae57f0512dc015bafd8be36f5909",
-    "actualMainVerification": "Git tree identical to tested PR head; complete Edge source closure read back after deployment",
-    "actualMainCI": 38986062212,
+    "additionalFocusedUiCases": 6,
+    "actualMain": "81095946eb4ab21b59dc903bc242333ccd31eaaa",
+    "actualMainTree": "d805596c11d9ab87eb24b813838c365446ea88e4",
+    "actualMainVerification": "Git tree identical to fully tested PR head; final public UI probe pending",
+    "actualMainCI": 38990675403,
     "actualMainCIStatus": "in_progress_at_release",
-    "actualMainPackage": 38986062275,
+    "actualMainPackage": 38990675405,
     "priorMainCI": {
-      "run": 38982545430,
+      "run": 38986062212,
       "conclusion": "success"
+    },
+    "backend": {
+      "sourceCommit": "469af44d8c001c7baab8a9a871718fb97baeda16",
+      "deploymentVersion": 6,
+      "closureFiles": 11,
+      "readbackAliases": 20,
+      "unchangedBySourcePr": 559
     }
   },
   "observedPriceExpiry": {

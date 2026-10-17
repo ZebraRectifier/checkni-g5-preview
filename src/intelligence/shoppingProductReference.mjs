@@ -11,6 +11,9 @@ const LABEL = source("Роспотребнадзор · этикетка и хр
 const MEAT = source("Роспотребнадзор · мясные продукты", "https://zpp.rospotrebnadzor.ru/news/federal/248504");
 const MARKING = source("Роспотребнадзор · как читать этикетку", "https://zpp.rospotrebnadzor.ru/news/federal/576105");
 const READY = source("Роспотребнадзор · готовая еда", "https://zpp.rospotrebnadzor.ru/news/federal/323866");
+const FROZEN_FISH = source("FDA · выбор свежей и замороженной рыбы", "https://www.fda.gov/food/buy-store-serve-safe-food/selecting-and-serving-fresh-and-frozen-seafood-safely");
+const APPLE_MATURITY = source("UMN Extension · спелость яблок", "https://blog-fruit-vegetable-ipm.extension.umn.edu/2018/08/check-apple-ripeness-with-starch-iodine.html");
+const APPLE_VARIETIES = source("UMD Extension · сорта яблок", "https://extension.umd.edu/resource/important-apple-cultivars-mid-atlantic-region-eb-2023-0684");
 const SOURCES = Object.freeze({
   "milk-kefir": Object.freeze([FERMENTED, HEAT]),
   "milk-treatment": Object.freeze([HEAT, LABEL]),
@@ -21,7 +24,9 @@ const SOURCES = Object.freeze({
   "mince-selection": Object.freeze([MEAT, MARKING]),
   "meat-selection": Object.freeze([MEAT, MARKING]),
   "ready-meal-selection": Object.freeze([READY, MARKING]),
-  "food-label-storage": Object.freeze([MARKING])
+  "food-label-storage": Object.freeze([MARKING]),
+  "dialogue-fish-frozen-packaging": Object.freeze([FROZEN_FISH]),
+  "dialogue-apple-colour": Object.freeze([APPLE_MATURITY, APPLE_VARIETIES])
 });
 
 // Match the complete supported question, so an uncovered second product or
