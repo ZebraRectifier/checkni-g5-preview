@@ -1,5 +1,5 @@
 import { createHybridBasketFlow } from "./hybridBasketFlow.mjs";
-import { extractShoppingDelta, updateShoppingConversation, isShoppingProductRejected, projectMartenConversation, shoppingTargets } from "../intelligence/shoppingConversation.mjs";
+import { extractShoppingDelta, updateShoppingConversation, isShoppingProductRejected, projectMartenConversation, shoppingTargets, shoppingTargetLabel } from "../intelligence/shoppingConversation.mjs";
 import { planConversationBasket, presentConversationBasket, knownPreparation } from "../intelligence/conversationBasket.mjs";
 import { validateBasketProposal } from "../core/ai-basket-proposal.mjs";
 import { parseLocalBasketText } from "../intelligence/localBasketParser.mjs";
@@ -563,7 +563,18 @@ export function createShoppingConversationFlow(options) {
       state = messageState("Уточню один момент.", followup.message);
       return state;
     }
-    if (followup) text = followup.text;
+    if (followup) {
+      text = followup.text;
+      // A people/day clarification continues the existing advice. Repeating
+      // "Как выбрать…" here would turn "А на двоих?" into the initial task.
+      const householdOnly = continuingAdvice && followup.readOnly && needContext.recognized
+        && !needContext.clarification && /^(?:а\s*)?[\s,.!?;]*$/iu.test(needContext.text);
+      if (householdOnly) {
+        const subject = adviceFocus?.targets.map(shoppingTargetLabel).join(" и ") || adviceFocus?.subject;
+        const scoped = subject ? `Про ${subject}: ${utterance}` : utterance;
+        text = scoped.length <= 300 ? scoped : utterance;
+      }
+    }
     // Exact heating answers belong to the source-backed ready-food reference.
     // "Без разогрева" is a preparation question, not an unknown food refusal
     // or a request to persist a new cooking preference.

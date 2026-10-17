@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "9f9137872e5116069a45ba861d630186ba5d9435",
+  "sourceCommit": "469af44d8c001c7baab8a9a871718fb97baeda16",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -121,22 +121,23 @@
       545,
       555,
       556,
-      557
+      557,
+      558
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
     "commercialAnswers": "Core and selected-store observed catalog",
     "basketChangesRequireConfirmation": true,
     "providerRoute": "GPTunnel primary with explicit paid opt-in; gpt-4o-mini; one attempt and no automatic paid fallback",
-    "providerDeploymentVersion": 5,
+    "providerDeploymentVersion": 6,
     "validation": {
-      "unitAndGuardChecks": 2232,
+      "unitAndGuardChecks": 2238,
       "chromiumDesktopAndMobileCases": 380,
-      "exactHead": "e50dbc2410c0d3da38bd7689399dc04165dbb077",
-      "sourceCommit": "9f9137872e5116069a45ba861d630186ba5d9435",
-      "exactHeadCiRun": 38980539469,
-      "mergedMainCiRun": 38982545430,
-      "validationScope": "Conversational advice, volatile three-pair history, current typed goals, correction scope and unchanged commercial/security boundaries. Physical Android and arbitrary grocery accuracy unestablished."
+      "exactHead": "98ff481ca15ccf4efb4705b5a41ef8599109aa82",
+      "sourceCommit": "469af44d8c001c7baab8a9a871718fb97baeda16",
+      "exactHeadCiRun": 38983399032,
+      "mergedMainCiRun": 38986062212,
+      "validationScope": "Fixed current-question guidance for reasons and explicit people count; scoped household follow-ups; prior conversational history and commercial/security boundaries retained. Actual provider quality recheck pending."
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -514,13 +515,13 @@
       "validation": "complete 18.9s responses accepted in virtual-clock tests; stalled responses remain bounded"
     },
     "previousValidation": {
-      "unitAndGuardChecks": 1833,
-      "chromiumDesktopAndMobileCases": 348,
-      "exactHead": "68fb01355c10a8d735b73c6569a04367bd3865a5",
-      "sourceCommit": "f8fb42155c0abaacfd04ec42c59b1083b62d6684",
-      "exactHeadCiRun": 38688071359,
-      "mergedMainCiRun": 38689554737,
-      "validationScope": "Full regression suite for explicit household/period context, unchanged pack quantities, bounded meat refusals, unknown-constraint clarification and stale-draft rejection; full weekly menu and arbitrary grocery expertise remain unestablished. External provider remains v28."
+      "unitAndGuardChecks": 2232,
+      "chromiumDesktopAndMobileCases": 380,
+      "exactHead": "e50dbc2410c0d3da38bd7689399dc04165dbb077",
+      "sourceCommit": "9f9137872e5116069a45ba861d630186ba5d9435",
+      "exactHeadCiRun": 38980539469,
+      "mergedMainCiRun": 38982545430,
+      "validationScope": "Conversational advice, volatile three-pair history, current typed goals, correction scope and unchanged commercial/security boundaries. Physical Android and arbitrary grocery accuracy unestablished."
     },
     "advicePurposeMemory": {
       "sourcePr": 520,
@@ -621,7 +622,7 @@
       "compositionGuarantee": false,
       "unknownCompositionConstraints": "clarification; no silent relaxation",
       "weeklyMenu": "partial; household, whole-period budget and restrictions retained; full menu not built",
-      "providerDeploymentVersion": 5,
+      "providerDeploymentVersion": 6,
       "broadMeatAdvice": "Current server contract supports typed exclusions",
       "modelRequired": false,
       "peopleAndDaysSentToAdvice": true
@@ -644,7 +645,8 @@
       "sourcePrs": [
         555,
         556,
-        557
+        557,
+        558
       ],
       "sourceAdapter": "integrated with explicit opt-in",
       "activation": "active in separate owner-controlled AI project",
@@ -655,7 +657,7 @@
       "paidLiveProbeVerified": false,
       "globalRequestsPerUtcDay": 20,
       "quotaIsRubCap": false,
-      "deploymentVersion": 5,
+      "deploymentVersion": 6,
       "adviceGuard": {
         "sourcePr": 556,
         "qualityPresenceAndOrdinaryWordsAccepted": true,
@@ -671,7 +673,7 @@
         "attempts": 1,
         "deploymentVersion": 4
       },
-      "currentRuntimeProbe": "Pending public UI validation in source PR #557"
+      "currentRuntimeProbe": "Pending corrected real-dialogue validation in source PR #558"
     },
     "activeProvider": {
       "provider": "gptunnel",
@@ -683,12 +685,12 @@
       "browserTimeoutMs": 20000,
       "globalRequestsPerUtcDay": 20,
       "quotaIsRubCap": false,
-      "deploymentVersion": 5,
+      "deploymentVersion": 6,
       "verificationScope": "Complete source readback: 11 files and 20 editor aliases; custom auth and legacy JWT setting preserved. Public UI probe pending."
     },
     "contextualDialogue": {
       "sourcePr": 557,
-      "exactHead": "e50dbc2410c0d3da38bd7689399dc04165dbb077",
+      "exactHead": "98ff481ca15ccf4efb4705b5a41ef8599109aa82",
       "contextFields": [
         "budgetMinor",
         "cookingEffort",
@@ -712,7 +714,13 @@
         "А зелёные можно?",
         "А чем красные отличаются от зелёных?"
       ],
-      "realProviderVerified": false
+      "realProviderVerified": false,
+      "correctiveSourcePr": 558,
+      "currentTurnGuidance": {
+        "reason": "One practical cause; correct inaccurate prior advice",
+        "household": "Validated people count; clarify volume/portions; never multiply packages",
+        "historyTrust": "data only"
+      }
     }
   },
   "magnitAddressPhotos": {
@@ -1044,21 +1052,25 @@
   },
   "runtimeValidation": {
     "runtimeFiles": 162,
-    "exactHead": "e50dbc2410c0d3da38bd7689399dc04165dbb077",
-    "exactHeadCI": 38980539469,
+    "exactHead": "98ff481ca15ccf4efb4705b5a41ef8599109aa82",
+    "exactHeadCI": 38983399032,
     "exactHeadCIConclusion": "success",
-    "exactHeadPackage": 38980539542,
-    "nodeChecks": 2232,
+    "exactHeadPackage": 38983399036,
+    "nodeChecks": 2238,
     "desktopMobileCases": 380,
     "retries": 0,
     "skips": 0,
     "additionalFocusedUiCases": 4,
-    "actualMain": "9f9137872e5116069a45ba861d630186ba5d9435",
-    "actualMainTree": "5fdf401ddf5bca8d4e55f9d07bfa93cfdfbac28b",
+    "actualMain": "469af44d8c001c7baab8a9a871718fb97baeda16",
+    "actualMainTree": "9801ae7cd4daae57f0512dc015bafd8be36f5909",
     "actualMainVerification": "Git tree identical to tested PR head; complete Edge source closure read back after deployment",
-    "actualMainCI": 38982545430,
+    "actualMainCI": 38986062212,
     "actualMainCIStatus": "in_progress_at_release",
-    "actualMainPackage": 38982545436
+    "actualMainPackage": 38986062275,
+    "priorMainCI": {
+      "run": 38982545430,
+      "conclusion": "success"
+    }
   },
   "observedPriceExpiry": {
     "sourcePr": 548,
