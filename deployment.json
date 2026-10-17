@@ -349,7 +349,7 @@
           "basketMutationRequested": false
         },
         {
-          "at": "2026-10-12T02:38:50.22Z",
+          "at": "2026-10-12T02:38:50.220Z",
           "mode": "advice",
           "http": null,
           "kind": "unavailable",
@@ -382,8 +382,8 @@
       },
       "liveReasoningCompatibility": "mandatory-reasoning parameter rejection absent in both v28 probes; both routes timed out",
       "latestScopedRouteReview": {
-        "from": "2026-10-12T02:38:50.22Z",
-        "until": "2026-10-12T02:39:14.28Z",
+        "from": "2026-10-12T02:38:50.220Z",
+        "until": "2026-10-12T02:39:14.280Z",
         "deploymentVersion": 28,
         "advice": {
           "primary": {
@@ -534,7 +534,7 @@
       "totalTimeoutMs": 20000,
       "serverRouteBudgetMs": 9000,
       "measuredPriorDeadlineFailure": {
-        "at": "2026-10-12T02:38:50.22Z",
+        "at": "2026-10-12T02:38:50.220Z",
         "mode": "advice",
         "http": null,
         "kind": "unavailable",
