@@ -1,4 +1,4 @@
-name: OKEY delivery price history
+name: OKEY verified prices
 on:
   push:
     branches: [main]
@@ -7,9 +7,21 @@ on:
       - 'tools/okey-public-catalog/eda-parser.mjs'
       - 'tools/okey-public-catalog/verify-refresh.mjs'
       - 'tests/okeyRefreshVerification.test.mjs'
+      - 'tools/okey-public-catalog/collect-official.mjs'
+      - 'tools/okey-public-catalog/verify-official-refresh.mjs'
+      - 'src/observations/okeyOfficialPromotions.mjs'
+      - 'src/components/OkeyOfficialCatalog.mjs'
+      - 'src/components/OkeyDeliveryCatalog.mjs'
+      - 'tests/okeyOfficialPromotions.test.mjs'
       - '.github/workflows/okey-public-data.yml'
   pull_request:
     paths:
+      - 'tools/okey-public-catalog/collect-official.mjs'
+      - 'tools/okey-public-catalog/verify-official-refresh.mjs'
+      - 'src/observations/okeyOfficialPromotions.mjs'
+      - 'src/components/OkeyOfficialCatalog.mjs'
+      - 'src/components/OkeyDeliveryCatalog.mjs'
+      - 'tests/okeyOfficialPromotions.test.mjs'
       - 'tools/okey-public-catalog/verify-refresh.mjs'
       - 'tests/okeyRefreshVerification.test.mjs'
       - '.github/workflows/okey-public-data.yml'
@@ -17,7 +29,7 @@ on:
     - cron: '30 0 * * *'
   workflow_dispatch:
 concurrency:
-  group: okey-public-data
+  group: ${{ github.event_name == 'pull_request' && format('okey-public-data-pr-{0}', github.event.pull_request.number) || 'okey-public-data' }}
   cancel-in-progress: false
 permissions:
   contents: read
@@ -30,13 +42,13 @@ jobs:
         with:
           persist-credentials: false
       - name: Verify history and freshness safeguards without source requests
-        run: node --test tests/addressPriceHistory.test.mjs tests/okeyRefreshVerification.test.mjs
+        run: node --test tests/addressPriceHistory.test.mjs tests/okeyRefreshVerification.test.mjs tests/okeyOfficialPromotions.test.mjs
   publish:
     if: github.event_name != 'pull_request'
     needs: verify
     runs-on: ubuntu-latest
     # Collector is bounded to twelve minutes; leave time for validation and Pages.
-    timeout-minutes: 20
+    timeout-minutes: 25
     permissions:
       contents: write
       pages: write
@@ -57,17 +69,22 @@ jobs:
         run: |
           node tools/okey-public-catalog/verify-refresh.mjs --start
           node tools/okey-public-catalog/collect-eda.mjs
+          node tools/okey-public-catalog/collect-official.mjs
       - name: Verify newly measured address-bound prices
         id: freshness
         continue-on-error: true
         run: node tools/okey-public-catalog/verify-refresh.mjs
+      - name: Verify newly measured official city promotions
+        id: official_freshness
+        continue-on-error: true
+        run: node tools/okey-public-catalog/verify-official-refresh.mjs
       - name: Validate measured history
         run: node --test tests/addressPriceHistory.test.mjs
       - name: Commit changed observations only
         run: |
           set -euo pipefail
           expected_base="$(git rev-parse HEAD)"
-          git add src/data/okeyDeliveryHistory.json src/data/okeyDeliveryRefresh.json
+          git add src/data/okeyDeliveryHistory.json src/data/okeyDeliveryRefresh.json src/data/okeyOfficialPromotions.json src/data/okeyOfficialRefresh.json
           if ! git diff --cached --quiet; then
             git config user.name "CHECKNI Price History"
             git config user.email "actions@users.noreply.github.com"
@@ -93,7 +110,7 @@ jobs:
       - id: deploy
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
       - name: Require fresh prices for a successful update
-        if: always() && steps.freshness.outcome != 'success'
+        if: always() && steps.freshness.outcome != 'success' && steps.official_freshness.outcome != 'success'
         run: |
           echo 'No verified fresh OKEY prices. Inspect the freshness summary; source protection remains enabled.'
           exit 1

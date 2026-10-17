@@ -1,6 +1,7 @@
 import { historySnapshots, latestForAddress, observationTime } from '../observations/addressPriceHistory.mjs';
 import { readBoundedJsonResponse } from '../ports/retailCatalogPort.mjs';
 import { createAddressPriceHistory } from './AddressPriceHistory.mjs';
+import { createOkeyOfficialCatalog } from './OkeyOfficialCatalog.mjs';
 
 function node(tag,text){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;}
 const rub=value=>new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB'}).format(value/100);
@@ -88,5 +89,7 @@ export function createOkeyDeliveryCatalog({fetchImpl=globalThis.fetch}={}){
       },15*60*1000);
     }catch{status.textContent='Цены сейчас недоступны. Попробуйте открыть каталог ещё раз.';started=false;}
   });
-  return details;
+  const group=node('div');
+  group.append(createOkeyOfficialCatalog({fetchImpl}),details);
+  return group;
 }

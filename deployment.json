@@ -349,7 +349,7 @@
           "basketMutationRequested": false
         },
         {
-          "at": "2026-10-12T02:38:50.220Z",
+          "at": "2026-10-12T02:38:50.22Z",
           "mode": "advice",
           "http": null,
           "kind": "unavailable",
@@ -382,8 +382,8 @@
       },
       "liveReasoningCompatibility": "mandatory-reasoning parameter rejection absent in both v28 probes; both routes timed out",
       "latestScopedRouteReview": {
-        "from": "2026-10-12T02:38:50.220Z",
-        "until": "2026-10-12T02:39:14.280Z",
+        "from": "2026-10-12T02:38:50.22Z",
+        "until": "2026-10-12T02:39:14.28Z",
         "deploymentVersion": 28,
         "advice": {
           "primary": {
@@ -534,7 +534,7 @@
       "totalTimeoutMs": 20000,
       "serverRouteBudgetMs": 9000,
       "measuredPriorDeadlineFailure": {
-        "at": "2026-10-12T02:38:50.220Z",
+        "at": "2026-10-12T02:38:50.22Z",
         "mode": "advice",
         "http": null,
         "kind": "unavailable",
@@ -1214,5 +1214,24 @@
     "priceExplanation": "current UI-owned Core result; no independent winner calculation",
     "catalogSort": "nominal package price, stable ties and unknown prices last",
     "liveExternalProviderVerifiedOvernight": false
+  },
+  "okeyOfficialCityPrices": {
+    "codeVersion": "20261017.1",
+    "basePublicCommit": "1d9f519d949bfc4bfdf44063808e779840a65e4f",
+    "sourceUrl": "https://www.okmarket.ru/catalogs/",
+    "scope": "moscow-city-promotion-not-exact-store",
+    "runtimeExtensions": [
+      "src/components/OkeyOfficialCatalog.mjs",
+      "src/observations/okeyOfficialPromotions.mjs"
+    ],
+    "deliveryChallengePausePreserved": true,
+    "maximumObservedProducts": 24,
+    "sourceAttemptBudgetMinutes": 5,
+    "maximumObservationAgeHours": 24,
+    "promotionExpiryTimezone": "Europe/Moscow",
+    "stock": "unknown",
+    "cardAndNoCardPrices": "unknown",
+    "fullAssortment": false,
+    "validationChecks": 18
   }
 }
