@@ -130,8 +130,8 @@
     "readOnlyProductAdvice": true,
     "commercialAnswers": "Core and selected-store observed catalog",
     "basketChangesRequireConfirmation": true,
-    "providerRoute": "GPTunnel primary with explicit paid opt-in; gpt-4o-mini; one attempt and no automatic paid fallback",
-    "providerDeploymentVersion": 6,
+    "providerRoute": "GPTunnel primary with explicit paid opt-in; gpt-4.1-mini; one attempt and no automatic paid fallback",
+    "providerDeploymentVersion": 7,
     "validation": {
       "unitAndGuardChecks": 2253,
       "chromiumDesktopAndMobileCases": 380,
@@ -139,7 +139,7 @@
       "sourceCommit": "4ba67caefe9da413f1aa9b2ea0bd04d34ddebf67",
       "exactHeadCiRun": 38993358621,
       "mergedMainCiRun": 38994830195,
-      "validationScope": "Complete exact-head CI passed; actual-main tree identical. Full selection to standalone litre-answer journey verified locally; final public UI probe pending."
+      "validationScope": "2253 Node checks and 380 desktop/mobile cases passed at the exact head; actual-main Git tree identical. Published ten-turn dialogue verified with two real GPTunnel requests, no replay, and unchanged basket."
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -489,13 +489,22 @@
     },
     "adviceQuality": {
       "localReferenceTopics": 13,
-      "generalFreeProvider": "Historical OpenRouter route; current active provider is recorded separately",
+      "generalFreeProvider": "GPTunnel gpt-4.1-mini; bounded context verified, general expertise partial.",
       "lastLiveReview": {
-        "at": "2026-10-11T18:59:56.654Z",
-        "http": 200,
-        "passedExistingGuards": true,
-        "grammar": "needs improvement",
-        "selectionQuestion": "response drifted into home preparation"
+        "at": "2026-10-17T02:30:28.688Z",
+        "model": "gpt-4.1-mini",
+        "http": [
+          200,
+          200
+        ],
+        "technical": "passed",
+        "boundedContext": "passed",
+        "generalExpertise": "partial",
+        "panVolume": "Two litres correctly interpreted as pan capacity after people-count and small-pan clarification",
+        "householdOnlyAmount": "No amount inferred locally from people count or qualitative pan size",
+        "generatedQuantity": "After a given two-litre capacity, the model suggested an approximate 300–400 g; no recipe calculation or validation is claimed",
+        "appleAdvice": "Generated variety/texture advice remains general; scoped colour follow-up uses reviewed sources",
+        "arbitraryProseTruth": "not established"
       },
       "arbitraryProseTruth": "not established",
       "groundedSelection": "source-linked local selection; generic free-generated prose remains variable",
@@ -509,6 +518,13 @@
         "kind": "unavailable",
         "code": "provider_unavailable",
         "generatedAnswerAvailable": false
+      },
+      "previousLiveReview": {
+        "at": "2026-10-11T18:59:56.654Z",
+        "http": 200,
+        "passedExistingGuards": true,
+        "grammar": "needs improvement",
+        "selectionQuestion": "response drifted into home preparation"
       }
     },
     "displayLabel": "Помощник CHECKNI",
@@ -640,7 +656,7 @@
       "compositionGuarantee": false,
       "unknownCompositionConstraints": "clarification; no silent relaxation",
       "weeklyMenu": "partial; household, whole-period budget and restrictions retained; full menu not built",
-      "providerDeploymentVersion": 6,
+      "providerDeploymentVersion": 7,
       "broadMeatAdvice": "Current server contract supports typed exclusions",
       "modelRequired": false,
       "peopleAndDaysSentToAdvice": true
@@ -671,19 +687,19 @@
       "sourceAdapter": "integrated with explicit opt-in",
       "activation": "active in separate owner-controlled AI project",
       "projectRef": "gcdigtvknihwytbuzaga",
-      "model": "gpt-4o-mini",
+      "model": "gpt-4.1-mini",
       "keyStorage": "server-side Edge Function secret only",
       "newKeyCreated": true,
-      "paidLiveProbeVerified": false,
+      "paidLiveProbeVerified": true,
       "globalRequestsPerUtcDay": 20,
       "quotaIsRubCap": false,
-      "deploymentVersion": 6,
+      "deploymentVersion": 7,
       "adviceGuard": {
         "sourcePr": 556,
         "qualityPresenceAndOrdinaryWordsAccepted": true,
         "commercialClaimsRejected": true
       },
-      "publicUiEvidence": "Recorded separately in source PR #556 after publication",
+      "publicUiEvidence": "Source PR #560 and local model-quality-recheck evidence; technical/context success does not establish arbitrary advice accuracy.",
       "previousServerProbe": {
         "at": "2026-10-16T21:24:33.166Z",
         "mode": "advice",
@@ -693,11 +709,41 @@
         "attempts": 1,
         "deploymentVersion": 4
       },
-      "currentRuntimeProbe": "Pending final public selection/household/litre-answer dialogue in source PR #560"
+      "currentRuntimeProbe": "Passed bounded ten-turn public UI dialogue on 2026-10-17: two real successful advice calls, eight local turns, zero replay, real selected-store catalog and unchanged basket.",
+      "publicUiProbe": {
+        "at": "2026-10-17T02:30:28.688Z",
+        "sourceCommit": "4ba67caefe9da413f1aa9b2ea0bd04d34ddebf67",
+        "testedHead": "969e287d01acaf5520050700e56759fa21c2fe2b",
+        "runtimePublicCommit": "278e31532e9c6d49b29c0023bb60bbb9f67d0f1a",
+        "turns": 10,
+        "realAdvicePosts": 2,
+        "replayedResponses": 0,
+        "localTurns": 8,
+        "groundedLocalTurns": 6,
+        "httpStatuses": [
+          200,
+          200
+        ],
+        "runtimeFilesVerified": 9,
+        "selectedStore": "Magnit",
+        "catalogStatus": 200,
+        "catalogRows": 24,
+        "catalogMocked": false,
+        "basketUnchanged": true,
+        "cspErrors": 0,
+        "unexpectedWrites": 0
+      },
+      "modelSelection": {
+        "previous": "gpt-4o-mini",
+        "selected": "gpt-4.1-mini",
+        "changedAt": "2026-10-17T02:29:29Z",
+        "reason": "In the bounded accepted-history journey, the previous model misread the pan capacity as fish volume. The selected model correctly linked the given two litres to the pan in a real follow-up.",
+        "scope": "Observed bounded dialogue only; no universal quality comparison."
+      }
     },
     "activeProvider": {
       "provider": "gptunnel",
-      "model": "gpt-4o-mini",
+      "model": "gpt-4.1-mini",
       "projectRef": "gcdigtvknihwytbuzaga",
       "maxRemoteRoutes": 1,
       "attemptsPerRoute": 1,
@@ -705,8 +751,8 @@
       "browserTimeoutMs": 20000,
       "globalRequestsPerUtcDay": 20,
       "quotaIsRubCap": false,
-      "deploymentVersion": 6,
-      "verificationScope": "Complete v6 server source readback: 11 files and 20 editor aliases; custom auth and legacy JWT setting preserved. Client-only PR #560 public UI probe pending."
+      "deploymentVersion": 7,
+      "verificationScope": "Actual v7 successful route log, complete 11-file/20-alias source readback matching v6 code, unchanged custom auth and legacy-JWT OFF. GPTUNNEL_MODEL change only; published UI evidence below."
     },
     "contextualDialogue": {
       "sourcePr": 557,
@@ -734,7 +780,7 @@
         "А зелёные можно?",
         "А чем красные отличаются от зелёных?"
       ],
-      "realProviderVerified": false,
+      "realProviderVerified": true,
       "correctiveSourcePr": 558,
       "currentTurnGuidance": {
         "reason": "One practical cause; correct inaccurate prior advice",
@@ -762,8 +808,9 @@
         "quantities": "No amount inferred from people count or qualitative pan size",
         "sourceLinks": "FDA; UMN Extension; UMD Extension",
         "history": "Accepted displayed local advice enters the bounded next remote request",
-        "runtimeProbe": "pending"
-      }
+        "runtimeProbe": "Passed on published UI: scoped fish/frozen/why, people count, small-pan clarification, standalone two-litre follow-up and green-apple clarification; two real provider calls, no replay."
+      },
+      "verificationScope": "Accepted bounded history plus current peopleCount reached the real provider. In the tested journey, the model linked 2 litres to the pan; a new apple topic had empty history. Arbitrary prose accuracy remains unestablished."
     }
   },
   "magnitAddressPhotos": {
@@ -1106,7 +1153,7 @@
     "additionalFocusedUiCases": 6,
     "actualMain": "4ba67caefe9da413f1aa9b2ea0bd04d34ddebf67",
     "actualMainTree": "c91fab98ea22dd4db1ac9343a335136cca1a7889",
-    "actualMainVerification": "Git tree identical to fully tested PR head; final public UI probe pending",
+    "actualMainVerification": "Actual-main tree identical to the fully tested head. Nine published HTTP runtime hashes verified. Ten-turn public dialogue with two real advice calls passed transport and bounded context, without basket changes. Actual v7 backend source readback matches the reviewed 11-file closure.",
     "actualMainCI": 38994830195,
     "actualMainCIStatus": "in_progress_at_release",
     "actualMainPackage": 38994830239,
@@ -1116,13 +1163,20 @@
     },
     "backend": {
       "sourceCommit": "469af44d8c001c7baab8a9a871718fb97baeda16",
-      "deploymentVersion": 6,
+      "deploymentVersion": 7,
       "closureFiles": 11,
       "readbackAliases": 20,
       "unchangedBySourcePrs": [
         559,
         560
-      ]
+      ],
+      "codeSourceDeploymentVersion": 6,
+      "codeChangedByModelSwitch": false,
+      "model": "gpt-4.1-mini",
+      "sourceReadbackMatched": true,
+      "authUnchanged": true,
+      "legacyJwtVerification": false,
+      "actualSuccessfulRouteAt": "2026-10-17T02:30:26Z"
     }
   },
   "observedPriceExpiry": {
