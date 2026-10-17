@@ -1,16 +1,6 @@
 {
-  "lastAttemptAt": "2026-10-05T12:50:40.620Z",
-  "status": "unavailable",
+  "lastAttemptAt": "2026-10-17T19:48:28.023Z",
+  "status": "blocked",
   "selectedDeliveryAddress": "Москва, проспект Мира, 211к2",
-  "reason": "manual_source_review_retry_pending",
-  "sourceReview": {
-    "reviewedAt": "2026-10-17T19:46:30Z",
-    "sourceUrl": "https://eda.yandex.ru/retail/okej_retail",
-    "selectedDeliveryAddress": "Москва, проспект Мира, 211к2",
-    "result": "public_rendered_catalog_and_selected_address_visible",
-    "previousStatus": "blocked",
-    "previousReason": "source_challenge",
-    "previousAttemptAt": "2026-10-05T12:50:40.620Z",
-    "note": "Manual review permits one ordinary collector attempt. Source challenge handling remains enabled. No fresh price claim or session transfer."
-  }
+  "reason": "source_challenge"
 }
