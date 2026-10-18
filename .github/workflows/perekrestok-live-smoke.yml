@@ -42,6 +42,16 @@ jobs:
             if (!condition) throw new Error(message);
           }
 
+          async function storeFacts(card) {
+            assert(await card.isVisible(), "Store selector must be visible");
+            const name = await card.locator("strong").innerText();
+            const copy = (await card.locator(".retail-store-copy").textContent()).trim();
+            const tooltip = await card.getAttribute("title");
+            assert(name && tooltip === copy && tooltip.includes(name),
+              "Compact selector must expose its full store/source scope in its tooltip");
+            return tooltip + "\n" + await card.locator(".retail-store-total").textContent();
+          }
+
           (async () => {
             const browser = await chromium.launch({
               headless: true,
@@ -59,8 +69,8 @@ jobs:
                 timeout: 30000
               });
               await page.waitForTimeout(1500);
-              const text = await page.locator("#retail-store-card-perekrestok")
-                .innerText().catch(() => "");
+              const text = await storeFacts(page.locator("#retail-store-card-perekrestok"))
+                .catch(() => "");
               if (
                 text.includes("Перекрёсток · Москва, Большой Овчинниковский пер. 16 · Яндекс Еда")
                 && /58 категорий/u.test(text)
@@ -124,7 +134,7 @@ jobs:
             assert(pageErrors.length === 0, "Page errors: " + pageErrors.join(" | "));
 
             console.log("PEREKRESTOK_MASS_LIVE", JSON.stringify({
-              store: await store.innerText(),
+              store: await storeFacts(store),
               categoryCount: await roots.count(),
               product: cardText
             }));
