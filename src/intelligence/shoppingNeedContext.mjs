@@ -8,7 +8,7 @@ const numeric = "[+-]?\\d+(?:[.,]\\d+)?(?:\\s*[-–—]\\s*\\d+)?";
 const count = `(?:${Object.keys(words).join("|")}|${numeric})`;
 const peopleNoun = "(?:человек(?:а)?|людей|персон(?:ы)?|чел\\.?|взрослых)";
 const people = new RegExp(`(?<![а-яa-z0-9])(?:на|для)\\s+((?:одного|одну|двоих|двух|троих|трех|четверых|четырех|пятерых|пяти|шестерых|шести)(?:\\s+${peopleNoun})?|${numeric}\\s+${peopleNoun})(?=$|[\\s,;.!?])`, "giu");
-const period = new RegExp(`(?<![а-яa-z0-9])(?:на\\s+(${count})\\s+(день|дня|дней|неделю|недели|недель)|(?:на|всю)\\s+(неделю|недельку))(?=$|[\\s,;.!?])`, "giu");
+const period = new RegExp(`(?<![а-яa-z0-9])(?:на\\s+(${count})\\s+(день|дня|дней|неделю|недели|недель|недельку|недельки|неделек)|(?:на|всю)\\s+(неделю|недельку))(?=$|[\\s,;.!?])`, "giu");
 const number = value => words[value] ?? Number(value.replace(",", "."));
 
 export function extractShoppingNeedContext(text) {

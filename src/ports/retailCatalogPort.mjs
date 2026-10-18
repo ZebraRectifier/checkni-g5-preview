@@ -704,6 +704,10 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
     currency: "RUB",
     priceCondition,
     priceConditionLabel,
+    // Descriptive purchase unit only. This does not admit a comparison offer
+    // or establish stock/checkout. Keep the upstream unit basis explicit.
+    ...(row.quantity_semantics?.packageType === "piece" && ["1 шт", "1 уп"].includes(row.quantity_semantics?.unitPriceText)
+      && row.minimum_quantity === 1 ? { catalogPurchaseBasis: "piece" } : {}),
     availability: "unknown",
     mainCategoryId: Number.isSafeInteger(row.main_category_id)
       ? row.main_category_id

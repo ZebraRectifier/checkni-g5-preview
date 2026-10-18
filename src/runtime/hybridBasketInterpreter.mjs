@@ -4,6 +4,7 @@ import {
   resolveHybridBasketProposal,
   snapshotHybridCatalog
 } from "../intelligence/hybridBasketResolver.mjs";
+import { normalizeShoppingAdviceResponse } from "../intelligence/shoppingAdviceContract.mjs";
 
 export const HYBRID_CATALOG_STAGE = Object.freeze({
   LOCAL: "local",
@@ -97,6 +98,25 @@ export async function interpretHybridBasketText(
       }),
       localSnapshot
     );
+  }
+
+  // The conversational shell can ask its existing advice provider to explain
+  // or clarify an unresolved phrase. One advice call replaces the strict SKU
+  // proposal call; a catalog outage must not prevent an ordinary conversation.
+  // Undefined declines advice for a concrete product request, preserving its
+  // live-catalog -> validated proposal path. Null means advice was unavailable.
+  if (typeof options.requestConversationAdvice === "function") {
+    let answer;
+    try { answer = await options.requestConversationAdvice(text); } catch { answer = null; }
+    if (answer !== undefined) {
+      const reply = normalizeShoppingAdviceResponse(answer);
+      return decorate(Object.freeze({ kind: HYBRID_BASKET_RESULT.CLARIFICATION,
+      source: HYBRID_BASKET_SOURCE.AI, reason: "conversation", triggerReason: "smalltalk",
+      conversationAdvice: true,
+      assistantReply: Object.freeze({ headline: reply ? "Давай разберёмся." : "Продолжим подбор.",
+        message: reply?.message ?? "Сервис советов сейчас не ответил. На сколько человек и дней нужны покупки?",
+        actionLabel: "Продолжить", mascotState: "curious" }) }), localSnapshot);
+    }
   }
 
   const resolveLiveCatalog = options.resolveLiveCatalog;
