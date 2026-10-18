@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "d2e1d725015930ede3226bf813cc8d5efd466be8",
+  "sourceCommit": "184c3b075b600f36b7eb3c686e4b1e96986a0dbd",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -129,7 +129,8 @@
       562,
       563,
       564,
-      565
+      565,
+      566
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -140,19 +141,27 @@
     "validation": {
       "exactHeadPassed": true,
       "actualMainPassed": true,
-      "testedExactHead": "b0355eb6677b0f05a9ead3385b4ef549d7bcc4cf",
-      "sourceCommit": "d2e1d725015930ede3226bf813cc8d5efd466be8",
-      "exactHeadCI": 39094104115,
-      "actualMainCI": 39096054171,
-      "exactHeadPackage": 39094104096,
-      "actualMainPackage": 39096054187,
-      "exactHeadRetriedCases": 0,
-      "actualMainRetriedCases": 0,
-      "unitAndGuardChecks": 2359,
+      "testedExactHead": "9d8a4330b671d09afde8ae98546852f58e5ef1ca",
+      "sourceCommit": "184c3b075b600f36b7eb3c686e4b1e96986a0dbd",
+      "exactHeadCI": 39097482762,
+      "actualMainCI": 39108194678,
+      "exactHeadPackage": 39097482749,
+      "actualMainPackage": 39108194573,
+      "nodeChecks": 2363,
+      "browserCases": 404,
+      "exactHeadRetriedCases": 1,
+      "actualMainRetriedCases": 1,
+      "retryNote": "In each Linux run, 403 cases passed initially and the pre-existing mobile two-column layout test passed its configured retry.",
+      "publicLocalNodeChecks": 123,
+      "publicLocalBrowserCases": 24,
+      "publicLocalInitialBrowserPasses": 21,
+      "publicLocalRecheckedCases": 3,
+      "publicLocalRecheckNote": "Three desktop navigation/action timeouts in the initial two-worker Edge run passed a focused unchanged-test one-worker replay. No production or timeout changes were made.",
+      "physicalAndroid": "unverified",
+      "unitAndGuardChecks": 2363,
       "chromiumDesktopAndMobileCases": 404,
-      "publicUnitChecks": 122,
-      "publicBrowserCases": 24,
-      "physicalAndroid": "unverified"
+      "publicUnitChecks": 123,
+      "publicBrowserCases": 24
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -1424,8 +1433,8 @@
     "sourceCommit": "0dea252f1221de01269b144b6786a76633c3be35",
     "testedExactHead": "53d176c176c3853a793799839283c84a381cc99a",
     "query": "Shared poultry prefix before unchanged food-family validation",
-    "reviewedMagnitIdentities": 46,
-    "unpricedDiscoveryCandidates": 21,
+    "reviewedMagnitIdentities": 47,
+    "unpricedDiscoveryCandidates": 24,
     "magnitNewIdentity": {
       "sourceProductId": "1000303406",
       "visiblePack": "800 г",
@@ -1547,6 +1556,51 @@
       "actualMainPackage": 39096054187,
       "exactHeadRetriedCases": 0,
       "actualMainRetriedCases": 0
+    }
+  },
+  "missingStaplesCollection": {
+    "sourcePr": 566,
+    "sourceCommit": "184c3b075b600f36b7eb3c686e4b1e96986a0dbd",
+    "testedExactHead": "9d8a4330b671d09afde8ae98546852f58e5ef1ca",
+    "reviewedIdentities": 47,
+    "unpricedCandidates": 24,
+    "priorityIds": [
+      "1000299639",
+      "1000299642",
+      "1349400001"
+    ],
+    "oatmealPack": "500 г, exact-name identity; no observed price is embedded",
+    "historicalCandidatesRetained": true,
+    "boundedWindow": {
+      "total": 80,
+      "reserved": 32,
+      "perFamily": 2
+    },
+    "sourcePausesAndClocksUnchanged": true,
+    "initialNewCandidateImportVerified": false,
+    "boundary": "New packaged candidates and unit identity are not source price/stock evidence. No weight or price basis is inferred for whole chicken.",
+    "validation": {
+      "nodeChecks": 2363,
+      "browserCases": 404,
+      "publicNodeChecks": 123,
+      "publicBrowserCases": 24,
+      "physicalAndroid": "unverified",
+      "exactHeadPassed": true,
+      "actualMainPassed": true,
+      "testedExactHead": "9d8a4330b671d09afde8ae98546852f58e5ef1ca",
+      "sourceCommit": "184c3b075b600f36b7eb3c686e4b1e96986a0dbd",
+      "exactHeadCI": 39097482762,
+      "actualMainCI": 39108194678,
+      "exactHeadPackage": 39097482749,
+      "actualMainPackage": 39108194573,
+      "exactHeadRetriedCases": 1,
+      "actualMainRetriedCases": 1,
+      "retryNote": "In each Linux run, 403 cases passed initially and the pre-existing mobile two-column layout test passed its configured retry.",
+      "publicLocalNodeChecks": 123,
+      "publicLocalBrowserCases": 24,
+      "publicLocalInitialBrowserPasses": 21,
+      "publicLocalRecheckedCases": 3,
+      "publicLocalRecheckNote": "Three desktop navigation/action timeouts in the initial two-worker Edge run passed a focused unchanged-test one-worker replay. No production or timeout changes were made."
     }
   }
 }

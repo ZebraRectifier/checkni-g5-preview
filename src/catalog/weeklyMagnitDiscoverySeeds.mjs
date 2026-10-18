@@ -2,6 +2,33 @@
 // Their presence here never proves assortment or price at another address.
 export const WEEKLY_MAGNIT_DISCOVERY_SEEDS = Object.freeze([
   {
+    "sourceProductId": "1000299639",
+    "name": "Макароны Gusto Di Roma Spaghettini Спагетти 450г",
+    "productPath": "/product/1000299639-makarony_gusto_di_roma_spaghettini_spagetti_450g",
+    "categoryId": 64121,
+    "categoryPath": "/catalog/64121-testmmbakaleya",
+    "categoryName": "Бакалея",
+    "missingStaplePriority": true
+  },
+  {
+    "sourceProductId": "1000299642",
+    "name": "Макароны Gusto Di Roma Fusilli Спирали 450г",
+    "productPath": "/product/1000299642-gusto_di_roma_fusilli_spirali_iz_tvyerdykh_sortov_450_g",
+    "categoryId": 64121,
+    "categoryPath": "/catalog/64121-testmmbakaleya",
+    "categoryName": "Бакалея",
+    "missingStaplePriority": true
+  },
+  {
+    "sourceProductId": "1349400001",
+    "name": "Хлопья Ясно солнышко Овсяные №2 500г",
+    "productPath": "/product/1349400001-khlopya_ovsyanye_yasno_solnyshko_ekstra_500g",
+    "categoryId": 64123,
+    "categoryPath": "/catalog/64123-testmmkrupy_i_sukhie_zavtraki",
+    "categoryName": "Крупы и сухие завтраки",
+    "missingStaplePriority": true
+  },
+  {
     "sourceProductId": "1000303406",
     "name": "Крупа гречневая ядрица Семейные секреты/Магнит 800г в ассортименте",
     "productPath": "/product/1000303406-krupa_grechnevaya_magnit_yadritsa_bystrogo_prigotovleniya_900g",
