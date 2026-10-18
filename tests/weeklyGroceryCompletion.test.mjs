@@ -8,7 +8,7 @@ import {createGuidedShoppingPlan,guidedGroupMatches} from '../src/intelligence/g
 import {createShoppingConversation,updateShoppingConversation} from '../src/intelligence/shoppingConversation.mjs';
 import {createGuidedShoppingFlow} from '../src/runtime/guidedShoppingFlow.mjs';
 import {createBasketStore} from '../src/state/basketStore.mjs';
-import {quoteCatalogDraft,catalogPurchaseUnit} from '../src/core/catalogDraft.mjs';
+import {quoteCatalogDraft,catalogPurchaseUnit,suggestedCatalogQuantity} from '../src/core/catalogDraft.mjs';
 
 // Actual HTTP names/amounts/times, shaped as catalogue rows for contract tests.
 // This fixture is NOT proof that the native workflow imported these prices.
@@ -98,4 +98,15 @@ test('the reviewed buckwheat uses visible 800g, preserves price and rejects a na
   assert.equal(guidedGroupMatches({key:'buckwheat'},actual),true);
   const changed=weeklyMagnitCard({...raw,name:raw.name.replace('800г','900г')});assert.equal(changed.unit,'упаковка');
   assert.equal(catalogPurchaseUnit(changed),null);
+});
+
+test('reviewed oatmeal repairs only its exact 500g pack and retains money and selected-address identity',()=>{
+  // Synthetic money tests invariance. It is not a collected price or import.
+  const raw={id:'retail:magnit:magnit-773804:1349400001',retailerId:'magnit',sourceProductId:'1349400001',
+    name:'Хлопья Ясно солнышко Овсяные №2 500г',unit:'упаковка',priceMinor:12345,
+    productUrl:'https://magnit.ru/product/1349400001-khlopya_ovsyanye_yasno_solnyshko_ekstra_500g?shopCode=773804&shopType=1'};
+  const actual=weeklyMagnitCard(raw);assert.equal(actual.unit,'500 г');assert.equal(actual.priceMinor,raw.priceMinor);
+  assert.equal(catalogPurchaseUnit(actual).amount,500);assert.equal(suggestedCatalogQuantity({dimension:'g',dailyAmount:40},actual,3,7),2);
+  for(const change of[{name:raw.name.replace('500г','450г')},{productUrl:raw.productUrl.replace('773804','773828')}])assert.equal(weeklyMagnitCard({...raw,...change}).unit,'упаковка');
+  assert.equal(weeklyMagnitCard({...raw,unit:'400 г'}).unit,'400 г');
 });

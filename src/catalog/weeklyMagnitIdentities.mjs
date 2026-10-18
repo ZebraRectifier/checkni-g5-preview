@@ -1,6 +1,12 @@
 // Reviewed public SKU identities and quoted portions; no prices, stock or cross-store equivalence.
 export const WEEKLY_MAGNIT_IDENTITIES = Object.freeze([
   {
+    "sourceProductId": "1349400001",
+    "name": "Хлопья Ясно солнышко Овсяные №2 500г",
+    "unit": "500 г",
+    "productPath": "/product/1349400001-khlopya_ovsyanye_yasno_solnyshko_ekstra_500g"
+  },
+  {
     "sourceProductId": "1000303406",
     "name": "Крупа гречневая ядрица Семейные секреты/Магнит 800г в ассортименте",
     "unit": "800 г",
