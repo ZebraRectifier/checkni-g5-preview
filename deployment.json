@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "b323a7e43991f90f6e1b0e2b577ddf280477d74c",
+  "sourceCommit": "8ccf9ecdeb6d678386d13776a2aeff82575d00c5",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -1728,5 +1728,91 @@
       "physicalAndroid": "unverified",
       "publicVerification": "Weekly grocery verification for the exact publication commit and actual main; deployed byte and browser receipts recorded in the publication PR"
     }
-  }
+  },
+  "horiReference": {
+    "sourcePr": 570,
+    "sourcePrs": [
+      569,
+      570
+    ],
+    "sourceCommit": "8ccf9ecdeb6d678386d13776a2aeff82575d00c5",
+    "testedExactHead": "efbd0d8fe34e9893fa9040b5b779562c8c1d0aed",
+    "layout": "real-assistant-upper-half-catalogue-and-cart-lower-half",
+    "reference": "shopping-hori-themes-v8",
+    "character": "Hori room v1 derived from character v4, black opaque glasses and black/violet hoodie",
+    "asset": "src/img/hori-room-v1.webp",
+    "freshEntry": "no-fabricated-parameters",
+    "themes": "top switch, browser-local appearance, retain basket and composer",
+    "shopping": "original controls and source/date/price conditions; desktop quick basket and narrow-screen original dock",
+    "commercial": "unchanged admission, exact identities, explicit confirmation and Core",
+    "ai": "existing Checkni AI/GPTunnel endpoint; no keys, auth, models or quotas changed",
+    "candidateLiveProof": {
+      "adviceResponses": 2,
+      "http": 200,
+      "contextFollowup": true,
+      "basketUnchanged": true,
+      "weeklyGroups": 13,
+      "priceDatesVisible": true,
+      "hasDatedObservations": true,
+      "freshPriceClaim": false,
+      "cheapestClaim": false
+    },
+    "validation": {
+      "sourcePr": 570,
+      "integratedSourcePrs": [
+        569,
+        570
+      ],
+      "testedExactHead": "efbd0d8fe34e9893fa9040b5b779562c8c1d0aed",
+      "startingMain": "43dbfbb82038dca8c7be83faceee417f9a5d12a1",
+      "exactHeadPassed": true,
+      "actualMainPassed": true,
+      "status": "source_release_verified",
+      "localRegression": {
+        "redBefore": 2,
+        "focusedBrowserPassedAfter": 24
+      },
+      "physicalAndroid": "unverified",
+      "publicCandidate": {
+        "browserPassed": 36,
+        "head": "c79ef81e1f83f68731121cfbd0573f46af867d7c",
+        "nodePassed": 123,
+        "ci": 39152753492
+      },
+      "exactHeadNode": {
+        "passed": 2363,
+        "failed": 0
+      },
+      "exactHeadPackage": 39150285135,
+      "localFull": {
+        "failedFirst": 3,
+        "focusedRecheckPass": 3,
+        "firstPass": 413
+      },
+      "exactHeadCI": 39150285137,
+      "exactHeadBrowser": {
+        "skipped": 0,
+        "passed": 416,
+        "retries": 0,
+        "failed": 0
+      },
+      "sourceTreeIdenticalToTestedHead": true,
+      "sourceCommit": "8ccf9ecdeb6d678386d13776a2aeff82575d00c5",
+      "actualMainCI": 39154285117,
+      "actualMainPackage": 39154285177,
+      "actualMainNode": {
+        "skipped": 0,
+        "failed": 0,
+        "passed": 2363
+      },
+      "actualMainBrowser": {
+        "skipped": 0,
+        "failed": 0,
+        "retries": 0,
+        "passed": 416
+      }
+    },
+    "physicalAndroid": "unverified"
+  },
+  "prerequisiteSourceCommit": "43dbfbb82038dca8c7be83faceee417f9a5d12a1"
 }

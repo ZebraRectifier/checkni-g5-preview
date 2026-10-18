@@ -45,6 +45,14 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
     if(!row.card){missing.push(row.group.label);continue;}
     const tr = document.createElement('tr');
     const product = document.createElement('td');
+    const photoUrl = retailSelectionUrl(row.card?.imageUrl, row.card?.retailerId, 'imageUrlRules');
+    if (photoUrl) {
+      const photo = document.createElement('img'); photo.className = 'guided-product-photo';
+      photo.src = photoUrl; photo.alt = ''; photo.width = 72; photo.height = 72;
+      photo.loading = 'lazy'; photo.decoding = 'async'; photo.referrerPolicy = 'no-referrer';
+      photo.addEventListener('error', () => photo.remove(), { once: true });
+      product.append(photo);
+    }
     const title = document.createElement('strong'); title.textContent = `${EMOJI[row.group.key] ?? '🛒'} ${row.card?.name ?? `${row.group.label} — требуется подбор`}`; product.append(title);
     const unit = document.createElement('p'); unit.textContent = row.unit ? `${row.quantity} × ${row.unit.label.replace(/^цена за\s+/iu, '')}` : 'Количество и упаковку уточним'; product.append(unit);
     const controls = document.createElement('details'); const edit = document.createElement('summary'); edit.textContent = `Изменить: ${row.group.label}`; controls.append(edit);

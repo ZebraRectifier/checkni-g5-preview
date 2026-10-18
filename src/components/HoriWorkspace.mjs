@@ -1,3 +1,5 @@
+import { createHoriCommerce } from './HoriCommerce.mjs';
+
 // Presentation shell only: existing ports, confirmation handlers and Core keep
 // ownership of product identities, observed prices and basket calculations.
 export function createHoriWorkspace({ form, input, output, welcome, dialogue }) {
@@ -20,11 +22,16 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   header.after(section);
   section.setAttribute('aria-label', 'Хори — помощник с покупками');
   const title = section.querySelector('#phrase-entry-title');
-  if (title) title.textContent = 'Хори';
+  if (title) title.innerHTML = '<span class="hori-name">Хори</span> <span class="hori-title-copy">— помощник CHECKNI</span>';
   const scene = document.createElement('div');
   scene.className = 'hori-scene';
   scene.setAttribute('role', 'img');
   scene.setAttribute('aria-label', 'Хори в чёрных очках за ноутбуком');
+  const room = document.createElement('img');
+  room.src = new URL('../img/hori-room-v1.webp', import.meta.url).href;
+  room.alt = ''; room.width = 1448; room.height = 1086;
+  room.fetchPriority = 'high';
+  scene.append(room);
   section.append(scene);
   const greeting = document.createElement('p');
   greeting.className = 'hori-greeting';
@@ -42,6 +49,7 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   results.hidden = true;
   const shop = document.getElementById('shop-view');
   shop?.querySelector('.hero')?.after(results);
+  const commerce = createHoriCommerce({ document, main, shop, header });
 
   const theme = document.createElement('button');
   theme.id = 'hori-theme'; theme.type = 'button';
@@ -79,7 +87,7 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
       results.replaceChildren();
       for (const node of output.querySelectorAll('.guided-shopping, .shopping-selection-cards')) results.append(node);
       results.hidden = !results.childElementCount;
-      if (!results.hidden && !previouslyVisible) main.scrollTop += results.getBoundingClientRect().top - main.getBoundingClientRect().top;
+      if (!results.hidden && !previouslyVisible) commerce.reveal(results);
       reveal();
     }
   });
