@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "184c3b075b600f36b7eb3c686e4b1e96986a0dbd",
+  "sourceCommit": "b323a7e43991f90f6e1b0e2b577ddf280477d74c",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -130,7 +130,9 @@
       563,
       564,
       565,
-      566
+      566,
+      567,
+      568
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -161,7 +163,56 @@
       "unitAndGuardChecks": 2363,
       "chromiumDesktopAndMobileCases": 404,
       "publicUnitChecks": 123,
-      "publicBrowserCases": 24
+      "publicBrowserCases": 24,
+      "horiWorkspaceSource": {
+        "exactHeadPassed": true,
+        "actualMainPassed": true,
+        "sourceCommit": "b323a7e43991f90f6e1b0e2b577ddf280477d74c",
+        "testedExactHead": "49f1766d109e5a9d35bd4f27ca3908621e4a8cab",
+        "sourcePr": 568,
+        "integratedSourcePrs": [
+          567,
+          568
+        ],
+        "sourceTreeIdenticalToTestedHead": true,
+        "exactHeadCI": 39132166907,
+        "exactHeadPackage": 39132166890,
+        "exactHeadNode": {
+          "passed": 2363,
+          "failed": 0
+        },
+        "exactHeadBrowser": {
+          "passedFirstAttempt": 409,
+          "passedAfterRetry": 1,
+          "failed": 0,
+          "retryCase": "unchanged manual-demo g5-flow pending hybrid request editing"
+        },
+        "actualMainCI": 39135780052,
+        "actualMainPackage": 39135779935,
+        "actualMainNode": {
+          "passed": 2363,
+          "failed": 0
+        },
+        "actualMainBrowser": {
+          "passedFirstAttempt": 410,
+          "passedAfterRetry": 0,
+          "failed": 0
+        },
+        "focusedBrowser": {
+          "afterLegacyScrollFix": 22,
+          "edgeDesktopMobile": 6,
+          "actualNativeUpgradeVerified": true,
+          "legacyScrollFailedBeforeFix": 2,
+          "legacyScrollPassedAfterFix": 2
+        },
+        "initialPublicationContainedBy": {
+          "publicPr": 52,
+          "publicCommit": "6d1fc4a788ee96edc0b621c878e2986ae865087b",
+          "restoredBrowserFiles": 191
+        },
+        "physicalAndroidVerified": false
+      },
+      "publicGate": "Weekly grocery verification for the exact publication commit and actual main; see PR receipts"
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -1601,6 +1652,81 @@
       "publicLocalInitialBrowserPasses": 21,
       "publicLocalRecheckedCases": 3,
       "publicLocalRecheckNote": "Three desktop navigation/action timeouts in the initial two-worker Edge run passed a focused unchanged-test one-worker replay. No production or timeout changes were made."
+    }
+  },
+  "horiWorkspace": {
+    "sourcePr": 568,
+    "sourcePrs": [
+      567,
+      568
+    ],
+    "sourceCommit": "b323a7e43991f90f6e1b0e2b577ddf280477d74c",
+    "testedExactHead": "49f1766d109e5a9d35bd4f27ca3908621e4a8cab",
+    "layout": "working-assistant-upper-half-commerce-lower-half",
+    "freshEntry": "no-fabricated-parameters",
+    "character": "Hori v4, black opaque sunglasses, black/violet hoodie, laptop vignette",
+    "themes": "top switch, browser-local appearance, retain basket and composer",
+    "commercial": "unchanged observed-price admission, exact identities, explicit confirmation and deterministic Core",
+    "ai": "existing Checkni AI endpoint and existing GPTunnel configuration; no keys, auth, models or quotas changed",
+    "liveProbe": {
+      "adviceHttp": 200,
+      "adviceElapsedMs": 5519,
+      "localCatalog": "GLOBUS Pushkino",
+      "groups": 13,
+      "priceObservationDate": "2026-10-12",
+      "datedSubtotalMinor": 484566,
+      "freshPriceClaim": false,
+      "cheapestClaim": false
+    },
+    "validation": {
+      "exactHeadPassed": true,
+      "actualMainPassed": true,
+      "sourceCommit": "b323a7e43991f90f6e1b0e2b577ddf280477d74c",
+      "testedExactHead": "49f1766d109e5a9d35bd4f27ca3908621e4a8cab",
+      "sourcePr": 568,
+      "integratedSourcePrs": [
+        567,
+        568
+      ],
+      "sourceTreeIdenticalToTestedHead": true,
+      "exactHeadCI": 39132166907,
+      "exactHeadPackage": 39132166890,
+      "exactHeadNode": {
+        "passed": 2363,
+        "failed": 0
+      },
+      "exactHeadBrowser": {
+        "passedFirstAttempt": 409,
+        "passedAfterRetry": 1,
+        "failed": 0,
+        "retryCase": "unchanged manual-demo g5-flow pending hybrid request editing"
+      },
+      "actualMainCI": 39135780052,
+      "actualMainPackage": 39135779935,
+      "actualMainNode": {
+        "passed": 2363,
+        "failed": 0
+      },
+      "actualMainBrowser": {
+        "passedFirstAttempt": 410,
+        "passedAfterRetry": 0,
+        "failed": 0
+      },
+      "focusedBrowser": {
+        "afterLegacyScrollFix": 22,
+        "edgeDesktopMobile": 6,
+        "actualNativeUpgradeVerified": true,
+        "legacyScrollFailedBeforeFix": 2,
+        "legacyScrollPassedAfterFix": 2
+      },
+      "initialPublicationContainedBy": {
+        "publicPr": 52,
+        "publicCommit": "6d1fc4a788ee96edc0b621c878e2986ae865087b",
+        "restoredBrowserFiles": 191
+      },
+      "physicalAndroidVerified": false,
+      "physicalAndroid": "unverified",
+      "publicVerification": "Weekly grocery verification for the exact publication commit and actual main; deployed byte and browser receipts recorded in the publication PR"
     }
   }
 }
