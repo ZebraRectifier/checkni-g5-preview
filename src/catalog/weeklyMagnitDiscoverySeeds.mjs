@@ -1,6 +1,14 @@
-// Unpriced candidates observed on public Magnit pages at 773505 on 2026-10-17.
+// Unpriced candidates reviewed on public Magnit pages at 773505 on October 17–18, 2026.
 // Their presence here never proves assortment or price at another address.
 export const WEEKLY_MAGNIT_DISCOVERY_SEEDS = Object.freeze([
+  {
+    "sourceProductId": "1000303406",
+    "name": "Крупа гречневая ядрица Семейные секреты/Магнит 800г в ассортименте",
+    "productPath": "/product/1000303406-krupa_grechnevaya_magnit_yadritsa_bystrogo_prigotovleniya_900g",
+    "categoryId": 64123,
+    "categoryPath": "/catalog/64123-testmmkrupy_i_sukhie_zavtraki",
+    "categoryName": "Крупы и сухие завтраки"
+  },
   {
     "sourceProductId": "1000246228",
     "name": "Яйца Лето С1 коричневые 10шт",

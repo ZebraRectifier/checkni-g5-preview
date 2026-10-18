@@ -59,7 +59,7 @@ export function createGuidedShoppingPlan(goal, history, memory) {
   const retailers=weeklyRetailerRequest(goal);
   if(retailers.length)for(const key of ['rice','pork','cheese'])if(!groups.some(g=>g.key===key))groups.push(GROUPS.find(g=>g.key===key));
   return { goal: String(goal).slice(0, 300), groups: groups.slice(0, 16).map(row => ({ ...row,
-    ...(economy&&row.key==='chicken'&&!/филе/u.test(clean(user))?{label:'Курица',query:'цыплен',allowPoultryCuts:true}:{}) })), retailers, stage: 'intake', mode: economy ? 'economy' : 'balanced',
+    ...(economy&&row.key==='chicken'&&!/филе/u.test(clean(user))?{label:'Курица',query:'цыпл',allowPoultryCuts:true}:{}) })), retailers, stage: 'intake', mode: economy ? 'economy' : 'balanced',
     location: shoppingLocationRequest(goal), freezer: /морозилк/u.test(clean(goal)) ? true : null,
     question: null, people: memory.facts.peopleCount?.value ?? null, days: memory.facts.shoppingDays?.value ?? null,
     budgetMinor: memory.facts.budgetMinor?.value ?? (economy ? null : undefined), constraintsReviewed: false, rows: [], base: null, scope: null };

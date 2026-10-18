@@ -16,6 +16,9 @@ test('address consent → candidate → radius → agreed store → household in
   await page.locator('#nearby-address-search').click();
   await page.locator('#nearby-address-candidates').getByRole('button').click();
   await expect(page.locator('#nearby-status')).toContainText('до 5 км');
+  await expect(page.locator('#nearby-connected-only')).toBeChecked();
+  await page.locator('#nearby-connected-only').uncheck();
+  await expect(page.locator('#nearby-results')).toContainText('Каталог этого адреса пока не подключён');
   await page.locator('#nearby-connected-only').check();
   await expect(page.locator('#nearby-results')).toContainText('Глобус Пушкино');
   await page.locator('#nearby-results article').filter({hasText:'Глобус Пушкино'}).getByRole('button',{name:'Выбрать магазин',exact:true}).click();

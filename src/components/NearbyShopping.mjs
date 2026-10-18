@@ -24,7 +24,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   const radius=el('select');radius.id='nearby-radius';radius.setAttribute('aria-label','Радиус поиска магазинов');
   for(const n of NEARBY_RADIUS_KM){const o=el('option',n+' км');o.value=String(n);radius.append(o);}radius.value='5';
   const radiusLabel=el('label','Радиус по прямой');radiusLabel.htmlFor=radius.id;
-  const connected=el('input');connected.type='checkbox';connected.id='nearby-connected-only';
+  const connected=el('input');connected.type='checkbox';connected.id='nearby-connected-only';connected.checked=true;
   const connectedLabel=el('label');connectedLabel.append(connected,document.createTextNode(' Только с подключённым каталогом'));
   const status=el('p','Укажи адрес, разреши геолокацию или выбери точку на карте.');status.id='nearby-status';status.setAttribute('role','status');
   const candidates=el('div');candidates.id='nearby-address-candidates';
@@ -56,7 +56,8 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
       const d=await directoryData();if(token!==version||current!==position)return;
       const rows=nearbyGroceryMatches(d.stores,position,Number(radius.value),{connectedOnly:connected.checked});
       status.textContent=`${pointName||'Выбранная точка'} · до ${radius.value} км по прямой. Найдено в справочнике: ${rows.length}. Карта от ${new Date(d.observedAt).toLocaleDateString('ru-RU')}.`
-        +(rows.length?' Выбери магазин, затем соберём корзину.':' Попробуй больший радиус или другую точку. Это не значит, что магазинов поблизости нет.');
+        +(rows.length?' Выбери магазин, затем соберём корзину.':' Попробуй больший радиус или другую точку. Это не значит, что магазинов поблизости нет.')
+        +(connected.checked?' Чтобы увидеть остальные магазины, сними фильтр «Только с подключённым каталогом».':'');
       for(const row of rows.slice(0,limit)){
         const card=el('article');card.className='nearby-store';
         card.append(el('strong',row.name+' · '+(row.distanceMeters<1000?Math.round(row.distanceMeters)+' м':(row.distanceMeters/1000).toFixed(1)+' км')),
