@@ -107,3 +107,33 @@ test('dialogue goal, quota recovery and finite deadline preserve the complete co
   await page.reload();
   await test.step('finite deadline and no retry', () => deadlineRecovery(page));
 });
+
+test('fish follow-up failure and explicit retry retain the topic, accepted history and basket', async ({ page }) => {
+  const requests = [];
+  await page.route('**/functions/v1/ai-basket-proposal', route => {
+    requests.push(route.request().postDataJSON());
+    return requests.length === 2
+      ? route.fulfill({ status:503, json:{kind:'unavailable',code:'provider_advice_assortment_claim'} })
+      : route.fulfill({ json:{kind:'advice',message: requests.length === 1
+        ? 'Для быстрого ужина подойдёт филе рыбы. Его можно приготовить на сковороде.'
+        : 'Замороженная рыба подойдёт. Проверь целостность упаковки и инструкцию по размораживанию.'} });
+  });
+  await page.goto('/?comparison=demo#shop');
+  await page.locator('[data-product-id="milk-25-900"]').getByRole('button').click();
+  const before = await savedBasket(page);
+  await submit(page,'Посоветуй рыбу на ужин, чтобы быстро приготовить.');
+  await expect(status(page)).toContainText('подойдёт филе рыбы');
+  await submit(page,'А замороженная подойдёт?');
+  await expect(status(page)).toContainText('Ответ сервиса не прошёл проверку');
+  await expect(status(page)).toContainText('Вопрос и контекст сохранены');
+  await expect(status(page)).not.toContainText('На сколько человек');
+  expect(requests).toHaveLength(2);
+  await status(page).getByRole('button',{name:'Повторить вопрос',exact:true}).click();
+  await expect(status(page)).toContainText('Замороженная рыба подойдёт');
+  expect(requests).toHaveLength(3);
+  expect(requests[2].text).toBe(requests[1].text);
+  expect(requests[2].history).toEqual(requests[1].history);
+  expect(requests[2].history[0].text).toContain('рыбу на ужин');
+  expect(await savedBasket(page)).toBe(before);
+  await expect(page.locator('.shopping-welcome')).toBeHidden();
+});

@@ -42,6 +42,7 @@ export function createShoppingConversationFlow(options) {
   let adviceHistoryBasket = null;
   let adviceExclusionPending = false;
   let dialogueFreezer = null;
+  let lastAdviceFailure = null;
   let guidedShopping = null;
   function rememberAdvice(text, message) {
     const pair = [{ role: "user", text }, { role: "assistant", text: message }]
@@ -93,7 +94,7 @@ export function createShoppingConversationFlow(options) {
   function invalidate() {
     epoch += 1; pending = null; suspendedDraft = null; inFlight = null; stagedByHybrid = null;
     referencePlan = []; adviceFocus = null; referenceAction = null;
-    adviceHistory = []; adviceHistoryBasket = null; adviceExclusionPending = false; dialogueFreezer = null;
+    adviceHistory = []; adviceHistoryBasket = null; adviceExclusionPending = false; dialogueFreezer = null; lastAdviceFailure = null;
     productSelection = null;
     retailList = null;
     mealNeed = null;
@@ -107,6 +108,7 @@ export function createShoppingConversationFlow(options) {
     const history = adviceHistory, historyBasket = adviceHistoryBasket;
     const exclusionPending = adviceExclusionPending;
     const freezer = dialogueFreezer;
+    const failure = lastAdviceFailure;
     const selection = productSelection;
     const list = retailList;
     const need = mealNeed;
@@ -116,6 +118,7 @@ export function createShoppingConversationFlow(options) {
     adviceHistory = history; adviceHistoryBasket = historyBasket;
     adviceExclusionPending = exclusionPending;
     dialogueFreezer = freezer;
+    lastAdviceFailure = failure;
     productSelection = selection;
     retailList = list;
     mealNeed = need;
@@ -459,7 +462,16 @@ export function createShoppingConversationFlow(options) {
   }
   async function askShoppingDialogue(text, token, newGoal = false) {
     const currentBasket = basket.getSnapshot();
-    if (newGoal) { adviceHistory = []; adviceHistoryBasket = null; dialogueFreezer = null; }
+    if (newGoal) { adviceHistory = []; adviceHistoryBasket = null; dialogueFreezer = null; lastAdviceFailure = null; }
+    // Retrying the same unanswered turn must not evict earlier accepted
+    // exchanges with repeated outage messages. A different follow-up still
+    // receives the displayed failed question, preserving its product topic.
+    if (lastAdviceFailure?.text === text
+        && adviceHistory.at(-2)?.text === text.replace(/\s+/gu, ' ').trim()
+        && adviceHistory.at(-1)?.text === lastAdviceFailure.message) {
+      adviceHistory = lastAdviceFailure.history;
+    }
+    const retryHistory = adviceHistory.map(row => ({ ...row }));
     pending = null; suspendedDraft = null; productSelection = null; retailList = null; mealNeed = null;
     referencePlan = []; referenceAction = null;
     const need = shoppingDialogueNeed(text, adviceHistory);
@@ -496,12 +508,14 @@ export function createShoppingConversationFlow(options) {
     }
     const reply = normalizeShoppingAdviceResponse(answer, input.context);
     const message = reply?.message ?? shoppingDialogueRecoveryQuestion(memory,
-      answer?.kind === "advice" ? "invalid_advice" : answer?.code);
+      answer?.kind === "advice" ? "invalid_advice" : answer?.code, { text, history: adviceHistory });
     state = messageState(reply ? "Давай разберёмся." : "Продолжим подбор.", message);
     state.result.conversationAdvice = true;
     state.result.providerAccepted = Boolean(reply);
     rememberAdvice(text, message);
-    if (typeof options.searchGuidedCatalog === "function" && (isShoppingPlanningRequest(text)
+    lastAdviceFailure = reply ? null : { text, message, history: retryHistory };
+    if (!reply) state.presentation.conversationChoices = [{ label: 'Повторить вопрос', text }];
+    else if (typeof options.searchGuidedCatalog === "function" && (isShoppingPlanningRequest(text)
         || adviceHistory.some(row => row.role === "user" && isShoppingPlanningRequest(row.text)))) {
       state.presentation.headline = "Давай подберём продукты.";
       state.presentation.message += " Соберём черновик покупок и посмотрим реальные карточки, или сначала обсудим состав?";

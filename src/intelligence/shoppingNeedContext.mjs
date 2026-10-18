@@ -6,10 +6,12 @@ const words = { одного: 1, одну: 1, один: 1, одной: 1, дво
   девяти: 9, девять: 9, десяти: 10, десять: 10 };
 const numeric = "[+-]?\\d+(?:[.,]\\d+)?(?:\\s*[-–—]\\s*\\d+)?";
 const count = `(?:${Object.keys(words).join("|")}|${numeric})`;
+const collectivePeople = {двое:2,трое:3,четверо:4,пятеро:5,шестеро:6,семеро:7,восьмеро:8,девятеро:9,десятеро:10};
+const otherCountUnit = '(?:минут[а-я]*|час[а-я]*|день|дня|дней|недел[а-я]*|месяц[а-я]*|кг|грамм[а-я]*|килограмм[а-я]*|литр[а-я]*|мл|л|упаков[а-я]*|штук[а-я]*)';
 const peopleNoun = "(?:человек(?:а)?|людей|персон(?:ы)?|чел\\.?|взрослых)";
-const people = new RegExp(`(?<![а-яa-z0-9])(?:на|для)\\s+((?:одного|одну|двоих|двух|троих|трех|четверых|четырех|пятерых|пяти|шестерых|шести)(?:\\s+${peopleNoun})?|${numeric}\\s+${peopleNoun})(?=$|[\\s,;.!?])`, "giu");
+const people = new RegExp(`(?<![а-яa-z0-9])(?:(?:на|для)\\s+((?:одного|одну|двоих|двух|троих|трех|четверых|четырех|пятерых|пяти|шестерых|шести)(?:\\s+${peopleNoun})?|${numeric}\\s+${peopleNoun})|нас\\s+(${Object.keys(collectivePeople).join('|')}|${numeric})(?:\\s+${peopleNoun})?(?!\\s+${otherCountUnit}(?=$|[\\s,;.!?])))(?=$|[\\s,;.!?])`, "giu");
 const period = new RegExp(`(?<![а-яa-z0-9])(?:на\\s+(${count})\\s+(день|дня|дней|неделю|недели|недель|недельку|недельки|неделек)|(?:на|всю)\\s+(неделю|недельку))(?=$|[\\s,;.!?])`, "giu");
-const number = value => words[value] ?? Number(value.replace(",", "."));
+const number = value => words[value] ?? collectivePeople[value] ?? Number(value.replace(",", "."));
 
 export function extractShoppingNeedContext(text) {
   const original = String(text ?? "").normalize("NFKC").replaceAll("ё", "е");
@@ -19,7 +21,7 @@ export function extractShoppingNeedContext(text) {
   let negative = false;
   for (const [key, pattern] of [["peopleCount", people], ["shoppingDays", period]]) {
     for (const match of masked.matchAll(pattern)) {
-      const raw = match[1]?.toLocaleLowerCase("ru-RU").replace(new RegExp(`\\s+${peopleNoun}$`, "u"), "");
+      const raw = (key === 'peopleCount' ? match[1] ?? match[2] : match[1])?.toLocaleLowerCase("ru-RU").replace(new RegExp(`\\s+${peopleNoun}$`, "u"), "");
       const amount = key === "peopleCount" ? number(raw)
         : match[3] ? 7 : number(raw) * (match[2].toLocaleLowerCase("ru-RU").startsWith("недел") ? 7 : 1);
       values[key].push(amount);

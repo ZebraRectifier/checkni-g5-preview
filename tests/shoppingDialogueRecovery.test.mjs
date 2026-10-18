@@ -196,7 +196,7 @@ test('a rejected commercial reply becomes a useful local question without a seco
   const answer = await s.send('Нужна еда на две недели для троих');
   assert.equal(s.advice.length, 1);
   assert.deepEqual(s.proposals, []);
-  assert.match(answer.presentation.message, /Не смогла использовать ответ.*бюджет/u);
+  assert.match(answer.presentation.message, /Ответ сервиса не прошёл проверку.*бюджет/u);
   assert.doesNotMatch(answer.presentation.message, /Магнит|100/u);
 });
 
