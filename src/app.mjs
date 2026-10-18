@@ -29,7 +29,11 @@ import { createStoresSection } from "./components/StoresMap.mjs";
 import { createOkeyStoreDirectory } from "./components/OkeyStoreDirectory.mjs";
 import { createMagnitStorePicker } from "./components/MagnitStorePicker.mjs";
 import { createMetroStorePicker } from "./components/MetroStorePicker.mjs";
-import { resolveMagnitMoscowStore } from "./data/magnitMoscowStores.mjs";
+import { resolveRegisteredMagnitStore as resolveMagnitMoscowStore } from "./data/registeredMagnitStores.mjs";
+import { createNearbyShopping } from './components/NearbyShopping.mjs';
+import { nearbyShoppingIntent } from './intelligence/nearbyShopping.mjs';
+import { isGuidedEntryRequest } from './intelligence/guidedShoppingPlan.mjs';
+import { createStoreGeolocation } from './runtime/storeGeolocation.mjs';
 import { resolveMetroMoscowRegionStore } from "./data/metroMoscowRegionStores.mjs";
 import { resolveGlobusMoscowRegionStore } from "./data/globusMoscowRegionStores.mjs";
 import { nearbyShoppingStores } from "./data/shoppingLocations.mjs";
@@ -231,6 +235,9 @@ let martenMindState = createMartenMindState();
 // this map stays mode-independent, unlike the catalogue card hints below.
 const budgetPlannerHints = buildSnapshotPriceHints();
 const weeklyRetailCatalog=createWeeklyRetailCatalogPort();
+let nearbyShopping=null,agreedNearbyStoreKey=null;
+let nearbyBuildGoal='Собери недорогую корзину';
+const shoppingLocationController=createStoreGeolocation();
 const basketProposalFlow = createShoppingConversationFlow({
   basket,
   getCurrentComparison: () => comparisonFlow.getCurrentComparison(basket.getSnapshot()),
@@ -247,6 +254,7 @@ const basketProposalFlow = createShoppingConversationFlow({
   requestShoppingAdvice,
   ...(publicRetailCatalogMode ? {
     getGuidedRetailContextKey:()=>selectedMagnitStore.shopCode,
+    hasGuidedAgreedStore:()=>agreedNearbyStoreKey===JSON.stringify([retailBrowserState.retailerId,currentRetailClient()?.definition.storeId]),
     getGuidedRetailContexts: ids=>[
       ...(ids.includes('magnit')?[{...retailClientFor('magnit').definition,store:selectedMagnitStore,priceScope:'address-public-price'}]:[]),
       ...(ids.includes('okey')?[OKEY_WEEKLY_SCOPE]:[])
@@ -1947,6 +1955,28 @@ const shoppingDialogue = createShoppingDialogue({
     renderBasketProposalState();
   }
 });
+if(publicRetailCatalogMode){
+  nearbyShopping=createNearbyShopping({
+    locationController:shoppingLocationController,
+    onInvalidate:()=>{agreedNearbyStoreKey=null;basketProposalFlow.invalidate();renderBasketProposalState();},
+    onManualMap:()=>{document.getElementById('stores-manual-location')?.click();document.getElementById('stores-section')?.scrollIntoView({block:'start'});},
+    onChoose:async(catalog,point,isCurrent)=>{
+      if(catalog.retailerId==='globus'){
+        const store=resolveGlobusMoscowRegionStore(catalog.store.officialStoreId);
+        if(store?.priceStatus!=='verified'||store.address!==catalog.store.address)return false;
+        selectedGlobusStore=store;comparedGlobusStore=null;
+      }else if(catalog.retailerId==='magnit'){
+        const store=resolveMagnitMoscowStore({shopCode:catalog.store.shopCode,address:catalog.store.address});
+        if(!store)return false;selectedMagnitStore=store;comparedGlobusStore=null;
+      }else return false;
+      comparisonAddressChanged();await selectRetailer(catalog.retailerId,{replaceHistory:true});
+      if(!isCurrent())return false;
+      agreedNearbyStoreKey=JSON.stringify([catalog.retailerId,currentRetailClient()?.definition.storeId]);return true;
+    },
+    onBuild:()=>{elements.proposalInput.value=nearbyBuildGoal;elements.proposalInput.dispatchEvent(new Event('input',{bubbles:true}));elements.proposalForm.requestSubmit();}
+  });
+  elements.proposalForm.querySelector('.shopping-welcome')?.after(nearbyShopping.element);
+}
 
 function renderBasketProposalState() {
   renderBasketProposalOutput();
@@ -2156,6 +2186,13 @@ function renderBasketProposalOutput() {
 async function handleBasketProposal() {
   const submittedRevision = proposalInputRevision;
   const submittedText = elements.proposalInput.value;
+  const localGoal=submittedText.split(/[,.;]?\s+(?:я\s+живу|мой адрес)(?=[:\s])/iu)[0];
+  if(isGuidedEntryRequest(localGoal))nearbyBuildGoal=localGoal;
+  const nearbyIntent=nearbyShopping&&nearbyShoppingIntent(submittedText,basketProposalFlow.getState().presentation?.locationRequested===true);
+  if(nearbyIntent){
+    if(isGuidedEntryRequest(localGoal)&&localGoal!==submittedText){await basketProposalFlow.run(localGoal);renderBasketProposalState();}
+    nearbyShopping.open(nearbyIntent.query,nearbyIntent.radiusKm);elements.proposalInput.value='';return;
+  }
   shoppingDialogue.begin(submittedText);
   const pending = basketProposalFlow.run(submittedText);
   renderBasketProposalState();
@@ -2957,6 +2994,7 @@ setupRetailBrowser();
 // Map selections use the same exact-address registry and invalidation as the pickers.
 try {
   storesSection = createStoresSection({
+    locationController:shoppingLocationController,
     selectedScope: comparisonMode === COMPARISON_MODE.OBSERVED
       && (publicRetailCatalogMode || comparisonAddressMode === "live-example")
       ? currentComparisonStoreScope() : null,

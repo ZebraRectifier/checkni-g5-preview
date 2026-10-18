@@ -18,7 +18,7 @@ export function createGuidedShoppingFlow(options) {
   const presentIntake = () => {
     const presentation = guidedIntakeView(plan, options.getMemory());
     if (!plan.question) plan.stage = 'outline';
-    state = view(presentation.headline, presentation.message, { conversationChoices: choices(presentation.conversationChoices) });
+    state = view(presentation.headline, presentation.message, { locationRequested:plan.question==='location',conversationChoices: choices(presentation.conversationChoices) });
     return state;
   };
   const table = (message = '', comparison = null) => {
@@ -43,6 +43,7 @@ export function createGuidedShoppingFlow(options) {
   function start(goal, history) {
     version++;
     plan = createGuidedShoppingPlan(goal, history, options.getMemory());
+    if(options.hasAgreedStore?.()===true&&!plan.location&&!plan.retailers.length)plan.useCurrentStore=true;
     const intake = advanceGuidedIntake(plan, goal, options.getMemory());
     if (!intake.issue) options.updateMemory(intake.delta);
     else return state = view('Уточню условия.', intake.issue);

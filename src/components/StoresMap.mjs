@@ -97,6 +97,7 @@ export function createStoresSection({
   selectedScope = null,
   onStoreSelect,
   onEditStore,
+  locationController,
   geolocationOptions = {}
 } = {}) {
   const section = document.createElement("section");
@@ -302,14 +303,17 @@ export function createStoresSection({
         : `Место определено. Точность устройства: ≈ ${Math.round(geoState.position.accuracyMeters)} м.`
         : messages[geoState.status];
   }
-  const geo = createStoreGeolocation({ ...geolocationOptions, onChange: state => {
+  const locationChanged = state => {
     geoState = state;
     if (state.position) {
       manualPicking = false; manualButton.setAttribute("aria-pressed", "false");
       map.classList.remove("stores-map-picking"); center = normalizeMapCenter(state.position); zoom = 12;
     }
+    if(state.status==='idle'){center={...DEFAULT_CENTER};zoom=DEFAULT_ZOOM;}
     renderGeoStatus(); renderMap(); renderSelected(); renderList();
-  } });
+  };
+  const geo=locationController??createStoreGeolocation({...geolocationOptions,onChange:locationChanged});
+  if(locationController)geo.subscribe(locationChanged);
   section.updateSelection = scope => {
     currentScope = scope; renderSelected(); renderList(); renderMap();
   };

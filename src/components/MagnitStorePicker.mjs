@@ -1,4 +1,4 @@
-import { MAGNIT_MOSCOW_STORES, resolveMagnitMoscowStore } from "../data/magnitMoscowStores.mjs";
+import { REGISTERED_MAGNIT_STORES as MAGNIT_MOSCOW_STORES, resolveRegisteredMagnitStore as resolveMagnitMoscowStore } from "../data/registeredMagnitStores.mjs";
 
 const normalized = (text) => text.normalize("NFKC").toLocaleLowerCase("ru").replaceAll("ё", "е");
 
@@ -10,7 +10,7 @@ export function createMagnitStorePicker({ shopCode, onSelect }) {
 
   const label = document.createElement("label");
   label.htmlFor = "magnit-store-address";
-  label.textContent = "Адрес Магнита в Москве";
+  label.textContent = "Адрес Магнита в Москве и Московской области";
 
   const search = document.createElement("input");
   search.type = "search";
