@@ -33,12 +33,12 @@ test('city catalogue → household → partial real-pack table → explicit bask
   await root.getByRole('button',{name:'Подобрать часть корзины по акциям',exact:true}).click();
   const output=page.locator('#basket-proposal-status');await expect(output).toContainText('На сколько человек');
   await say(page,'На троих');await say(page,'На неделю');await expect(output).toContainText('Какие продукты исключить');
-  await say(page,'Ограничений нет');const table=output.getByRole('table');await expect(table.getByRole('row')).toHaveCount(4);
+  await say(page,'Ограничений нет');const commerce=page.locator('#hori-shopping-results');const table=commerce.getByRole('table');await expect(table.getByRole('row')).toHaveCount(4);
   await expect(table).toContainText('925 мл');await expect(table).toContainText('Гречка');await expect(table).toContainText('Рис');
-  await expect(output).toContainText('Ещё нужно подобрать: 13 поз.');await expect(output).toContainText('акции города, условия карты неизвестны');
+  await expect(commerce).toContainText('Ещё нужно подобрать: 13 поз.');await expect(commerce).toContainText('акции города, условия карты неизвестны');
   await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
   await output.getByRole('button',{name:'Добавить найденное',exact:true}).click();await expect(page.locator('#basket-dock-copy')).toContainText('3 поз.');
-  await output.getByRole('button',{name:'Открыть корзину',exact:true}).click();await page.reload();
+  await commerce.getByRole('button',{name:'Открыть корзину',exact:true}).click();await page.reload();
   await expect(page.locator('#basket-view')).toContainText('Му-у');await expect(page.locator('#basket-view')).toContainText('925 мл');
   expect(ai).toBe(0);
 });
