@@ -68,6 +68,7 @@ export function createStoreGeolocation({
   let state = snapshot("idle");
   let requestVersion = 0;
   let watchdog = null;
+  const listeners=new Set();
 
   function stopPending() {
     requestVersion += 1;
@@ -80,6 +81,7 @@ export function createStoreGeolocation({
   function publish(nextState) {
     state = nextState;
     onChange(state);
+    for(const listener of listeners)listener(state);
     return state;
   }
 
@@ -144,7 +146,8 @@ export function createStoreGeolocation({
     return publish(snapshot("idle"));
   }
 
-  return Object.freeze({ getSnapshot: () => state, request, setManual, clear });
+  return Object.freeze({ getSnapshot: () => state, request, setManual, clear,
+    subscribe:listener=>{listeners.add(listener);return()=>listeners.delete(listener);} });
 }
 
 /** Great-circle distance; invalid coordinates remain unknown. */

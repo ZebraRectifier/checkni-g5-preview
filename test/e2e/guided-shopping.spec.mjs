@@ -107,7 +107,9 @@ test('welcome → inexpensive weekly groceries for three near Zavety Ilyicha →
   await expect(output).toContainText('На сколько человек');
   await submit(page, 'на 3 да есть морозилка'); await expect(output).toContainText('На сколько дней');
   await output.getByRole('button', { name: 'На неделю', exact: true }).click();
-  await output.getByRole('button', { name: 'Заветы Ильича · до 20 км', exact: true }).click();
+  // The welcome now offers a general place picker; the legacy spoken example
+  // remains supported without hard-coding one station into every greeting.
+  await submit(page,'Заветы Ильича · до 20 км');
   await expect(output).toContainText('морозилка есть');
   await output.getByRole('button', { name: 'Ограничений нет', exact: true }).click();
   const table = output.getByRole('table');

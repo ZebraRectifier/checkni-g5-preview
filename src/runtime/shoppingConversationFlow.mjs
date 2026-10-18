@@ -574,6 +574,7 @@ export function createShoppingConversationFlow(options) {
           getMemory: () => memory,
           updateMemory: delta => { const next = updateShoppingConversation(memory, delta); if (next.overflow) return false; setMemory(next.state); return true; },
           getContext: options.resolveRetailSelectionScope,
+          hasAgreedStore:options.hasGuidedAgreedStore,
           getNearbyContexts: options.getGuidedNearbyContexts,
           getRetailContexts: options.getGuidedRetailContexts,
           getRetailContextKey:options.getGuidedRetailContextKey,
