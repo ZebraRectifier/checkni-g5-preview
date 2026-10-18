@@ -1,6 +1,12 @@
 // Reviewed public SKU identities and quoted portions; no prices, stock or cross-store equivalence.
 export const WEEKLY_MAGNIT_IDENTITIES = Object.freeze([
   {
+    "sourceProductId": "1000303406",
+    "name": "Крупа гречневая ядрица Семейные секреты/Магнит 800г в ассортименте",
+    "unit": "800 г",
+    "productPath": "/product/1000303406-krupa_grechnevaya_magnit_yadritsa_bystrogo_prigotovleniya_900g"
+  },
+  {
     "sourceProductId": "9039215501",
     "name": "Яблоки новый урожай 800г",
     "unit": "800 г",

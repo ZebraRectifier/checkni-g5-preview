@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "d5c027bf2b01d7be2559132341d4d938457deced",
+  "sourceCommit": "0dea252f1221de01269b144b6786a76633c3be35",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -126,7 +126,8 @@
       559,
       560,
       561,
-      562
+      562,
+      563
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -135,15 +136,18 @@
     "providerRoute": "GPTunnel primary with explicit paid opt-in; gpt-4.1-mini; one attempt and no automatic paid fallback",
     "providerDeploymentVersion": 7,
     "validation": {
-      "unitAndGuardChecks": 2334,
-      "chromiumDesktopAndMobileCases": 390,
-      "exactHead": "04108480f17c333fd42ba8f3f4e560d73b515e5b",
-      "sourceCommit": "e7fe20f58a0ca1d4b459ee4b6beea24ad5b7ab33",
-      "exactHeadCiRun": 39078240696,
-      "mergedMainCiRun": 39080643074,
-      "mergedMainCiStatus": "success",
-      "mergedMainRetriedCases": 1,
-      "validationScope": "Complete source checks and desktop/mobile suite passed on the existing private VM. The public artifact separately passes 81 contracts and 10 fixture-based browser cases. Provider v7 and its auth/quotas are unchanged."
+      "unitAndGuardChecks": 2344,
+      "chromiumDesktopAndMobileCases": 398,
+      "exactHead": "53d176c176c3853a793799839283c84a381cc99a",
+      "sourceCommit": "0dea252f1221de01269b144b6786a76633c3be35",
+      "exactHeadCI": 39088144727,
+      "actualMainCI": 39089290687,
+      "actualMainPassed": true,
+      "exactHeadRetriedCases": 0,
+      "actualMainRetriedCases": 1,
+      "publicUnitChecks": 107,
+      "publicBrowserCases": 18,
+      "physicalAndroid": "unverified"
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -1338,7 +1342,7 @@
   },
   "nearbyShopping": {
     "sourcePr": 562,
-    "sourceCommit": "d5c027bf2b01d7be2559132341d4d938457deced",
+    "sourceCommit": "0dea252f1221de01269b144b6786a76633c3be35",
     "testedExactHead": "936112afb434547959eb72e7026ad38108199814",
     "codeVersion": "20261018.1",
     "addressEndpoint": "https://cxpneczhczashanbetgj.supabase.co/functions/v1/nearby-address",
@@ -1364,6 +1368,35 @@
     "requiresStoreAgreement": true,
     "basketChangesRequireConfirmation": true,
     "validation": {
+      "nodeChecks": 2344,
+      "browserCases": 398,
+      "exactHeadCi": 39088144727,
+      "exactHeadPackage": 39088144709,
+      "exactHeadRetriedCases": 0,
+      "actualMainCi": 39089290687,
+      "actualMainStatus": "success",
+      "publicNodeChecks": 107,
+      "publicBrowserCases": 18,
+      "physicalAndroid": "unverified",
+      "actualMainRetriedCases": 1,
+      "actualMainRetryNote": "Pre-existing mobile two-column layout case passed its configured retry; other397 passed initially."
+    },
+    "sourceBoundary": "A nearby map point does not prove live operation, stock, fresh prices or exact-store comparison coverage. Expired observations stay expired.",
+    "backend": {
+      "project": "cxpneczhczashanbetgj",
+      "name": "nearby-address",
+      "version": 1,
+      "closureFiles": 4,
+      "sourceCommit": "d5c027bf2b01d7be2559132341d4d938457deced",
+      "readbackMatched": true,
+      "verifyJwt": false,
+      "authentication": "Existing configured public API key validated by the function body",
+      "quotas": "20/minute warm-isolate traffic guard; not a distributed global quota",
+      "probes": "Missing key 401, wrong key 401, absent consent 400, wrong origin 403, actual public commercial address 200"
+    },
+    "followUpSourcePr": 563,
+    "defaultFilter": "Only linked registered catalogues; user can show all map points",
+    "initialValidation": {
       "nodeChecks": 2342,
       "browserCases": 398,
       "exactHeadCi": 39085730334,
@@ -1379,19 +1412,49 @@
       "publicNodeChecks": 105,
       "publicBrowserCases": 18,
       "publicLocalRetries": 0
-    },
-    "sourceBoundary": "A nearby map point does not prove live operation, stock, fresh prices or exact-store comparison coverage. Expired observations stay expired.",
-    "backend": {
-      "project": "cxpneczhczashanbetgj",
-      "name": "nearby-address",
-      "version": 1,
-      "closureFiles": 4,
-      "sourceCommit": "d5c027bf2b01d7be2559132341d4d938457deced",
-      "readbackMatched": true,
-      "verifyJwt": false,
-      "authentication": "Existing configured public API key validated by the function body",
-      "quotas": "20/minute warm-isolate traffic guard; not a distributed global quota",
-      "probes": "Missing key 401, wrong key 401, absent consent 400, wrong origin 403, actual public commercial address 200"
     }
+  },
+  "groceryQueryRecovery": {
+    "sourcePr": 563,
+    "sourceCommit": "0dea252f1221de01269b144b6786a76633c3be35",
+    "testedExactHead": "53d176c176c3853a793799839283c84a381cc99a",
+    "query": "Shared poultry prefix before unchanged food-family validation",
+    "reviewedMagnitIdentities": 46,
+    "unpricedDiscoveryCandidates": 21,
+    "magnitNewIdentity": {
+      "sourceProductId": "1000303406",
+      "visiblePack": "800 г",
+      "oldUrlSlugIgnored": "900g",
+      "newPriceImported": false
+    },
+    "realReadOnlyReplay": {
+      "at": "2026-10-18T01:46:12.047Z",
+      "storeId": "globus-store-5014",
+      "people": 3,
+      "days": 7,
+      "requested": 13,
+      "beforeFound": 12,
+      "afterFound": 13,
+      "complete": true,
+      "allRecent": false,
+      "winner": null,
+      "fixture": false,
+      "newCollection": false
+    },
+    "validation": {
+      "nodeChecks": 2344,
+      "browserCases": 398,
+      "exactHeadCi": 39088144727,
+      "exactHeadPackage": 39088144709,
+      "exactHeadRetriedCases": 0,
+      "actualMainCi": 39089290687,
+      "actualMainStatus": "success",
+      "publicNodeChecks": 107,
+      "publicBrowserCases": 18,
+      "physicalAndroid": "unverified",
+      "actualMainRetriedCases": 1,
+      "actualMainRetryNote": "Pre-existing mobile two-column layout case passed its configured retry; other397 passed initially."
+    },
+    "boundary": "A complete set of 13 dated grocery families is not a fresh-price guarantee or a complete diet. New identity/seed is not an import."
   }
 }
