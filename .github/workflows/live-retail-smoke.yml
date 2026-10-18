@@ -90,6 +90,16 @@ jobs:
             if (!condition) throw new Error(message);
           }
 
+          async function storeFacts(card) {
+            assert(await card.isVisible(), "Store selector must be visible");
+            const name = await card.locator("strong").innerText();
+            const copy = (await card.locator(".retail-store-copy").textContent()).trim();
+            const tooltip = await card.getAttribute("title");
+            assert(name && tooltip === copy && tooltip.includes(name),
+              "Compact selector must expose its full store/source scope in its tooltip");
+            return tooltip + "\n" + await card.locator(".retail-store-total").textContent();
+          }
+
           function validDateKey(value, label) {
             assert(typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/u.test(value),
               `Invalid ${label}`);
@@ -289,6 +299,9 @@ jobs:
 
             const lenta = page.locator("#retail-store-card-lenta");
             stage("lenta:start");
+            // Address/category checks above scroll the independent commerce
+            // pane. Return to its store row before switching retailers.
+            await page.locator("#hori-shop-pane").evaluate(pane => pane.scrollTo({top:0,behavior:"instant"}));
             await lenta.click();
             await page.waitForFunction(() => (
               document.querySelector("#retail-store-card-lenta")
@@ -329,11 +342,11 @@ jobs:
               ).length === 22
             ), null, { timeout: 15000 });
             assert(
-              (await lenta.innerText()).includes("Лента · публичный каталог"),
+              (await storeFacts(lenta)).includes("Лента · публичный каталог"),
               "Lenta selector has the wrong store label"
             );
             assert(
-              (await lenta.innerText()).includes("наличие неизвестно"),
+              (await storeFacts(lenta)).includes("наличие неизвестно"),
               "Lenta selector must not claim stock availability"
             );
             assert(
@@ -358,7 +371,7 @@ jobs:
               "Published Lenta root must expose exactly 22 categories"
             );
 
-            const lentaStoreText = await lenta.innerText();
+            const lentaStoreText = await storeFacts(lenta);
             const lentaStoreCountMatch = lentaStoreText.match(
               /22 категории · ([\d\s]+) (?:товар|товара|товаров)/u
             );
@@ -596,7 +609,7 @@ jobs:
               && document.querySelector("#retail-store-card-magnit")
                 ?.textContent?.includes("Дмитровское")
             ), null, { timeout: 15000 });
-            const magnitText = await magnit.innerText();
+            const magnitText = await storeFacts(magnit);
             assert(
               magnitText.includes("Дмитровское"),
               "Magnit selector has the wrong selected address"
@@ -696,7 +709,7 @@ jobs:
               let daPublished = false;
               for (let attempt = 0; attempt < 16; attempt += 1) {
                 const daSelector = page.locator("#retail-store-card-da");
-                const daText = await daSelector.innerText({ timeout: 2000 }).catch(() => "");
+                const daText = await storeFacts(daSelector).catch(() => "");
                 if (
                   daText.includes("ДА! · публичный промо-каталог")
                   && daText.includes("1 категория · 94 товара")
@@ -798,9 +811,9 @@ jobs:
               // actually published Pages artifact.
               let auchanPublished = false;
               for (let attempt = 0; attempt < 16; attempt += 1) {
-                const liveAuchanText = await page.locator(
+                const liveAuchanText = await storeFacts(page.locator(
                   "#retail-store-card-auchan"
-                ).innerText({ timeout: 2000 }).catch(() => "");
+                )).catch(() => "");
                 if (
                   liveAuchanText.includes("АШАН · Москва · публичный промо-каталог")
                   && liveAuchanText.includes("1 категория · 312 товаров")
