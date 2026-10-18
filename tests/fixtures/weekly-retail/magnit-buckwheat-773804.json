@@ -1,0 +1,39 @@
+{
+  "kind": "frozen-public-api-observation-for-offline-regression",
+  "rows": [
+    {
+      "retailer_id": "magnit",
+      "store_id": "magnit-773804",
+      "store_name": "Магнит · г Москва, ул Родниковая, д 9А к 5",
+      "locality_id": "city-moscow",
+      "locality_name": "Москва",
+      "source_product_id": "1000303406",
+      "name": "Крупа гречневая ядрица Семейные секреты/Магнит 800г в ассортименте",
+      "price_minor": 3999,
+      "currency": "RUB",
+      "price_condition": "public-online",
+      "sales_channel": "public-store-product-page",
+      "minimum_quantity": 1,
+      "availability": "unknown",
+      "product_url": "https://magnit.ru/product/1000303406-krupa_grechnevaya_magnit_yadritsa_bystrogo_prigotovleniya_900g?shopCode=773804&shopType=1",
+      "image_url": "https://images-foodtech.magnit.ru/9-XJaT2oKB8pH9it3tnbt0HeaImoZ-wQdcB4fwK2ApM/rs:fit:1600:1600/plain/s3://img-dostavka/catalog/uf/b69/b69c94f85ac3657082e74896cb4bf2f2/95360d9b7b1bd528ac16e1aa0d8e5483.jpeg@webp",
+      "main_category_id": 64123,
+      "weight_text": null,
+      "source_url": "https://magnit.ru/product/1000303406-krupa_grechnevaya_magnit_yadritsa_bystrogo_prigotovleniya_900g?shopCode=773804&shopType=1",
+      "observed_at": "2026-10-18T06:10:07.584+03:00",
+      "snapshot_collected_at": "2026-10-18T06:18:14.038+03:00",
+      "metadata_state": "official-public-product-page",
+      "active": true,
+      "updated_at": "2026-10-18T06:18:15.358456+03:00",
+      "category_url": "https://magnit.ru/catalog/64123-testmmkrupy_i_sukhie_zavtraki?shopCode=773804&shopType=1",
+      "old_price_minor": null,
+      "quantity_semantics": {},
+      "location_label": "г Москва, ул Родниковая, д 9А к 5",
+      "scope_binding": "public-store-product-page",
+      "binding_id": "magnit-shopcode-773804",
+      "scope_evidence_url": "https://magnit.ru/product/1000303406-krupa_grechnevaya_magnit_yadritsa_bystrogo_prigotovleniya_900g?shopCode=773804&shopType=1"
+    }
+  ],
+  "nativeRunArtifactVerifiedAtCapture": false,
+  "capturedAt": "2026-10-18T03:25:43.022Z"
+}
