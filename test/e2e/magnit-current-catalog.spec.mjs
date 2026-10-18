@@ -12,10 +12,10 @@ test('selected Magnit → current catalogue without repeating the chain → actu
  });
  await page.goto('/?comparison=observed&catalog=retail#shop');await page.locator('#retail-store-card-magnit').click();await page.locator('#magnit-store-address').selectOption('773804');
  const output=page.locator('#basket-proposal-status');await say(page,'Собери недорогую корзину на неделю для троих');await expect(output).toContainText('Где закупаемся');
- await say(page,'Текущий магазин');await say(page,'Ограничений нет');const commerce=page.locator('#hori-shopping-results');const table=commerce.getByRole('table');await expect(table.getByRole('row')).toHaveCount(2);
- await expect(table).toContainText('800 г');await expect(table).toContainText('39,99 ₽ / 800 г');await expect(table).toContainText('79,98 ₽');await expect(commerce).toContainText('Ещё нужно подобрать: 12 поз.');
+ await say(page,'Текущий магазин');await say(page,'Ограничений нет');const table=output.getByRole('table');await expect(table.getByRole('row')).toHaveCount(2);
+ await expect(table).toContainText('800 г');await expect(table).toContainText('39,99 ₽ / 800 г');await expect(table).toContainText('79,98 ₽');await expect(output).toContainText('Ещё нужно подобрать: 12 поз.');
  await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');await output.getByRole('button',{name:'Добавить найденное',exact:true}).click();
- await expect(page.locator('#basket-dock-copy')).toContainText('1 поз.');await commerce.getByRole('button',{name:'Открыть корзину',exact:true}).click();await page.reload();
+ await expect(page.locator('#basket-dock-copy')).toContainText('1 поз.');await output.getByRole('button',{name:'Открыть корзину',exact:true}).click();await page.reload();
  await expect(page.locator('#basket-view')).toContainText('800 г');const basket=await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')));
  expect(basket).toHaveLength(1);expect(basket[0].quantity).toBe(2);expect(ai).toBe(0);
 });
