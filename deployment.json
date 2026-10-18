@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "184c3b075b600f36b7eb3c686e4b1e96986a0dbd",
+  "sourceCommit": "559b9a932d290f8acfe0c6987d050be415320532",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -130,7 +130,8 @@
       563,
       564,
       565,
-      566
+      566,
+      567
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -161,7 +162,45 @@
       "unitAndGuardChecks": 2363,
       "chromiumDesktopAndMobileCases": 404,
       "publicUnitChecks": 123,
-      "publicBrowserCases": 24
+      "publicBrowserCases": 24,
+      "horiWorkspaceSource": {
+        "exactHeadPassed": true,
+        "actualMainPassed": true,
+        "sourceCommit": "559b9a932d290f8acfe0c6987d050be415320532",
+        "testedExactHead": "b183aafd3fbada21fe2d3b91ed53959d1c227b01",
+        "sourcePr": 567,
+        "sourceTreeIdenticalToTestedHead": true,
+        "exactHeadCI": 39128442741,
+        "exactHeadPackage": 39128442732,
+        "exactHeadNode": {
+          "passed": 2363,
+          "failed": 0
+        },
+        "exactHeadBrowser": {
+          "passedFirstAttempt": 407,
+          "passedAfterRetry": 1,
+          "failed": 0,
+          "retryCase": "unchanged legacy demo violet mobile layout at 320/360/390/412"
+        },
+        "actualMainCI": 39129856381,
+        "actualMainPackage": 39129856383,
+        "actualMainNode": {
+          "passed": 2363,
+          "failed": 0
+        },
+        "actualMainBrowser": {
+          "passedFirstAttempt": 407,
+          "passedAfterRetry": 1,
+          "failed": 0,
+          "retryCase": "unchanged legacy demo violet mobile layout at 320/360/390/412"
+        },
+        "focusedBrowser": {
+          "chromiumDesktopMobile": 38,
+          "afterFinalIntakeChange": 16
+        },
+        "physicalAndroidVerified": false
+      },
+      "publicGate": "Weekly grocery verification for the exact publication commit and actual main; see PR receipts"
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -1601,6 +1640,66 @@
       "publicLocalInitialBrowserPasses": 21,
       "publicLocalRecheckedCases": 3,
       "publicLocalRecheckNote": "Three desktop navigation/action timeouts in the initial two-worker Edge run passed a focused unchanged-test one-worker replay. No production or timeout changes were made."
+    }
+  },
+  "horiWorkspace": {
+    "sourcePr": 567,
+    "sourceCommit": "559b9a932d290f8acfe0c6987d050be415320532",
+    "testedExactHead": "b183aafd3fbada21fe2d3b91ed53959d1c227b01",
+    "layout": "working-assistant-upper-half-commerce-lower-half",
+    "freshEntry": "no-fabricated-parameters",
+    "character": "Hori v4, black opaque sunglasses, black/violet hoodie, laptop vignette",
+    "themes": "top switch, browser-local appearance, retain basket and composer",
+    "commercial": "unchanged observed-price admission, exact identities, explicit confirmation and deterministic Core",
+    "ai": "existing Checkni AI endpoint and existing GPTunnel configuration; no keys, auth, models or quotas changed",
+    "liveProbe": {
+      "adviceHttp": 200,
+      "adviceElapsedMs": 5519,
+      "localCatalog": "GLOBUS Pushkino",
+      "groups": 13,
+      "priceObservationDate": "2026-10-12",
+      "datedSubtotalMinor": 484566,
+      "freshPriceClaim": false,
+      "cheapestClaim": false
+    },
+    "validation": {
+      "exactHeadPassed": true,
+      "actualMainPassed": true,
+      "sourceCommit": "559b9a932d290f8acfe0c6987d050be415320532",
+      "testedExactHead": "b183aafd3fbada21fe2d3b91ed53959d1c227b01",
+      "sourcePr": 567,
+      "sourceTreeIdenticalToTestedHead": true,
+      "exactHeadCI": 39128442741,
+      "exactHeadPackage": 39128442732,
+      "exactHeadNode": {
+        "passed": 2363,
+        "failed": 0
+      },
+      "exactHeadBrowser": {
+        "passedFirstAttempt": 407,
+        "passedAfterRetry": 1,
+        "failed": 0,
+        "retryCase": "unchanged legacy demo violet mobile layout at 320/360/390/412"
+      },
+      "actualMainCI": 39129856381,
+      "actualMainPackage": 39129856383,
+      "actualMainNode": {
+        "passed": 2363,
+        "failed": 0
+      },
+      "actualMainBrowser": {
+        "passedFirstAttempt": 407,
+        "passedAfterRetry": 1,
+        "failed": 0,
+        "retryCase": "unchanged legacy demo violet mobile layout at 320/360/390/412"
+      },
+      "focusedBrowser": {
+        "chromiumDesktopMobile": 38,
+        "afterFinalIntakeChange": 16
+      },
+      "physicalAndroidVerified": false,
+      "physicalAndroid": "unverified",
+      "publicVerification": "Weekly grocery verification for the exact publication commit and actual main; deployed byte and browser receipts recorded in the publication PR"
     }
   }
 }

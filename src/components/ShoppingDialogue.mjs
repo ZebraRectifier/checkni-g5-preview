@@ -2,6 +2,7 @@ import { shoppingReferenceSources } from "../intelligence/shoppingProductReferen
 import { retailSelectionUrl } from "../intelligence/retailProductSelection.mjs";
 import { formatRubMinor } from "./ComparisonResult.mjs";
 import { renderGuidedShoppingTable } from "./GuidedShoppingTable.mjs";
+import { createHoriWorkspace } from "./HoriWorkspace.mjs";
 
 const MAX_PREVIOUS_TURNS = 8;
 const MAX_REPLY_CHARACTERS = 6000;
@@ -25,7 +26,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
   const header = document.createElement("div");
   header.className = "shopping-dialogue-header";
   const heading = document.createElement("strong");
-  heading.textContent = "Помощник CHECKNI";
+  heading.textContent = "Хори";
   const clear = document.createElement("button");
   clear.type = "button";
   clear.id = "shopping-dialogue-clear";
@@ -36,10 +37,10 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
   const welcome = document.createElement('section'); welcome.className = 'shopping-welcome';
   welcome.setAttribute('aria-label', 'С чего начнём покупки');
   const entry = document.createElement('div'); entry.className = 'shopping-conversation-choices';
-  for (const [label, text] of [['💰 Собрать недорогую корзину', 'Собери недорогую корзину'],
-    ['🥗 Подобрать по вкусу и составу', 'Подбери по вкусу и составу'], ['🛒 Сравнить мой список', 'Сравни мой список']]) {
+  for (const [label, text] of [['Собрать корзину', 'Собери недорогую корзину'],
+    ['У меня есть список', null]]) {
     const button = document.createElement('button'); button.type = 'button'; button.textContent = label;
-    button.addEventListener('click', () => { input.value = text; input.dispatchEvent(new Event('input', { bubbles: true })); form.requestSubmit(); });
+    button.addEventListener('click', () => { if (!text) { const greeting = welcome.querySelector('.hori-greeting'); if (greeting) greeting.textContent = 'Напиши продукты одним сообщением — помогу собрать список.'; input.focus({ preventScroll: true }); return; } input.value = text; input.dispatchEvent(new Event('input', { bubbles: true })); form.requestSubmit(); });
     entry.append(button);
   }
   welcome.append(entry);
@@ -81,6 +82,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
   if (help) help.textContent = "Напиши список покупок, свои условия или вопрос о товарах. Можешь уточнять ответ следующим сообщением.";
   const title = document.getElementById("phrase-entry-title");
   if (title) title.textContent = 'Привет! 👋 Соберём покупки?';
+  const workspace = createHoriWorkspace({ form, input, output, welcome, dialogue: root });
 
   let active = null;
   let previous = [];
@@ -155,6 +157,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
   }
 
   function sync(state) {
+    root.dataset.guided = String(state.result?.guidedShopping === true);
     output.querySelectorAll('.guided-shopping').forEach(node => node.remove());
     renderGuidedShoppingTable(output, state.presentation?.guidedShopping, text => {
       input.value = text; input.dispatchEvent(new Event('input', { bubbles: true })); form.requestSubmit();
@@ -197,6 +200,11 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
     welcome.hidden = Boolean(active || previous.length || state.status !== 'idle');
     clear.hidden = !active && !previous.length;
     speaker.hidden = !output.childElementCount;
+    if (state.result?.guidedShopping) {
+      fallback.hidden = true;
+      for (const button of output.querySelectorAll('button')) if (button.textContent === 'Написать уточнение') button.hidden = true;
+    }
+    workspace.present();
     if (!active) return;
     if (state.status === "idle") { archiveActive(); return; }
     active.pending = state.status === "loading";
@@ -214,6 +222,8 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
   clear.addEventListener("click", () => {
     active = null;
     previous = [];
+    const greeting = welcome.querySelector('.hori-greeting');
+    if (greeting) greeting.textContent = 'Привет! Я Хори. Что покупаем?';
     user.hidden = true;
     speaker.hidden = true;
     renderHistory();

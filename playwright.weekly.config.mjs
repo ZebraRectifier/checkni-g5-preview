@@ -2,7 +2,7 @@ import {defineConfig,devices} from '@playwright/test';
 
 export default defineConfig({
   testDir:'./test/e2e',
-  testMatch:['magnit-current-catalog.spec.mjs','pyaterochka-published.spec.mjs','nearby-shopping.spec.mjs','guided-shopping.spec.mjs','shopping-dialogue-recovery.spec.mjs','weekly-retail-basket.spec.mjs'],
+  testMatch:['hori-workspace.spec.mjs','magnit-current-catalog.spec.mjs','pyaterochka-published.spec.mjs','nearby-shopping.spec.mjs','guided-shopping.spec.mjs','shopping-dialogue-recovery.spec.mjs','weekly-retail-basket.spec.mjs'],
   fullyParallel:false,
   forbidOnly:Boolean(process.env.CI),
   workers:2,
