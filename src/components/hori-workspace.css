@@ -245,3 +245,5 @@ body.hori-workspace .product-visual { border-radius:3px; }
   body.hori-workspace .catalog-sort select { min-height:36px; height:36px; padding:4px 8px; font-size:12px; border-radius:3px; }
   body.hori-workspace #catalog-note { font-size:10px; line-height:1.4; margin:4px 0 8px; }
 }
+/* State visibility wins over every responsive flex/grid presentation rule. */
+body.hori-workspace [hidden] { display:none !important; }

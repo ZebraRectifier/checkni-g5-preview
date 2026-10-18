@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "sourcePr": 569,
-  "integratedSource": "43dbfbb82038dca8c7be83faceee417f9a5d12a1",
-  "testedExactHead": "982c92992b7668b61dfe1c8a4dbd0f5fc81b86ac",
+  "sourcePr": 570,
+  "integratedSource": null,
+  "testedExactHead": "efbd0d8fe34e9893fa9040b5b779562c8c1d0aed",
   "publicBase": "07f86f724d9ea25fc8e14a031c56ba19d2d73043",
   "runtimeFiles": 196,
   "retainedPublicPaths": [
@@ -28,43 +28,21 @@
     "src/data/pyaterochkaPublishedRefresh.json"
   ],
   "validation": {
-    "sourcePr": 569,
-    "testedExactHead": "982c92992b7668b61dfe1c8a4dbd0f5fc81b86ac",
-    "startingMain": "b323a7e43991f90f6e1b0e2b577ddf280477d74c",
-    "exactHeadCI": 39146535458,
-    "exactHeadPackage": 39146535443,
-    "exactHeadNode": {
-      "passed": 2363,
-      "failed": 0
+    "sourcePr": 570,
+    "integratedSourcePrs": [
+      569,
+      570
+    ],
+    "testedExactHead": "efbd0d8fe34e9893fa9040b5b779562c8c1d0aed",
+    "startingMain": "43dbfbb82038dca8c7be83faceee417f9a5d12a1",
+    "exactHeadPassed": false,
+    "actualMainPassed": false,
+    "status": "exact_head_pending",
+    "localRegression": {
+      "redBefore": 2,
+      "focusedBrowserPassedAfter": 24
     },
-    "exactHeadPassed": true,
-    "actualMainPassed": true,
-    "status": "source_release_verified",
-    "physicalAndroid": "unverified",
-    "exactHeadBrowser": {
-      "retries": 0,
-      "skipped": 0,
-      "passed": 414,
-      "failed": 0
-    },
-    "actualMainNode": {
-      "failed": 0,
-      "passed": 2363
-    },
-    "actualMainPackage": 39148108536,
-    "actualMainFocused": {
-      "nodePassed": 116,
-      "browserPassed": 26
-    },
-    "sourceCommit": "43dbfbb82038dca8c7be83faceee417f9a5d12a1",
-    "sourceTreeIdenticalToTestedHead": true,
-    "actualMainCI": 39148108511,
-    "actualMainBrowser": {
-      "failed": 0,
-      "passed": 414,
-      "skipped": 0,
-      "retries": 0
-    }
+    "physicalAndroid": "unverified"
   },
   "files": [
     {
@@ -149,8 +127,8 @@
     },
     {
       "path": "src/components/HoriCommerce.mjs",
-      "blob": "d75f88558a90d5749dceabcd0d4f1d211f98c5dc",
-      "source": "43dbfbb82038dca8c7be83faceee417f9a5d12a1"
+      "blob": "439e74f765e2b608ee187790a4548352b656d1c9",
+      "source": "efbd0d8fe34e9893fa9040b5b779562c8c1d0aed"
     },
     {
       "path": "src/components/HoriWorkspace.mjs",
@@ -224,8 +202,8 @@
     },
     {
       "path": "src/components/hori-workspace.css",
-      "blob": "5dcb8f2e7bf36119f158f24c30f088f5ea71d406",
-      "source": "43dbfbb82038dca8c7be83faceee417f9a5d12a1"
+      "blob": "bd0ae5c8aa67a9d57c7343a988743eaa88b1427b",
+      "source": "efbd0d8fe34e9893fa9040b5b779562c8c1d0aed"
     },
     {
       "path": "src/components/nearby-shopping.css",
@@ -1047,5 +1025,51 @@
       "blob": "fd1ecb269dd165123f3a118f3930504255c10d0c",
       "source": "43dbfbb82038dca8c7be83faceee417f9a5d12a1"
     }
-  ]
+  ],
+  "prerequisiteIntegratedSource": "43dbfbb82038dca8c7be83faceee417f9a5d12a1",
+  "prerequisiteValidation": {
+    "sourcePr": 569,
+    "testedExactHead": "982c92992b7668b61dfe1c8a4dbd0f5fc81b86ac",
+    "startingMain": "b323a7e43991f90f6e1b0e2b577ddf280477d74c",
+    "exactHeadCI": 39146535458,
+    "exactHeadPackage": 39146535443,
+    "exactHeadNode": {
+      "passed": 2363,
+      "failed": 0
+    },
+    "exactHeadPassed": true,
+    "actualMainPassed": true,
+    "status": "source_release_verified",
+    "physicalAndroid": "unverified",
+    "exactHeadBrowser": {
+      "retries": 0,
+      "skipped": 0,
+      "passed": 414,
+      "failed": 0
+    },
+    "actualMainNode": {
+      "failed": 0,
+      "passed": 2363
+    },
+    "actualMainPackage": 39148108536,
+    "actualMainFocused": {
+      "nodePassed": 116,
+      "browserPassed": 26
+    },
+    "sourceCommit": "43dbfbb82038dca8c7be83faceee417f9a5d12a1",
+    "sourceTreeIdenticalToTestedHead": true,
+    "actualMainCI": 39148108511,
+    "actualMainBrowser": {
+      "failed": 0,
+      "passed": 414,
+      "skipped": 0,
+      "retries": 0
+    }
+  },
+  "candidateSource": "efbd0d8fe34e9893fa9040b5b779562c8c1d0aed",
+  "sourcePrs": [
+    569,
+    570
+  ],
+  "status": "candidate_pending_source_verification"
 }

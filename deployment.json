@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "43dbfbb82038dca8c7be83faceee417f9a5d12a1",
+  "sourceCommit": null,
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -1730,9 +1730,9 @@
     }
   },
   "horiReference": {
-    "sourcePr": 569,
-    "sourceCommit": "43dbfbb82038dca8c7be83faceee417f9a5d12a1",
-    "testedExactHead": "982c92992b7668b61dfe1c8a4dbd0f5fc81b86ac",
+    "sourcePr": 570,
+    "sourceCommit": null,
+    "testedExactHead": "efbd0d8fe34e9893fa9040b5b779562c8c1d0aed",
     "layout": "real-assistant-upper-half-catalogue-and-cart-lower-half",
     "reference": "shopping-hori-themes-v8",
     "character": "Hori room v1 derived from character v4, black opaque glasses and black/violet hoodie",
@@ -1754,44 +1754,30 @@
       "cheapestClaim": false
     },
     "validation": {
-      "sourcePr": 569,
-      "testedExactHead": "982c92992b7668b61dfe1c8a4dbd0f5fc81b86ac",
-      "startingMain": "b323a7e43991f90f6e1b0e2b577ddf280477d74c",
-      "exactHeadCI": 39146535458,
-      "exactHeadPackage": 39146535443,
-      "exactHeadNode": {
-        "passed": 2363,
-        "failed": 0
+      "sourcePr": 570,
+      "integratedSourcePrs": [
+        569,
+        570
+      ],
+      "testedExactHead": "efbd0d8fe34e9893fa9040b5b779562c8c1d0aed",
+      "startingMain": "43dbfbb82038dca8c7be83faceee417f9a5d12a1",
+      "exactHeadPassed": false,
+      "actualMainPassed": false,
+      "status": "exact_head_pending",
+      "localRegression": {
+        "redBefore": 2,
+        "focusedBrowserPassedAfter": 24
       },
-      "exactHeadPassed": true,
-      "actualMainPassed": true,
-      "status": "source_release_verified",
-      "physicalAndroid": "unverified",
-      "exactHeadBrowser": {
-        "retries": 0,
-        "skipped": 0,
-        "passed": 414,
-        "failed": 0
-      },
-      "actualMainNode": {
-        "failed": 0,
-        "passed": 2363
-      },
-      "actualMainPackage": 39148108536,
-      "actualMainFocused": {
-        "nodePassed": 116,
-        "browserPassed": 26
-      },
-      "sourceCommit": "43dbfbb82038dca8c7be83faceee417f9a5d12a1",
-      "sourceTreeIdenticalToTestedHead": true,
-      "actualMainCI": 39148108511,
-      "actualMainBrowser": {
-        "failed": 0,
-        "passed": 414,
-        "skipped": 0,
-        "retries": 0
-      }
+      "physicalAndroid": "unverified"
     },
-    "physicalAndroid": "unverified"
-  }
+    "physicalAndroid": "unverified",
+    "candidateSourceCommit": "efbd0d8fe34e9893fa9040b5b779562c8c1d0aed",
+    "sourcePrs": [
+      569,
+      570
+    ],
+    "status": "candidate_pending_source_verification"
+  },
+  "prerequisiteSourceCommit": "43dbfbb82038dca8c7be83faceee417f9a5d12a1",
+  "candidateSourceCommit": "efbd0d8fe34e9893fa9040b5b779562c8c1d0aed"
 }

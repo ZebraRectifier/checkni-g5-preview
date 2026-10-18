@@ -48,7 +48,8 @@ export function createHoriCommerce({ document, main, shop, header }) {
   main.append(aside);
 
   function reveal(target) {
-    if (target) pane.scrollTop += target.getBoundingClientRect().top - pane.getBoundingClientRect().top - 12;
+    const searchHeight = shop?.querySelector('.hero')?.getBoundingClientRect().height || 0;
+    if (target) pane.scrollTop += target.getBoundingClientRect().top - pane.getBoundingClientRect().top - searchHeight - 12;
   }
 
   let currentView = shop?.hidden ? 'basket' : 'shop';
@@ -133,7 +134,7 @@ export function createHoriCommerce({ document, main, shop, header }) {
       revealSearch = false;
       requestAnimationFrame(() => {
         const catalog = grid.closest('.catalog-section');
-        pane.scrollTop += catalog.getBoundingClientRect().top - pane.getBoundingClientRect().top - 62;
+        reveal(catalog);
       });
     }
   }).observe(grid, { childList:true });

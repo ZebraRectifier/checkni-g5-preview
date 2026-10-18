@@ -74,6 +74,7 @@ test('retail catalogue → live basket controls → compare → Back and reload 
   }
   await page.locator('#open-basket').click();
   await expect(page.locator('#basket-view')).toBeVisible();
+  await expect(page.locator('#hori-basket-preview')).toBeHidden();
   await expect(page.locator('#basket-proposal-input')).toBeInViewport();
   await page.locator('#compare-basket').click();
   await expect(page.locator('#comparison-output')).toContainText(/недостаточно|нет|не удалось/i);
@@ -83,4 +84,15 @@ test('retail catalogue → live basket controls → compare → Back and reload 
   await page.reload();
   expect(await page.evaluate(() => localStorage.getItem('checkni.surface.basket.v1'))).toBe(basket);
   await expect(page.locator('.hori-scene img')).toBeVisible();
+});
+
+test('active dialogue hides the fresh greeting and keeps its composer and reply in the upper pane', async ({ page }) => {
+  await setup(page);
+  await page.locator('#basket-proposal-input').fill('Нужна недорогая еда на неделю для троих');
+  await page.locator('#basket-proposal-submit').click();
+  await expect(page.locator('#basket-proposal-status')).toContainText('Где закупаемся');
+  await expect(page.locator('.shopping-welcome')).toBeHidden();
+  await expect(page.locator('.hori-greeting')).toBeHidden();
+  await expect(page.locator('#basket-proposal-input')).toBeInViewport();
+  await expect(page.locator('#basket-proposal-status')).toBeInViewport();
 });
