@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "8ccf9ecdeb6d678386d13776a2aeff82575d00c5",
+  "sourceCommit": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -1814,5 +1814,67 @@
     },
     "physicalAndroid": "unverified"
   },
-  "prerequisiteSourceCommit": "43dbfbb82038dca8c7be83faceee417f9a5d12a1"
+  "prerequisiteSourceCommit": "43dbfbb82038dca8c7be83faceee417f9a5d12a1",
+  "gptunnelReliability": {
+    "sourcePr": 571,
+    "sourceCommit": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb",
+    "testedExactHead": "9fb6aaeddaad85ee7b8c606d426d02a5607b014d",
+    "validation": {
+      "sourcePr": 571,
+      "startingMain": "8ccf9ecdeb6d678386d13776a2aeff82575d00c5",
+      "testedExactHead": "9fb6aaeddaad85ee7b8c606d426d02a5607b014d",
+      "sourceCommit": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb",
+      "sourceTreeIdenticalToTestedHead": true,
+      "exactHeadCI": 39161977089,
+      "exactHeadPackage": 39161977093,
+      "exactHeadNode": {
+        "passed": 2377,
+        "failed": 0,
+        "skipped": 0
+      },
+      "exactHeadPassed": true,
+      "exactHeadBrowser": {
+        "total": 418,
+        "passed": 417,
+        "flaky": 1,
+        "retryPasses": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "actualMainPassed": true,
+      "actualMainBrowser": {
+        "total": 418,
+        "passed": 418,
+        "failed": 0,
+        "skipped": 0,
+        "retries": 0
+      },
+      "actualMainCI": 39164374018,
+      "actualMainPackage": 39164374024,
+      "packagePassed": true,
+      "actualMainNode": {
+        "passed": 2377,
+        "failed": 0,
+        "skipped": 0
+      },
+      "focusedNodePassed": 159,
+      "focusedBrowserPassed": 24,
+      "physicalAndroid": "unverified",
+      "localFullBrowser": {
+        "passed": 417,
+        "failed": 1,
+        "isolatedRecheckPassed": 1,
+        "note": "unchanged loading-copy timing assertion; full result retained"
+      },
+      "status": "integrated source verified by exact-head and actual-main CI/package"
+    },
+    "quotaDeadlineMs": 5000,
+    "providerDeadlineMs": 9000,
+    "clientDeadlineMs": 20000,
+    "paidAttempts": 1,
+    "dailyQuota": 20,
+    "context": "bounded history, first-person household facts, explicit retry restores pre-failure history",
+    "guards": "existing auth, content/commercial guards and real outage circuit retained",
+    "physicalAndroid": "unverified"
+  }
 }

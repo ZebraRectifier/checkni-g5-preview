@@ -1,0 +1,1061 @@
+{
+  "schemaVersion": 1,
+  "sourcePr": 571,
+  "integratedSource": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb",
+  "testedExactHead": "9fb6aaeddaad85ee7b8c606d426d02a5607b014d",
+  "publicBase": "ecd8e2f59bf5bb945b3eb6f174736b677956684c",
+  "runtimeFiles": 196,
+  "retainedPublicPaths": [
+    "src/components/OkeyDeliveryCatalog.mjs",
+    "src/components/OkeyOfficialCatalog.mjs",
+    "src/data/okeyDeliveryHistory.json",
+    "src/data/okeyDeliveryRefresh.json",
+    "src/data/okeyOfficialPromotions.json",
+    "src/data/okeyOfficialRefresh.json",
+    "src/data/okeyPublishedPromotions.json",
+    "src/data/okeyPublishedRefresh.json",
+    "src/data/pyaterochkaPublishedPromotions.json",
+    "src/data/pyaterochkaPublishedRefresh.json"
+  ],
+  "dynamicPaths": [
+    "src/data/okeyDeliveryHistory.json",
+    "src/data/okeyDeliveryRefresh.json",
+    "src/data/okeyOfficialPromotions.json",
+    "src/data/okeyOfficialRefresh.json",
+    "src/data/okeyPublishedPromotions.json",
+    "src/data/okeyPublishedRefresh.json",
+    "src/data/pyaterochkaPublishedPromotions.json",
+    "src/data/pyaterochkaPublishedRefresh.json"
+  ],
+  "validation": {
+    "sourcePr": 571,
+    "startingMain": "8ccf9ecdeb6d678386d13776a2aeff82575d00c5",
+    "testedExactHead": "9fb6aaeddaad85ee7b8c606d426d02a5607b014d",
+    "sourceCommit": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb",
+    "sourceTreeIdenticalToTestedHead": true,
+    "exactHeadCI": 39161977089,
+    "exactHeadPackage": 39161977093,
+    "exactHeadNode": {
+      "passed": 2377,
+      "failed": 0,
+      "skipped": 0
+    },
+    "exactHeadPassed": true,
+    "exactHeadBrowser": {
+      "total": 418,
+      "passed": 417,
+      "flaky": 1,
+      "retryPasses": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "actualMainPassed": true,
+    "actualMainBrowser": {
+      "total": 418,
+      "passed": 418,
+      "failed": 0,
+      "skipped": 0,
+      "retries": 0
+    },
+    "actualMainCI": 39164374018,
+    "actualMainPackage": 39164374024,
+    "packagePassed": true,
+    "actualMainNode": {
+      "passed": 2377,
+      "failed": 0,
+      "skipped": 0
+    },
+    "focusedNodePassed": 159,
+    "focusedBrowserPassed": 24,
+    "physicalAndroid": "unverified",
+    "localFullBrowser": {
+      "passed": 417,
+      "failed": 1,
+      "isolatedRecheckPassed": 1,
+      "note": "unchanged loading-copy timing assertion; full result retained"
+    },
+    "status": "integrated source verified by exact-head and actual-main CI/package"
+  },
+  "files": [
+    {
+      "path": "index.html",
+      "blob": "4f1a4d6e19f0f526336d841160ec5f595aafdffa",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "prices.html",
+      "blob": "2bd70d6b6c967677651e302b7e8fa87a76c034b4",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/adapters/coreComparisonAdapter.mjs",
+      "blob": "162062eafeda9133ce134231f7f4f8c877f48b48",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/adapters/publicPageObservationAdapter.mjs",
+      "blob": "8fd56b3690fe0cdb5925949aa79984e5965c4979",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/app.mjs",
+      "blob": "9c9dbdcb216baafd56ccaa976e03f5d928912913",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/catalog/productDiscovery.mjs",
+      "blob": "a846dfa05eb4ae60e4f0b802b1b5d0fce5f618c6",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/catalog/providers/openFoodFactsCatalogProvider.mjs",
+      "blob": "b67eb641787f504509e99060d3d859ca16feb413",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/catalog/reviewedRetailBasket.mjs",
+      "blob": "740a41d27be6c4e90b37f7a4d42d9ae769f58565",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/catalog/weeklyMagnitDiscoverySeeds.mjs",
+      "blob": "93e3d2ee7ddba29f439f0f98c15c477f2f48ced4",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/catalog/weeklyMagnitIdentities.mjs",
+      "blob": "36e02f7df7ce5b8b22f937f550f97fba80ed991a",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/AddressPriceHistory.mjs",
+      "blob": "13ea8bf894155eb89f59d14be953e2e227015ccf",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/AggregatorChecks.mjs",
+      "blob": "de4b0734d6ba7014a6d98a0506369289046392ec",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/BasketView.mjs",
+      "blob": "4019121d190ed97af5334f98d293099ab0df0257",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/ComparisonResult.mjs",
+      "blob": "121e17ddd9bf3e3c13ffda2b54979c95972a03c4",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/GlobusStorePicker.mjs",
+      "blob": "52b5414f1bc1327eee2229c370f0da62651bf88e",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/GuidedShoppingTable.mjs",
+      "blob": "baa044102a1ae7da35f96b41a3311681c62e3b98",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/HoriCommerce.mjs",
+      "blob": "439e74f765e2b608ee187790a4548352b656d1c9",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/HoriWorkspace.mjs",
+      "blob": "fdf04353ab7b91ab5bbcb5111e81a72a4232f901",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/MagnitStoreDirectory.mjs",
+      "blob": "5160e17941c349d1832e664ad1ce908771dee062",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/MagnitStorePicker.mjs",
+      "blob": "6e919ff69645eee627a6a6f8233c71c4ccc5c6a5",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/MetroStorePicker.mjs",
+      "blob": "3a0ec4bc5e99f738ca3b1f886628e97f9076da5b",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/NearbyShopping.mjs",
+      "blob": "25479a5a850a2d3fef55487a1384848fe8aed168",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/OkeyDeliveryCatalog.mjs",
+      "blob": "efa0e0e368467d9263b8a2c006916e9bbdfde678",
+      "source": "ecd8e2f59bf5bb945b3eb6f174736b677956684c"
+    },
+    {
+      "path": "src/components/OkeyOfficialCatalog.mjs",
+      "blob": "05faf86add0900229d66ecda2799e0645263cab3",
+      "source": "ecd8e2f59bf5bb945b3eb6f174736b677956684c"
+    },
+    {
+      "path": "src/components/OkeyStoreDirectory.mjs",
+      "blob": "aa122b045366f5cb9456fde7674a1d3bd3cc659e",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/ProductCard.mjs",
+      "blob": "027c681443293b28798e360aa4887d6884500781",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/PyaterochkaPublishedCatalog.mjs",
+      "blob": "ab2674747c05cfbc5d45d318c2f9161fcb11c45c",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/SelectedComparisonStores.mjs",
+      "blob": "0801015b9db22e53abb5d98afc6eda46fc70ebd1",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/ShoppingDialogue.mjs",
+      "blob": "21a3e40228ca8625f9f5ef3a15a7dd0200ec525a",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/StoresMap.mjs",
+      "blob": "f5e92a5cb54428c8b646876277ba4131ebee8335",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/WebSnapshotResult.mjs",
+      "blob": "53412c36dcde541d1c1e1b74d1fb6acd81b4b662",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/hori-workspace.css",
+      "blob": "bd0ae5c8aa67a9d57c7343a988743eaa88b1427b",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/nearby-shopping.css",
+      "blob": "cbb99b4a95121bd7450ccf2d14718ebe44e9d5b9",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/pixelIcons.mjs",
+      "blob": "491fd67d6f6cfc7059a5d11c4baa83767220dea2",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/pyaterochka-published.css",
+      "blob": "ab984fd18440dd2b9b8cc8348111645b8eb0a75a",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/shareResult.mjs",
+      "blob": "45cf1027ad8e77c67ad146f1fa15e5d7c4f78940",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/components/shopping-dialogue.css",
+      "blob": "0b924934e17ebfa5553f0c27b84caa6aef03764f",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/core/ai-basket-proposal.mjs",
+      "blob": "ff2fc0ac7e84b2121cf3dd863728f88dc200e4de",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/core/basket-core.mjs",
+      "blob": "eedc8968bcead7b74a9026d955572b52bf7e72a6",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/core/catalogDraft.mjs",
+      "blob": "b1bf7475a3a8237afd173251123285e33e0e898e",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/core/mock-scenario.mjs",
+      "blob": "e3a0a10593ee22bf52cafec2d833ef57252e5ca5",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/core/observation-trust.mjs",
+      "blob": "bd6411c0582c058e085636e0dae0d0e1a0aaddc0",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/core/observed-price-core.mjs",
+      "blob": "f0bf480c3a82bf0e860c52bbd2002894088bbf45",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/core/web-snapshot-comparison.mjs",
+      "blob": "7ac66ecd1bf5adc6dafe0d2f17d4b4557cb7360f",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/betaRealBasket.mjs",
+      "blob": "7b50b20861e2e85b1c4e8b896cf873384bd77c50",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/canonicalProductRegistry.mjs",
+      "blob": "ebc4648f4b57590981adb4c57c2942192d97044f",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/commerceSources.mjs",
+      "blob": "9a8b2ac3d382f53184e80204124caf58aedb1667",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/extendedCatalog.mjs",
+      "blob": "a3bd9ea36417908194543ee25d63117c1d765df1",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/globusMoscowRegionStores.mjs",
+      "blob": "f90af4b78bfcfb504bf0ac3d5ba0dde9269f6edf",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/magnitMoscowOblastBindings.mjs",
+      "blob": "b1adf3474d2e29100107b9760e46c7a6c03799bc",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/magnitMoscowOblastStores.mjs",
+      "blob": "3c35dd3de68c8fc33f8987aeed487f157713f42d",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/magnitMoscowStores.mjs",
+      "blob": "30f9ef06be6244d07029e25040e27dcd026c2443",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/metroMoscowRegionStores.mjs",
+      "blob": "ea1f878efee9990ee1b665efb44cccba8ee342b3",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/mockCatalog.mjs",
+      "blob": "c39129575fcf5bf3dd504191204395b789a729f6",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/nearbyGroceryStores.json",
+      "blob": "979e770aa966166a775ee8686feec91447370fb7",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/okeyDeliveryHistory.json",
+      "blob": "5c4db665a63ea84abb27ff7ddc78cf3672967b24",
+      "source": "ecd8e2f59bf5bb945b3eb6f174736b677956684c"
+    },
+    {
+      "path": "src/data/okeyDeliveryRefresh.json",
+      "blob": "a9715a052cb7e6275874c2cfb553bad2bfc4150e",
+      "source": "ecd8e2f59bf5bb945b3eb6f174736b677956684c"
+    },
+    {
+      "path": "src/data/okeyOfficialPromotions.json",
+      "blob": "9ba514a07cc9832ca8343154671c97dcc36744f6",
+      "source": "ecd8e2f59bf5bb945b3eb6f174736b677956684c"
+    },
+    {
+      "path": "src/data/okeyOfficialRefresh.json",
+      "blob": "ed8e7727ae6436648ee7034474a5d0397dfa0cd0",
+      "source": "ecd8e2f59bf5bb945b3eb6f174736b677956684c"
+    },
+    {
+      "path": "src/data/okeyPublishedPromotions.json",
+      "blob": "03712d6be9bcbc1d09832dadcf9a9e87efcee901",
+      "source": "ecd8e2f59bf5bb945b3eb6f174736b677956684c"
+    },
+    {
+      "path": "src/data/okeyPublishedRefresh.json",
+      "blob": "bfd88c16e36277c01e223951c0387a4752003ef7",
+      "source": "ecd8e2f59bf5bb945b3eb6f174736b677956684c"
+    },
+    {
+      "path": "src/data/okeyStoreDirectory.mjs",
+      "blob": "15fd5e11244d20500b319271e2047a5fdb1afc7a",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/pyaterochkaPublishedPromotions.json",
+      "blob": "dfe39c26043d376cc050f19906b93a8a1e546d1a",
+      "source": "ecd8e2f59bf5bb945b3eb6f174736b677956684c"
+    },
+    {
+      "path": "src/data/pyaterochkaPublishedRefresh.json",
+      "blob": "68b5a58edcd1a743b306c5200f5dd41862313fea",
+      "source": "ecd8e2f59bf5bb945b3eb6f174736b677956684c"
+    },
+    {
+      "path": "src/data/registeredMagnitStores.mjs",
+      "blob": "f391aa5cbbf257f7cff7a317ab085ee590ac3b03",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/retailerRegistry.mjs",
+      "blob": "fae74701e9641f15edd3841ccb0497000ca32994",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/retailers/base.mjs",
+      "blob": "982c745c32788a37a04a20f061ed4de736f1072d",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/retailers/identityContract.mjs",
+      "blob": "6bb926246ef26abc942a17e2bd640b830ae8895d",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/retailers/index.mjs",
+      "blob": "f8c06f388f9c3f00500b106abd859f0beb9a770b",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/retailers/regional.mjs",
+      "blob": "3d93d1ccf3164c41724f40d0611b61dd92410670",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/retailers/regionalWave3.mjs",
+      "blob": "583fdd2c593e35d7294f5b66252a1cd7bd0972f1",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/shopCatalog.mjs",
+      "blob": "53da71bfb0b237601845e33d43e318559f51d945",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/shoppingLocations.mjs",
+      "blob": "8601d042e979b8122f77046d6e69307060736b07",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/storeMapLocations.mjs",
+      "blob": "502c1bcabcc4dcb128960a961485142fb01f8797",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/webPriceSnapshot.mjs",
+      "blob": "057c820613332851f1a1126f46b7fac750056892",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/data/webPriceSnapshotCollected.mjs",
+      "blob": "676f6ed23727ea24960d9cf297b7ce7a264ad2ac",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/features.css",
+      "blob": "2027f1b0ea2e4309bb2e9b14292b81f86a54e80c",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/fonts/PressStart2P-OFL.txt",
+      "blob": "5891186b36c9f9a60bc523c36934fd018974d91f",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/fonts/press-start-2p-cyrillic-400-normal.woff2",
+      "blob": "3ba14437670f4237da3f53097b761e998096cc58",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/fonts/press-start-2p-latin-400-normal.woff2",
+      "blob": "947a9792df962367ce85b81182fdb07be1eaced1",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/img/basket-card.png",
+      "blob": "190e4a772fff210291f641f76b2a71077ef8af57",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/img/cat-bread.png",
+      "blob": "9362c8396a4ceab26d69fabd9327214e44de17fc",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/img/cat-dairy.png",
+      "blob": "faef6e15ebc8b2247ca457ed88bbf4aeb40e0254",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/img/cat-drinks.png",
+      "blob": "7ad5333a499e561fe1d2c0d39c7ddb9d93e20d4e",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/img/cat-grocery.png",
+      "blob": "7fceac951b168b7aef1a57fabf8749451b7b2296",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/img/cat-meat.png",
+      "blob": "f2aa55ee1cdddc0e3903203586f542be9738b205",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/img/cat-veg.png",
+      "blob": "1bdd35c00c313398f21c922933a63f2fc9a23c44",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/img/ferret-hero.png",
+      "blob": "a5d8cba3615c7f099220f94f5c98612e73b42d0d",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/img/ferret-thumbs.png",
+      "blob": "44033b782adf57ed4fbfaf11d1f6a3421b709245",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/img/hori-character-v4.webp",
+      "blob": "887ceb531b6a08e505c7883b2dba6582b8d27200",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/img/hori-room-v1.webp",
+      "blob": "f07a299cafb643d25eaf7b72fc897f7b68df8663",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/budgetBasketPlanner.mjs",
+      "blob": "f1ecb3929de5db06382b407154207f0c25cceab5",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/catalogAliasBundle.mjs",
+      "blob": "d3ea4610d5e0f566f7de6c263e1bf4dc3aba64ae",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/comparisonContext.mjs",
+      "blob": "9c6041e282be0aecb0b27b8a8adaa3f32e3870a3",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/comparisonProposal.mjs",
+      "blob": "931d7afa24e69c71df7535ff08472174c518744d",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/conversationBasket.mjs",
+      "blob": "de883b2d60c569cbad94ff9346ff1c17ab3f29ae",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/currentComparisonExplanation.mjs",
+      "blob": "2c048bf26688ba8745032a8bb189ed5db1d82d61",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/guidedShoppingPlan.mjs",
+      "blob": "611f903b4016da6f1e575b2108a4a016bad4294c",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/hybridBasketConfirmation.mjs",
+      "blob": "5325a22d267659429901af9d134dcfc36535672d",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/hybridBasketMetrics.mjs",
+      "blob": "876917f5cced7ef83fa367fa552f3cbd2c936e2e",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/hybridBasketPresentation.mjs",
+      "blob": "03a52a70b5bd039429d7d0393218db569dfb1b91",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/hybridBasketResolver.mjs",
+      "blob": "9c0a8f9e6da66bdda457ae0f94b33367f4bf5252",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/localAssistantDialogue.mjs",
+      "blob": "314dd0484414a3973cb854cf1100addf376d3856",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/localBasketParser.mjs",
+      "blob": "f41528380f33343a8f4ee601b404dc5cf860674a",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/localBasketPreflight.mjs",
+      "blob": "efb7f693fb4fd0f0e2543160fc32281998ec2e28",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/localIntentPlanner.mjs",
+      "blob": "d56995a70bc40ca1a2a3987cbff996ba88b1f8b4",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/martenMind.mjs",
+      "blob": "66f243214f1b73b77e92a8954d2ea2aa91ea0337",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/nearbyAddressContract.mjs",
+      "blob": "1880dea567b2502d2b4695937cf0bd8aa1d787b0",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/nearbyShopping.mjs",
+      "blob": "a1a299937c39b3e0c3385522c74394f74e7c6387",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/retailProductSelection.mjs",
+      "blob": "eddb71ac0bcf31814cb148fd5bb83caeca8183db",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/retailShoppingIntent.mjs",
+      "blob": "cf09276ed85f7d728579d24990b1b0dd761012a3",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/shoppingAdvice.mjs",
+      "blob": "c5efbcc279f29a935c6b5dca6d3d3b20294edf96",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/shoppingAdviceContract.mjs",
+      "blob": "86d35ed9240983dd4949bd750f0a8d35ca8030ce",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/shoppingAssistantOrchestrator.mjs",
+      "blob": "2a9af8c196dd334a0002f2ae28d77b2038c94553",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/shoppingConversation.mjs",
+      "blob": "ce01cb411182771656aa027e3a10e8d993c54959",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/shoppingDialogueRecovery.mjs",
+      "blob": "e38d4ae7cc177d098142d85fc544e0d6ffb51e2f",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/shoppingDialogueReference.mjs",
+      "blob": "eb48e77bc2323a2bf7c7999bd055f9eaf3c57320",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/shoppingMealNeed.mjs",
+      "blob": "0c72110f876aa0aa40abfce348d06529b448eea5",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/shoppingNeedContext.mjs",
+      "blob": "d415b489386320838842a6c6f48f34233fcecb6f",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/shoppingProductFacts.mjs",
+      "blob": "446fa84a6ff7f0a5af0a7a0b342725ece35b7e07",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/shoppingProductReference.mjs",
+      "blob": "e10841fd25ff1d94f531d92501aaa6c17e37a9aa",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/shoppingRequestText.mjs",
+      "blob": "8f1183ca34312237b06c6d6d7f1bad489d0825ea",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/intelligence/shoppingTurnContext.mjs",
+      "blob": "cccfc95713507345f22a5fa5061b0127d4246067",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/matching/productMatch.mjs",
+      "blob": "dbd50c79e2b0726e1b1103a51e1cbd6cd76d6b50",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/monitoring/refreshPlanner.mjs",
+      "blob": "726a7c87c03e570dffa97a98e07e64751df3ff34",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/navigation/retailerNavigation.mjs",
+      "blob": "2515dcb3ccba10623eb23f5dfd991ef81f433ae7",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/observations/addressPriceHistory.mjs",
+      "blob": "a9b40a32f110125a1e990fc9f1a845db1bb82d48",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/observations/index.mjs",
+      "blob": "e95ddcaf3eeb2256dcb61a7e6b8d3ac8959e9882",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/observations/localUserEvidenceStore.mjs",
+      "blob": "873d1d817f76c7c80feb6007879fa636208cd3a6",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/observations/localYandexPriceCacheStore.mjs",
+      "blob": "8f5c74da84c076e406b695b32c9a1f224db2b134",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/observations/localYandexProductMappingStore.mjs",
+      "blob": "c2b7b9c8be6860592021eef46bac5404c177d4b0",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/observations/observedOffer.mjs",
+      "blob": "672742c24af25aef1994bbbe2f46a4edc3cc166e",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/observations/okeyOfficialPromotions.mjs",
+      "blob": "22d240d495009ea8fd07ad71353a42c2f1c2bd8d",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/observations/okeyPublishedPromotions.mjs",
+      "blob": "ced1cc72e0b156766e5f62144538d55d3f805f69",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/observations/pyaterochkaPublishedPromotions.mjs",
+      "blob": "fd15c8ce1b34cb20d0821a7d9b6288be5005c0be",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/observations/selectedStoreScope.mjs",
+      "blob": "42e15cc9516a396429f4590bf545d9f6515e452b",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/observations/userEvidence.mjs",
+      "blob": "eddbd630be09a956fd9226105c068f1dc4fc1d6d",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/okey-delivery.css",
+      "blob": "567df9310eb276e0e7f8810b85db1bacacf3f4d0",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/basketProposalPort.mjs",
+      "blob": "deb8389e9a5e2ec170af56d1fa1e44fe72359c6a",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/betaRetailPricesPort.mjs",
+      "blob": "5a8d5d9c0af87497dc8aba1e07f705d22351e001",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/catalogGatewayPort.mjs",
+      "blob": "2b02646bc7dcfb1072d15074cd8cebc0911baf55",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/catalogPhotosPort.mjs",
+      "blob": "e0de531c46797e34730b406b71e412e309eceef8",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/catalogSearchPort.mjs",
+      "blob": "db7860c50a45bd3107cceb00a982350b708ad935",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/comparisonPort.mjs",
+      "blob": "1dd551c1380a0cd8b83264eff4220be59e43d9d7",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/nearbyShoppingPort.mjs",
+      "blob": "e82e78c697a08973dcd81c403f84d169c3bd3989",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/observedOffersPort.mjs",
+      "blob": "323e2f05b98bed703528ebbc023264fc52c3dd3f",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/retailCatalogPort.mjs",
+      "blob": "417a0065ea632ff86bb3aab0f9a205d849049141",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/selectedGlobusCatalogOffersPort.mjs",
+      "blob": "d5d32c9873aff8ecf779bf1e3456893a44389cb6",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/selectedRetailCatalogOffersPort.mjs",
+      "blob": "0a07c5adaaf81349a01ccf2a5eacba5bb02bebd2",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/shoppingAdvicePort.mjs",
+      "blob": "603766585ea8c503493522a4c72f40905fb4ea22",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/weeklyRetailCatalogPort.mjs",
+      "blob": "25df1dd543802df55bc1c7debae22e6d04988e6a",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/ports/yandexPublicPricesPort.mjs",
+      "blob": "c9f4df5d98107db3fbf8d0e791b3339c1911b9ed",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/priceCapture.css",
+      "blob": "02a64d21832b8d65943380fe009f84c2afc869ca",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/priceCapture.mjs",
+      "blob": "94d7f94c8b4efe8e28ef594b86e3c293da56f534",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/revenue/revenueHandoff.mjs",
+      "blob": "e4894ef157c04994ac23afcd61dac09f01975f47",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/basketProposalFlow.mjs",
+      "blob": "976945126e4ce8829d5975c404ecf6ea6d22affe",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/catalogQueries.mjs",
+      "blob": "d5bedf9080ed13294040e1bb82f35f48b14efa2d",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/comparisonFeedback.mjs",
+      "blob": "5f965412cf2265475ee79668c4e57de2d0c778ff",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/comparisonFlow.mjs",
+      "blob": "fe12ea5edec10178688447c10542ff2ea1cdac9a",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/comparisonIntelligenceFlow.mjs",
+      "blob": "78033fca9fcb508428cf91e0052bd138fa604f9c",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/focusRecovery.mjs",
+      "blob": "615e3b286b197bcef8ad05ccfd94b2c76cbd7b01",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/guidedShoppingFlow.mjs",
+      "blob": "0d0ffe8479ef588c1162d7e16ac4743d614cbe36",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/hybridBasketBetaMetrics.mjs",
+      "blob": "d727263dc6a54d8b4f31edcb4e192caa7fb1a0db",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/hybridBasketFlow.mjs",
+      "blob": "5f36c6b8a55960e98fe058198a4400155cf45127",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/hybridBasketInterpreter.mjs",
+      "blob": "c83191596bf2c56fc29191e19f2f1569ec05e4f9",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/hybridBasketLoader.mjs",
+      "blob": "d7ce1eca188d4edeb19aaf0f8b917e07e1384bb6",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/hybridBasketRequestGate.mjs",
+      "blob": "7b90849854f2dacecc81eb6ada721407048c35c7",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/listInspection.mjs",
+      "blob": "fc96bb9dd412aacd322f0549f43bef79c33f9a64",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/liveCatalog.mjs",
+      "blob": "d13503cd60bd227a6a80a64b243d44a1ed7d228b",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/navigation.mjs",
+      "blob": "b86e63fdbd8538509619689cb5e69477c4842070",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/observedCatalogSort.mjs",
+      "blob": "ba46e493d2344ac5306c4569226e3d5fbdac3095",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/observedComparisonExpiry.mjs",
+      "blob": "f786c9a902eede75a0790c664a85503b466a8a6c",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/priceHints.mjs",
+      "blob": "5b8ffe92459ef6d77ef31850391fd88ac1bb7588",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/productPhotos.mjs",
+      "blob": "9101ac924928650826bdefa4b0ff522751f0a415",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/shoppingConversationFlow.mjs",
+      "blob": "b5825c02850d8da5916da4932a95c2f3d53bf3ee",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/shoppingPreferenceStorage.mjs",
+      "blob": "cf4b2e9c82b9cafb046880cf4d9b4369c026fb2d",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/storeGeolocation.mjs",
+      "blob": "0dcf1eadc31fe9ef9a15c8565914e959f200e398",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/runtime/zeroCostMonitoringPolicy.mjs",
+      "blob": "c669b9219ef2605f9aa49da790deec7cd6b7e424",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/adapters/openPricesAdapter.mjs",
+      "blob": "71ea4c2225033ef059c7d4695ca90b0225c46d59",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sourceDescriptor.mjs",
+      "blob": "9ce59674445deaf68c95e0709005b17b611dd9af",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sourceRegistry.mjs",
+      "blob": "8683d678f4dbb80fe8a05d9fa669b9c0dec21401",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sources/delivery.mjs",
+      "blob": "e85655ebe0cf503ba8120e32b91cce4a063cff5c",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sources/edadeal.mjs",
+      "blob": "1a4044b1b7fbd17b066e7165dc9bae4606d0f0e1",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sources/kuper.mjs",
+      "blob": "e5fa142ec0b8cc2a02c789f9768cdc3d996038c1",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sources/megamarket.mjs",
+      "blob": "3e4c3e7659c2e0ddc4a84e5665999da0988c0b9f",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sources/openFoodFacts.mjs",
+      "blob": "feaa657b210b6ef3694f4fa94159c7229299c04b",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sources/openPrices.mjs",
+      "blob": "71ed8d05675605edba59ddfb72528429de28a4bb",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sources/ozonFresh.mjs",
+      "blob": "89b1ab0042f670d66b3718473e038d8b9837508a",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sources/samokat.mjs",
+      "blob": "18b0cdf8f70b9e1c1b2539a5e4c1ca468833c8ce",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sources/vprok.mjs",
+      "blob": "403a40156134baaf8858f8b81fec8d38da162406",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sources/yandexEda.mjs",
+      "blob": "5d19e6e777ae60b0e711eb471a7bbb26d3e5d23c",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/sensors/sources/yandexMapsEdadealExactStore.mjs",
+      "blob": "12087b22d58fb8676ba51181d76921517c6b6d14",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/state/basketStore.mjs",
+      "blob": "a98e6e49fd21fd89538b0cbf2b4358ce68dc04bb",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/styles.css",
+      "blob": "95ac4b9adf9eaaf4d6c6acfcb186089143e3eb6d",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/theme-sky.css",
+      "blob": "9432a3650f89730e3940d7d76b53e4fa71263497",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    },
+    {
+      "path": "src/theme-violet.css",
+      "blob": "fd1ecb269dd165123f3a118f3930504255c10d0c",
+      "source": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb"
+    }
+  ]
+}

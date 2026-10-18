@@ -1,5 +1,6 @@
 import { stripAssistantGreetingPrefix } from './localAssistantDialogue.mjs';
 import { extractShoppingNeedContext } from './shoppingNeedContext.mjs';
+import { shoppingTargets } from './shoppingConversation.mjs';
 
 const clean = text => stripAssistantGreetingPrefix(String(text)).normalize('NFKC')
   .toLocaleLowerCase('ru-RU').replaceAll('ё', 'е').replace(/\s+/gu, ' ').trim();
@@ -54,10 +55,16 @@ export function shoppingDialogueText(text, memory, freezer) {
   return scoped.length <= 300 ? scoped : text;
 }
 
-export function shoppingDialogueRecoveryQuestion(memory, code) {
+export function shoppingDialogueRecoveryQuestion(memory, code, turn = null) {
   const notice = code === 'rate_limited' ? 'Лимит обращений к сервису советов сейчас исчерпан.'
-    : code === 'invalid_advice' ? 'Не смогла использовать ответ сервиса.'
+    : code === 'invalid_advice' || /^(?:invalid_provider_advice|provider_advice_)/u.test(code ?? '') ? 'Ответ сервиса не прошёл проверку.'
+    : code === 'provider_timeout' ? 'Не успел получить ответ сервиса.'
     : 'Сервис советов сейчас не ответил.';
+  const specific = text => shoppingTargets(text).length || /рыб|готов|ужин|обед|завтрак|заморож/iu.test(text);
+  const previousQuestions = (turn?.history ?? []).filter(row => row.role === 'user');
+  const onTopic = turn && !isShoppingPlanningRequest(turn.text) && (specific(turn.text)
+    || !previousQuestions.some(row => isShoppingPlanningRequest(row.text)) && previousQuestions.some(row => specific(row.text)));
+  if (onTopic) return `${notice} Вопрос и контекст сохранены. Можно повторить вопрос или продолжить уточнять эту же тему.`;
   const question = !memory.facts.peopleCount ? 'На сколько человек нужна еда?'
     : !memory.facts.shoppingDays ? 'На сколько дней планируем покупки?'
       : !memory.facts.budgetMinor ? 'Какой общий бюджет на весь срок?'
