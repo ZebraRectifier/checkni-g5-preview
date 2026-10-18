@@ -940,17 +940,60 @@
       "exactHeadCi": 39078240696,
       "releaseGate": 39078240704,
       "actualMainCi": 39080643074,
-      "actualMainCiStatus": "in_progress",
+      "actualMainCiStatus": "success",
+      "actualMainRetriedCases": 1,
+      "actualMainRetryNote": "The pre-existing mobile two-column layout test passed on its configured retry; the other 389 cases passed initially.",
       "publicNodeChecks": 81,
       "publicDesktopMobileCases": 10,
       "publicReplayUsesFixtures": true,
       "physicalAndroid": "unverified"
     },
     "nativeImport": {
-      "status": "queued",
+      "status": "verified-import",
+      "verified": true,
       "run": 39081077632,
+      "sourceCommit": "e7fe20f58a0ca1d4b459ee4b6beea24ad5b7ab33",
+      "artifactId": 12118839802,
       "shopCode": "773505",
-      "verified": false
+      "storeAddress": "г Москва, ул 1-я Нововатутинская, д 1",
+      "importedObservations": 64,
+      "readBackRows": 64,
+      "auditedFields": 1920,
+      "differences": 0,
+      "selectedControlProofs": 64,
+      "snapshotCollectedAt": "2026-10-18T00:19:17.269Z",
+      "observedAtFrom": "2026-10-18T00:10:46.151Z",
+      "observedAtUntil": "2026-10-18T00:19:17.269Z",
+      "observedFamilies": 9,
+      "requestedFamilies": 16,
+      "checkedAt": "2026-10-18T00:26:17.730Z",
+      "availability": "unknown",
+      "cardConditions": "unknown",
+      "fullAssortmentProven": false
+    },
+    "liveWeeklyCoverage": {
+      "status": "partial",
+      "fixture": false,
+      "checkedAt": "2026-10-18T00:26:31.188Z",
+      "shopCode": "773505",
+      "requested": 16,
+      "addable": 10,
+      "complete": false,
+      "allRecent": false,
+      "recentAddable": 8,
+      "olderAddable": [
+        "Курица",
+        "Яблоки"
+      ],
+      "missing": [
+        "Гречка",
+        "Макароны",
+        "Молоко",
+        "Бананы",
+        "Хлопья для каши",
+        "Свинина"
+      ],
+      "note": "An observed price is not stock. Unconfirmed source pages remain unpriced; milk sold by mass is not converted to litres."
     }
   }
 }
