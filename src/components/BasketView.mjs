@@ -82,7 +82,11 @@ function pluralizeProducts(count) {
 
 export function basketSummaryText(items) {
   const units = countBasketUnits(items);
-  return `${units} шт. · ${items.length} ${pluralizeProducts(items.length)}`;
+  return `${basketHasWeightAmounts(items) ? '' : `${units} шт. · `}${items.length} ${pluralizeProducts(items.length)}`;
+}
+
+export function basketHasWeightAmounts(items) {
+  return items.some(item => /^цена за\s+\d/iu.test(String(item.unit ?? '')));
 }
 
 export function renderBasketView(container, items, actions) {

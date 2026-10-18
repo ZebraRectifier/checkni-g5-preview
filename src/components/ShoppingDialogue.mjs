@@ -1,6 +1,7 @@
 import { shoppingReferenceSources } from "../intelligence/shoppingProductReference.mjs";
 import { retailSelectionUrl } from "../intelligence/retailProductSelection.mjs";
 import { formatRubMinor } from "./ComparisonResult.mjs";
+import { renderGuidedShoppingTable } from "./GuidedShoppingTable.mjs";
 
 const MAX_PREVIOUS_TURNS = 8;
 const MAX_REPLY_CHARACTERS = 6000;
@@ -8,7 +9,7 @@ const MAX_REPLY_CHARACTERS = 6000;
 // Presentation only. These archived views never contain live basket actions
 // or enter browser storage. The conversation flow separately retains a small
 // set of validated advice exchanges for contextual provider questions.
-export function createShoppingDialogue({ form, input, output, fallback, onClear }) {
+export function createShoppingDialogue({ form, input, output, fallback, onClear, onOpenBasket }) {
   const document = form.ownerDocument;
   const stylesheet = document.createElement("link");
   stylesheet.rel = "stylesheet";
@@ -31,6 +32,17 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
   clear.className = "text-button";
   clear.textContent = "Очистить переписку";
   header.append(heading, clear);
+
+  const welcome = document.createElement('section'); welcome.className = 'shopping-welcome';
+  welcome.setAttribute('aria-label', 'С чего начнём покупки');
+  const entry = document.createElement('div'); entry.className = 'shopping-conversation-choices';
+  for (const [label, text] of [['💰 Собрать недорогую корзину', 'Собери недорогую корзину'],
+    ['🥗 Подобрать по вкусу и составу', 'Подбери по вкусу и составу'], ['🛒 Сравнить мой список', 'Сравни мой список']]) {
+    const button = document.createElement('button'); button.type = 'button'; button.textContent = label;
+    button.addEventListener('click', () => { input.value = text; input.dispatchEvent(new Event('input', { bubbles: true })); form.requestSubmit(); });
+    entry.append(button);
+  }
+  welcome.append(entry);
 
   const history = document.createElement("ol");
   history.id = "shopping-dialogue-history";
@@ -60,14 +72,15 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
   output.setAttribute("aria-atomic", "true");
   root.append(header, history, previousNote, user, speaker, output, fallback, note);
   form.prepend(root);
+  form.querySelector('.proposal-box').after(welcome);
 
   const label = form.querySelector('label[for="basket-proposal-input"] .sr-only');
   if (label) label.textContent = "Сообщение помощнику CHECKNI о покупках";
-  input.placeholder = "Покупки или вопрос — например: как выбрать сыр?";
+  input.placeholder = 'Например: недорогая корзина на неделю для троих';
   const help = document.getElementById("basket-proposal-help");
   if (help) help.textContent = "Напиши список покупок, свои условия или вопрос о товарах. Можешь уточнять ответ следующим сообщением.";
   const title = document.getElementById("phrase-entry-title");
-  if (title) title.textContent = "Поговорим о покупках";
+  if (title) title.textContent = 'Привет! 👋 Соберём покупки?';
 
   let active = null;
   let previous = [];
@@ -133,6 +146,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
     if (!normalized || normalized.length > 300) { archiveActive(); return; }
     if (active?.pending && active.user === normalized) return;
     archiveActive();
+    welcome.hidden = true;
     active = { user: normalized, reply: [], pending: true };
     user.textContent = `Ты: ${normalized}`;
     user.hidden = false;
@@ -141,6 +155,10 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
   }
 
   function sync(state) {
+    output.querySelectorAll('.guided-shopping').forEach(node => node.remove());
+    renderGuidedShoppingTable(output, state.presentation?.guidedShopping, text => {
+      input.value = text; input.dispatchEvent(new Event('input', { bubbles: true })); form.requestSubmit();
+    }, onOpenBasket);
     output.querySelectorAll(".shopping-conversation-choices").forEach(node => node.remove());
     if (Array.isArray(state.presentation?.conversationChoices)) {
       const choices = document.createElement("div"); choices.className = "shopping-conversation-choices";
@@ -176,6 +194,8 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
     output.querySelectorAll(".shopping-dialogue-sources").forEach(node => node.remove());
     appendSources(output, state.presentation?.referenceKey);
     root.hidden = !active && !previous.length && !output.childElementCount;
+    welcome.hidden = Boolean(active || previous.length || state.status !== 'idle');
+    clear.hidden = !active && !previous.length;
     speaker.hidden = !output.childElementCount;
     if (!active) return;
     if (state.status === "idle") { archiveActive(); return; }
@@ -183,7 +203,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear 
     if (active.pending) return;
     active.referenceKey = state.presentation?.referenceKey;
     let remaining = MAX_REPLY_CHARACTERS;
-    active.reply = [...output.querySelectorAll(".proposal-message, .proposal-detail, .proposal-preview-list li, .proposal-problems li, .shopping-selection-card")]
+    active.reply = [...output.querySelectorAll(".proposal-message, .proposal-detail, .proposal-preview-list li, .proposal-problems li, .shopping-selection-card, .guided-shopping-total, .guided-shopping-comparison")]
       .map(node => {
         const text = (node.textContent ?? "").trim().slice(0, remaining);
         remaining -= text.length;

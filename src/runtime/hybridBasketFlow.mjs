@@ -98,6 +98,7 @@ export function createHybridBasketFlow(options = {}) {
     localCatalog,
     resolveLiveCatalog,
     requestAiProposal,
+    requestConversationAdvice,
     resolveCommercialRequest,
     priceHints,
     applyValidatedBasket,
@@ -260,6 +261,7 @@ export function createHybridBasketFlow(options = {}) {
         {
           resolveLiveCatalog,
           requestAiProposal,
+          requestConversationAdvice,
           ...(typeof resolveCommercialRequest === "function"
             ? { resolveCommercialRequest }
             : {}),

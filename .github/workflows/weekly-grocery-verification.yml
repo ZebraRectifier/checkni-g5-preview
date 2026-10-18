@@ -1,0 +1,55 @@
+name: Weekly grocery artifact verification
+
+on:
+  pull_request:
+    paths: ['src/**', 'index.html', 'prices.html', 'deployment.json', 'release/**', 'tests/**', 'test/**', 'tools/security/**', 'playwright.weekly.config.mjs', '.github/workflows/weekly-grocery-verification.yml']
+  push:
+    branches: [main]
+    paths: ['src/**', 'index.html', 'prices.html', 'deployment.json', 'release/**', 'tests/**', 'test/**', 'tools/security/**', 'playwright.weekly.config.mjs', '.github/workflows/weekly-grocery-verification.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-grocery-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    # Standard hosted runners are free for this public artifact repository.
+    # Never attach this public/fork workflow to the private Cloud.ru runner.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact candidate SHA
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Verify grocery contracts and retained OKEY data
+        run: node --test tests/guidedShoppingFlow.test.mjs tests/weeklyRetailBasket.test.mjs tests/weeklyGroceryCompletion.test.mjs tests/weeklyShoppingJourney.test.mjs tests/shoppingDialogueRecovery.test.mjs tests/addressPriceHistory.test.mjs tests/okeyRefreshVerification.test.mjs tests/okeyOfficialPromotions.test.mjs tests/okeyPublishedPromotions.test.mjs
+      - name: Scan complete browser artifact and release metadata
+        run: node tools/security/scan-public-secrets.mjs src index.html prices.html deployment.json release
+      - name: Install pinned browser test dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install pinned Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Replay desktop and mobile grocery journeys without external services
+        run: npx playwright test --config=playwright.weekly.config.mjs
+      - name: Preserve failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: weekly-grocery-failure-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7

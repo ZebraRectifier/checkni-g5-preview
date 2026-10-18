@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "4ba67caefe9da413f1aa9b2ea0bd04d34ddebf67",
+  "sourceCommit": "e7fe20f58a0ca1d4b459ee4b6beea24ad5b7ab33",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -124,7 +124,8 @@
       557,
       558,
       559,
-      560
+      560,
+      561
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -133,13 +134,15 @@
     "providerRoute": "GPTunnel primary with explicit paid opt-in; gpt-4.1-mini; one attempt and no automatic paid fallback",
     "providerDeploymentVersion": 7,
     "validation": {
-      "unitAndGuardChecks": 2253,
-      "chromiumDesktopAndMobileCases": 380,
-      "exactHead": "969e287d01acaf5520050700e56759fa21c2fe2b",
-      "sourceCommit": "4ba67caefe9da413f1aa9b2ea0bd04d34ddebf67",
-      "exactHeadCiRun": 38993358621,
-      "mergedMainCiRun": 38994830195,
-      "validationScope": "2253 Node checks and 380 desktop/mobile cases passed at the exact head; actual-main Git tree identical. Published ten-turn dialogue verified with two real GPTunnel requests, no replay, and unchanged basket."
+      "unitAndGuardChecks": 2334,
+      "chromiumDesktopAndMobileCases": 390,
+      "exactHead": "04108480f17c333fd42ba8f3f4e560d73b515e5b",
+      "sourceCommit": "e7fe20f58a0ca1d4b459ee4b6beea24ad5b7ab33",
+      "exactHeadCiRun": 39078240696,
+      "mergedMainCiRun": 39080643074,
+      "mergedMainCiStatus": "success",
+      "mergedMainRetriedCases": 1,
+      "validationScope": "Complete source checks and desktop/mobile suite passed on the existing private VM. The public artifact separately passes 81 contracts and 10 fixture-based browser cases. Provider v7 and its auth/quotas are unchanged."
     },
     "localAdviceRecovery": {
       "readOnly": true,
@@ -1251,5 +1254,85 @@
     "cardAndNoCardPrices": "unknown",
     "fullAssortment": false,
     "validationChecks": 25
+  },
+  "weeklyGroceryJourney": {
+    "sourcePr": 561,
+    "sourceCommit": "e7fe20f58a0ca1d4b459ee4b6beea24ad5b7ab33",
+    "testedExactHead": "04108480f17c333fd42ba8f3f4e560d73b515e5b",
+    "codeVersion": "20261018.1",
+    "peopleAndDays": "explicit or clarified",
+    "budget": "optional",
+    "confirmation": "explicit before basket changes",
+    "proposedWeeklyFamilies": 16,
+    "reviewedMagnitIdentities": 45,
+    "unpricedDiscoveryCandidates": 20,
+    "weighedPortions": "approximate and editable",
+    "availability": "unknown",
+    "cardConditions": "unknown",
+    "fullAssortmentProven": false,
+    "exactSkuCheapestStoreProven": false,
+    "dietaryCompletenessProven": false,
+    "okeyScope": "third-party Moscow city promotions; partial weekly coverage",
+    "validation": {
+      "nodeChecks": 2334,
+      "browserCases": 390,
+      "exactHeadCi": 39078240696,
+      "releaseGate": 39078240704,
+      "actualMainCi": 39080643074,
+      "actualMainCiStatus": "success",
+      "actualMainRetriedCases": 1,
+      "actualMainRetryNote": "The pre-existing mobile two-column layout test passed on its configured retry; the other 389 cases passed initially.",
+      "publicNodeChecks": 81,
+      "publicDesktopMobileCases": 10,
+      "publicReplayUsesFixtures": true,
+      "physicalAndroid": "unverified"
+    },
+    "nativeImport": {
+      "status": "verified-import",
+      "verified": true,
+      "run": 39081077632,
+      "sourceCommit": "e7fe20f58a0ca1d4b459ee4b6beea24ad5b7ab33",
+      "artifactId": 12118839802,
+      "shopCode": "773505",
+      "storeAddress": "г Москва, ул 1-я Нововатутинская, д 1",
+      "importedObservations": 64,
+      "readBackRows": 64,
+      "auditedFields": 1920,
+      "differences": 0,
+      "selectedControlProofs": 64,
+      "snapshotCollectedAt": "2026-10-18T00:19:17.269Z",
+      "observedAtFrom": "2026-10-18T00:10:46.151Z",
+      "observedAtUntil": "2026-10-18T00:19:17.269Z",
+      "observedFamilies": 9,
+      "requestedFamilies": 16,
+      "checkedAt": "2026-10-18T00:26:17.730Z",
+      "availability": "unknown",
+      "cardConditions": "unknown",
+      "fullAssortmentProven": false
+    },
+    "liveWeeklyCoverage": {
+      "status": "partial",
+      "fixture": false,
+      "checkedAt": "2026-10-18T00:26:31.188Z",
+      "shopCode": "773505",
+      "requested": 16,
+      "addable": 10,
+      "complete": false,
+      "allRecent": false,
+      "recentAddable": 8,
+      "olderAddable": [
+        "Курица",
+        "Яблоки"
+      ],
+      "missing": [
+        "Гречка",
+        "Макароны",
+        "Молоко",
+        "Бананы",
+        "Хлопья для каши",
+        "Свинина"
+      ],
+      "note": "An observed price is not stock. Unconfirmed source pages remain unpriced; milk sold by mass is not converted to litres."
+    }
   }
 }

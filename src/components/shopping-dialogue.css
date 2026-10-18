@@ -124,3 +124,33 @@
   white-space: normal;
   text-align: left;
 }
+
+.guided-shopping { min-width: 0; margin: 12px 0; }
+.guided-shopping-scroll { max-width: 100%; overflow-x: auto; border: 1px solid #49405d; border-radius: 12px; }
+.guided-shopping-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
+.guided-shopping-table caption { text-align: left; padding: 12px; font-weight: 700; color: #f8f8fc; }
+.guided-shopping-table th, .guided-shopping-table td { padding: 10px; border-top: 1px solid #49405d; text-align: left; vertical-align: top; }
+.guided-shopping-table th { color: #d5c3ff; }
+.guided-shopping-table th:first-child { width: 58%; }
+.guided-shopping-table td { overflow-wrap: anywhere; }
+.guided-shopping-table td:nth-child(2) > strong { white-space: nowrap; }
+.guided-shopping-table summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: #d5c3ff; }
+.guided-shopping-table p { margin: 5px 0; }
+.guided-shopping-table small { display: block; margin-top: 6px; color: #c3c9d7; }
+.guided-shopping-table a { color: #d5c3ff; }
+.guided-shopping-table input { width: 60px; min-height: 44px; }
+.guided-shopping-table select { width: 100%; max-width: 260px; min-height: 44px; white-space: normal; }
+.guided-shopping-table button { min-height: 44px; margin-top: 5px; }
+.guided-shopping-total { font-weight: 700; }
+.guided-shopping-comparison { margin-top: 12px; padding: 12px; border: 1px solid #685183; border-radius: 12px; }
+.shopping-welcome { margin-block: 12px; padding: 14px; background: #242336; border: 1px solid #685183; border-radius: 12px; line-height: 1.6; }
+.shopping-welcome .shopping-conversation-choices { margin: 0; }
+.shopping-welcome button { background: #39245a; border: 1px solid #8d61c3; border-radius: 10px; color: #f8f8fc; font: inherit; font-weight: 600; cursor: pointer; }
+.shopping-welcome button:hover { background: #4c3374; }
+.shopping-welcome :focus-visible { outline: 2px solid #bd95ff; outline-offset: 3px; }
+.guided-shopping-area { font-weight: 700; color: #d5c3ff; }
+.guided-shopping-stores { padding: 12px; margin-block: 12px; border: 1px solid #49405d; border-radius: 12px; }
+.guided-shopping-stores p { margin-block: 8px; }
+@media (max-width: 480px) {
+  .guided-shopping-table th, .guided-shopping-table td { padding: 8px; font-size: 12px; }
+}

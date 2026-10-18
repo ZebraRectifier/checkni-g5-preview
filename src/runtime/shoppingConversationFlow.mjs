@@ -16,6 +16,10 @@ import { isRetailSortFollowup, normalizeRetailShoppingText, retailBudgetIntent }
 import { extractShoppingNeedContext, shoppingNeedContextSummary } from "../intelligence/shoppingNeedContext.mjs";
 import { currentComparisonExplanation } from "../intelligence/currentComparisonExplanation.mjs";
 import { resolveLocalAssistantDialogue } from "../intelligence/localAssistantDialogue.mjs";
+import { isShoppingPlanningRequest, canContinueShoppingDialogue, shoppingDialogueNeed,
+  explicitFreezerAnswer, shoppingDialogueText, shoppingDialogueRecoveryQuestion } from "../intelligence/shoppingDialogueRecovery.mjs";
+import { isGuidedBuildRequest, isGuidedEntryRequest } from "../intelligence/guidedShoppingPlan.mjs";
+import { createGuidedShoppingFlow } from "./guidedShoppingFlow.mjs";
 
 const copy = value => JSON.parse(JSON.stringify(value));
 const rowsOf = validation => (validation?.basket ?? []).map(row => ({ productId: row.product.id, quantity: row.quantity }));
@@ -37,6 +41,8 @@ export function createShoppingConversationFlow(options) {
   let adviceHistory = [];
   let adviceHistoryBasket = null;
   let adviceExclusionPending = false;
+  let dialogueFreezer = null;
+  let guidedShopping = null;
   function rememberAdvice(text, message) {
     const pair = [{ role: "user", text }, { role: "assistant", text: message }]
       .map(row => ({ ...row, text: row.text.replace(/\s+/gu, " ").trim() }));
@@ -60,6 +66,17 @@ export function createShoppingConversationFlow(options) {
   const retailScope = () => currentRetailSelectionScope(options.resolveProductFactsCatalog, localCatalog, options.resolveRetailSelectionScope);
   const activeMemory = () => Object.keys(memory.facts).length || Object.keys(memory.rejected).length || Object.keys(memory.wishes).length;
   const hybrid = createHybridBasketFlow({ ...options,
+    ...(typeof options.requestShoppingAdvice === "function" ? {
+      requestConversationAdvice: async text => {
+        if (commercialTurn) return null;
+        // Concrete product identity still comes from the live catalog and the
+        // strict proposal guard. Open planning goals were handled before here.
+        if (shoppingTargets(text).length) return undefined;
+        const token = epoch;
+        const reply = await askShoppingDialogue(text, token);
+        return token === epoch ? reply ?? { kind: "advice", message: state.presentation.message } : null;
+      }
+    } : {}),
     resolveCommercialRequest: typeof options.resolveCommercialRequest === "function"
       ? (text, catalog) => options.resolveCommercialRequest(text, catalog, { retailer: memory.facts.retailer?.value ?? null })
       : undefined,
@@ -76,10 +93,11 @@ export function createShoppingConversationFlow(options) {
   function invalidate() {
     epoch += 1; pending = null; suspendedDraft = null; inFlight = null; stagedByHybrid = null;
     referencePlan = []; adviceFocus = null; referenceAction = null;
-    adviceHistory = []; adviceHistoryBasket = null; adviceExclusionPending = false;
+    adviceHistory = []; adviceHistoryBasket = null; adviceExclusionPending = false; dialogueFreezer = null;
     productSelection = null;
     retailList = null;
     mealNeed = null;
+    guidedShopping = null;
     hybrid.invalidate(); state = { status: "idle" };
     return state;
   }
@@ -88,16 +106,20 @@ export function createShoppingConversationFlow(options) {
     const references = referencePlan, focus = adviceFocus, action = referenceAction;
     const history = adviceHistory, historyBasket = adviceHistoryBasket;
     const exclusionPending = adviceExclusionPending;
+    const freezer = dialogueFreezer;
     const selection = productSelection;
     const list = retailList;
     const need = mealNeed;
+    const guided = guidedShopping;
     invalidate();
     referencePlan = references; adviceFocus = focus; referenceAction = action;
     adviceHistory = history; adviceHistoryBasket = historyBasket;
     adviceExclusionPending = exclusionPending;
+    dialogueFreezer = freezer;
     productSelection = selection;
     retailList = list;
     mealNeed = need;
+    guidedShopping = guided;
     suspendedDraft = draft;
     return state;
   }
@@ -147,6 +169,10 @@ export function createShoppingConversationFlow(options) {
     return state;
   }
   function confirm(mode) {
+    if (state.result?.guidedShopping === true && guidedShopping?.active() && mode === "confirm_all") {
+      state = guidedShopping.confirm() ?? state;
+      return state;
+    }
     if (!pending) {
       if (hybrid.getState().status !== "clarification") return state;
       const next = hybrid.confirm(mode);
@@ -431,6 +457,61 @@ export function createShoppingConversationFlow(options) {
       return true;
     })();
   }
+  async function askShoppingDialogue(text, token, newGoal = false) {
+    const currentBasket = basket.getSnapshot();
+    if (newGoal) { adviceHistory = []; adviceHistoryBasket = null; dialogueFreezer = null; }
+    pending = null; suspendedDraft = null; productSelection = null; retailList = null; mealNeed = null;
+    referencePlan = []; referenceAction = null;
+    const need = shoppingDialogueNeed(text, adviceHistory);
+    const delta = extractShoppingDelta(text);
+    const updated = updateShoppingConversation(memory, { ...delta, facts: { ...delta.facts, ...need.facts } });
+    if (!updated.overflow) setMemory(updated.state);
+    const freezer = explicitFreezerAnswer(text);
+    if (freezer !== null) dialogueFreezer = freezer;
+    adviceFocus = { topic: "dialogue", targets: [], subject: "покупки" };
+    if (need.clarification || memory.facts.unresolvedConstraints) {
+      const message = need.clarification ?? "Уточни пищевое ограничение, которое нужно учесть. Сохраняю прежние условия.";
+      state = messageState("Уточню условие.", message);
+      rememberAdvice(text, message);
+      return { kind: "advice", message };
+    }
+    const input = shoppingAdviceInput(shoppingDialogueText(text, memory, dialogueFreezer), memory,
+      localCatalog, [], currentBasket, adviceHistory);
+    state = { status: "loading" };
+    let timer;
+    let answer;
+    try {
+      answer = await Promise.race([
+        Promise.resolve().then(() => options.requestShoppingAdvice(input)),
+        new Promise(resolve => { timer = setTimeout(() => resolve({ kind: "unavailable", code: "provider_timeout" }),
+          Math.max(1, Math.min(20_000, options.dialogueTimeoutMs ?? 20_000))); })
+      ]);
+    } catch { answer = { kind: "unavailable", code: "transport_unavailable" }; }
+    finally { clearTimeout(timer); }
+    if (token !== epoch) return null;
+    if (JSON.stringify(currentBasket) !== JSON.stringify(basket.getSnapshot())) {
+      adviceHistory = []; adviceHistoryBasket = null; adviceFocus = null;
+      state = messageState("Корзина изменилась.", "Повтори вопрос — учту текущие покупки. Прежний совет не применён.");
+      return null;
+    }
+    const reply = normalizeShoppingAdviceResponse(answer, input.context);
+    const message = reply?.message ?? shoppingDialogueRecoveryQuestion(memory,
+      answer?.kind === "advice" ? "invalid_advice" : answer?.code);
+    state = messageState(reply ? "Давай разберёмся." : "Продолжим подбор.", message);
+    state.result.conversationAdvice = true;
+    state.result.providerAccepted = Boolean(reply);
+    rememberAdvice(text, message);
+    if (typeof options.searchGuidedCatalog === "function" && (isShoppingPlanningRequest(text)
+        || adviceHistory.some(row => row.role === "user" && isShoppingPlanningRequest(row.text)))) {
+      state.presentation.headline = "Давай подберём продукты.";
+      state.presentation.message += " Соберём черновик покупок и посмотрим реальные карточки, или сначала обсудим состав?";
+      state.presentation.conversationChoices = [
+        { label: "Собрать корзину", text: "Собери корзину" },
+        { label: "Обсудить продукты", text: "Хочу сначала обсудить состав продуктов" }
+      ];
+    }
+    return { kind: "advice", message };
+  }
   async function execute(text, token) {
     const utterance = text;
     commercialTurn = false;
@@ -442,19 +523,27 @@ export function createShoppingConversationFlow(options) {
     // matching: "хай" must not become tea in the selected retailer catalog.
     const dialogue = resolveLocalAssistantDialogue(text);
     if (dialogue && (["greeting", "attention", "thanks"].includes(dialogue.dialogueKind)
-      || dialogue.dialogueKind === "acknowledgement" && adviceFocus && !pending && !suspendedDraft)) {
+      || dialogue.dialogueKind === "acknowledgement" && adviceFocus && !guidedShopping?.active() && !pending && !suspendedDraft)) {
       // Social replies consume a turn too: expire one-turn facts and age
       // hypotheses through the same empty-delta update as ordinary fallback.
       setMemory(updateShoppingConversation(memory, extractShoppingDelta("")).state);
+      guidedShopping?.hideReview();
       mealNeed = null; retailList = null; productSelection = null; stagedByHybrid = null;
       pending = null; suspendedDraft = null; referencePlan = []; referenceAction = null;
       const request = hybrid.run(text);
       state = hybrid.getState();
       const next = await request;
-      if (token === epoch) state = next;
+      const greetingChoices = [
+        { label: '💰 Собрать недорогую корзину', text: 'Собери недорогую корзину' },
+        { label: '🥗 Подобрать по вкусу и составу', text: 'Подбери по вкусу и составу' },
+        { label: '🛒 Сравнить мой список', text: 'Сравни мой список' }
+      ];
+      if (token === epoch) state = dialogue.dialogueKind === 'greeting' && next.presentation
+        ? { ...next, presentation: { ...next.presentation, conversationChoices: greetingChoices } } : next;
       return state;
     }
     if (preflightLocalBasketText(text).kind === "reject") {
+      guidedShopping = null;
       mealNeed = null;
       retailList = null; productSelection = null;
       pending = null; suspendedDraft = null; referencePlan = []; adviceFocus = null; referenceAction = null;
@@ -464,6 +553,53 @@ export function createShoppingConversationFlow(options) {
       state = hybrid.getState();
       const next = await request;
       if (token === epoch) state = next;
+      return state;
+    }
+    const planning = isShoppingPlanningRequest(text);
+    const control = extractShoppingDelta(text);
+    if (control.reset || control.newGoal || control.undo) guidedShopping = null;
+    if (/^сравни мой список[.!?]*$/iu.test(text)) {
+      guidedShopping?.hideReview();
+      state = messageState('Давай сравним покупки.', basket.getSnapshot().length
+        ? 'Товары уже в корзине. Открой её и нажми «Сравнить» — покажу результат по подтверждённым данным выбранных адресов.'
+        : 'Напиши свой список с количеством, например «молоко 2, яйца 1, гречка 1». Покажу варианты товаров, а после твоего подтверждения сравним корзину.');
+      return state;
+    }
+    const directGuidedBuild = isGuidedEntryRequest(text);
+    if (typeof options.searchGuidedCatalog === "function" && (directGuidedBuild || isGuidedBuildRequest(text)
+        && (adviceFocus?.topic === "dialogue" || adviceHistory.length))) {
+      if (directGuidedBuild) guidedShopping = null;
+      if (!guidedShopping?.active()) {
+        guidedShopping = createGuidedShoppingFlow({ basket,
+          getMemory: () => memory,
+          updateMemory: delta => { const next = updateShoppingConversation(memory, delta); if (next.overflow) return false; setMemory(next.state); return true; },
+          getContext: options.resolveRetailSelectionScope,
+          getNearbyContexts: options.getGuidedNearbyContexts,
+          getRetailContexts: options.getGuidedRetailContexts,
+          getRetailContextKey:options.getGuidedRetailContextKey,
+          selectStore: options.selectGuidedStore,
+          searchCatalog: options.searchGuidedCatalog,
+          compareBasket: options.compareGuidedBasket });
+        state = guidedShopping.start(directGuidedBuild ? text : adviceHistory.find(row => row.role === "user")?.text ?? text,
+          directGuidedBuild ? [] : adviceHistory);
+      } else state = guidedShopping.getState();
+      pending = null; suspendedDraft = null; hybrid.invalidate();
+      return state;
+    }
+    if (guidedShopping?.active() && !planning) {
+      const request = guidedShopping.handle(text, () => token === epoch);
+      state = guidedShopping.getState() ?? state;
+      const handled = await request;
+      if (token !== epoch) return state;
+      if (handled) { state = handled; return state; }
+      if (parseLocalBasketText(text, localCatalog).kind === "local") guidedShopping = null;
+    } else if (planning) guidedShopping = null;
+    const dialogueContinuation = adviceFocus?.topic === "dialogue" && canContinueShoppingDialogue(text)
+      && !shoppingAdviceTopic(text) && !isShoppingProductFactsQuestion(text)
+      && parseLocalBasketText(text, localCatalog).kind !== "local";
+    if (typeof options.requestShoppingAdvice === "function" && (planning || dialogueContinuation)) {
+      hybrid.invalidate();
+      await askShoppingDialogue(text, token, planning);
       return state;
     }
     if (adviceExclusionPending) {
@@ -746,7 +882,7 @@ export function createShoppingConversationFlow(options) {
     // A concept match alone must not turn lactose-free milk into generic milk.
     const retailerProductQuery = delta.facts.retailer && shoppingTargets(text).length && !delta.facts.budgetMinor
       && !delta.reject.length && !delta.allow.length && !/корзин|перестрой/u.test(text.toLocaleLowerCase("ru-RU"));
-    const commercialQuery = retailerProductQuery || /где дешевле|цен[ау]|сколько сто|в наличии|скидк|акци|сам(?:ый|ая|ое|ые|ую|ого|ой)\s+деш[её]в/u.test(text.toLocaleLowerCase("ru-RU"));
+    const commercialQuery = retailerProductQuery || /где дешевле|цен[ау]|сколько сто|поч[её]м|в наличии|скидк|акци|сам(?:ый|ая|ое|ые|ую|ого|ой)\s+деш[её]в/u.test(text.toLocaleLowerCase("ru-RU"));
     commercialTurn = Boolean(commercialQuery);
     if (commercialQuery && delta.facts.retailer) {
       const updated = updateShoppingConversation(memory, { ...extractShoppingDelta(""), facts: { retailer: delta.facts.retailer } });
@@ -770,13 +906,14 @@ export function createShoppingConversationFlow(options) {
       checkpoint = { memory, plan: copy(lastPlan), basket: basket.getSnapshot(), appliedSnapshot: null };
       setMemory(updated.state);
       if (delta.reset) {
+        dialogueFreezer = null;
         managed = []; lastPlan = []; referencePlan = [];
         state = preferenceStore.status().failed
           ? messageState("Сбросила условия этого разговора.", "Сохранённые предпочтения удалить не удалось. После перезагрузки они могут восстановиться. Подтверждённая корзина сохранена.")
           : messageState("Предпочтения сброшены.", "Начнём новый разговор о покупках. Подтверждённая корзина сохранена.");
         return state;
       }
-      if (delta.newGoal) { lastPlan = []; referencePlan = []; }
+      if (delta.newGoal) { lastPlan = []; referencePlan = []; dialogueFreezer = null; }
       if (memory.facts.unresolvedConstraints) {
         state = messageState("Не всё условие удалось понять.", `Не распознала: ${memory.facts.unresolvedConstraints.value.join("; ")}. Уточни именно эту часть, чтобы я не нарушила отказ. Можно явно написать «забудь нераспознанное условие». Другие пожелания сохранила; корзина не изменилась.`);
         return state;
@@ -854,6 +991,18 @@ export function createShoppingConversationFlow(options) {
         ? needsPreparation.filter(row => knownPreparation(byId.get(row.productId) ?? { id: row.productId }) === "cook").map(row => `${byId.get(row.productId).name} потребует готовки; оставила по твоему прямому запросу.`)
         : [];
       return preview({ items: [...items.values()], unresolved: next.result?.unresolvedTerms ?? [], warnings });
+    }
+    if (typeof options.requestShoppingAdvice === "function" && ["unavailable", "error"].includes(next.status)) {
+      // The strict proposal already used this turn's provider attempt. Recover
+      // locally, retaining manual search and context without a second paid call.
+      hybrid.invalidate(); stagedByHybrid = null;
+      adviceFocus = { topic: "dialogue", targets: [], subject: "покупки" };
+      referencePlan = []; referenceAction = null;
+      const message = "Не удалось подобрать точный товар. Уточни вид, марку или упаковку — что для тебя важно? Можно также найти товар вручную. Корзина сохранена.";
+      state = { ...next, validation: null, presentation: { ...next.presentation,
+        headline: "Уточним товар.", message, items: [], primaryAction: "Уточнить товар" } };
+      rememberAdvice(text, message);
+      return state;
     }
     state = next;
     if (next.validation?.basket?.length) { lastPlan = rowsOf(next.validation); referencePlan = copy(lastPlan); }

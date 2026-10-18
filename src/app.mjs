@@ -12,7 +12,7 @@ import {
 } from "./ports/betaRetailPricesPort.mjs";
 import { VALIDATED_MERGE_REASON, createBasketStore, countBasketUnits } from "./state/basketStore.mjs";
 import { createProductCard } from "./components/ProductCard.mjs";
-import { BASKET_COMPARE_LABEL, renderBasketView } from "./components/BasketView.mjs";
+import { BASKET_COMPARE_LABEL, renderBasketView, basketHasWeightAmounts } from "./components/BasketView.mjs";
 import {
   createComparisonResult,
   createObservedComparisonResult
@@ -32,6 +32,7 @@ import { createMetroStorePicker } from "./components/MetroStorePicker.mjs";
 import { resolveMagnitMoscowStore } from "./data/magnitMoscowStores.mjs";
 import { resolveMetroMoscowRegionStore } from "./data/metroMoscowRegionStores.mjs";
 import { resolveGlobusMoscowRegionStore } from "./data/globusMoscowRegionStores.mjs";
+import { nearbyShoppingStores } from "./data/shoppingLocations.mjs";
 import { createGlobusStorePicker, resolveGlobusComparisonPeer } from "./components/GlobusStorePicker.mjs";
 import { createOkeyDeliveryCatalog } from "./components/OkeyDeliveryCatalog.mjs";
 import { createSelectedComparisonStores } from "./components/SelectedComparisonStores.mjs";
@@ -56,6 +57,7 @@ import {
   HYBRID_BASKET_FLOW_STATUS,
 } from "./runtime/hybridBasketFlow.mjs";
 import { createShoppingConversationFlow } from "./runtime/shoppingConversationFlow.mjs";
+import {createWeeklyRetailCatalogPort,OKEY_WEEKLY_SCOPE} from './ports/weeklyRetailCatalogPort.mjs';
 import { createShoppingDialogue } from "./components/ShoppingDialogue.mjs";
 import {
   createHybridBasketInterpreterLoader
@@ -228,6 +230,7 @@ let martenMindState = createMartenMindState();
 // snapshot hints: the draft text carries its own source/region label, so
 // this map stays mode-independent, unlike the catalogue card hints below.
 const budgetPlannerHints = buildSnapshotPriceHints();
+const weeklyRetailCatalog=createWeeklyRetailCatalogPort();
 const basketProposalFlow = createShoppingConversationFlow({
   basket,
   getCurrentComparison: () => comparisonFlow.getCurrentComparison(basket.getSnapshot()),
@@ -242,6 +245,37 @@ const basketProposalFlow = createShoppingConversationFlow({
   resolveLiveCatalog: resolveAiCatalog,
   requestAiProposal: requestBasketProposal,
   requestShoppingAdvice,
+  ...(publicRetailCatalogMode ? {
+    getGuidedRetailContextKey:()=>selectedMagnitStore.shopCode,
+    getGuidedRetailContexts: ids=>[
+      ...(ids.includes('magnit')?[{...retailClientFor('magnit').definition,store:selectedMagnitStore,priceScope:'address-public-price'}]:[]),
+      ...(ids.includes('okey')?[OKEY_WEEKLY_SCOPE]:[])
+    ],
+    getGuidedNearbyContexts: location => nearbyShoppingStores(location).map(store => ({
+      ...createRetailCatalogClient({ retailerId: 'globus', store }).definition,
+      officialStoreId: store.officialStoreId, distanceKm: store.distanceKm
+    })),
+    selectGuidedStore: scope => {
+      const store = resolveGlobusMoscowRegionStore(scope.officialStoreId);
+      if (scope.retailerId !== 'globus' || store?.priceStatus !== 'verified'
+          || scope.storeId !== `globus-store-${store.officialStoreId}`) return false;
+      selectedGlobusStore = store; comparedGlobusStore = null;
+      comparisonAddressChanged({ guidedStoreId: store.officialStoreId });
+      retailBrowserRequestVersion += 1; catalogRequestVersion += 1;
+      pendingCatalogSearch = null; activeQuery = ''; elements.searchInput.value = ''; elements.clearSearch.hidden = true;
+      retailBrowserState = { retailerId: 'globus', status: 'idle', path: [], categories: [], rootProductCount: null };
+      updateRetailHistory([], { replace: true, retailerId: 'globus' }); renderRetailBrowser();
+      void Promise.all([loadRetailRoots({ clearCatalog: false }), loadInitialRetailCatalog()]);
+      return true;
+    },
+    searchGuidedCatalog: (query, options) => ['magnit','okey'].includes(options?.scope?.retailerId)
+      ? weeklyRetailCatalog.search(query,options)
+      : (options?.scope?.retailerId === 'globus' && options.scope.officialStoreId
+      ? createRetailCatalogClient({ retailerId: 'globus', store: resolveGlobusMoscowRegionStore(options.scope.officialStoreId) })
+      : currentRetailClient())?.search(query, options)
+      ?? Promise.resolve({ kind: "unavailable" }),
+    compareGuidedBasket: rows => compareSurfaceBasket(rows)
+  } : {}),
   resolveCommercialRequest: (text, catalog, context = {}) => shoppingAssistant.resolveCommercialRequest(text, catalog, {
     retailer: context.retailer ?? (publicRetailCatalogMode ? retailDefinitionFor(retailBrowserState.retailerId)?.displayName : null),
     selectionDiscovery: context.selectionDiscovery === true
@@ -315,6 +349,8 @@ let selectedMetroStore = resolveMetroMoscowRegionStore({
 let magnitStorePicker = null;
 let metroStorePicker = null;
 let selectedGlobusStore = resolveGlobusMoscowRegionStore(history.state?.checkniGlobusStoreId ?? "5011") ?? resolveGlobusMoscowRegionStore("5011");
+let guidedComparisonStoreId = history.state?.checkniGuidedComparisonStoreId === selectedGlobusStore.officialStoreId
+  ? selectedGlobusStore.officialStoreId : null;
 let comparedGlobusStore = resolveGlobusComparisonPeer(selectedGlobusStore.officialStoreId,
   history.state?.checkniGlobusCompareStoreId);
 let globusStorePicker = null;
@@ -326,6 +362,7 @@ const selectedAddressComparisonPort = typeof comparisonPorts.createSelectedAddre
 
 function currentComparisonStoreScope() {
   if (comparisonAddressMode === "live-example") return createLiveExampleStoreScope();
+  if (guidedComparisonStoreId === selectedGlobusStore.officialStoreId) return createSelectedStoreScope({ globus: guidedComparisonStoreId });
   if (comparedGlobusStore) return createSelectedStoreScope({
     globus: selectedGlobusStore.officialStoreId, globusCompare: comparedGlobusStore.officialStoreId
   });
@@ -340,7 +377,8 @@ function compareSurfaceBasket(surfaceBasket) {
   }
   return comparisonPort.compare(surfaceBasket);
 }
-function comparisonAddressChanged() {
+function comparisonAddressChanged({ guidedStoreId = null } = {}) {
+  guidedComparisonStoreId = guidedStoreId === selectedGlobusStore.officialStoreId ? guidedStoreId : null;
   comparisonAddressMode = "selected";
   comparisonFlow.invalidate();
   renderBasket();
@@ -1021,6 +1059,7 @@ function createAppRouteState(
     state.checkniMetroStoreNumber = selectedMetroStore.storeNumber;
     state.checkniGlobusStoreId = selectedGlobusStore.officialStoreId;
     state.checkniGlobusCompareStoreId = comparedGlobusStore?.officialStoreId ?? null;
+    state.checkniGuidedComparisonStoreId = guidedComparisonStoreId;
   }
 
   return state;
@@ -1097,6 +1136,8 @@ async function selectRetailer(retailerId, {
 } = {}) {
   const definition = retailDefinitionFor(retailerId);
   if (!publicRetailCatalogMode || !definition) return;
+
+  if (guidedComparisonStoreId) comparisonAddressChanged();
 
   basketProposalFlow.setRetailer(definition.displayName);
   renderBasketProposalState();
@@ -1441,6 +1482,8 @@ function restoreRetailNavigationFromHistory({ initial = false, forceAddressReloa
         : false
   );
   if (restoredGlobusStore?.priceStatus === "verified") selectedGlobusStore = restoredGlobusStore;
+  guidedComparisonStoreId = history.state?.checkniGuidedComparisonStoreId === selectedGlobusStore.officialStoreId
+    ? selectedGlobusStore.officialStoreId : null;
   comparedGlobusStore = resolveGlobusComparisonPeer(selectedGlobusStore.officialStoreId,
     history.state?.checkniGlobusCompareStoreId);
   if (restoredMagnitStore) selectedMagnitStore = restoredMagnitStore;
@@ -1896,6 +1939,7 @@ const shoppingDialogue = createShoppingDialogue({
   input: elements.proposalInput,
   output: elements.proposalStatus,
   fallback: elements.proposalFallback,
+  onOpenBasket: () => navigate(VIEW.BASKET),
   onClear: () => {
     basketProposalFlow.invalidate();
     elements.proposalInput.value = "";
@@ -2489,7 +2533,7 @@ function renderDock() {
 
   elements.basketDockCopy.textContent = units === 0
     ? "Пока пусто"
-    : `${units} шт. · ${items.length} поз.${priceSuffix}`;
+    : `${basketHasWeightAmounts(items) ? '' : `${units} шт. · `}${items.length} поз.${priceSuffix}`;
   const persistence = basket.getPersistenceStatus();
   const persistenceMessage = persistence.reason === "conflict"
     ? "В другой вкладке корзина изменилась. Несохранённые изменения остались здесь."
@@ -2504,7 +2548,8 @@ function renderDock() {
   elements.openBasket.classList.toggle("has-items", units > 0);
   elements.openBasket.setAttribute(
     "aria-label",
-    units === 0 ? "Открыть пустую корзину" : `Открыть корзину, товаров: ${units}`
+    units === 0 ? "Открыть пустую корзину" : basketHasWeightAmounts(items)
+      ? `Открыть корзину, позиций: ${items.length}` : `Открыть корзину, товаров: ${units}`
   );
 }
 
@@ -2845,6 +2890,8 @@ window.addEventListener("popstate", () => {
     if (magnit) selectedMagnitStore = magnit;
     if (metro?.onlinePickupStatus === "proven") selectedMetroStore = metro;
     if (globus?.priceStatus === "verified") selectedGlobusStore = globus;
+    guidedComparisonStoreId = history.state?.checkniGuidedComparisonStoreId === selectedGlobusStore.officialStoreId
+      ? selectedGlobusStore.officialStoreId : null;
     comparedGlobusStore = resolveGlobusComparisonPeer(selectedGlobusStore.officialStoreId,
       history.state?.checkniGlobusCompareStoreId);
   }
