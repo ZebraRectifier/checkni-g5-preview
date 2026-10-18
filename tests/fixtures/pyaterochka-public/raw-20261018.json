@@ -1,0 +1,1862 @@
+{
+  "sourceUrl": "https://mos.proshoper.ru/actions/pyaterochka/moskva/",
+  "observedAt": "2026-10-18T01:17:16.791Z",
+  "title": "Каталог акций «Пятерочка» — Москва",
+  "period": "с 13 по 19 октября 2026",
+  "products": [
+    {
+      "id": "51936233",
+      "name": "Яблоко сезонное",
+      "category": "frukty-ovoshi-zelen",
+      "rubles": "79",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936118",
+      "name": "Грейпфрут красный",
+      "category": "frukty-ovoshi-zelen",
+      "rubles": "118",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936151",
+      "name": "Яблоко Global Village красное фасованное",
+      "category": "frukty-ovoshi-zelen",
+      "rubles": "119",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936044",
+      "name": "Яблоки Симиренко фасованные",
+      "category": "frukty-ovoshi-zelen",
+      "rubles": "129",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936333",
+      "name": "Манго спелое Египет",
+      "category": "frukty-ovoshi-zelen",
+      "rubles": "259",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936164",
+      "name": "Капуста Китайская",
+      "category": "frukty-ovoshi-zelen",
+      "rubles": "129",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936182",
+      "name": "Томаты Черри на ветке 250г",
+      "category": "frukty-ovoshi-zelen",
+      "rubles": "189",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936289",
+      "name": "Перец красный сладкий",
+      "category": "frukty-ovoshi-zelen",
+      "rubles": "269",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936076",
+      "name": "Капуста Брокколи",
+      "category": "frukty-ovoshi-zelen",
+      "rubles": "279",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936299",
+      "name": "Шампиньоны Global Village 250г",
+      "category": "frukty-ovoshi-zelen",
+      "rubles": "99",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936014",
+      "name": "Вешенки Global Village 300г",
+      "category": "frukty-ovoshi-zelen",
+      "rubles": "159",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936036",
+      "name": "Лук зеленый 50г",
+      "category": "frukty-ovoshi-zelen",
+      "rubles": "64",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936089",
+      "name": "Молоко ЭкоНива детское ультрапастеризованное 3.2% БЗМЖ 200мл",
+      "category": "moloko-syr-yajca",
+      "rubles": "29",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936317",
+      "name": "Молоко Сарафаново детское ультрапастеризованное 3.2% БЗМЖ 970мл",
+      "category": "moloko-syr-yajca",
+      "rubles": "84",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936092",
+      "name": "Молоко Северная Долина ультрапастеризованное 3.2% БЗМЖ 950г",
+      "category": "moloko-syr-yajca",
+      "rubles": "92",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936224",
+      "name": "Молоко Му-у ультрапастеризованное 2.5% БЗМЖ 925мл",
+      "category": "moloko-syr-yajca",
+      "rubles": "94",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936241",
+      "name": "Масло сливочное Станция Молочная Традиционное 82.5% БЗМЖ 175г",
+      "category": "moloko-syr-yajca",
+      "rubles": "164",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936129",
+      "name": "Масло сливочное ЭкоНива Крестьянское 72.5% БЗМЖ 180г",
+      "category": "moloko-syr-yajca",
+      "rubles": "169",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936186",
+      "name": "Крыло куриное Петелинка целое охлажденное",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "299",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936051",
+      "name": "Голень цыплят Петелинка охлажденная",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "314",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936222",
+      "name": "Индейка ИндиЛайт филе грудки в сливочном соусе охлажденная, 600г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "304",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936108",
+      "name": "Окорок свиной бескостный охлаждённый",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "299",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936194",
+      "name": "Колбаски Мясо Так Мясо Кнуты Классические сырокопчёные полусухие 60г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "59",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936122",
+      "name": "Колбаса Мясницкий Ряд Верона сыровяленая полусухая нарезка 80г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "99",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936043",
+      "name": "Колбаса Черкизово Варшавская полукопченая 350г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "124",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936269",
+      "name": "Набор колбас Велком Брауншвейгская, велкомовская, миланская сырокопченые полусухие 90г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "129",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936337",
+      "name": "Колбаса Вязанка Филейская вареная 450г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "139",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936110",
+      "name": "Колбаса Папа может Сервелат Зернистый варено-копченая 350г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "149",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936166",
+      "name": "Ветчина Папа может с индейкой, 300г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "149",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936145",
+      "name": "Ветчина Черкизово Рубленая По-Черкизовски вареная 350г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "184",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936019",
+      "name": "Колбаса Вязанка Докторская вареная 370г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "194",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936144",
+      "name": "Шницель свиной Рестория охлажденный, 300г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "199",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936147",
+      "name": "Колбаса Ближние Горки балыковая варено-копченая 300г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "209",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936140",
+      "name": "Колбаса Рублевский Краковская полукопченая 350г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "289",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936138",
+      "name": "Котлеты Рестория По-Киевски из мяса птицы замороженные 390г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "299",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936136",
+      "name": "Сосиски Вязанка Сливушки 330г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "149",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936206",
+      "name": "Паста Крем-Фиш кальмар-креветка 150г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "92",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936084",
+      "name": "Соломка из горбуши Fish House Классическая вяленая 40г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "99",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936146",
+      "name": "Сельдь Матиас Оригинал филе в масле 250г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "159",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936041",
+      "name": "Минтай Fish House филе в кляре 350г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "214",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936231",
+      "name": "Чебурек Твистер's band Чебурито с мясом замороженный 85г",
+      "category": "myaso-ryba-kolbasy",
+      "rubles": "24",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936099",
+      "name": "Пельмени Рестория Классические 800г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "269",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936131",
+      "name": "Наггетсы Стародворье Хрустящие из мяса цыплят-бройлеров 230г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "134",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936313",
+      "name": "Пицца Рестория Ассорти замороженная, 350г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "199",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936281",
+      "name": "Пельмени Горячая штучка Бигбули с мясом 700г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "249",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936078",
+      "name": "Стрипсы Пава-Пава из мяса индеек 450г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "324",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936095",
+      "name": "Креветки Fish House Королевские 500г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "404",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936291",
+      "name": "Креветки Красная Цена Королевские варено-мороженые неразделанные 50/70",
+      "category": "zamorozhennye-produkty",
+      "rubles": "569",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936086",
+      "name": "Блинчики Папа Может с ветчиной и сыром, 180г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "79",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936150",
+      "name": "Блины с мясом С Пылу с Жару 360г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "139",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936097",
+      "name": "Фруктовый лед Бон Пари Арбузик с соком арбуза 67г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "32",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936035",
+      "name": "Пломбир Сарафаново Ванильный 12% БЗМЖ 70г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "47",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936227",
+      "name": "Пломбир Сарафаново Шоколадный 12% БЗМЖ 70г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "47",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936303",
+      "name": "Мороженое Магнат Gold Эскимо сливочное Крем-чиз и соленая карамель 8% БЗМЖ 65г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "139",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936101",
+      "name": "Эскимо Чистая Линия Российское пломбир 12% БЗМЖ 80г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "169",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936038",
+      "name": "Тесто Рестория слоеное бездрожжевое 500г",
+      "category": "zamorozhennye-produkty",
+      "rubles": "89",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936049",
+      "name": "Горошек Global Village зеленый из мозговых сортов 240г",
+      "category": "konservaciya",
+      "rubles": "64",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936202",
+      "name": "Фасоль Global Village красная в собственном соку 400г",
+      "category": "konservaciya",
+      "rubles": "89",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936235",
+      "name": "Горошек Global Village зеленый из мозговых сортов 400г",
+      "category": "konservaciya",
+      "rubles": "89",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936247",
+      "name": "Икра Global Village из баклажанов 350г",
+      "category": "konservaciya",
+      "rubles": "89",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936261",
+      "name": "Кукуруза Global Village сахарная 340г",
+      "category": "konservaciya",
+      "rubles": "89",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936162",
+      "name": "Фасоль Global Village белая 425мл",
+      "category": "konservaciya",
+      "rubles": "89",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936301",
+      "name": "Баклажаны Global Village обжаренные с овощами 350г",
+      "category": "konservaciya",
+      "rubles": "94",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936283",
+      "name": "Горошек Global Village Selection зеленый 520г",
+      "category": "konservaciya",
+      "rubles": "99",
+      "cents": "00",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936071",
+      "name": "Лобио Global Village с фасолью 360г",
+      "category": "konservaciya",
+      "rubles": "99",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936132",
+      "name": "Фасоль красная Global Village в томатном соусе 425мл",
+      "category": "konservaciya",
+      "rubles": "99",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936112",
+      "name": "Фасоль Global Village белая в томатном соусе 400г",
+      "category": "konservaciya",
+      "rubles": "99",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936254",
+      "name": "Перец Халапеньо Global Village Selection зеленый резаный маринованный 350г",
+      "category": "konservaciya",
+      "rubles": "99",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936111",
+      "name": "Фасоль Global Village печеная 350г",
+      "category": "konservaciya",
+      "rubles": "109",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936210",
+      "name": "Фасоль Global Village Selection с шампиньонами и белыми грибами, 360г",
+      "category": "konservaciya",
+      "rubles": "109",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936106",
+      "name": "Кукуруза Global Village Selection сладкая 340г",
+      "category": "konservaciya",
+      "rubles": "114",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936081",
+      "name": "Горошек Global Village Selection зеленый 400г",
+      "category": "konservaciya",
+      "rubles": "119",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936220",
+      "name": "Лечо Global Village 520г",
+      "category": "konservaciya",
+      "rubles": "119",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936142",
+      "name": "Кукуруза Global Village Selection без сахара 340г",
+      "category": "konservaciya",
+      "rubles": "129",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936037",
+      "name": "Фасоль красная Global Village 400г",
+      "category": "konservaciya",
+      "rubles": "139",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936091",
+      "name": "Лютеница Global Village Selection домашняя 360г",
+      "category": "konservaciya",
+      "rubles": "147",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936033",
+      "name": "Полосатик Fish House жёлтый сушёно-вяленый, 40г",
+      "category": "konservaciya",
+      "rubles": "79",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936149",
+      "name": "Скумбрия Fish House атлантическая натуральная с добавлением масла 240г",
+      "category": "konservaciya",
+      "rubles": "152",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936130",
+      "name": "Скумбрия Fish House атлантическая кусочки в томатном соусе 240г",
+      "category": "konservaciya",
+      "rubles": "161",
+      "cents": "49",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936271",
+      "name": "Шпроты За Родину тушки из балтийской кильки в масле 270г",
+      "category": "konservaciya",
+      "rubles": "169",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936153",
+      "name": "Индейка Мясная Ферма тушеная 325г",
+      "category": "konservaciya",
+      "rubles": "149",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936126",
+      "name": "Говядина Скопинский МК тушеная высший сорт 325г",
+      "category": "konservaciya",
+      "rubles": "179",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936114",
+      "name": "Говядина Снов тушеная 338г",
+      "category": "konservaciya",
+      "rubles": "309",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936321",
+      "name": "Ананасы Global Village кусочки в сиропе 580мл",
+      "category": "konservaciya",
+      "rubles": "184",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936172",
+      "name": "Варенье Global Village selection бруснично-апельсиновое с пряностями 310г",
+      "category": "konservaciya",
+      "rubles": "194",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936218",
+      "name": "Варенье Выручай абрикосовое 380г",
+      "category": "konservaciya",
+      "rubles": "194",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936279",
+      "name": "Варенье Выручай клубничное 380г",
+      "category": "konservaciya",
+      "rubles": "209",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936124",
+      "name": "Варенье Выручай малиновое 380г",
+      "category": "konservaciya",
+      "rubles": "259",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936158",
+      "name": "Варенье Выручай вишневое 380г",
+      "category": "konservaciya",
+      "rubles": "259",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936323",
+      "name": "Варенье Выручай черносмородиновое 380г",
+      "category": "konservaciya",
+      "rubles": "259",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936125",
+      "name": "Паштет Выручай Нежный с мясом птицы 90г",
+      "category": "konservaciya",
+      "rubles": "43",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936192",
+      "name": "Паштет Выручай Фермерский печеночный с зеленью укропа 90г",
+      "category": "konservaciya",
+      "rubles": "43",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936080",
+      "name": "Лапша Big Bon Wok Курица в соусе терияки быстрого приготовления 85г",
+      "category": "makarony-krupy-muka",
+      "rubles": "62",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936184",
+      "name": "Гречка ядрица Селяночка быстроразваривающаяся пропаренная 900г",
+      "category": "makarony-krupy-muka",
+      "rubles": "69",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936105",
+      "name": "Рис Global Village Для плова 800г",
+      "category": "makarony-krupy-muka",
+      "rubles": "96",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936141",
+      "name": "Рис Селяночка круглозерный шлифованный 900г",
+      "category": "makarony-krupy-muka",
+      "rubles": "99",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936034",
+      "name": "Рис Селяночка длиннозерный шлифованный 900г",
+      "category": "makarony-krupy-muka",
+      "rubles": "114",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936229",
+      "name": "Гречка Мистраль 900г",
+      "category": "makarony-krupy-muka",
+      "rubles": "114",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936137",
+      "name": "Мука Селяночка пшеничная высшего сорта 2кг",
+      "category": "makarony-krupy-muka",
+      "rubles": "82",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936032",
+      "name": "Палочки кукурузные Кузя Лакомкин сладкие 140г",
+      "category": "makarony-krupy-muka",
+      "rubles": "69",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936093",
+      "name": "Пюре Роллтон Горячая порция картофельное с курицей 55г",
+      "category": "makarony-krupy-muka",
+      "rubles": "59",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936315",
+      "name": "Лапша Биг Ланч Рагу с говядиной и чили перцем быстрого приготовления 90г",
+      "category": "makarony-krupy-muka",
+      "rubles": "74",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936178",
+      "name": "Лапша Биг Ланч Соте с курицей и пряными травами 90г",
+      "category": "makarony-krupy-muka",
+      "rubles": "76",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936075",
+      "name": "Лапша Биг Ланч Фрикасе с цыпленком с черным трюфелем быстрого приготовления 90г",
+      "category": "makarony-krupy-muka",
+      "rubles": "84",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936245",
+      "name": "Майонез Ряба Провансаль 67% 630г",
+      "category": "masla-sousy-specii",
+      "rubles": "164",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936204",
+      "name": "Приправа для картофеля Рестория 15г",
+      "category": "masla-sousy-specii",
+      "rubles": "37",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936123",
+      "name": "Лавровый лист Рестория целый сушеный 5г",
+      "category": "masla-sousy-specii",
+      "rubles": "37",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936083",
+      "name": "Пряная зелень Рестория Укроп сушеный 10г",
+      "category": "masla-sousy-specii",
+      "rubles": "37",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936216",
+      "name": "Пряности Рестория Куркума молотая 15г",
+      "category": "masla-sousy-specii",
+      "rubles": "37",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936249",
+      "name": "Паприка Рестория Красная молотая, 15г",
+      "category": "masla-sousy-specii",
+      "rubles": "37",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936343",
+      "name": "Пряности Рестория Перец душистый горошек 10г",
+      "category": "masla-sousy-specii",
+      "rubles": "37",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936307",
+      "name": "Смесь перцев Рестория дробленая 15г",
+      "category": "masla-sousy-specii",
+      "rubles": "37",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936152",
+      "name": "Кумин Рестория целый 15г",
+      "category": "masla-sousy-specii",
+      "rubles": "39",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936214",
+      "name": "Перец молотый Рестория черный 50г",
+      "category": "masla-sousy-specii",
+      "rubles": "96",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936339",
+      "name": "Батончик Milky Way шоколадный с суфле 26г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "24",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936117",
+      "name": "Шоколад Goodmix молочный с начинкой со вкусом солёной карамели с хрустящей вафлей 40г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "54",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936102",
+      "name": "Шоколад Goodmix молочный с начинкой со вкусом соленого арахиса с хрустящей вафлей 40г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "56",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936047",
+      "name": "Шоколад Россия-Щедрая Душа с начинкой с кокосовой стружкой и вафлей молочный и белый, 75г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "64",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936048",
+      "name": "Шоколад Россия щедрая душа Кофе с Молоком молочный с добавлением кофе, 75г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "64",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936107",
+      "name": "Шоколад Россия - Щедрая Душа Очень молочный, 75г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "64",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936239",
+      "name": "Шоколад Россия-Щедрая Душа с карамелью и арахисом молочный, 75г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "64",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936030",
+      "name": "Шоколад молочный Россия - Щедрая Душа! Шоколадные пузырьки пористый, 70г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "72",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936040",
+      "name": "Шоколад Россия Щедрая Душа Шоколадные пузырьки молочный и белый пористый 70г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "72",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936275",
+      "name": "Шоколад Россия Щедрая Душа Шоколадные пузырьки белый пористый 70г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "72",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936082",
+      "name": "Шоколад Бабаевский Элитный горький 75% 75г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "94",
+      "cents": "90",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936293",
+      "name": "Кондитерское изделие Orion Choco Pie Арбуз в глазури 6х30г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "127",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936267",
+      "name": "Карамель Mixbar молочная 11.3г в ассортименте 1шт.",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "4",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936133",
+      "name": "Конфеты Невский кондитер Цитрон глазированные с помадной начинкой",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "11",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936127",
+      "name": "Козинак Mixbar подсолнечный 50г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "14",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936121",
+      "name": "Конфеты Рот Фронт Батончики 250г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "109",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936198",
+      "name": "Конфеты Рот Фронт Птичье молоко настоящее 225г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "129",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936155",
+      "name": "Козинаки AgroSputnik Богучарские 250г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "149",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936046",
+      "name": "Конфеты Красный Октябрь Мишка косолапый 200г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "199",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936016",
+      "name": "Леденцы Бон Пари Фруктовый Микс, 500г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "229",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936100",
+      "name": "Конфеты Вдохновение глазированные шоколадной глазурью с корпусом пралине 180г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "279",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936252",
+      "name": "Конфеты шоколадные Коркунов Коллекция из темного и молочного шоколада с фундуком и вафельной крошкой 165г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "299",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936088",
+      "name": "Вафли Шарлиз Голландские с карамельной начинкой 290г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "119",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936200",
+      "name": "Печенье Шарлиз Американо сдобное 250г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "119",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936259",
+      "name": "Печенье Milka с кусочками молочного шоколада 126г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "139",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936180",
+      "name": "Мармелад Mixbar Веселые мишки жевательный 140г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "67",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936143",
+      "name": "Джем Выручай Персиковый десертный 320г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "134",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936196",
+      "name": "Хлеб Коломенский Даниловский ржано-пшеничный нарезка 350г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "59",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936287",
+      "name": "Хлеб Хлебный Дом тостовый пшеничный 350г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "64",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936295",
+      "name": "Хлебец Энергия здоровья Подовый с зернами и семенами нарезка 300г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "76",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936026",
+      "name": "Хлеб Хлебный Дом Марьин заварной 350г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "84",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936023",
+      "name": "Хлебцы Коломенское зерновые 260г",
+      "category": "sladosti-vypechka-hleb",
+      "rubles": "94",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936042",
+      "name": "Цикорий Вкус & Польза натуральный растворимый сублимированный 85г",
+      "category": "chaj-kofe-kakao",
+      "rubles": "284",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936090",
+      "name": "Паста Premissimo с фундуком и какао 330г",
+      "category": "chaj-kofe-kakao",
+      "rubles": "269",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936157",
+      "name": "Сок Ideas томатный прямого отжима 1л",
+      "category": "voda-soki-napitki",
+      "rubles": "159",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936256",
+      "name": "Напиток Добрый Апельсин-мандарин для детского питания сокосодержащий 1.45л",
+      "category": "voda-soki-napitki",
+      "rubles": "164",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936170",
+      "name": "Нектар Добрый Мультифруктовый 1.45л",
+      "category": "voda-soki-napitki",
+      "rubles": "164",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936277",
+      "name": "Нектар Добрый Фермерские яблочки яблочный для детского питания 1.45л",
+      "category": "voda-soki-napitki",
+      "rubles": "164",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936329",
+      "name": "Нектар Добрый томатный с сахаром и солью 1.45л",
+      "category": "voda-soki-napitki",
+      "rubles": "164",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936335",
+      "name": "Нектар Добрый из яблок, черноплодной рябины и вишни 1.45л",
+      "category": "voda-soki-napitki",
+      "rubles": "164",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936085",
+      "name": "Нектар Сады Придонья ананас для питания детей старше 3-х лет 1.93л",
+      "category": "voda-soki-napitki",
+      "rubles": "199",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936103",
+      "name": "Арахис в хрустящей корочке Васаби",
+      "category": "orehi-sneki",
+      "rubles": "12",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936109",
+      "name": "Арахис жареный соленый",
+      "category": "orehi-sneki",
+      "rubles": "39",
+      "cents": "90",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936305",
+      "name": "Миндаль Mixbar сладкий жареный 100г",
+      "category": "orehi-sneki",
+      "rubles": "199",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936120",
+      "name": "Семечки Крутой Окер Полосатые с морской солью 240г",
+      "category": "orehi-sneki",
+      "rubles": "199",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936104",
+      "name": "Фисташки Mixbar жареные соленые 100г",
+      "category": "orehi-sneki",
+      "rubles": "219",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936094",
+      "name": "Пюре Фрутоняня Яблоко, малина и мелисса с 5мес. 90г",
+      "category": "tovary-dlya-detej",
+      "rubles": "59",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936079",
+      "name": "Подгузники Honey Kid M 6-11кг 14шт",
+      "category": "tovary-dlya-detej",
+      "rubles": "169",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936135",
+      "name": "Подгузники Nishoomi детские NB1 до 5кг 24шт.",
+      "category": "tovary-dlya-detej",
+      "rubles": "249",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936319",
+      "name": "Подгузники Nishoomi детские S2 4-8кг 24шт",
+      "category": "tovary-dlya-detej",
+      "rubles": "249",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936327",
+      "name": "Набор Конфитрейд в ассортименте 1шт.",
+      "category": "tovary-dlya-detej",
+      "rubles": "69",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936039",
+      "name": "Бальзам Шаума 7 трав для нормальных и жирных волос 300мл",
+      "category": "krasota-gigiena",
+      "rubles": "189",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936077",
+      "name": "Шампунь Шаума 7 трав для нормальных и жирных волос 360мл",
+      "category": "krasota-gigiena",
+      "rubles": "189",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936128",
+      "name": "Шампунь Шаума Men Ultra Сила для мужчин для ежедневного применения 650мл",
+      "category": "krasota-gigiena",
+      "rubles": "279",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936017",
+      "name": "Шампунь Глисс Кур Жидкий Шелк 400мл",
+      "category": "krasota-gigiena",
+      "rubles": "289",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936074",
+      "name": "Бальзам Глисс Кур Жидкий шелк для непослушных тусклых волос 360мл",
+      "category": "krasota-gigiena",
+      "rubles": "289",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936273",
+      "name": "Мыло жидкое Красная цена антибактериальное с экстрактом ромашки 1л",
+      "category": "krasota-gigiena",
+      "rubles": "99",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936148",
+      "name": "Мыло жидкое Body&Up Гармония радости 500мл",
+      "category": "krasota-gigiena",
+      "rubles": "119",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936325",
+      "name": "Гель-крем для душа Palmolive Натурэль Олива и Увлажняющее молочко, 750мл",
+      "category": "krasota-gigiena",
+      "rubles": "389",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936025",
+      "name": "Крем Body Up Роскошный Уход для рук 75мл",
+      "category": "krasota-gigiena",
+      "rubles": "56",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936113",
+      "name": "Зубная паста Colgate Макс Блеск Кристальная мята с отбеливающими пластинками, 100мл",
+      "category": "krasota-gigiena",
+      "rubles": "119",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936257",
+      "name": "Салфетки Красная Цена хозяйственные нетканые 25х30см 3шт.",
+      "category": "krasota-gigiena",
+      "rubles": "19",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936174",
+      "name": "Туалетная бумага Tolli влажная 80шт.",
+      "category": "krasota-gigiena",
+      "rubles": "77",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936243",
+      "name": "Туалетная бумага Tolli Lux белая 3 слоя 8шт.",
+      "category": "krasota-gigiena",
+      "rubles": "164",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936309",
+      "name": "Туалетная бумага Tolli Lux белая 3 слоя ароматизированная 8шт.",
+      "category": "krasota-gigiena",
+      "rubles": "164",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936096",
+      "name": "Туалетная бумага Papia Балийский цветок 3 слоя 8шт.",
+      "category": "krasota-gigiena",
+      "rubles": "219",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936263",
+      "name": "Прокладки Body&Up Ultra Normal женские гигиенические 10шт",
+      "category": "krasota-gigiena",
+      "rubles": "35",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936341",
+      "name": "Прокладки Body&Up Ultra Night гигиенические ультратонкие 7шт.",
+      "category": "krasota-gigiena",
+      "rubles": "35",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936045",
+      "name": "Средство для снятия лака Econta без ацетона 100мл",
+      "category": "krasota-gigiena",
+      "rubles": "56",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936119",
+      "name": "Дезодорант Антиперспирант Deonica Энергия витаминов роликовый женский 50мл",
+      "category": "krasota-gigiena",
+      "rubles": "169",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936331",
+      "name": "Станок для бритья Endeavor женский одноразовый 5шт.",
+      "category": "krasota-gigiena",
+      "rubles": "69",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936190",
+      "name": "Пена для бритья Endeavor sensitive для чувствительной кожи 200мл",
+      "category": "krasota-gigiena",
+      "rubles": "139",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936208",
+      "name": "Дезодорант - антиперспирант Рексона men Мужской спрей аэрозоль 72 ч защиты от пота и запаха кобальт 150мл",
+      "category": "krasota-gigiena",
+      "rubles": "299",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936028",
+      "name": "Станок бритвенный Endeavor со сменной кассетой с тремя лезвиями SL-7006 1шт.",
+      "category": "krasota-gigiena",
+      "rubles": "149",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936311",
+      "name": "Бальзам AOS для мытья посуды 450г",
+      "category": "bytovaya-himiya",
+      "rubles": "114",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936297",
+      "name": "Средство для мытья посуды Synergetic Алоэ 500мл",
+      "category": "bytovaya-himiya",
+      "rubles": "124",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936115",
+      "name": "Средство Сомат Все в 1 Экстра для мытья посуды в посудомоечных машинах 900г",
+      "category": "bytovaya-himiya",
+      "rubles": "799",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936212",
+      "name": "Кондиционер для белья Е Делюкс 1.7л",
+      "category": "bytovaya-himiya",
+      "rubles": "179",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936188",
+      "name": "Кондиционер для белья Вернель Свежий бриз концентрированный 910мл",
+      "category": "bytovaya-himiya",
+      "rubles": "184",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936160",
+      "name": "Стиральный порошок Econta универсал 3кг",
+      "category": "bytovaya-himiya",
+      "rubles": "199",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936176",
+      "name": "Гель для стирки Ласка Эффект восстановления черного 1л",
+      "category": "bytovaya-himiya",
+      "rubles": "279",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936087",
+      "name": "Гель для стирки Лоск Горное озеро для белого, 1.3л",
+      "category": "bytovaya-himiya",
+      "rubles": "289",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936098",
+      "name": "Порошок стиральный Лоск Color Total 2.7кг",
+      "category": "bytovaya-himiya",
+      "rubles": "319",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936139",
+      "name": "Гель для стирки Персил Power Gel Color 1.3л",
+      "category": "bytovaya-himiya",
+      "rubles": "339",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936168",
+      "name": "Гель для стирки Lamm Color 1.3л",
+      "category": "bytovaya-himiya",
+      "rubles": "369",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936073",
+      "name": "Порошок стиральный BiMax Color automat 3кг",
+      "category": "bytovaya-himiya",
+      "rubles": "449",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936154",
+      "name": "Мешки для мусора Liberhaus сверхпрочные 160л 10шт",
+      "category": "dlya-doma",
+      "rubles": "147",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936285",
+      "name": "Корм сухой Whiskas Вкусные подушечки с нежным паштетом Аппетитный обед с говядиной для взрослых кошек 1.3кг",
+      "category": "tovary-dlya-zhivotnyh",
+      "rubles": "474",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936021",
+      "name": "Лампа светодиодная Старт E27 10W теплый свет 1шт.",
+      "category": "bytovaya-tehnika",
+      "rubles": "99",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936116",
+      "name": "Лампа светодиодная Старт Eco LED GLS E27 15W 30 теплый свет 1шт.",
+      "category": "bytovaya-tehnika",
+      "rubles": "139",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936237",
+      "name": "Трубочки для молока Ухтышка ягодный микс 30г",
+      "category": "prochee",
+      "rubles": "31",
+      "cents": "79",
+      "currency": "RUB",
+      "endText": ""
+    },
+    {
+      "id": "51936265",
+      "name": "Гвоздика Рестория целая 15г",
+      "category": "prochee",
+      "rubles": "37",
+      "cents": "99",
+      "currency": "RUB",
+      "endText": ""
+    }
+  ]
+}

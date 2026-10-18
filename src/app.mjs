@@ -31,6 +31,7 @@ import { createMagnitStorePicker } from "./components/MagnitStorePicker.mjs";
 import { createMetroStorePicker } from "./components/MetroStorePicker.mjs";
 import { resolveRegisteredMagnitStore as resolveMagnitMoscowStore } from "./data/registeredMagnitStores.mjs";
 import { createNearbyShopping } from './components/NearbyShopping.mjs';
+import {createPyaterochkaPublishedCatalog} from './components/PyaterochkaPublishedCatalog.mjs';
 import { nearbyShoppingIntent } from './intelligence/nearbyShopping.mjs';
 import { isGuidedEntryRequest } from './intelligence/guidedShoppingPlan.mjs';
 import { createStoreGeolocation } from './runtime/storeGeolocation.mjs';
@@ -61,7 +62,7 @@ import {
   HYBRID_BASKET_FLOW_STATUS,
 } from "./runtime/hybridBasketFlow.mjs";
 import { createShoppingConversationFlow } from "./runtime/shoppingConversationFlow.mjs";
-import {createWeeklyRetailCatalogPort,OKEY_WEEKLY_SCOPE} from './ports/weeklyRetailCatalogPort.mjs';
+import {createWeeklyRetailCatalogPort,OKEY_WEEKLY_SCOPE,PYAT_WEEKLY_SCOPE} from './ports/weeklyRetailCatalogPort.mjs';
 import { createShoppingDialogue } from "./components/ShoppingDialogue.mjs";
 import {
   createHybridBasketInterpreterLoader
@@ -257,7 +258,8 @@ const basketProposalFlow = createShoppingConversationFlow({
     hasGuidedAgreedStore:()=>agreedNearbyStoreKey===JSON.stringify([retailBrowserState.retailerId,currentRetailClient()?.definition.storeId]),
     getGuidedRetailContexts: ids=>[
       ...(ids.includes('magnit')?[{...retailClientFor('magnit').definition,store:selectedMagnitStore,priceScope:'address-public-price'}]:[]),
-      ...(ids.includes('okey')?[OKEY_WEEKLY_SCOPE]:[])
+      ...(ids.includes('okey')?[OKEY_WEEKLY_SCOPE]:[]),
+      ...(ids.includes('pyaterochka')?[PYAT_WEEKLY_SCOPE]:[])
     ],
     getGuidedNearbyContexts: location => nearbyShoppingStores(location).map(store => ({
       ...createRetailCatalogClient({ retailerId: 'globus', store }).definition,
@@ -276,7 +278,7 @@ const basketProposalFlow = createShoppingConversationFlow({
       void Promise.all([loadRetailRoots({ clearCatalog: false }), loadInitialRetailCatalog()]);
       return true;
     },
-    searchGuidedCatalog: (query, options) => ['magnit','okey'].includes(options?.scope?.retailerId)
+    searchGuidedCatalog: (query, options) => ['magnit','okey','pyaterochka'].includes(options?.scope?.retailerId)
       ? weeklyRetailCatalog.search(query,options)
       : (options?.scope?.retailerId === 'globus' && options.scope.officialStoreId
       ? createRetailCatalogClient({ retailerId: 'globus', store: resolveGlobusMoscowRegionStore(options.scope.officialStoreId) })
@@ -1976,6 +1978,10 @@ if(publicRetailCatalogMode){
     onBuild:()=>{elements.proposalInput.value=nearbyBuildGoal;elements.proposalInput.dispatchEvent(new Event('input',{bubbles:true}));elements.proposalForm.requestSubmit();}
   });
   elements.proposalForm.querySelector('.shopping-welcome')?.after(nearbyShopping.element);
+  nearbyShopping.element.after(createPyaterochkaPublishedCatalog({onBuild:()=>{
+    elements.proposalInput.value='Собери недорогую корзину в Пятёрочке';
+    elements.proposalInput.dispatchEvent(new Event('input',{bubbles:true}));elements.proposalForm.requestSubmit();
+  }}));
 }
 
 function renderBasketProposalState() {

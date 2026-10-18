@@ -35,6 +35,7 @@ export function weeklyRetailerRequest(text) {
   const value=clean(text),ids=[];
   if(/магнит/u.test(value)&&!/(?:без|не)\s+магнит/u.test(value))ids.push('magnit');
   if(/(?:в|из|и)\s+о['’]?кей|^о['’]?кей$/u.test(value)&&!/(?:без|не)\s+о['’]?кей/u.test(value))ids.push('okey');
+  if(/пятерочк/u.test(value)&&!/(?:без|не)\s+пятерочк/u.test(value))ids.push('pyaterochka');
   return ids;
 }
 export function isGuidedEntryRequest(text) {
@@ -72,7 +73,7 @@ export function advanceGuidedIntake(plan, text, memory) {
   const location = shoppingLocationRequest(text);
   const retailers=weeklyRetailerRequest(text);
   if(retailers.length){plan.retailers=retailers;plan.useCurrentStore=true;
-    if(/^магнит и о['’]?кей$/u.test(value))plan.location=null;
+    if(/^(?:магнит|о['’]?кей|пятерочка)(?: и (?:магнит|о['’]?кей|пятерочка))*$/u.test(value))plan.location=null;
     for(const key of ['rice','pork','cheese'])if(!plan.groups.some(g=>g.key===key))plan.groups.push({...GROUPS.find(g=>g.key===key)});
     plan.groups=plan.groups.slice(0,16);plan.rows=[];plan.alternatives=[];
   }

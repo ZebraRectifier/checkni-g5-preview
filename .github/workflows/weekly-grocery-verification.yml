@@ -34,7 +34,7 @@ jobs:
           node-version: '22'
           package-manager-cache: false
       - name: Verify grocery contracts and retained OKEY data
-        run: node --test tests/nearbyShopping.test.mjs tests/storeGeolocation.test.mjs tests/guidedShoppingFlow.test.mjs tests/weeklyRetailBasket.test.mjs tests/weeklyGroceryCompletion.test.mjs tests/weeklyShoppingJourney.test.mjs tests/shoppingDialogueRecovery.test.mjs tests/addressPriceHistory.test.mjs tests/okeyRefreshVerification.test.mjs tests/okeyOfficialPromotions.test.mjs tests/okeyPublishedPromotions.test.mjs
+        run: node --test tests/pyaterochkaPublishedPromotions.test.mjs tests/pyaterochkaShopping.test.mjs tests/nearbyShopping.test.mjs tests/storeGeolocation.test.mjs tests/guidedShoppingFlow.test.mjs tests/weeklyRetailBasket.test.mjs tests/weeklyGroceryCompletion.test.mjs tests/weeklyShoppingJourney.test.mjs tests/shoppingDialogueRecovery.test.mjs tests/addressPriceHistory.test.mjs tests/okeyRefreshVerification.test.mjs tests/okeyOfficialPromotions.test.mjs tests/okeyPublishedPromotions.test.mjs
       - name: Scan complete browser artifact and release metadata
         run: node tools/security/scan-public-secrets.mjs src index.html prices.html deployment.json release
       - name: Install pinned browser test dependencies

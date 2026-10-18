@@ -5,7 +5,7 @@ import{GLOBUS_MAP_LOCATIONS}from'../data/storeMapLocations.mjs';
 export const NEARBY_RADIUS_KM=Object.freeze([1,3,5,10,20]);
 export function nearbyShoppingIntent(text,expectLocation=false){
   const raw=String(text??'').trim(),v=raw.toLowerCase().replaceAll('ё','е');
-  if(/^(?:текущий магазин|магнит и о['’]?кей|заветы ильича · до 20 км)$/u.test(v))return null;
+  if(/^(?:текущий магазин|(?:магнит|о['’]?кей|пятерочка)(?: и (?:магнит|о['’]?кей|пятерочка))*|заветы ильича · до 20 км)$/u.test(v))return null;
   if(expectLocation&&/^(?:без\s|не\s|ограничений нет|на\s+(?:\d|одного|двоих|троих|неделю|две недели)|бюджет\s|подбери подешевле)/u.test(v))return null;
   const radius=v.match(/(?:до|радиус(?:е|ом)?|в пределах)\s*(\d{1,3})\s*км/u);
   if(!expectLocation&&!/найти магазины рядом|магазины рядом|изменить (?:место|адрес)|моя геолокация|я живу|мой адрес|^адрес[:\s]|^москва[,\s]|^московская область[,\s]/u.test(v))return null;

@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "0dea252f1221de01269b144b6786a76633c3be35",
+  "sourceCommit": "a1616a42d01a93d033f401fa12334563842d51af",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -127,7 +127,8 @@
       560,
       561,
       562,
-      563
+      563,
+      564
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -136,17 +137,17 @@
     "providerRoute": "GPTunnel primary with explicit paid opt-in; gpt-4.1-mini; one attempt and no automatic paid fallback",
     "providerDeploymentVersion": 7,
     "validation": {
-      "unitAndGuardChecks": 2344,
-      "chromiumDesktopAndMobileCases": 398,
-      "exactHead": "53d176c176c3853a793799839283c84a381cc99a",
-      "sourceCommit": "0dea252f1221de01269b144b6786a76633c3be35",
-      "exactHeadCI": 39088144727,
-      "actualMainCI": 39089290687,
+      "unitAndGuardChecks": 2356,
+      "chromiumDesktopAndMobileCases": 402,
+      "exactHead": "fb03043845b003c54b5a87c1e22193dc8afd1cb2",
+      "sourceCommit": "a1616a42d01a93d033f401fa12334563842d51af",
+      "exactHeadCI": 39090346400,
+      "actualMainCI": 39091472750,
       "actualMainPassed": true,
       "exactHeadRetriedCases": 0,
       "actualMainRetriedCases": 1,
-      "publicUnitChecks": 107,
-      "publicBrowserCases": 18,
+      "publicUnitChecks": 119,
+      "publicBrowserCases": 22,
       "physicalAndroid": "unverified"
     },
     "localAdviceRecovery": {
@@ -1456,5 +1457,38 @@
       "actualMainRetryNote": "Pre-existing mobile two-column layout case passed its configured retry; other397 passed initially."
     },
     "boundary": "A complete set of 13 dated grocery families is not a fresh-price guarantee or a complete diet. New identity/seed is not an import."
+  },
+  "pyaterochkaPublished": {
+    "sourcePr": 564,
+    "sourceCommit": "a1616a42d01a93d033f401fa12334563842d51af",
+    "testedExactHead": "fb03043845b003c54b5a87c1e22193dc8afd1cb2",
+    "scope": "third-party-moscow-city-promotion-not-exact-store",
+    "sourceUrl": "https://mos.proshoper.ru/actions/pyaterochka/moskva/",
+    "initialObservedAt": "2026-10-18T01:17:16.791Z",
+    "initialFoodCards": 160,
+    "reviewedBasketPacks": 6,
+    "weeklyFamilies": 3,
+    "physicalStoreBinding": false,
+    "stock": "unknown",
+    "loyaltyConditions": "unconfirmed",
+    "initialMachineRefreshVerified": false,
+    "refreshStatusFile": "src/data/pyaterochkaPublishedRefresh.json",
+    "dailySchedule": "04:15 Europe/Moscow; guarded source attempt; no automatic retry of ambiguous reservation",
+    "sourceCheckpointBranch": "data/pyaterochka-published",
+    "validation": {
+      "nodeChecks": 2356,
+      "browserCases": 402,
+      "exactHeadCi": 39090346400,
+      "exactHeadPackage": 39090346391,
+      "actualMainStatus": "success",
+      "publicNodeChecks": 119,
+      "publicBrowserCases": 22,
+      "physicalAndroid": "unverified",
+      "actualMainCi": 39091472750,
+      "exactHeadRetriedCases": 0,
+      "actualMainRetriedCases": 1,
+      "actualMainRetryNote": "Pre-existing desktop surface-interaction-guards mobile-width layout case passed its configured retry; other401 passed initially."
+    },
+    "boundary": "City promotional observations are not exact-address prices, stock, guaranteed loyalty terms or a complete weekly basket."
   }
 }

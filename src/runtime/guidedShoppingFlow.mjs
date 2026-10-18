@@ -58,13 +58,15 @@ export function createGuidedShoppingFlow(options) {
       state = view('Список готов, выберем магазин.', 'Открой каталог нужного магазина, затем нажми «Подобрать товары и цены». Условия и список сохраняю.',
         { conversationChoices: choices(['Подобрать товары и цены', 'Изменить список']) }); return state;
     }
+    if(plan.retailers?.length>2)return state=view('Выберем два каталога.', 'Сейчас можно сопоставить два каталога за один подбор. Напиши, например, «Магнит и Пятёрочка» или «Магнит и О’КЕЙ». Список продуктов сохраняю.');
     const retailScopes=plan.retailers?.length?options.getRetailContexts?.(plan.retailers)??[]:[];
     if(plan.retailers?.length&&plan.location) return state=view('Уточним охват магазинов.',
+      plan.retailers.includes('pyaterochka')?'Для Пятёрочки есть акции Москвы, расстояние до конкретного магазина неизвестно. Выбери «Пятёрочка» без радиуса или «текущий магазин».':
       'Для О’КЕЙ есть городской каталог Москвы, расстояние до конкретного магазина неизвестно. Выбери «Магнит и О’КЕЙ» без радиуса или «текущий магазин».');
     const nearby = plan.location?.landmark ? options.getNearbyContexts?.(plan.location) ?? [] : [];
     if (plan.location?.landmark && !nearby.length) return view('Для этого радиуса пока нет каталога.',
       'Условия и список сохранились. Можно выбрать больший радиус до 20 км или написать «текущий магазин».');
-    if(plan.retailers?.length&&!retailScopes.length)return state=view('Выберем источники.', 'Каталоги Магнита и О’КЕЙ сейчас не подключены. Список сохранился; выбери текущий магазин.');
+    if(plan.retailers?.length&&!retailScopes.length)return state=view('Выберем источники.', 'Запрошенные каталоги сейчас не подключены. Список сохранился; выбери текущий магазин.');
     const scopes = retailScopes.length?retailScopes.slice(0,2):nearby.length ? nearby.slice(0, 4) : [scope];
     const token = version;
     const groups = plan.groups.filter(group => guidedGroupAllowed(group, options.getMemory()));
@@ -140,6 +142,11 @@ export function createGuidedShoppingFlow(options) {
       plan.rows = []; plan.stage = 'outline'; return view('Условия изменились.', 'Старый состав не добавлен. Подберём товары заново с учётом ограничений.', { conversationChoices: choices(['Подобрать товары и цены']) });
     }
     if (plan.scope !== contextKey()) { plan.rows = []; plan.stage = 'outline'; state = view('Выбран другой магазин.', 'Старые карточки не добавлены. Подберём товары для нового адреса.', { conversationChoices: choices(['Подобрать товары и цены']) }); return state; }
+    const at=options.now?.()??Date.now();
+    if(plan.rows.some(row=>row.card?.priceScope==='city-promotion'&&at-Date.parse(row.card.observedAt)>86400000)){
+      plan.rows=[];plan.stage='outline';return state=view('Акции нужно обновить.', 'Наблюдению больше суток. Корзина сохранилась; подберём товары заново по актуальному каталогу.',
+        {conversationChoices:choices(['Подобрать товары и цены','Текущий магазин'])});
+    }
     const quote = quoteCatalogDraft(plan.rows, { nowMs: options.now?.() ?? Date.now() });
     if (!quote.basket.length) return table('Нет проверенных упаковок для добавления. Можно изменить список или найти товар вручную.');
     const base = plan.base, byId = new Map(base.map(row => [row.id, { ...row }]));
@@ -186,7 +193,7 @@ export function createGuidedShoppingFlow(options) {
       return presentIntake();
     }
     if (/^(?:подобрать товары и цены|подбери товары и цены|обновить подбор)$/u.test(value)) return load(isCurrent);
-    const storeChoice=value.match(/^показать вариант (magnit|okey)$/u);
+    const storeChoice=value.match(/^показать вариант (magnit|okey|pyaterochka)$/u);
     if(storeChoice&&plan.stage==='review'){
       const draft=plan.drafts?.find(d=>d.scope.retailerId===storeChoice[1]);
       if(!draft)return table('Такой вариант ещё не проверен.');

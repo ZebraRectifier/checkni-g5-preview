@@ -1,6 +1,6 @@
 import { formatRubMinor, buildObservedResultModel } from './ComparisonResult.mjs';
 import { retailSelectionUrl } from '../intelligence/retailProductSelection.mjs';
-import {validWeeklyCardSource,OKEY_WEEKLY_SCOPE} from '../ports/weeklyRetailCatalogPort.mjs';
+import {validWeeklyCardSource,OKEY_WEEKLY_SCOPE,PYAT_WEEKLY_SCOPE} from '../ports/weeklyRetailCatalogPort.mjs';
 const EMOJI = { mince: '🥩', chicken: '🍗', buckwheat: '🌾', pasta: '🍝', milk: '🥛', eggs: '🥚', tomatoes: '🍅',
   apples: '🍎', bananas: '🍌', curd: '🥣', cheese: '🧀', potatoes: '🥔', carrots: '🥕', onions: '🧅', cabbage: '🥬', oats: '🥣', flakes: '🥣', oil: '🌻',rice:'🍚',pork:'🥩' };
 
@@ -24,8 +24,8 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
       const line = document.createElement('p');
       line.textContent = `${store.selected ? '📍 ' : '🏪 '}${store.storeName} · ${store.address}${Number.isFinite(store.distanceKm)?` · ≈${store.distanceKm.toLocaleString('ru-RU',{maximumFractionDigits:1})} км`:''} · ${store.found}/${store.requested} позиций · ${store.knownSubtotalMinor == null ? 'сумма неизвестна' : `${store.complete ? '' : 'найденная часть: '}${formatRubMinor(store.knownSubtotalMinor)}`} · ${store.allRecent ? 'наблюдаемые цены' : 'есть старые или неизвестные цены'}${store.priceScope==='city-promotion'?' · акции города, условия карты неизвестны':''}`;
       coverage.append(line);
-      if(!model.confirmed&&['magnit','okey'].includes(store.retailerId)){
-        const choose=document.createElement('button');choose.type='button';choose.textContent=`Показать ${store.retailerId==='magnit'?'Магнит':'О’КЕЙ'}`;
+      if(!model.confirmed&&['magnit','okey','pyaterochka'].includes(store.retailerId)){
+        const choose=document.createElement('button');choose.type='button';choose.textContent=`Показать ${{magnit:'Магнит',okey:'О’КЕЙ',pyaterochka:'Пятёрочку'}[store.retailerId]}`;
         choose.addEventListener('click',()=>send('Показать вариант '+store.retailerId));coverage.append(choose);
       }
     }
@@ -70,7 +70,7 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
     const basis = document.createElement('small'); basis.textContent = row.unitPriceMinor == null ? 'Цена не подтверждена' : `${formatRubMinor(row.unitPriceMinor)} / ${row.unit?.label.replace(/^цена за\s+/iu, '') ?? 'единица не уточнена'}`; price.append(basis);
     const condition = document.createElement('small'); condition.textContent = row.card?.priceConditionLabel ?? 'Условие цены неизвестно'; price.append(condition); tr.append(price);
     const source = document.createElement('div');
-    const url = validWeeklyCardSource(row.card,OKEY_WEEKLY_SCOPE)?row.card.sourceUrl:retailSelectionUrl(row.card?.sourceUrl, row.card?.retailerId);
+    const url = validWeeklyCardSource(row.card,row.card?.retailerId==='pyaterochka'?PYAT_WEEKLY_SCOPE:OKEY_WEEKLY_SCOPE)?row.card.sourceUrl:retailSelectionUrl(row.card?.sourceUrl, row.card?.retailerId);
     if (url) { const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = row.card.storeName ?? model.storeName; source.append(link); }
     const date = document.createElement('small'); date.textContent = row.card
       ? `${new Date(row.card.observedAt).toLocaleDateString('ru-RU', { timeZone: 'UTC' })} · ${row.freshness === 'dated' ? 'старое наблюдение' : 'наличие неизвестно'}` : 'Карточка не получена'; source.append(date); price.append(source);
