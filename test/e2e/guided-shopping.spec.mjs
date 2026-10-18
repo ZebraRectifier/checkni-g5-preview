@@ -40,11 +40,12 @@ test('the user dialogue → intake → editable real-card table → honest compa
   await submit(page, '5000'); await expect(output).toContainText('Какие продукты исключить');
   await output.getByRole('button', { name: 'Ограничений нет', exact: true }).click();
   await output.getByRole('button', { name: 'Подобрать товары и цены', exact: true }).click();
-  const table = output.getByRole('table'); await expect(table).toBeVisible();
+  const commerce = page.locator('#hori-shopping-results');
+  const table = commerce.getByRole('table'); await expect(table).toBeVisible();
   await expect(table.getByRole('row')).toHaveCount(4);
   await expect(table).not.toContainText('Майонез'); await expect(table).not.toContainText('Каша');
   await expect(table).toContainText('249,99 ₽'); await expect(table).toContainText('старое наблюдение');
-  await expect(output).toContainText('не подтверждает сегодняшнюю стоимость');
+  await expect(commerce).toContainText('не подтверждает сегодняшнюю стоимость');
   await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
   await table.getByText('Изменить: Фарш', { exact: true }).click();
   await table.getByLabel('Количество: Фарш', { exact: true }).fill('3');
@@ -54,8 +55,8 @@ test('the user dialogue → intake → editable real-card table → honest compa
   await table.getByLabel('Вариант: Фарш', { exact: true }).selectOption('2');
   await expect(table).toContainText('Фарш Говяжий');
   await output.getByRole('button', { name: 'Сравнить этот список', exact: true }).click();
-  await expect(output.getByLabel('Результат сравнения списка')).toContainText('Недостаточно данных');
-  await expect(output.getByLabel('Результат сравнения списка')).not.toContainText('Экономия');
+  await expect(commerce.getByLabel('Результат сравнения списка')).toContainText('Недостаточно данных');
+  await expect(commerce.getByLabel('Результат сравнения списка')).not.toContainText('Экономия');
   await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
   await output.getByRole('button', { name: 'Добавить показанное', exact: true }).click();
   await expect(output).toContainText('Корзина собрана');
@@ -63,7 +64,7 @@ test('the user dialogue → intake → editable real-card table → honest compa
   expect(snapshot).toHaveLength(3); expect(snapshot.map(row => row.id)).toContain('retail:globus:globus-store-5014:mince2');
   expect(snapshot.find(row => row.id.endsWith(':mince2')).quantity).toBe(3);
   expect(aiCalls).toBe(1);
-  await output.getByRole('button', { name: 'Открыть корзину', exact: true }).click();
+  await commerce.getByRole('button', { name: 'Открыть корзину', exact: true }).click();
   await expect(page.locator('#basket-content')).toContainText('Фарш Говяжий');
   await page.reload(); await expect(page.locator('#basket-content')).toContainText('Фарш Говяжий');
   await expect(page.locator('#basket-content')).toContainText('Глобус Пушкино');
@@ -101,8 +102,8 @@ test('welcome → inexpensive weekly groceries for three near Zavety Ilyicha →
   });
   await page.goto('/?comparison=observed&catalog=retail#shop');
   const welcome = page.getByRole('region', { name: 'С чего начнём покупки' });
-  await expect(page.getByRole('heading', {name:'Привет! 👋 Соберём покупки?',exact:true})).toBeVisible();
-  await welcome.getByRole('button', { name: '💰 Собрать недорогую корзину', exact: true }).click();
+  await expect(welcome).toContainText('Привет! Я Хори. Что покупаем?');
+  await welcome.getByRole('button', { name: 'Собрать корзину', exact: true }).click();
   const output = page.locator('#basket-proposal-status');
   await expect(output).toContainText('На сколько человек');
   await submit(page, 'на 3 да есть морозилка'); await expect(output).toContainText('На сколько дней');
@@ -110,23 +111,24 @@ test('welcome → inexpensive weekly groceries for three near Zavety Ilyicha →
   // The welcome now offers a general place picker; the legacy spoken example
   // remains supported without hard-coding one station into every greeting.
   await submit(page,'Заветы Ильича · до 20 км');
-  await expect(output).toContainText('морозилка есть');
+  await expect(output).toContainText('Какие продукты исключить');
   await output.getByRole('button', { name: 'Ограничений нет', exact: true }).click();
-  const table = output.getByRole('table');
+  const commerce = page.locator('#hori-shopping-results');
+  const table = commerce.getByRole('table');
   // The nearby-store lookup has one explicit 15-second application deadline.
   await expect(table).toBeVisible({timeout:16000}); await expect(table.getByRole('columnheader')).toHaveCount(2);
   await expect(table.getByRole('row')).toHaveCount(14);
   await expect(table).toContainText('🥔 Картофель'); await expect(table).toContainText('🥛 Молоко');
   await expect(table).toContainText('100,00 ₽'); await expect(table).toContainText('старое наблюдение');
-  await expect(output.getByLabel('Проверенные магазины в радиусе')).toContainText('Глобус Пушкино');
-  await expect(output.getByLabel('Проверенные магазины в радиусе')).toContainText('Глобус Щелково');
-  await expect(table).toContainText('Глобус Королёв'); await expect(output).toContainText('частичный охват');
+  await expect(commerce.getByLabel('Проверенные магазины в радиусе')).toContainText('Глобус Пушкино');
+  await expect(commerce.getByLabel('Проверенные магазины в радиусе')).toContainText('Глобус Щелково');
+  await expect(table).toContainText('Глобус Королёв'); await expect(commerce).toContainText('частичный охват');
   expect([...scopes].sort()).toEqual(['5001', '5010', '5014']); expect(paidCalls).toBe(0);
   await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
   const overflow = await table.evaluate(element => element.scrollWidth > element.clientWidth + 1);
   expect(overflow).toBe(false);
   await output.getByRole('button', { name: 'Добавить показанное', exact: true }).click();
-  await output.getByRole('button', { name: 'Открыть корзину', exact: true }).click();
+  await commerce.getByRole('button', { name: 'Открыть корзину', exact: true }).click();
   await expect(page.locator('#basket-content')).toContainText('Глобус Королёв');
   await expect(page.locator('#basket-content')).not.toContainText('Изменить адрес Магнит');
   await expect(page.locator('#basket-content')).not.toContainText('Изменить адрес METRO');
