@@ -40,7 +40,6 @@ export function weeklyRetailerRequest(text) {
 }
 export function isGuidedEntryRequest(text) {
   return /^(?:собери недорогую корзину|подбери по вкусу и составу)$/u.test(clean(text))
-    || /^(?:(?:мне|нам)\s+)?(?:нужн[аы]|хочу)\s+(?:(?:недорог\S*|дешев\S*)\s+)?(?:ед[ау]|продукты|покупки|корзину)(?:\s|$)/u.test(clean(text))
     || /^(?:(?:хочу|нужна|нужны)\s+)?(?:недорог\S*|дешев\S*)\s+(?:корзин|продукт)/u.test(clean(text))
     || /^(?:(?:ну|давай)[,\s]+)?(?:собери|подбери)\s+(?:мне\s+|нам\s+)?(?:(?:недорог\S*|дешев\S*|качественн\S*)\s+)?(?:еду|продукты|покупки|корзину)/u.test(clean(text));
 }
@@ -123,11 +122,11 @@ export function guidedIntakeView(plan, memory) {
   plan.question = question;
   const summary = [plan.people && `для ${plan.people} человек`, plan.days && `на ${plan.days} дн.`].filter(Boolean).join(', ').replace(/\.$/u, '');
   const messages = {
-    people: 'На сколько человек нужны продукты?',
-    days: 'На сколько дней собираем продукты?',
-    location: 'Где закупаемся? Напиши город, район или ближайшее метро.',
-    budget: 'Какой общий бюджет на весь список? Можно пока без точной суммы.',
-    constraints: `${summary ? `Понял: ${summary}. ` : ''}${plan.freezer ? 'Учёл: морозилка есть. ' : ''}Какие продукты исключить? Есть особые пожелания?`
+    people: `Давай соберём${summary ? ` ${summary}` : ''}. На сколько человек нужны продукты?`,
+    days: `Учту ${plan.people} чел. На сколько дней собираем продукты?`,
+    location: 'Где закупаемся? Найдём магазины рядом с твоим адресом или геолокацией, выберем радиус и согласуем магазин. Можно также продолжить в текущем каталоге. Точный бюджет необязателен.',
+    budget: `Собираем ${summary}. Какой общий бюджет на весь список? Можно написать сумму или «без лимита».`,
+    constraints: `Условия помню: ${summary}${plan.location?.landmark ? `, ${plan.location.landmark.name}, до ${plan.location.radiusKm} км по прямой` : ''}${plan.freezer ? ', морозилка есть' : ''}. Какие продукты исключить? Если всё подходит, выбери «Ограничений нет».${plan.mode === 'economy' && plan.budgetMinor == null ? ' Точный бюджет не нужен — ищем доступные варианты среди полученных карточек.' : ''}`
   };
   if (question) return { headline: 'Соберём под тебя.', message: messages[question], conversationChoices:
     question === 'people' ? ['На одного', 'На двоих', 'На троих']
@@ -135,7 +134,7 @@ export function guidedIntakeView(plan, memory) {
         : question === 'location' ? ['Найти магазины рядом', 'Текущий магазин', 'Магнит и О’КЕЙ']
           : question === 'budget' ? ['Подбери подешевле', 'Без лимита'] : ['Ограничений нет', 'Без мяса'] };
   const groups = plan.groups.filter(group => guidedGroupAllowed(group, memory));
-  return { headline: 'Вот основа списка.', message: `Подберу конкретные карточки ${groups.length} групп продуктов. Количества можно поправить перед добавлением. Это черновик покупок, а не полный рацион.`,
+  return { headline: 'Вот основа списка.', message: `Предлагаю ${groups.map(group => group.label.toLowerCase()).join(', ')}. Подберу конкретные карточки в выбранном каталоге и покажу таблицу. Количества будут ориентировочными — их можно изменить до добавления. Это черновик покупок, а не полный рацион.`,
     conversationChoices: ['Подобрать товары и цены', 'Изменить список'] };
 }
 
