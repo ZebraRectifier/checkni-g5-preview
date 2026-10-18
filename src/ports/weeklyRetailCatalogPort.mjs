@@ -2,6 +2,7 @@ import { createRetailCatalogClient,readBoundedJsonResponse } from './retailCatal
 import { WEEKLY_MAGNIT_IDENTITIES } from '../catalog/weeklyMagnitIdentities.mjs';
 import { validPublishedSnapshot,currentPublishedProducts,PUBLISHED_URL } from '../observations/okeyPublishedPromotions.mjs';
 import {validPyatSnapshot,pyatWeeklyCards,validPyatWeeklySource,PYAT_WEEKLY_SCOPE} from '../observations/pyaterochkaPublishedPromotions.mjs';
+import {resolveRegisteredMagnitStore} from '../data/registeredMagnitStores.mjs';
 export {PYAT_WEEKLY_SCOPE};
 
 export const OKEY_WEEKLY_SCOPE=Object.freeze({retailerId:'okey',storeId:'okey-moscow-proshoper',storeName:'О’КЕЙ · акции Москвы (Прошопер)',
@@ -81,8 +82,13 @@ export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,create
     if(scope?.retailerId==='okey'&&scope.storeId===OKEY_WEEKLY_SCOPE.storeId){
       const q=normalize(query);return {kind:'catalog',products:(await okey()).filter(p=>normalize(p.name).includes(q)).slice(0,Math.min(40,limit))};
     }
-    if(scope?.retailerId==='magnit'&&scope.store?.shopCode){
-      const response=await createMagnitClient({retailerId:'magnit',store:scope.store}).search(query,{limit});
+    if(scope?.retailerId==='magnit'){
+      // The current catalogue scope carries storeId without an embedded store.
+      // Resolve only that registered ID; an explicit contradictory store fails closed.
+      const code=typeof scope.storeId==='string'?/^magnit-(\d{1,12})$/u.exec(scope.storeId)?.[1]:null;
+      const store=code?resolveRegisteredMagnitStore({shopCode:code}):null;
+      if(!store||(scope.store!==undefined&&scope.store?.shopCode!==code))return{kind:'unavailable'};
+      const response=await createMagnitClient({retailerId:'magnit',store}).search(query,{limit});
       return response?.kind==='catalog'?{...response,products:response.products.map(weeklyMagnitCard)}:response;
     }
     return {kind:'unavailable'};

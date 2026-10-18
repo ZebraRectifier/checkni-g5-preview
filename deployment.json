@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "a1616a42d01a93d033f401fa12334563842d51af",
+  "sourceCommit": "d2e1d725015930ede3226bf813cc8d5efd466be8",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -128,7 +128,8 @@
       561,
       562,
       563,
-      564
+      564,
+      565
     ],
     "conversationMemory": "browser-local explicit preferences; session-only working context",
     "readOnlyProductAdvice": true,
@@ -137,17 +138,20 @@
     "providerRoute": "GPTunnel primary with explicit paid opt-in; gpt-4.1-mini; one attempt and no automatic paid fallback",
     "providerDeploymentVersion": 7,
     "validation": {
-      "unitAndGuardChecks": 2356,
-      "chromiumDesktopAndMobileCases": 402,
-      "exactHead": "fb03043845b003c54b5a87c1e22193dc8afd1cb2",
-      "sourceCommit": "a1616a42d01a93d033f401fa12334563842d51af",
-      "exactHeadCI": 39090346400,
-      "actualMainCI": 39091472750,
+      "exactHeadPassed": true,
       "actualMainPassed": true,
+      "testedExactHead": "b0355eb6677b0f05a9ead3385b4ef549d7bcc4cf",
+      "sourceCommit": "d2e1d725015930ede3226bf813cc8d5efd466be8",
+      "exactHeadCI": 39094104115,
+      "actualMainCI": 39096054171,
+      "exactHeadPackage": 39094104096,
+      "actualMainPackage": 39096054187,
       "exactHeadRetriedCases": 0,
-      "actualMainRetriedCases": 1,
-      "publicUnitChecks": 119,
-      "publicBrowserCases": 22,
+      "actualMainRetriedCases": 0,
+      "unitAndGuardChecks": 2359,
+      "chromiumDesktopAndMobileCases": 404,
+      "publicUnitChecks": 122,
+      "publicBrowserCases": 24,
       "physicalAndroid": "unverified"
     },
     "localAdviceRecovery": {
@@ -1426,7 +1430,8 @@
       "sourceProductId": "1000303406",
       "visiblePack": "800 г",
       "oldUrlSlugIgnored": "900g",
-      "newPriceImported": false
+      "newPriceImported": true,
+      "priceImportVerifiedAt": "2026-10-18T03:52:01.525Z"
     },
     "realReadOnlyReplay": {
       "at": "2026-10-18T01:46:12.047Z",
@@ -1456,7 +1461,31 @@
       "actualMainRetriedCases": 1,
       "actualMainRetryNote": "Pre-existing mobile two-column layout case passed its configured retry; other397 passed initially."
     },
-    "boundary": "A complete set of 13 dated grocery families is not a fresh-price guarantee or a complete diet. New identity/seed is not an import."
+    "boundary": "A complete set of 13 dated grocery families is not a fresh-price guarantee or a complete diet. New identity/seed is not an import.",
+    "nativeFollowUp": {
+      "run": 39092583770,
+      "sourceCommit": "a1616a42d01a93d033f401fa12334563842d51af",
+      "completedAt": "2026-10-18T03:49:22.485Z",
+      "outcome": "verified-import",
+      "artifactId": 12124600234,
+      "artifactDigest": "sha256:c37256ddf98878a89de96e95b20748bf61d7b7fcd2513ee0d44ee7855b7928a9",
+      "persistedCheckpointCommit": "59daa7db555b71a219fe487a7359112c1d2ff8fb",
+      "verifiedStores": 4,
+      "observations": 273,
+      "auditedFields": 8190,
+      "differences": 0,
+      "selectedControlProofs": 273,
+      "newBuckwheatStores": [
+        "773804",
+        "773828",
+        "773843",
+        "773861"
+      ],
+      "fullAssortmentProven": false,
+      "stock": "unknown",
+      "loyaltyConditions": "unconfirmed",
+      "boundary": "Four dated exact-address public website observations; no entire-region or current-cheapest guarantee."
+    }
   },
   "pyaterochkaPublished": {
     "sourcePr": 564,
@@ -1490,5 +1519,34 @@
       "actualMainRetryNote": "Pre-existing desktop surface-interaction-guards mobile-width layout case passed its configured retry; other401 passed initially."
     },
     "boundary": "City promotional observations are not exact-address prices, stock, guaranteed loyalty terms or a complete weekly basket."
+  },
+  "currentMagnitCatalog": {
+    "sourcePr": 565,
+    "sourceCommit": "d2e1d725015930ede3226bf813cc8d5efd466be8",
+    "testedExactHead": "b0355eb6677b0f05a9ead3385b4ef549d7bcc4cf",
+    "fix": "Resolve the exact registered store from the existing current-catalogue storeId; reject contradictory embedded stores before any catalogue request.",
+    "physicalScopeUnchanged": true,
+    "registeredMoscowAndOblast": true,
+    "localValidation": {
+      "node": 16,
+      "browser": 2
+    },
+    "validation": {
+      "nodeChecks": 2359,
+      "browserCases": 404,
+      "publicNodeChecks": 122,
+      "publicBrowserCases": 24,
+      "physicalAndroid": "unverified",
+      "exactHeadPassed": true,
+      "actualMainPassed": true,
+      "testedExactHead": "b0355eb6677b0f05a9ead3385b4ef549d7bcc4cf",
+      "sourceCommit": "d2e1d725015930ede3226bf813cc8d5efd466be8",
+      "exactHeadCI": 39094104115,
+      "actualMainCI": 39096054171,
+      "exactHeadPackage": 39094104096,
+      "actualMainPackage": 39096054187,
+      "exactHeadRetriedCases": 0,
+      "actualMainRetriedCases": 0
+    }
   }
 }
