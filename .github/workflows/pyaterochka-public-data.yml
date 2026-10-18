@@ -1,0 +1,173 @@
+name: Pyaterochka verified city promotions
+on:
+  pull_request:
+    paths: ['tools/pyaterochka-public-catalog/**', 'src/observations/pyaterochkaPublishedPromotions.mjs', 'tests/pyaterochka*.test.mjs', 'tests/fixtures/pyaterochka-public/**', '.github/workflows/pyaterochka-public-data.yml']
+  push:
+    branches: [main]
+    paths: ['tools/pyaterochka-public-catalog/**', 'src/observations/pyaterochkaPublishedPromotions.mjs', '.github/workflows/pyaterochka-public-data.yml']
+  schedule:
+    - cron: '15 1 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('pyat-published-pr-{0}', github.event.pull_request.number) || 'pyat-published-data' }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - run: node --test tests/pyaterochkaPublishedPromotions.test.mjs tests/pyaterochkaShopping.test.mjs
+  publish:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      PYAT_STATE_DIR: _pyat_state/src/data
+      PYAT_RESERVATION_OWNER: ${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: main
+          persist-credentials: true
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Install locked browser checks
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Verify actual checkout before any source reservation
+        run: |
+          node --test tests/*.test.mjs
+          node tools/security/scan-public-secrets.mjs src index.html prices.html deployment.json release
+          npx playwright test --config=playwright.weekly.config.mjs
+          echo "PYAT_MAIN_BASE=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Open the independent feed checkpoint
+        id: state
+        shell: bash
+        run: |
+          set -euo pipefail
+          state_ref=refs/heads/data/pyaterochka-published
+          previous=$(git ls-remote origin "$state_ref" | cut -f1)
+          if [ -n "$previous" ]; then
+            git fetch origin "$state_ref"
+            test "$(git rev-parse FETCH_HEAD)" = "$previous"
+            git worktree add --detach _pyat_state "$previous"
+          else
+            git worktree add --detach _pyat_state HEAD
+          fi
+          echo "previous=$previous" >> "$GITHUB_OUTPUT"
+      - name: Reserve one attempt without contacting the source
+        id: reserve
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$PYAT_MAIN_BASE"
+          node tools/pyaterochka-public-catalog/reserve-attempt.mjs
+      - name: Persist and acknowledge reservation before navigation
+        id: reservation_checkpoint
+        working-directory: _pyat_state
+        env:
+          EXPECTED_STATE: ${{ steps.state.outputs.previous }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          state_ref=refs/heads/data/pyaterochka-published
+          git add src/data/pyaterochkaPublishedPromotions.json src/data/pyaterochkaPublishedRefresh.json
+          if ! git diff --cached --quiet; then
+            git -c user.name='CHECKNI Price History' -c user.email='actions@users.noreply.github.com' commit -m 'DATA: reserve Pyaterochka source attempt'
+          fi
+          test "$(git ls-remote origin "$state_ref" | cut -f1)" = "$EXPECTED_STATE"
+          git push origin HEAD:"$state_ref"
+          actual=$(git rev-parse HEAD)
+          test "$(git ls-remote origin "$state_ref" | cut -f1)" = "$actual"
+          echo "acknowledged=true" >> "$GITHUB_OUTPUT"
+          echo "commit=$actual" >> "$GITHUB_OUTPUT"
+      - name: Collect one ordinary visible catalogue
+        if: steps.reserve.outputs.source_allowed == 'true' && steps.reservation_checkpoint.outputs.acknowledged == 'true'
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$PYAT_MAIN_BASE"
+          node tools/pyaterochka-public-catalog/collect-published.mjs
+      - name: Preserve the measured result or source pause independently of main
+        id: result_checkpoint
+        if: always() && steps.reservation_checkpoint.outputs.acknowledged == 'true'
+        working-directory: _pyat_state
+        env:
+          EXPECTED_STATE: ${{ steps.reservation_checkpoint.outputs.commit }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          state_ref=refs/heads/data/pyaterochka-published
+          git add src/data/pyaterochkaPublishedPromotions.json src/data/pyaterochkaPublishedRefresh.json
+          if ! git diff --cached --quiet; then
+            git -c user.name='CHECKNI Price History' -c user.email='actions@users.noreply.github.com' commit -m 'DATA: checkpoint Pyaterochka collection result'
+          fi
+          test "$(git ls-remote origin "$state_ref" | cut -f1)" = "$EXPECTED_STATE"
+          git push origin HEAD:"$state_ref"
+          test "$(git ls-remote origin "$state_ref" | cut -f1)" = "$(git rev-parse HEAD)"
+      - name: Verify the correlated automated observation
+        id: freshness
+        if: always() && steps.result_checkpoint.outcome == 'success'
+        continue-on-error: true
+        run: node tools/pyaterochka-public-catalog/verify-refresh.mjs
+      - name: Publish only the two feed files to unchanged reviewed main
+        if: always() && steps.result_checkpoint.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$PYAT_MAIN_BASE"
+          cp _pyat_state/src/data/pyaterochkaPublishedPromotions.json src/data/pyaterochkaPublishedPromotions.json
+          cp _pyat_state/src/data/pyaterochkaPublishedRefresh.json src/data/pyaterochkaPublishedRefresh.json
+          node tools/security/scan-public-secrets.mjs src index.html prices.html deployment.json release
+          git add src/data/pyaterochkaPublishedPromotions.json src/data/pyaterochkaPublishedRefresh.json
+          if ! git diff --cached --quiet; then
+            git -c user.name='CHECKNI Price History' -c user.email='actions@users.noreply.github.com' commit -m 'DATA: publish Pyaterochka city collection result'
+            git push origin HEAD:main
+          fi
+      - name: Package the complete browser artifact
+        run: |
+          mkdir -p _site
+          cp index.html prices.html deployment.json _site/
+          cp -a src _site/src
+          touch _site/.nojekyll
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b
+        with:
+          path: _site
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
+      - id: deploy
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
+      - name: Keep checkpoint diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pyaterochka-published-${{ github.run_id }}
+          path: |
+            _pyat_state/src/data/pyaterochkaPublished*.json
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Require a verified current automated source result
+        if: always() && steps.freshness.outcome != 'success'
+        run: |
+          echo 'No verified current Pyaterochka city observation; source pauses and unresolved reservations remain preserved.'
+          exit 1

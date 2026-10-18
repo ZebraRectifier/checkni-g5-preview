@@ -1,6 +1,8 @@
 import { createRetailCatalogClient,readBoundedJsonResponse } from './retailCatalogPort.mjs';
 import { WEEKLY_MAGNIT_IDENTITIES } from '../catalog/weeklyMagnitIdentities.mjs';
 import { validPublishedSnapshot,currentPublishedProducts,PUBLISHED_URL } from '../observations/okeyPublishedPromotions.mjs';
+import {validPyatSnapshot,pyatWeeklyCards,validPyatWeeklySource,PYAT_WEEKLY_SCOPE} from '../observations/pyaterochkaPublishedPromotions.mjs';
+export {PYAT_WEEKLY_SCOPE};
 
 export const OKEY_WEEKLY_SCOPE=Object.freeze({retailerId:'okey',storeId:'okey-moscow-proshoper',storeName:'О’КЕЙ · акции Москвы (Прошопер)',
   storeAddress:'Городской каталог, физический магазин не подтверждён',priceScope:'city-promotion',physicalStoreId:null});
@@ -41,6 +43,7 @@ export function weeklyOkeyCards(snapshot,nowMs=Date.now()) {
   });
 }
 export function validWeeklyCardSource(card,scope) {
+  if(scope?.retailerId==='pyaterochka')return validPyatWeeklySource(card,scope);
   if(scope?.retailerId!=='okey')return false;
   const id=card?.sourceProductId,unit=okeyUnits[id];
   return scope.storeId===OKEY_WEEKLY_SCOPE.storeId&&unit&&card.id===`retail:okey:${scope.storeId}:${id}`
@@ -50,6 +53,15 @@ export function validWeeklyCardSource(card,scope) {
 }
 export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,createMagnitClient=createRetailCatalogClient,now=Date.now}={}) {
   let cached=null,inFlight=null,checkedAt=0;
+  let pyatCached=null,pyatPending=null,pyatChecked=0;
+  async function pyat(){
+    if(pyatChecked&&now()-pyatChecked<60000)return pyatCached?pyatWeeklyCards(pyatCached,now()):[];
+    if(!pyatPending)pyatPending=(async()=>{try{
+      const r=await fetchImpl(new URL('../data/pyaterochkaPublishedPromotions.json',import.meta.url),{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(5000)});
+      if(!r.ok)return[];const data=await readBoundedJsonResponse(r,262144);if(!validPyatSnapshot(data))return[];
+      pyatCached=data;return pyatWeeklyCards(data,now());
+    }catch{return[];}finally{pyatChecked=now();pyatPending=null;}})();return pyatPending;
+  }
   async function okey() {
     if(checkedAt&&now()-checkedAt<60_000)return cached?weeklyOkeyCards(cached,now()):[];
     if(!inFlight)inFlight=(async()=>{
@@ -63,6 +75,9 @@ export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,create
     })();return inFlight;
   }
   return {async search(query,{scope,limit=40}={}) {
+    if(scope?.retailerId==='pyaterochka'&&scope.storeId===PYAT_WEEKLY_SCOPE.storeId){
+      const q=normalize(query);return{kind:'catalog',products:(await pyat()).filter(p=>normalize(p.name).includes(q)).slice(0,Math.min(40,limit))};
+    }
     if(scope?.retailerId==='okey'&&scope.storeId===OKEY_WEEKLY_SCOPE.storeId){
       const q=normalize(query);return {kind:'catalog',products:(await okey()).filter(p=>normalize(p.name).includes(q)).slice(0,Math.min(40,limit))};
     }
