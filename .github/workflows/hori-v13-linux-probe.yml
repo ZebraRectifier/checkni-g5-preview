@@ -1,0 +1,30 @@
+name: Hori v13 one-off Linux visual baseline
+on:
+  push:
+    branches: [codex/hori-v13-linux-probe-20261019]
+permissions:
+  contents: read
+jobs:
+  render:
+    if: github.repository == 'ZebraRectifier/checkni-g5-preview' && github.actor == 'ZebraRectifier'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Render fixed fixtures for human review, not acceptance
+        run: npx playwright test --config=playwright.weekly.config.mjs hori-v13.spec.mjs --grep "approved v13" --workers=1 --update-snapshots
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: hori-v13-linux-review
+          path: test/e2e/reference-v13/linux/*.png
+          if-no-files-found: error
+          retention-days: 3
