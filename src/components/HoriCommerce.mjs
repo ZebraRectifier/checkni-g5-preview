@@ -14,7 +14,7 @@ export function createHoriCommerce({ document, main, shop, header }) {
 
   const nearby = document.createElement('button');
   nearby.type = 'button'; nearby.className = 'hori-location';
-  nearby.textContent = '📍 Адрес и магазины';
+  nearby.textContent = '⌖ Адрес и радиус';
   nearby.addEventListener('click', () => {
     if (shop.hidden) document.getElementById('back-to-shop')?.click();
     const target = document.getElementById('nearby-shopping');
@@ -29,15 +29,40 @@ export function createHoriCommerce({ document, main, shop, header }) {
   selected.type = 'button';
   selected.className = 'hori-selected-store';
   selected.setAttribute('aria-label', 'Выбранный каталог');
+  selected.setAttribute('aria-haspopup', 'dialog');
+  const storeDialog = document.createElement('dialog');
+  storeDialog.id = 'hori-store-dialog';
+  storeDialog.setAttribute('aria-labelledby', 'hori-store-dialog-title');
+  const dialogHeader = document.createElement('header');
+  const dialogTitle = document.createElement('h2');
+  dialogTitle.id = 'hori-store-dialog-title';
+  dialogTitle.textContent = 'Выбери магазин';
+  const closeStores = document.createElement('button');
+  closeStores.type = 'button'; closeStores.textContent = 'Готово';
+  closeStores.addEventListener('click', () => storeDialog.close());
+  dialogHeader.append(dialogTitle, closeStores); storeDialog.append(dialogHeader);
+  document.body.append(storeDialog);
+  const movedControls = [];
+  storeDialog.addEventListener('close', () => {
+    for (const { node, anchor } of movedControls.splice(0)) { anchor.replaceWith(node); }
+    selected.setAttribute('aria-expanded', 'false');
+  });
+  storeDialog.addEventListener('click', event => {
+    if (event.target.closest('.retail-store-card')) {
+      storeDialog.close();
+      requestAnimationFrame(() => { pane.scrollTop = 0; });
+    }
+  });
   selected.addEventListener('click', () => {
     if (shop.hidden) document.getElementById('back-to-shop')?.click();
-    const retailer = document.querySelector('.retail-store-card.is-selected')?.dataset.retailerId;
-    const picker = document.getElementById(`${retailer}-store-picker`);
-    const target = picker && !picker.hidden ? picker : document.getElementById('retail-store-grid');
-    requestAnimationFrame(() => {
-      reveal(target);
-      target?.querySelector('select,button')?.focus({ preventScroll: true });
-    });
+    for (const selector of ['#retail-store-grid', '#globus-store-picker', '#metro-store-picker', '#magnit-store-picker']) {
+      const node = document.querySelector(selector);
+      if (!node || storeDialog.contains(node)) continue;
+      const anchor = document.createComment('Hori store control return position');
+      node.before(anchor); movedControls.push({ node, anchor }); storeDialog.append(node);
+    }
+    selected.setAttribute('aria-expanded', 'true');
+    storeDialog.showModal();
   });
   header.querySelector('.brand')?.after(nearby, selected);
 
@@ -67,7 +92,11 @@ export function createHoriCommerce({ document, main, shop, header }) {
   function syncStore() {
     const card = document.querySelector('.retail-store-card.is-selected');
     const name = card?.querySelector('strong')?.textContent?.trim();
-    selected.textContent = name || 'Выбери магазин';
+    const logo = card?.querySelector('.retail-store-logo')?.cloneNode(true);
+    if (logo) logo.setAttribute('aria-hidden', 'true');
+    const label = document.createElement('span'); label.className = 'hori-store-label';
+    label.textContent = name || 'Выбери магазин';
+    selected.replaceChildren(...(logo ? [logo, label] : [label]));
     selected.title = card?.querySelector('.retail-store-copy')?.textContent?.trim() || '';
     for (const card of document.querySelectorAll('.retail-store-card')) {
       card.title = card.querySelector('.retail-store-copy')?.textContent?.trim() || '';
@@ -106,7 +135,12 @@ export function createHoriCommerce({ document, main, shop, header }) {
     }
     if (!rows.length) {
       const empty = document.createElement('p'); empty.className = 'hori-basket-empty';
-      empty.textContent = 'Добавляй товары из каталога или попроси Хори помочь с выбором.';
+      const icon = document.createElement('span'); icon.className = 'hori-empty-basket';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = '<svg viewBox="0 0 80 72" width="80" height="72" fill="none"><path d="M20 26 32 6h8L29 26m15 0L39 6h8l13 20" stroke="#aa8fe5" stroke-width="6"/><path d="m8 25 52-4 13 8-11 36-43 3-11-43Z" fill="#c4b0f3"/><path d="m8 25 11 43 8-7-8-32" fill="#dfd2fc"/><path d="m19 29 54 0-11 36-35-4-8-32Z" fill="#b39ae9"/><path d="m8 25 52-4 13 8-54 0-11-4Z" fill="#e9dfff"/><path d="m30 36 3 19m10-20-1 20m12-20-4 20" stroke="#f1eaff" stroke-width="5"/></svg>';
+      const title = document.createElement('strong'); title.textContent = 'Здесь появятся покупки';
+      const copy = document.createElement('span'); copy.textContent = 'Добавляй товары из каталога или попроси Хори помочь.';
+      empty.append(icon, title, copy);
       list.append(empty);
     }
     aside.append(heading, count, list);
@@ -145,6 +179,16 @@ export function createHoriCommerce({ document, main, shop, header }) {
   queueMicrotask(() => {
     const catalog = shop?.querySelector('.catalog-section');
     if (!catalog) return;
+    const searchForm = document.getElementById('search-form');
+    const sort = catalog.querySelector('.catalog-sort');
+    if (searchForm && sort) searchForm.append(sort);
+    const note = document.getElementById('catalog-note');
+    if (searchForm && note) {
+      const details = document.createElement('details'); details.className = 'hori-price-note';
+      const summary = document.createElement('summary'); summary.textContent = 'О ценах';
+      summary.setAttribute('aria-label', 'О ценах и источниках каталога');
+      details.append(summary, note); searchForm.append(details);
+    }
     const extras = document.createElement('section');
     extras.className = 'hori-store-extras';
     extras.setAttribute('aria-label', 'Адреса, источники и справочники магазинов');
@@ -156,6 +200,16 @@ export function createHoriCommerce({ document, main, shop, header }) {
     const browser = document.getElementById('retail-browser');
     for (const node of [...(browser?.children || [])]) {
       if (!['retail-store-grid', 'retail-catalog-nav'].includes(node.id)) extras.append(node);
+    }
+    // One real store picker: the header opens it in a modal. Its original
+    // controls remain below the catalogue for navigation/recovery, without
+    // consuming the first visible row of products or duplicating handlers.
+    const stores = document.getElementById('retail-store-grid');
+    if (stores) {
+      extras.prepend(stores);
+      stores.addEventListener('click', event => {
+        if (event.target.closest('.retail-store-card')) requestAnimationFrame(() => { pane.scrollTop = 0; });
+      });
     }
   });
   return Object.freeze({ reveal });

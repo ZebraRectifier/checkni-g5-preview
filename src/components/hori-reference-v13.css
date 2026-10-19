@@ -1,0 +1,262 @@
+/* Approved CHECKNI v13: presentation only. Existing controllers own all facts. */
+@font-face{font-family:Inter;src:url('../fonts/InterVariable.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:HoriPixel;src:url('../fonts/press-start-2p-latin-400-normal.woff2') format('woff2');font-display:swap}
+@font-face{font-family:HoriPixel;src:url('../fonts/press-start-2p-cyrillic-400-normal.woff2') format('woff2');font-display:swap;unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+body.hori-workspace{
+  --bg:#fbf9f5;--surface:#fffefa;--surface-soft:#f1eaff;--ink:#17133c;--muted:#69638b;
+  --line:#d7c9f6;--accent:#6530ef;--accent-strong:#702cff;--accent-soft:#ebe1ff;
+  --scene-bg:#eee5ff;--shadow:0 3px 0 #d8cbf7,0 7px 20px #7b52bf0c;
+  position:fixed;inset:0;height:100vh;height:100dvh;min-height:0;margin:0;
+  display:grid;grid-template-rows:64px minmax(0,1fr) minmax(0,1fr);overflow:hidden;
+  background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,sans-serif;color-scheme:light
+}
+body.hori-workspace[data-hori-theme=dark]{--bg:#23202f;--surface:#2d283c;--surface-soft:#383047;--ink:#f5f1ff;--muted:#c5b9dc;--line:#64517e;--accent:#c39aff;--accent-strong:#7935ee;--accent-soft:#493367;--scene-bg:#3c2c56;--shadow:0 3px 0 #16101f,0 7px 20px #0002;color-scheme:dark}
+body.hori-workspace::before{display:none}
+body.hori-workspace [hidden]{display:none!important}
+body.hori-workspace :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+body.hori-workspace .hori-header{grid-row:1;display:flex;align-items:center;gap:20px;width:100%;max-width:1600px;height:100%;min-height:0;margin:auto;padding:8px 22px;border-bottom:1px solid var(--line);background:var(--surface)}
+body.hori-workspace .brand{flex:none;margin:0 12px 0 0}
+body.hori-workspace .brand-word{font-size:0}
+body.hori-workspace .brand-word::after{display:none}
+body.hori-workspace .brand-word::before{content:'CHECKNI';font:27px HoriPixel,monospace;color:var(--accent-strong);letter-spacing:-1.5px;text-shadow:2px 2px 0 var(--accent-soft)}
+body.hori-workspace :is(.brand-word::after,.brand-mark,#comparison-mode-badge){display:none}
+body.hori-workspace :is(.hori-location,.hori-selected-store,#hori-theme){min-height:40px;padding:7px 12px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--ink);cursor:pointer;font-size:14px;white-space:nowrap}
+body.hori-workspace .hori-location{color:var(--accent);font-weight:650}
+body.hori-workspace .hori-selected-store{display:flex;align-items:center;gap:8px;max-width:250px;overflow:hidden;font-weight:750}
+body.hori-workspace .hori-store-label{overflow:hidden;text-overflow:ellipsis}
+body.hori-workspace .hori-selected-store::after{content:'⌄';color:var(--accent);margin-left:auto}
+body.hori-workspace .hori-selected-store .retail-store-logo{width:26px;height:26px;min-width:26px;border-radius:2px;font-size:18px}
+body.hori-workspace #hori-theme{margin-left:auto;display:flex;gap:4px;background:var(--accent-soft);padding:3px;min-width:76px}
+body.hori-workspace #hori-theme span{width:32px;height:30px;display:grid;place-items:center;font-size:22px;color:var(--muted);border-radius:4px}
+body.hori-workspace[data-hori-theme=light] #hori-theme span:first-child,body.hori-workspace[data-hori-theme=dark] #hori-theme span:last-child{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px #4e2a8a20}
+body.hori-workspace .hori-stage{position:relative;grid-row:2;display:grid;grid-template-columns:56% minmax(0,1fr);grid-template-rows:44px minmax(0,1fr);width:100%;max-width:1600px;min-height:0;margin:0 auto;padding:0;border:0;border-bottom:2px solid var(--line);border-radius:0;background:linear-gradient(115deg,var(--surface-soft),var(--surface) 72%);overflow:hidden;isolation:isolate;box-shadow:inset 4px 4px 0 var(--accent-soft),inset -4px -4px 0 var(--accent-soft)}
+body.hori-workspace .hori-stage::before{content:'';position:absolute;z-index:-1;inset:4px;border:1px solid var(--line);clip-path:polygon(0 14px,7px 14px,7px 7px,14px 7px,14px 0,calc(100% - 14px) 0,calc(100% - 14px) 7px,calc(100% - 7px) 7px,calc(100% - 7px) 14px,100% 14px,100% calc(100% - 14px),calc(100% - 7px) calc(100% - 14px),calc(100% - 7px) calc(100% - 7px),calc(100% - 14px) calc(100% - 7px),calc(100% - 14px) 100%,14px 100%,14px calc(100% - 7px),7px calc(100% - 7px),7px calc(100% - 14px),0 calc(100% - 14px));background:linear-gradient(135deg,var(--scene-bg),transparent 65%);pointer-events:none}
+body.hori-workspace .hori-stage::after{content:'';position:absolute;pointer-events:none;left:36%;top:16%;width:8px;height:8px;background:#b58cff;opacity:.4;box-shadow:8px -8px #b58cff,170px 12px #b58cff,178px 4px #b58cff,90px 144px #b58cff}
+body.hori-workspace .phrase-entry-heading{grid-column:1;grid-row:1;padding:14px 24px 0;margin:0}
+body.hori-workspace .phrase-entry-heading .eyebrow{display:none}
+body.hori-workspace #phrase-entry-title{margin:0;color:var(--ink);font:clamp(20px,2.3vw,30px)/1.25 HoriPixel,monospace}
+body.hori-workspace .hori-scene{grid-column:2;grid-row:1/3;min-height:0;overflow:hidden;position:relative;padding:0 0 62px;pointer-events:none}
+body.hori-workspace .hori-scene img{position:absolute;right:-1%;bottom:40px;width:auto;max-width:none;height:100%;display:block;object-fit:contain;object-position:right bottom;filter:none}
+body.hori-workspace .hori-form{grid-column:1;grid-row:2;display:flex;flex-direction:column;min-width:0;min-height:0;margin:0;padding:10px 24px 76px;gap:6px}
+body.hori-workspace .hori-composer{position:absolute;left:20px;right:20px;bottom:14px;display:flex;gap:8px;min-width:0;margin:0;padding:4px;border:1px solid var(--line);border-radius:5px;background:var(--surface);box-shadow:0 3px 0 var(--accent-soft);z-index:2}
+body.hori-workspace .hori-composer input{flex:1;width:0;min-width:0;min-height:40px;padding:8px 12px;border:0;border-radius:3px;background:var(--surface);color:var(--ink);font-size:16px}
+body.hori-workspace .hori-composer input::placeholder{color:var(--muted);opacity:1}
+body.hori-workspace #basket-proposal-submit{flex:none;min-height:40px;width:44px;padding:0;font-size:0;border:1px solid #a47aff;border-radius:4px;background:linear-gradient(135deg,#9554ff,var(--accent-strong));color:white;box-shadow:0 2px 0 #5420bd}
+body.hori-workspace #basket-proposal-submit::before{content:'➤';font:26px/1 system-ui,sans-serif}
+body.hori-workspace #basket-proposal-submit:disabled{opacity:.55}
+body.hori-workspace #basket-proposal-help{display:none}
+body.hori-workspace .shopping-welcome{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;margin:0;padding:6px 0;border:0;background:none;overflow:auto}
+body.hori-workspace .hori-greeting{width:min(100%,560px);max-width:100%;padding:14px 18px;margin:0 0 20px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);font-size:clamp(17px,1.65vw,22px);font-weight:550;line-height:1.5}
+body.hori-workspace .shopping-welcome .shopping-conversation-choices{width:100%;max-width:560px}
+body.hori-workspace .shopping-welcome .shopping-conversation-choices button{flex:1}
+body.hori-workspace .shopping-conversation-choices{display:flex;flex-wrap:wrap;gap:10px;margin:0}
+body.hori-workspace .shopping-conversation-choices button{min-height:44px;padding:10px 15px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);color:var(--accent);box-shadow:0 2px 0 var(--accent-soft);font:650 14px/1.25 Inter,system-ui,sans-serif;cursor:pointer}
+body.hori-workspace .shopping-conversation-choices button:first-child{background:linear-gradient(120deg,#9150ff,var(--accent-strong));color:white;border-color:#9c6bff;box-shadow:0 3px 0 #5720b7}
+body.hori-workspace .shopping-dialogue{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;margin:0;padding:0 5px 0 0;scrollbar-width:thin;color:var(--ink)}
+body.hori-workspace .shopping-dialogue-header{min-height:0;margin:0}
+body.hori-workspace :is(.shopping-dialogue-header strong,.shopping-dialogue-speaker,.shopping-dialogue-note){display:none}
+body.hori-workspace .shopping-dialogue-header button{margin-left:auto;min-height:28px;font-size:11px;color:var(--muted)}
+body.hori-workspace .shopping-dialogue-history{max-height:none;overflow:visible;border:0;margin:0;padding:0}
+body.hori-workspace :is(.shopping-dialogue-user,.shopping-dialogue-answer,.shopping-dialogue .proposal-status){max-width:96%;padding:10px 13px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--ink);font-size:14px;line-height:1.5;box-shadow:0 2px 0 var(--accent-soft)}
+body.hori-workspace .shopping-dialogue-user{background:var(--accent-soft);max-width:86%}
+body.hori-workspace .shopping-dialogue .proposal-message{margin:0}
+body.hori-workspace .shopping-dialogue[data-guided=true] .proposal-message:has(+ .proposal-detail){display:none}
+body.hori-workspace .shopping-dialogue .shopping-conversation-choices{margin-top:10px}
+body.hori-workspace .app-shell{grid-row:3;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;width:100%;max-width:1600px;min-height:0;margin:0 auto;padding:12px 18px 14px;overflow:hidden;background:var(--bg)}
+body.hori-workspace .app-shell[data-hori-view=basket]{grid-template-columns:minmax(0,1fr)}
+body.hori-workspace .hori-shop-pane{min-width:0;min-height:0;overflow:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;padding:0 4px 6px 0;scroll-padding-top:60px}
+body.hori-workspace #shop-view>.hero{position:sticky;top:0;z-index:4;max-width:none;min-height:0;margin:0 0 8px;padding:0 0 3px;border:0;border-radius:0;background:var(--bg);box-shadow:none;overflow:visible}
+body.hori-workspace :is(.hero::before,.hero::after,.hero>.hero-identity,.hero>.eyebrow,#shop-title,.hero>.hero-copy,#manual-divider){display:none}
+body.hori-workspace .hero::before,body.hori-workspace .hero::after{display:none}
+body.hori-workspace .search-form{display:flex;align-items:center;gap:8px;margin:0}
+body.hori-workspace .search-form .search-box{flex:1;min-width:0}
+body.hori-workspace .search-box{min-height:40px;padding:0 12px;border:1px solid #b7a0ea;border-radius:4px;background:var(--surface);color:var(--accent);box-shadow:none}
+body.hori-workspace .search-box::before,body.hori-workspace .search-box::after{display:none}
+body.hori-workspace .search-box input{font-size:15px;color:var(--ink)}
+body.hori-workspace #search-help{display:none}
+body.hori-workspace :is(.field-help,.product-unit,.product-category,.basket-item-info p){color:var(--muted)}
+body.hori-workspace :is(.product-card,.basket-row,.basket-summary,.retail-catalog-nav,.retail-store-card,.retail-category-button,.retail-breadcrumbs button,.catalog-sort select,.empty-state,.stores-section,.stores-list,.nearby-shopping,.pyaterochka-published,.hori-shopping-results){background:var(--surface);color:var(--ink);border-color:var(--line);box-shadow:none}
+body.hori-workspace :is(h1,h2,h3,.product-price strong,.basket-item-info h2,.guided-shopping-table caption,.guided-shopping-table td){color:var(--ink)}
+body.hori-workspace :is(.text-button,.shopping-dialogue-sources a,.guided-shopping-table a,.guided-shopping-table summary,.guided-shopping-table th,.guided-shopping-area){color:var(--accent)}
+body.hori-workspace :is(.stepper,.stepper-button,.remove-button,.back-button,.basket-dock-button,.retail-breadcrumbs .is-current){background:var(--surface-soft);color:var(--ink);border-color:var(--line)}
+body.hori-workspace .retail-browser{gap:0;margin:0}
+body.hori-workspace .retail-catalog-nav{padding:0;margin:0 0 6px;border:0;border-radius:0;background:transparent}
+body.hori-workspace .retail-browser-head{min-height:0;gap:6px;margin:0}
+body.hori-workspace .retail-browser-head>div{display:none}
+body.hori-workspace .retail-category-back{min-height:30px;margin-bottom:4px;padding:0 8px;font-size:12px;border-radius:3px}
+body.hori-workspace .retail-category-grid{display:flex;flex-wrap:nowrap;gap:6px;overflow:auto;margin:0;padding:1px 0 4px;scrollbar-width:thin}
+body.hori-workspace .retail-category-button{flex:0 0 auto;display:flex;align-items:center;gap:5px;height:32px;min-height:32px;max-width:210px;padding:5px 9px;border:1px solid var(--line);border-radius:3px;font-size:12px}
+body.hori-workspace .retail-category-button strong{font-size:12px;white-space:nowrap}
+/* Keep counts in the accessible name while the visual strip stays compact. */
+body.hori-workspace .retail-category-button>span:not(.retail-category-arrow){position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap}
+body.hori-workspace .retail-category-button strong{overflow:hidden;text-overflow:ellipsis}
+body.hori-workspace :is(.retail-category-arrow,.retail-category-button small){display:none}
+body.hori-workspace .retail-breadcrumbs{margin:0 0 4px;gap:4px}
+body.hori-workspace .retail-breadcrumbs :is(button,.is-current){min-height:28px;font-size:11px;padding:4px 7px;border-radius:3px}
+body.hori-workspace:has(#product-search:not(:placeholder-shown)) #retail-catalog-nav{display:none}
+body.hori-workspace .catalog-section{margin-top:0}
+body.hori-workspace .section-heading{position:absolute;clip-path:inset(50%);width:1px;height:1px;min-height:0;overflow:hidden;white-space:nowrap;margin:0}
+body.hori-workspace .section-heading h2{margin:0;font-size:14px}
+body.hori-workspace #catalog-eyebrow{display:none}
+body.hori-workspace .result-count{min-width:22px;height:22px;padding:2px 5px;border-radius:3px;font-size:10px;color:var(--muted);background:var(--surface);border-color:var(--line)}
+body.hori-workspace .catalog-sort{flex:0 0 auto;min-width:0;margin-left:auto}
+body.hori-workspace .catalog-sort select{min-height:26px;height:26px;max-width:160px;padding:2px 6px;font-size:11px;border:1px solid var(--line);border-radius:3px}
+body.hori-workspace #catalog-note{margin:0 0 5px;font-size:10px;line-height:1.35}
+body.hori-workspace .hori-price-note{flex:none;margin:0}
+body.hori-workspace .hori-price-note summary{cursor:pointer;min-height:36px;display:grid;place-items:center;font-size:12px;color:var(--accent);list-style:none}
+body.hori-workspace .hori-price-note summary::-webkit-details-marker{display:none}
+body.hori-workspace .hori-price-note #catalog-note{position:absolute;top:100%;right:0;max-width:100%;width:420px;margin:2px 0 0;padding:14px;border:1px solid var(--line);border-radius:4px;background:var(--surface);box-shadow:var(--shadow);font-size:13px;line-height:1.5;color:var(--ink);z-index:8}
+body.hori-workspace .product-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+body.hori-workspace .product-card{display:flex;flex-direction:column;min-width:0;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);box-shadow:0 3px 12px #8b68bc09}
+body.hori-workspace .product-card .product-visual{position:relative;height:clamp(64px,calc(25vh - 106px),165px);aspect-ratio:auto;min-height:0;padding:0;border:0;border-radius:3px;background:#fff;overflow:hidden;flex-shrink:0}
+body.hori-workspace .product-card .product-photo{position:absolute;inset:0;display:block;width:100%;height:100%;min-height:0;min-width:0;object-fit:contain;border-radius:0;background:#fff;filter:none;image-rendering:auto}
+body.hori-workspace .product-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto auto;gap:3px 5px;align-content:start;padding:6px 0 0}
+body.hori-workspace .product-meta{display:none}
+body.hori-workspace .product-card h3{grid-column:1/3;margin:0;min-height:2.5em;font-size:14px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body.hori-workspace .product-card p.product-unit{grid-column:1/3;font-size:11px;line-height:1.2;margin:0}
+body.hori-workspace .product-card .product-price{grid-column:1;grid-row:3;align-self:center;min-width:0;margin:0;font-size:10px;line-height:1.25}
+body.hori-workspace .product-card .product-price strong{display:block;font-size:21px;line-height:1.2;white-space:nowrap}
+body.hori-workspace .product-card .product-price-unit{font-size:10px;color:var(--muted)}
+body.hori-workspace .product-card a.product-unit{grid-column:1/3;grid-row:4;display:block;overflow-wrap:anywhere;font-size:10px;line-height:1.3;margin:1px 0 0;color:var(--muted)}
+body.hori-workspace .product-card .add-button{grid-column:2;grid-row:3;align-self:center;min-height:38px;border:1px solid #a47aff;border-radius:4px;background:linear-gradient(135deg,#9c5cff,var(--accent-strong));color:#fff;box-shadow:0 2px 0 #5720b7}
+body.hori-workspace .product-card .add-button:not(:disabled){font-size:0;width:38px;padding:0}
+body.hori-workspace .product-card .add-button:not(:disabled)::before{content:'+';font:30px/1 system-ui,sans-serif}
+body.hori-workspace .product-card .add-button.is-added::before{content:'✓';font-size:22px}
+body.hori-workspace .product-card .add-button:disabled{grid-column:1/3;grid-row:5;font-size:10px;line-height:1.3;padding:4px 6px;background:var(--surface-soft);color:var(--muted);border-color:var(--line);box-shadow:none}
+body.hori-workspace .hori-basket-preview{display:flex;flex-direction:column;min-width:0;min-height:0;padding:14px;border:1px solid var(--line);border-radius:6px;background:var(--surface);box-shadow:var(--shadow)}
+body.hori-workspace .hori-basket-preview h2{font-size:21px;margin:0 0 4px}
+body.hori-workspace .hori-basket-count{margin:0 0 8px;color:var(--muted);font-size:11px}
+body.hori-workspace .hori-basket-items{flex:1;min-height:0;overflow:auto;scrollbar-width:thin}
+body.hori-workspace .hori-basket-empty{min-height:0;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;margin:0;text-align:center;color:var(--muted);font-size:13px;line-height:1.4}
+body.hori-workspace .hori-basket-empty strong{font-size:16px}
+body.hori-workspace .hori-empty-basket{display:block;padding:6px;filter:drop-shadow(3px 5px 0 #d9cbf660)}
+body.hori-workspace .hori-empty-basket svg{width:64px;height:58px}
+body.hori-workspace .hori-mini-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;padding:8px 0;border-top:1px solid var(--line)}
+body.hori-workspace .hori-mini-item strong{grid-column:1/3;font-size:13px;line-height:1.35}
+body.hori-workspace .hori-mini-item small{align-self:center;color:var(--muted)}
+body.hori-workspace .hori-mini-stepper{display:flex;align-items:center;gap:8px}
+body.hori-workspace .hori-mini-stepper button{width:34px;height:34px;background:var(--accent-soft);border:1px solid var(--line);border-radius:3px;color:var(--accent);font-size:20px;cursor:pointer}
+body.hori-workspace .hori-mini-stepper button:disabled{opacity:.4;cursor:default}
+body.hori-workspace .basket-dock{display:none}
+body.hori-workspace #open-basket{border:1px solid #a47aff;border-radius:4px;background:linear-gradient(120deg,#9554ff,var(--accent-strong));color:white;box-shadow:0 3px 0 #5720b7}
+body.hori-workspace #basket-dock-copy{color:#f1eaff}
+body.hori-workspace #back-to-shop{margin-bottom:6px}
+body.hori-workspace .basket-heading{margin:8px 0 12px}
+body.hori-workspace .basket-heading .eyebrow{display:none}
+body.hori-workspace .basket-heading h1{margin:0;font-size:26px;line-height:1.25}
+body.hori-workspace .basket-heading .hero-copy{max-width:none;margin:5px 0;font-size:13px;line-height:1.4}
+body.hori-workspace .hori-store-extras{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+body.hori-workspace .retail-store-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}
+body.hori-workspace .retail-store-card{display:flex;align-items:center;gap:8px;min-width:0;min-height:52px;padding:8px;border:1px solid var(--line);border-radius:4px}
+body.hori-workspace .retail-store-card.is-selected{border:2px solid var(--accent);background:var(--accent-soft)}
+body.hori-workspace .retail-store-logo{width:30px;height:30px;min-width:30px;border-radius:2px;font-size:18px}
+body.hori-workspace .retail-store-copy{min-width:0;text-align:left}
+body.hori-workspace .retail-store-copy strong{display:block;font-size:13px}
+body.hori-workspace .retail-store-copy>span:last-child{display:block;font-size:10px;line-height:1.35}
+body.hori-workspace :is(.retail-store-kicker,.retail-store-total){display:none}
+body.hori-workspace #hori-store-dialog{position:fixed;inset:0;width:min(760px,calc(100vw - 28px));max-height:80dvh;margin:auto;padding:20px;border:2px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);box-shadow:0 6px 0 #9c7ccd}
+body.hori-workspace #hori-store-dialog::backdrop{background:#21123588}
+body.hori-workspace #hori-store-dialog>header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+body.hori-workspace #hori-store-dialog h2{margin:0;font-size:21px}
+body.hori-workspace #hori-store-dialog>header button{min-height:40px;padding:8px 14px;border:1px solid var(--line);border-radius:4px;background:var(--accent-strong);color:white;cursor:pointer}
+body.hori-workspace :is(#globus-store-picker,#metro-store-picker,#magnit-store-picker){padding:10px;border:1px solid var(--line);border-radius:4px;background:var(--surface);margin-bottom:12px;font-size:12px}
+body.hori-workspace :is(#globus-store-picker,#metro-store-picker,#magnit-store-picker) select{max-width:100%;min-height:40px;border:1px solid var(--line);border-radius:3px;background:var(--surface-soft);color:var(--ink)}
+body.hori-workspace .nearby-shopping{margin:0 0 10px;padding:0;border:0;border-radius:0}
+body.hori-workspace .nearby-shopping :is(input[type=search],select){background:var(--surface);color:var(--ink)}
+body.hori-workspace .hori-shopping-results{padding:10px;margin:0 0 12px;border:1px solid var(--line);border-radius:4px}
+body.hori-workspace .guided-shopping{margin:0;font-size:12px}
+body.hori-workspace .guided-shopping-scroll{max-height:none;border-color:var(--line)}
+body.hori-workspace .guided-shopping-table{table-layout:fixed;width:100%}
+body.hori-workspace .guided-shopping-table th:first-child{width:62%}
+body.hori-workspace .guided-shopping-table :is(td,th){padding:10px;overflow-wrap:anywhere;font-size:12px}
+body.hori-workspace .guided-shopping-table td p{margin:5px 0}
+body.hori-workspace .guided-product-photo{float:left;margin:0 10px 8px 0;width:64px;height:64px;object-fit:contain;background:white;border-radius:3px;filter:none;image-rendering:auto}
+body.hori-workspace .shopping-selection-cards{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin:0}
+body.hori-workspace .toast-region{top:auto;bottom:14px}
+@media(min-width:901px){
+ body.hori-workspace .hori-basket-preview .basket-dock:not([hidden]){display:block;position:static;width:100%;max-width:none;transform:none;margin:10px 0 0;padding:0}
+ body.hori-workspace .hori-basket-preview .basket-dock-button{width:100%;min-height:44px;font-size:13px}
+}
+@media(min-width:1450px){body.hori-workspace .app-shell{grid-template-columns:minmax(0,1fr) 330px}}
+@media(max-width:900px){
+ body.hori-workspace .app-shell{grid-template-columns:minmax(0,1fr);padding-bottom:70px}
+ body.hori-workspace .hori-basket-preview:not([hidden]){display:contents}
+ body.hori-workspace .hori-basket-preview>:not(.basket-dock){display:none}
+ body.hori-workspace .basket-dock:not([hidden]){display:block;bottom:max(8px,env(safe-area-inset-bottom));width:calc(100% - 24px);max-width:620px}
+ body.hori-workspace .basket-dock-button{min-height:48px}
+ body.hori-workspace .hori-header{gap:10px;padding-inline:14px}
+ body.hori-workspace .brand-word::before{font-size:22px}
+ body.hori-workspace .product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:620px){
+ body.hori-workspace{grid-template-rows:84px minmax(0,1fr) minmax(0,1fr)}
+ body.hori-workspace .hori-header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:30px 34px;gap:4px 8px;padding:8px 12px}
+ body.hori-workspace .brand{grid-column:1;grid-row:1;margin:0}
+ body.hori-workspace .brand-word::before{font-size:19px;letter-spacing:-1px}
+ body.hori-workspace #hori-theme{grid-column:2;grid-row:1;padding:1px;min-height:30px;min-width:64px}
+ body.hori-workspace #hori-theme span{width:28px;height:26px;font-size:19px}
+ body.hori-workspace .hori-location{grid-column:1;grid-row:2;justify-self:start;min-height:32px;padding:4px 7px;font-size:12px}
+ body.hori-workspace .hori-selected-store{grid-column:2;grid-row:2;justify-self:end;min-height:32px;max-width:155px;padding:2px 6px;font-size:12px;border:0;background:none}
+ body.hori-workspace .hori-selected-store .retail-store-logo{width:21px;height:21px;min-width:21px;font-size:15px}
+ body.hori-workspace .hori-stage{grid-template-columns:minmax(0,1fr);grid-template-rows:36px minmax(0,1fr)}
+ body.hori-workspace .phrase-entry-heading{grid-column:1;grid-row:1;padding:12px 16px 0}
+ body.hori-workspace #phrase-entry-title{font-size:21px}
+ body.hori-workspace .hori-scene{position:absolute;grid-column:1;grid-row:1/3;top:20px;right:0;width:53%;height:58%;padding:0;z-index:0}
+ body.hori-workspace .hori-scene img{right:0;bottom:0;width:100%;height:100%;object-fit:contain;object-position:right top}
+ body.hori-workspace .hori-form{grid-column:1;grid-row:2;padding:8px 14px 68px}
+ body.hori-workspace .shopping-welcome{justify-content:space-between;gap:10px;padding:8px 0 3px;overflow:auto}
+ body.hori-workspace .hori-greeting{max-width:49%;font-size:15px;line-height:1.4;padding:10px;margin:0}
+ body.hori-workspace .shopping-welcome .shopping-conversation-choices{flex-direction:column;flex-wrap:nowrap;width:100%;gap:8px}
+ body.hori-workspace .shopping-conversation-choices button{min-height:40px;padding:8px 10px;font-size:13px}
+ body.hori-workspace .hori-composer{left:12px;right:12px;bottom:12px;padding:3px;gap:5px}
+ body.hori-workspace .hori-composer input{min-height:38px;padding:7px 8px}
+ body.hori-workspace #basket-proposal-submit{width:40px;min-height:38px}
+ body.hori-workspace .hori-stage:has(.shopping-welcome[hidden]) .hori-scene{opacity:.16}
+ body.hori-workspace :is(.shopping-dialogue-user,.shopping-dialogue-answer,.shopping-dialogue .proposal-status){font-size:13px;padding:8px 10px;max-width:96%}
+ body.hori-workspace .app-shell{padding:8px 12px 68px;gap:0}
+ body.hori-workspace .app-shell[data-hori-view=basket]{padding-bottom:10px}
+ body.hori-workspace .hori-shop-pane{padding-right:0}
+ body.hori-workspace #shop-view>.hero{margin-bottom:5px}
+ body.hori-workspace .search-box{min-height:36px;padding:0 8px}
+ body.hori-workspace .search-box input{font-size:16px}
+ body.hori-workspace .retail-category-grid{gap:5px;padding-bottom:3px}
+ body.hori-workspace .retail-category-button{min-height:30px;padding:4px 7px}
+ body.hori-workspace .retail-category-button strong{font-size:11px}
+ body.hori-workspace .section-heading{min-height:23px;margin-bottom:3px}
+ body.hori-workspace .section-heading h2{font-size:12px}
+ body.hori-workspace .catalog-sort select{min-height:23px;height:23px;font-size:10px;max-width:130px}
+ body.hori-workspace .catalog-sort select{width:105px;min-height:34px;height:34px}
+ body.hori-workspace .hori-price-note summary{width:24px;font-size:0}
+ body.hori-workspace .hori-price-note summary::before{content:'ⓘ';font-size:20px}
+ body.hori-workspace #catalog-note{font-size:9px;line-height:1.25;margin-bottom:4px}
+ body.hori-workspace .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ body.hori-workspace .product-card{padding:6px}
+ body.hori-workspace .product-card .product-visual{height:56px}
+ body.hori-workspace .product-card h3{font-size:12px;line-height:1.25}
+ body.hori-workspace .product-card .product-price strong{font-size:19px}
+ body.hori-workspace .product-card a.product-unit{font-size:9px}
+ body.hori-workspace .product-card .add-button:not(:disabled){width:34px;min-height:34px}
+ body.hori-workspace .product-card .add-button:disabled{min-height:30px}
+ body.hori-workspace .retail-store-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body.hori-workspace .guided-product-photo{width:48px;height:48px;margin-right:7px}
+ body.hori-workspace #hori-store-dialog{padding:14px}
+}
+@media(max-height:700px) and (min-width:621px){
+ body.hori-workspace .hori-stage{grid-template-rows:38px minmax(0,1fr)}
+ body.hori-workspace .hori-greeting{font-size:17px;padding:10px 14px;margin-bottom:10px}
+ body.hori-workspace .product-card .product-visual{height:70px}
+}
+@media(max-width:620px) and (max-height:650px){
+ body.hori-workspace{grid-template-rows:72px minmax(0,1fr) minmax(0,1fr)}
+ body.hori-workspace .hori-header{padding-top:3px;padding-bottom:3px;grid-template-rows:28px 30px}
+ body.hori-workspace .hori-stage{grid-template-rows:30px minmax(0,1fr)}
+ body.hori-workspace #phrase-entry-title{font-size:16px}
+ body.hori-workspace .hori-scene{top:12px;height:55%;width:47%}
+ body.hori-workspace .hori-greeting{font-size:13px;padding:6px 8px}
+ body.hori-workspace .shopping-welcome{overflow:auto;gap:5px;padding-top:3px}
+ body.hori-workspace .shopping-welcome .shopping-conversation-choices{flex-direction:row;gap:5px}
+ body.hori-workspace .shopping-welcome .shopping-conversation-choices button{flex:1;min-height:36px;font-size:11px;padding:5px}
+ body.hori-workspace .hori-form{padding-top:3px;padding-bottom:62px}
+ body.hori-workspace .hori-composer{bottom:8px}
+ body.hori-workspace .shopping-dialogue-header{display:none}
+}
