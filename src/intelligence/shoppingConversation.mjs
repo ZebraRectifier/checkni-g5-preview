@@ -119,8 +119,8 @@ export function extractShoppingDelta(text) {
   };
   const clauses = shoppingClauses(value);
   for (let clause of clauses) {
-    const permissionQuestion = PERMISSION_QUESTION.test(clause)
-      || value.replace(/\s+\?/gu, "?").includes(`${clause.trim()}?`);
+    const askedAsQuestion = value.replace(/\s+\?/gu, "?").includes(`${clause.trim()}?`);
+    const permissionQuestion = PERMISSION_QUESTION.test(clause) || askedAsQuestion;
     const replacement = clause.match(/вместо\s+(.+?)\s+(?:хочу|нужен|возьми|давай|добавь)\s+(.+)/u);
     if (replacement) {
       addTargets(replacement[1], "reject");
@@ -133,6 +133,12 @@ export function extractShoppingDelta(text) {
     const except = clause.match(/кроме\s+(.+)/u);
     if (except) { addTargets(except[1], "allow"); clause = clause.slice(0, except.index); }
     if (REFUSAL.test(clause)) {
+      // "You suggested it; now it doesn't suit the dish?" is a question,
+      // not a new dietary refusal. Explicit personal refusals/commands and
+      // every other restriction in the clause still take the strict path.
+      if (askedAsQuestion && /не\s+подход[а-я]*/u.test(clause)
+        && !REFUSAL.test(clause.replace(/не\s+подход[а-я]*/gu, ""))
+        && !/(?<![а-я])(?:мне|нам)(?![а-я])|добавь|возьми|купи|верни|исключи/u.test(clause)) continue;
       const without = clause.match(/без\s+(.+)/u);
       const otherRefusal = NEGATIVE_REQUEST.test(clause);
       const phrase = without && !otherRefusal ? without[1] : clause;

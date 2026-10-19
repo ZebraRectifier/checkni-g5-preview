@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "0d8b47b866e09dcfa9ed9fddaa7c65035dbbcfbb",
+  "sourceCommit": "b0cce2e195d705d7f9419a32f5c3de5463e90cd1",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -1874,6 +1874,37 @@
     "paidAttempts": 1,
     "dailyQuota": 20,
     "context": "bounded history, first-person household facts, explicit retry restores pre-failure history",
+    "guards": "existing auth, content/commercial guards and real outage circuit retained",
+    "physicalAndroid": "unverified"
+  },
+  "gptunnelConsistency": {
+    "sourcePr": 572,
+    "sourceCommit": "b0cce2e195d705d7f9419a32f5c3de5463e90cd1",
+    "testedExactHead": "751ee24ec6702e742aac902a6c2a2c25d1b77be0",
+    "validation": {
+      "sourcePr": 572,
+      "sourceCommit": "b0cce2e195d705d7f9419a32f5c3de5463e90cd1",
+      "testedExactHead": "751ee24ec6702e742aac902a6c2a2c25d1b77be0",
+      "exactHeadPassed": true,
+      "exactHeadCi": 39232599863,
+      "exactHeadPackage": 39232599852,
+      "exactNodeTests": 2387,
+      "exactBrowserTests": 422,
+      "exactRetries": 0,
+      "actualMainCi": 39234921021,
+      "actualMainPackage": 39234920849,
+      "actualMainPassed": true,
+      "actualNodeTests": 2387,
+      "actualBrowserTests": 422,
+      "actualRetries": 0,
+      "packagePassed": true
+    },
+    "quotaDeadlineMs": 5000,
+    "providerDeadlineMs": 9000,
+    "clientDeadlineMs": 20000,
+    "paidAttempts": 1,
+    "dailyQuota": 20,
+    "context": "latest validated question/answer pair, referential follow-ups, suitability questions stay out of dietary memory",
     "guards": "existing auth, content/commercial guards and real outage circuit retained",
     "physicalAndroid": "unverified"
   }
