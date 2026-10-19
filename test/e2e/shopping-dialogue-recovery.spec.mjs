@@ -137,3 +137,43 @@ test('fish follow-up failure and explicit retry retain the topic, accepted histo
   expect(await savedBasket(page)).toBe(before);
   await expect(page.locator('.shopping-welcome')).toBeHidden();
 });
+
+test('questioning a previous recommendation stays conversational and does not block a new product topic', async ({ page }) => {
+  const requests=[];
+  const replies=['Для супа можно выбрать треску, судака или хек.','Те же варианты можно обсудить и для духовки.',
+    'Треска по-прежнему подходит; уточнение способа приготовления не меняет прежний выбор.',
+    'Для завтрака подбирай творог по вкусу, составу на этикетке и способу подачи.'];
+  await page.route('**/functions/v1/ai-basket-proposal',route=>{
+    requests.push(route.request().postDataJSON());return route.fulfill({json:{kind:'advice',message:replies[requests.length-1]}});
+  });
+  await page.goto('/?comparison=demo#shop');
+  await page.locator('[data-product-id="milk-25-900"]').getByRole('button').click();
+  const before=await savedBasket(page);
+  const turns=['Посоветуй рыбу для супа.','Она подойдёт для духовки? Нас двое.',
+    'Ты же сам предложил треску — теперь она не подходит?','Теперь посоветуй творог к завтраку.'];
+  for(let i=0;i<turns.length;i++){
+    await submit(page,turns[i]);await expect(status(page)).toContainText(replies[i]);
+    await expect(status(page)).not.toContainText('Уточни пищевое ограничение');
+  }
+  expect(requests).toHaveLength(4);expect(requests[2].context.peopleCount).toBe(2);
+  expect(requests[2].history[0].text).toBe(turns[0]);expect(requests[3].history).toHaveLength(6);
+  expect(await savedBasket(page)).toBe(before);
+  await page.reload();expect(await savedBasket(page)).toBe(before);
+});
+
+test('short suitability and same-product questions retain both previous answers',async({page})=>{
+  const requests=[],replies=['Для пирога выбирай яблоки по рецепту; цвет сам по себе не определяет вкус.',
+    'Зелёные могут подойти: важны сорт, вкус и текстура, а не только цвет.',
+    'Те же яблоки можно обсудить и для свежей подачи; цвет не меняет прежний совет.'];
+  await page.route('**/functions/v1/ai-basket-proposal',route=>{
+    requests.push(route.request().postDataJSON());return route.fulfill({json:{kind:'advice',message:replies[requests.length-1]}});
+  });
+  await page.goto('/?comparison=demo#shop');
+  await page.locator('[data-product-id="milk-25-900"]').getByRole('button').click();
+  const before=await savedBasket(page);
+  const turns=['Как выбрать яблоки для пирога?','А зелёные подойдут?','А те же яблоки можно есть свежими?'];
+  for(let i=0;i<turns.length;i++){await submit(page,turns[i]);await expect(status(page)).toContainText(replies[i]);}
+  expect(requests).toHaveLength(3);expect(requests.map(r=>r.history?.length??0)).toEqual([0,2,4]);
+  expect(requests[2].history[1].text).toBe(replies[0]);expect(requests[2].history[3].text).toBe(replies[1]);
+  expect(await savedBasket(page)).toBe(before);
+});

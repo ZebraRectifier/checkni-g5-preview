@@ -44,14 +44,20 @@ export function resolveShoppingAdviceFollowup(text, focus, volumeQuestionPending
   // actual question and no newly named food, rather than interpreting a
   // permission statement or a different product as the old advice subject.
   const descriptiveQuestion = /\?\s*$/u.test(text) && !shoppingTargets(value).length
-    && /^(?:а\s+)?(?:[а-я]+(?:ые|ие)\s+(?:тоже\s+)?можно|чем\s+[а-я]+(?:ые|ие)\s+отличаются\s+от\s+[а-я]+(?:ых|их))$/u.test(value);
+    && /^(?:а\s+)?(?:[а-я]+(?:ые|ие)\s+(?:тоже\s+)?(?:можно|подойдут)|чем\s+[а-я]+(?:ые|ие)\s+отличаются\s+от\s+[а-я]+(?:ых|их))$/u.test(value);
+  // A named demonstrative continuation must still name the current subject.
+  // "Those same apples" continues apples; "those same eggs" starts its own turn.
+  const sameSubjectQuestion = /\?\s*$/u.test(text) && /^(?:а\s+)?(?:те же|тот же|та же|то же)\s/u.test(value)
+    && (focus?.targets.length ? shoppingTargets(value).length > 0
+      && shoppingTargets(value).every(target => focus.targets.includes(target))
+      : focus?.subject && value.split(/\s+/u).includes(focus.subject));
   const commercial = /цен[ауы]|стоим|сто[ия]т|скидк|акци|дешев|налич|доставк|заказ|где|магнит|глобус|метро|пятерочк|перекресток/iu.test(value);
   const command = /новая\s+(?:корзина|задача)|другая\s+корзина|сбрось|забудь|отмени|откат|верни\s+как|перестрой|пересобери|обнови\s+корзину|(?:^|[,;.!?]\s*|\sи\s)(?:а\s+)?(?:добавь|положи|убери|удали|замени|возьми|купи|собери|закажи)(?=$|\s)/iu.test(value);
   const adviceExplanation = /^(?:а\s+)?(?:почему|зачем)(?=$|\s)/u.test(value)
     && !/корзин|набор|магазин|адрес|побед|сравнен|итог|сумм|стоим|дешев|выгод/u.test(value);
   const mincePurpose = focus?.topic === "selection" && focus.subject === "фарш" && /^(?:котлеты|соус|начинка)$/u.test(value);
   const heating = focus?.topic === "selection" && focus.subject === "готовую еду" && /^(?:без (?:разогрева|готовки)|(?:только )?разогреть|(?:в )?микроволновк[ае])$/u.test(value);
-  if (focus && (conversational || descriptiveQuestion || adviceExplanation) && !commercial && !command && !mincePurpose && !heating) {
+  if (focus && (conversational || descriptiveQuestion || sameSubjectQuestion || adviceExplanation) && !commercial && !command && !mincePurpose && !heating) {
     const correction = /^(?:нет[,\s]+я\s+(?:имел|имела|имею)\s+в\s+виду|давай\s+лучше\s+про)\s+(.+)$/u.exec(value);
     const nextFocus = correction ? shoppingAdviceFocus(`Как выбрать ${correction[1]}?`) : focus;
     const subject = nextFocus.targets.map(shoppingTargetLabel).join(" и ") || nextFocus.subject;
