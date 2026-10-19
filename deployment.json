@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "b0cce2e195d705d7f9419a32f5c3de5463e90cd1",
+  "sourceCommit": "b75280c69a86aaf1124023c517beabe2ce49452c",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -1906,6 +1906,70 @@
     "dailyQuota": 20,
     "context": "latest validated question/answer pair, referential follow-ups, suitability questions stay out of dietary memory",
     "guards": "existing auth, content/commercial guards and real outage circuit retained",
+    "physicalAndroid": "unverified"
+  },
+  "horiReferenceV13": {
+    "reference": "shopping-hori-hybrid-v13",
+    "approved": "2026-10-19",
+    "sourcePr": 573,
+    "sourceCommit": "b75280c69a86aaf1124023c517beabe2ce49452c",
+    "testedExactHead": "7b8e72ba04c2c09abebe3ef62ee2b3313a58eabd",
+    "asset": "src/img/hori-room-v13.png",
+    "validation": {
+      "sourcePr": 573,
+      "sourceCommit": "b75280c69a86aaf1124023c517beabe2ce49452c",
+      "testedExactHead": "7b8e72ba04c2c09abebe3ef62ee2b3313a58eabd",
+      "exactHeadPassed": true,
+      "actualMainPassed": true,
+      "packagePassed": true,
+      "sourceTreeEqualsTestedTree": true,
+      "sourceBase": "b0cce2e195d705d7f9419a32f5c3de5463e90cd1",
+      "exactCi": "https://github.com/ZebraRectifier/Checkni/actions/runs/39283168318",
+      "exactPackage": "https://github.com/ZebraRectifier/Checkni/actions/runs/39283168313",
+      "exactBaseline": {
+        "job": 118161686119,
+        "tests": 2387,
+        "passed": 2387,
+        "failed": 0
+      },
+      "exactBrowser": {
+        "job": 118162921034,
+        "tests": 428,
+        "passedFirstAttempt": 426,
+        "passedOnRetry": 2,
+        "failed": 0,
+        "elapsedMinutes": 17.1
+      },
+      "retriedCases": [
+        "hori-reference: desktop reference image position",
+        "surface-interaction-guards: existing mobile violet layout"
+      ],
+      "evidenceMethod": "Exact checked-out SHA and completed job logs/steps; GitHub status index lags behind completed steps. No gates, retry counts, timeouts or visual tolerance changed.",
+      "actualMainCi": "https://github.com/ZebraRectifier/Checkni/actions/runs/39286279944",
+      "actualMainPackage": "https://github.com/ZebraRectifier/Checkni/actions/runs/39286279945",
+      "physicalAndroidVerified": false,
+      "actualMainBaseline": {
+        "passed": 2387,
+        "checkedOutSha": "b75280c69a86aaf1124023c517beabe2ce49452c",
+        "job": 118173298532,
+        "failed": 0,
+        "tests": 2387
+      },
+      "actualMainPackageJob": 118173316544,
+      "actualMainBrowserJob": 118174690752,
+      "actualMainBrowser": {
+        "failed": 0,
+        "tests": 428,
+        "passedOnRetry": 0,
+        "job": 118174690752,
+        "passedFirstAttempt": 428,
+        "elapsedMinutes": 17.6
+      },
+      "actualMainPackagePassed": true
+    },
+    "layout": "equal-assistant-and-commerce-halves-below-header",
+    "appearance": "soft-light-default-or-explicit-saved-choice",
+    "data": "existing real observations, conditions and source dates; unchanged Core and provider",
     "physicalAndroid": "unverified"
   }
 }

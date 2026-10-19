@@ -12,7 +12,7 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   if (!section || !main || !header || !retailSurface) return { present() {} };
   const sheet = document.createElement('link');
   sheet.rel = 'stylesheet';
-  sheet.href = new URL('./hori-workspace.css', import.meta.url).href;
+  sheet.href = new URL('./hori-reference-v13.css', import.meta.url).href;
   document.head.append(sheet);
   document.body.classList.add('hori-workspace');
   header.classList.replace('app-header', 'hori-header');
@@ -22,24 +22,27 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   header.after(section);
   section.setAttribute('aria-label', 'Хори — помощник с покупками');
   const title = section.querySelector('#phrase-entry-title');
-  if (title) title.innerHTML = '<span class="hori-name">Хори</span> <span class="hori-title-copy">— помощник CHECKNI</span>';
+  if (title) title.innerHTML = '<span class="hori-name">Хори</span>';
   const scene = document.createElement('div');
   scene.className = 'hori-scene';
   scene.setAttribute('role', 'img');
   scene.setAttribute('aria-label', 'Хори в чёрных очках за ноутбуком');
   const room = document.createElement('img');
-  room.src = new URL('../img/hori-room-v1.webp', import.meta.url).href;
+  room.src = new URL('../img/hori-room-v13.png', import.meta.url).href;
   room.alt = ''; room.width = 1448; room.height = 1086;
   room.fetchPriority = 'high';
   scene.append(room);
   section.append(scene);
   const greeting = document.createElement('p');
   greeting.className = 'hori-greeting';
-  greeting.textContent = 'Привет! Я Хори. Что покупаем?';
+  greeting.append('Привет! Я Хори. ', document.createElement('br'), 'Что покупаем?');
   welcome.prepend(greeting);
   const label = form.querySelector('.proposal-box');
   if (label) { label.classList.replace('proposal-box', 'hori-composer'); form.append(label); }
-  input.placeholder = 'Что хочешь купить?';
+  input.placeholder = 'Что нужно купить?';
+  const send = document.getElementById('basket-proposal-submit');
+  send?.setAttribute('aria-label', 'Отправить сообщение Хори');
+  document.getElementById('product-search')?.setAttribute('placeholder', 'Найти продукты');
   const help = document.getElementById('basket-proposal-help');
   if (help) { help.textContent = 'Можно списком или своими словами.'; form.append(help); }
   const results = document.createElement('section');
@@ -57,9 +60,11 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   try { const saved = localStorage.getItem('checkni.appearance.v1'); if (['light', 'dark'].includes(saved)) appearance = saved; } catch { /* Tab-only theme remains usable. */ }
   const system = globalThis.matchMedia?.('(prefers-color-scheme: dark)');
   const applyTheme = () => {
-    const dark = appearance ? appearance === 'dark' : system?.matches !== false;
+    // The newly approved v13 starts in its soft light palette. A previous
+    // explicit appearance choice still wins and never resets shopping state.
+    const dark = appearance === 'dark';
     document.body.dataset.horiTheme = dark ? 'dark' : 'light';
-    theme.textContent = dark ? '☀ Светлая' : '☾ Тёмная';
+    theme.innerHTML = '<span aria-hidden="true">☀</span><span aria-hidden="true">☾</span>';
     theme.setAttribute('aria-label', dark ? 'Включить светлую тему' : 'Включить тёмную тему');
   };
   theme.addEventListener('click', () => {

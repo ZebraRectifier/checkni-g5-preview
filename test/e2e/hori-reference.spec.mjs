@@ -21,6 +21,7 @@ async function setup(page) {
     body:'export const observedOffersPort={async load(){return [];}};' }));
   await page.goto('/?comparison=observed&catalog=retail#shop');
   await expect(page.locator('.hori-greeting')).toBeVisible();
+  await expect(page.locator('body')).toHaveCSS('display', 'grid');
 }
 
 test('reference scene, equal working panes, first entry, address access and theme remain usable', async ({ page }, info) => {
@@ -32,7 +33,13 @@ test('reference scene, equal working panes, first entry, address access and them
   const commerce = await page.locator('#main').boundingBox();
   expect(Math.abs(ai.height - commerce.height)).toBeLessThanOrEqual(2);
   expect(box.width).toBeGreaterThanOrEqual(info.project.name.includes('mobile') ? 120 : 350);
-  expect(box.height).toBeGreaterThanOrEqual(info.project.name.includes('mobile') ? 90 : 300);
+  // v13 reserves a full-width composer below the room, unlike the old v8
+  // full-height left illustration. The working assistant still owns half.
+  expect(box.height).toBeGreaterThanOrEqual(info.project.name.includes('mobile') ? 90 : 200);
+  if (!info.project.name.includes('mobile')) {
+    const heading = await page.locator('#phrase-entry-title').boundingBox();
+    expect(box.x).toBeGreaterThan(heading.x);
+  }
   await expect(page.locator('.shopping-welcome')).not.toContainText(/3 человека|7 дней|600/);
   await page.locator('#basket-proposal-input').fill('Молоко и яблоки');
   await page.locator('#hori-theme').click();
