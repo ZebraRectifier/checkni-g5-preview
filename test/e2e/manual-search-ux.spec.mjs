@@ -80,6 +80,41 @@ test('an unsubmitted retail query is an announced draft, without an empty result
   expect(calls.ai).toBe(0);
 });
 
+test('narrow search retains a usable input, native actions and price information on one row', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  const { calls } = await setup(page);
+  await page.evaluate(() => document.fonts.ready);
+  for (const width of [320, 390, 412]) {
+    await page.setViewportSize({ width, height: 844 });
+    await search(page).fill('молоко');
+    const controls = [search(page), submit(page), page.locator('#catalog-sort'), page.locator('.hori-price-note summary')];
+    const boxes = [];
+    for (const control of controls) {
+      await expect(control).toBeInViewport();
+      boxes.push(await control.boundingBox());
+    }
+    expect(boxes[0].width, `editable text width at ${width}`).toBeGreaterThanOrEqual(48);
+    expect(boxes[1].height).toBeGreaterThanOrEqual(44);
+    expect(boxes[2].height).toBeGreaterThanOrEqual(44);
+    const centres = boxes.map(box => box.y + box.height / 2);
+    expect(Math.max(...centres) - Math.min(...centres), `one toolbar row at ${width}`).toBeLessThanOrEqual(1);
+    for (let index = 1; index < boxes.length; index++) expect(boxes[index - 1].x + boxes[index - 1].width).toBeLessThanOrEqual(boxes[index].x);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await expect(page.locator('#clear-search')).toBeVisible();
+  }
+  await page.locator('#catalog-sort').selectOption({ label: 'Сначала дешевле' });
+  await expect(page.locator('#catalog-sort option:checked')).toHaveText('Сначала дешевле');
+  await page.locator('.hori-price-note summary').click();
+  await expect(page.locator('#catalog-note')).toBeVisible();
+  await page.locator('.hori-price-note summary').click();
+  expect(calls.gateway).toEqual([]);
+  expect(calls.retail).toEqual([]);
+  await submit(page).click();
+  await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
+  expect(calls.gateway).toEqual(['молоко']);
+  expect(calls.ai).toBe(0);
+});
+
 test('empty and whitespace submissions never reload the initial catalogue', async ({ page }) => {
   const { calls } = await setup(page);
   const initialBrowse = calls.browse;
