@@ -1,4 +1,5 @@
 import { createHoriCommerce } from './HoriCommerce.mjs';
+import { createHoriCubes } from './HoriCubes.mjs';
 
 // Presentation shell only: existing ports, confirmation handlers and Core keep
 // ownership of product identities, observed prices and basket calculations.
@@ -74,6 +75,7 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   });
   system?.addEventListener?.('change', () => { if (!appearance) applyTheme(); });
   header.append(theme); applyTheme();
+  createHoriCubes(section);
 
   // These existing pickers are mounted by app.mjs immediately after this
   // component. Keep their identity/listeners but place commerce below the AI.
