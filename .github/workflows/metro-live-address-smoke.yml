@@ -79,6 +79,16 @@ jobs:
             if (!condition) throw new Error(message);
           };
 
+          async function storeFacts(card) {
+            assert(await card.isVisible(), "Store selector must be visible");
+            const name = await card.locator("strong").innerText();
+            const copy = (await card.locator(".retail-store-copy").textContent()).trim();
+            const tooltip = await card.getAttribute("title");
+            assert(name && tooltip === copy && tooltip.includes(name),
+              "Compact selector must expose its full store/source scope in its tooltip");
+            return tooltip + "\n" + await card.locator(".retail-store-total").textContent();
+          }
+
           (async () => {
             const browser = await chromium.launch({
               headless: true,
@@ -99,7 +109,7 @@ jobs:
                 timeout: 30000
               });
               await page.waitForTimeout(1200);
-              const text = await page.locator("#retail-store-card-metro").innerText().catch(() => "");
+              const text = await storeFacts(page.locator("#retail-store-card-metro")).catch(() => "");
               if (text.includes("METRO · Москва, Ленинградское ш. 71Г")
                   && /\d+ категор/u.test(text)
                   && /\d+ товар/u.test(text)) {
