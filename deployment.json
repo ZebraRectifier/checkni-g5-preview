@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "b75280c69a86aaf1124023c517beabe2ce49452c",
+  "sourceCommit": "bb6075094f687407838a029425bfe2ab6227b6c8",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -1971,5 +1971,41 @@
     "appearance": "soft-light-default-or-explicit-saved-choice",
     "data": "existing real observations, conditions and source dates; unchanged Core and provider",
     "physicalAndroid": "unverified"
+  },
+  "horiCubes": {
+    "scope": "One decorative field on the shopping home screen",
+    "maxPhoneCubes": 20,
+    "maxDesktopCubes": 40,
+    "lowResourceCubes": 12,
+    "maxTransformUpdatesPerSecond": 30,
+    "threeDimensionalAppearance": "six CSS faces; planar circle-envelope collisions",
+    "pause": true,
+    "reducedMotion": true,
+    "hiddenAndOffscreenStop": true,
+    "basketRouteStop": true,
+    "physicalDevicePerformance": "unverified",
+    "validation": {
+      "sourcePr": 574,
+      "sourceCommit": "bb6075094f687407838a029425bfe2ab6227b6c8",
+      "testedExactHead": "d5d8878fdedf7344daa932b0644d1780b0aa0f2c",
+      "sourceTreeEqualsTestedTree": true,
+      "exactHeadCI": 39488277487,
+      "exactHeadPackage": 39488277548,
+      "exactHeadNode": {
+        "passed": 2405,
+        "failed": 0
+      },
+      "exactHeadBrowser": {
+        "cases": 432,
+        "passedFirstAttempt": 431,
+        "passedAfterRetry": 1,
+        "failed": 0,
+        "retryCase": "existing surface-interaction-guards mobile geometry case"
+      },
+      "actualMainCI": 39491454251,
+      "actualMainPackage": 39491454228,
+      "actualMainGatesRequiredBeforePublication": true,
+      "physicalAndroidVerified": false
+    }
   }
 }
