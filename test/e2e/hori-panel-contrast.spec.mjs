@@ -7,9 +7,9 @@ const index=readFileSync(new URL('../../index.html',import.meta.url),'utf8');
 const betaMarkup=index.match(/<section id="beta-live-section"[\s\S]*?<\/section>/u)?.[0];
 if(!betaMarkup)throw new Error('The shipping beta panel was not found');
 
-async function fixture(page,theme,mobile){
+async function fixture(page,theme,mobile,reducedMotion){
  await page.setViewportSize(mobile?{width:390,height:844}:{width:1280,height:720});
- await page.emulateMedia({colorScheme:theme,reducedMotion:'reduce'});
+ await page.emulateMedia({colorScheme:theme,reducedMotion});
  const externalRequests=[];
  await page.route('**/*',route=>{
   if(['localhost','127.0.0.1'].includes(new URL(route.request().url()).hostname))return route.continue();
@@ -46,8 +46,12 @@ async function fixture(page,theme,mobile){
 // Measure the painted pair, not two CSS token strings. Translucent foregrounds
 // and every ancestor background are composited before WCAG relative luminance.
 // Refuse unsupported image/opacity layers instead of silently assuming white.
-async function contrasts(locator,focus=false){
- return locator.evaluate((root,focus)=>{
+async function contrasts(locator,focus=false,disabled=null){
+ return locator.evaluate((root,{focus,disabled})=>{
+  // Read in the same task as the state change, before the next paint. A short
+  // transition must not briefly pair new text with the previous background.
+  if(disabled!==null)root.disabled=disabled;
+  if(focus)root.focus();
   const rgba=value=>{
    if(!/^rgba?\(/u.test(value))throw new Error(`Unsupported computed colour: ${value}`);
    const values=value.match(/[\d.]+/gu).map(Number);
@@ -87,7 +91,7 @@ async function contrasts(locator,focus=false){
    results.push({text:text.slice(0,100),element:element.tagName+'.'+element.className,ratio:ratio(rgba(style.color),background(element))});
   }
   return results;
- },focus);
+ },{focus,disabled});
 }
 
 function expectReadable(readings){
@@ -97,7 +101,8 @@ function expectReadable(readings){
 
 for(const theme of ['light','dark']){
  test(`${theme} comparison and beta panels retain readable text, links, actions and keyboard focus`,async({page},info)=>{
-  const externalRequests=await fixture(page,theme,info.project.name.includes('mobile'));
+ for(const reducedMotion of ['no-preference','reduce'])await test.step(`motion preference: ${reducedMotion}`,async()=>{
+  const externalRequests=await fixture(page,theme,info.project.name.includes('mobile'),reducedMotion);
   const panels=page.locator('#panels');
   const normal=[];
   for(const panel of await panels.locator('.beta-live-card,.future-step,.comparison-progress').all())normal.push(...await contrasts(panel));
@@ -110,13 +115,16 @@ for(const theme of ['light','dark']){
    await action.hover();expectReadable(await contrasts(action));
   }
   const compare=page.locator('#compare-basket');
-  await compare.evaluate(button=>{button.disabled=true;});
-  expectReadable(await contrasts(compare));
-  await compare.evaluate(button=>{button.disabled=false;});
+  for(const disabled of [true,false]){
+   expectReadable(await contrasts(compare,false,disabled));
+   for(let frame=0;frame<3;frame++){
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(resolve)));
+    expectReadable(await contrasts(compare));
+   }
+  }
   await page.keyboard.press('Tab');
   for(const selector of ['#compare-basket','.comparison-step .text-button','.aggregator-link','.comparison-state','[aria-label="Адреса для сравнения"] button','#beta-live-button']){
    const target=page.locator(selector).first();
-   await target.focus();
    const outline=await contrasts(target,true);
    expect(outline.visible,selector+' has keyboard focus').toBe(true);
    expect(outline.style,selector+' outline is painted').toBe('solid');
@@ -125,5 +133,6 @@ for(const theme of ['light','dark']){
    expect(outline.ratio,selector+' outline versus adjacent surface').toBeGreaterThanOrEqual(3);
   }
   expect(externalRequests).toEqual([]);
+ });
  });
 }

@@ -249,17 +249,33 @@ test('a retailer change discards the old search and keeps the next request in th
   await submit(page).click();
   await expect.poll(() => calls.retail.length).toBe(1);
   await page.locator('.hori-selected-store').click();
+  const metroBrowseDone = page.waitForResponse(response => {
+    const url = new URL(response.url());
+    return url.pathname.endsWith('/rest/v1/retail_catalog_items')
+      && url.searchParams.get('retailer_id') === 'eq.metro'
+      && !url.searchParams.has('name');
+  });
   await page.locator('#retail-store-card-metro').click();
+  await (await metroBrowseDone).finished();
   await expect(page.locator('.hori-selected-store')).toContainText('METRO');
   await expect(search(page)).toHaveValue('');
+  // Establish the completed replacement catalogue before releasing Globus.
+  // Otherwise a later METRO browse could overwrite an incorrectly applied A.
+  await expect(page.locator('#search-status')).toHaveText('Подтверждённых товаров не найдено');
+  await expect(page.locator('#empty-search-copy')).toHaveText('В живом каталоге по этому запросу ничего не найдено.');
+  await expect(page.locator('#catalog-search-prompt')).toBeHidden();
   const oldResponses = Promise.all([
     page.waitForResponse(response => response.url().includes('/functions/v1/catalog-search')),
     page.waitForResponse(response => response.url().includes('/rest/v1/retail_catalog_items') && new URL(response.url()).searchParams.get('retailer_id') === 'eq.globus')
   ]);
   release();
-  await oldResponses;
+  await Promise.all((await oldResponses).map(response => response.finished()));
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await expect(page.locator('#product-grid .product-card')).toHaveCount(0);
+  await expect(page.locator('#search-status')).toHaveText('Подтверждённых товаров не найдено');
+  await expect(page.locator('#empty-search-copy')).toHaveText('В живом каталоге по этому запросу ничего не найдено.');
+  await expect(search(page)).toHaveValue('');
+  await expect(page.locator('.hori-selected-store')).toContainText('METRO');
   await search(page).fill('рис');
   await submit(page).click();
   await expect(page.locator('#empty-search')).toBeVisible();

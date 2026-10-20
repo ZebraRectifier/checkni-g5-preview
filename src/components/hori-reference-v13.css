@@ -85,7 +85,10 @@ body.hori-workspace :is(.text-button,.shopping-dialogue-sources a,.guided-shoppi
 body.hori-workspace :is(.stepper,.stepper-button,.remove-button,.back-button,.basket-dock-button,.retail-breadcrumbs .is-current){background:var(--surface-soft);color:var(--ink);border-color:var(--line)}
 /* Pair the legacy comparison panels with the active Hori theme as a whole.
    Recolouring headings alone leaves dark legacy surfaces with light-theme ink. */
-body.hori-workspace :is(.beta-live-card,.future-step){background:var(--surface);color:var(--ink);border-color:var(--line);box-shadow:none}
+body.hori-workspace :is(.beta-live-card,.future-step){background:var(--surface);color:var(--ink);border-color:var(--line);box-shadow:none;transition-property:transform}
+/* The legacy reduced-motion rule assigns a nonzero duration to every element.
+   Exclude paint and focus properties so new ink never animates over old paint. */
+body.hori-workspace :is(.beta-live-card,.future-step) :is(a,button){transition-property:transform}
 body.hori-workspace :is(.beta-live-card,.future-step) :is(p,.field-help){color:var(--muted)}
 body.hori-workspace :is(.beta-live-card,.future-step) :is(h2,h3){color:var(--ink)}
 body.hori-workspace :is(.beta-live-card,.future-step) .eyebrow{color:var(--accent)}
