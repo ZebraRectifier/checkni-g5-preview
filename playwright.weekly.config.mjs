@@ -2,7 +2,7 @@ import {defineConfig,devices} from '@playwright/test';
 
 export default defineConfig({
   testDir:'./test/e2e',
-  testMatch:['hori-cubes.spec.mjs','hori-v13.spec.mjs','hori-reference.spec.mjs','hori-workspace.spec.mjs','magnit-current-catalog.spec.mjs','pyaterochka-published.spec.mjs','nearby-shopping.spec.mjs','guided-shopping.spec.mjs','shopping-dialogue-recovery.spec.mjs','weekly-retail-basket.spec.mjs'],
+  testMatch:['manual-search-ux.spec.mjs','hori-panel-contrast.spec.mjs','hori-cubes.spec.mjs','hori-v13.spec.mjs','hori-reference.spec.mjs','hori-workspace.spec.mjs','magnit-current-catalog.spec.mjs','pyaterochka-published.spec.mjs','nearby-shopping.spec.mjs','guided-shopping.spec.mjs','shopping-dialogue-recovery.spec.mjs','weekly-retail-basket.spec.mjs'],
   fullyParallel:false,
   expect:{toHaveScreenshot:{pathTemplate:'{testDir}/reference-v13/{platform}/{arg}{ext}'}},
   forbidOnly:Boolean(process.env.CI),
