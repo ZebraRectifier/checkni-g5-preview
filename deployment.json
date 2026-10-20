@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "bb6075094f687407838a029425bfe2ab6227b6c8",
+  "sourceCommit": "c8b82185fb85d8ff6085208ee522f2c3f2add546",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -2006,6 +2006,65 @@
       "actualMainPackage": 39491454228,
       "actualMainGatesRequiredBeforePublication": true,
       "physicalAndroidVerified": false
+    }
+  },
+  "manualSearchUx": {
+    "sourcePr": 575,
+    "sourceCommit": "c8b82185fb85d8ff6085208ee522f2c3f2add546",
+    "testedExactHead": "38ded73b985f0cee0bc23324f6166ee476c74b97",
+    "scope": "Manual catalogue search and Hori comparison/beta panel readability",
+    "nativeSubmitButton": "Найти",
+    "stableAccessibleName": "Найти продукты",
+    "explicitDraftAndEmptyRecovery": true,
+    "noLiveSearchOnInput": true,
+    "narrowToolbarWidthsVerified": [
+      320,
+      390,
+      412
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "atomicControlPaintAndFocus": true,
+    "commercialAdmissionAndProviders": "Existing contracts",
+    "validation": {
+      "sourcePr": 575,
+      "sourceCommit": "c8b82185fb85d8ff6085208ee522f2c3f2add546",
+      "testedExactHead": "38ded73b985f0cee0bc23324f6166ee476c74b97",
+      "sourceTreeEqualsTestedTree": true,
+      "exactHeadCI": 39510623541,
+      "exactHeadPackage": 39510623521,
+      "exactHeadNode": {
+        "passed": 2405,
+        "failed": 0,
+        "skipped": 0
+      },
+      "exactHeadBrowser": {
+        "cases": 460,
+        "passedFirstAttempt": 459,
+        "passedAfterRetry": 1,
+        "failed": 0,
+        "skipped": 0,
+        "retryCase": "existing surface-interaction-guards chromium-desktop violet mobile two-column geometry; the Hori stylesheet is not loaded by this legacy route"
+      },
+      "newBrowserCases": {
+        "manualSearch": 24,
+        "panelContrast": 4,
+        "passedFirstAttempt": 28
+      },
+      "actualMainCI": 39514894619,
+      "actualMainPackage": 39514894815,
+      "actualMainGatesRequiredBeforePublication": true,
+      "physicalAndroidVerified": false,
+      "publicCodeCandidate": {
+        "head": "8fdde3bf5b388ba700752a211340e615e8935591",
+        "ci": 39510642815,
+        "nodePassed": 145,
+        "browserPassed": 80,
+        "retries": 0
+      },
+      "evidenceBoundary": "Browser fixtures do not prove current retailer prices, stock, paid provider operation, physical Android or TalkBack."
     }
   }
 }
