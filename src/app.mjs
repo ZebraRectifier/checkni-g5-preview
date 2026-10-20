@@ -1647,11 +1647,52 @@ function setupCatalogSort() {
   heading.append(label);
 }
 
+function setupManualSearchControls() {
+  elements.searchInput.setAttribute("aria-label", "Найти продукты");
+  elements.searchStatus.setAttribute("role", "status");
+  elements.searchStatus.setAttribute("aria-atomic", "true");
+
+  // Keep one native submit path for the button and Enter. The existing form
+  // owns requests; editing the query only updates its draft presentation.
+  if (!elements.searchForm.querySelector(".catalog-search-submit")) {
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.className = "catalog-search-submit";
+    submit.textContent = "Найти";
+    elements.searchInput.closest(".search-box").after(submit);
+  }
+  elements.searchSubmit = elements.searchForm.querySelector(".catalog-search-submit");
+  elements.searchSubmit.disabled = !elements.searchInput.value.trim();
+  const prompt = document.createElement("p");
+  prompt.id = "catalog-search-prompt";
+  prompt.className = "field-help catalog-search-prompt";
+  const promptText = document.createElement("span");
+  promptText.className = "catalog-search-prompt-text";
+  promptText.textContent = "Введите запрос и нажмите «Найти».";
+  const reset = document.createElement("button");
+  reset.type = "button";
+  reset.className = "text-button catalog-search-reset";
+  reset.textContent = "Показать каталог";
+  reset.hidden = true;
+  reset.addEventListener("click", () => elements.clearSearch.click());
+  prompt.append(promptText, reset);
+  prompt.hidden = true;
+  elements.searchForm.querySelector(".catalog-search-submit").after(prompt);
+  elements.searchPrompt = prompt;
+  elements.searchPromptText = promptText;
+  elements.searchReset = reset;
+}
+
 function renderCatalog() {
   document.querySelector("#retail-load-more")?.remove();
+  if (elements.searchSubmit) elements.searchSubmit.disabled = !elements.searchInput.value.trim();
   const normalizedQuery = activeQuery.trim();
   const retailDefinition = currentRetailDefinition();
   const retailName = retailDefinition?.displayName ?? "магазина";
+  const draft = catalogSearchState.status === "draft";
+  const draftPrompt = normalizedQuery
+    ? "Введите запрос и нажмите «Найти»."
+    : "Введите запрос или вернитесь к каталогу.";
   const loading = catalogSearchState.status === "loading";
   const live = (
     catalogSearchState.status === "live"
@@ -1736,7 +1777,14 @@ function renderCatalog() {
     elements.productGrid.after(loadMore);
   }
 
-  if (loading) {
+  if (draft) {
+    elements.catalogEyebrow.textContent = publicRetailCatalogMode
+      ? `Каталог · ${retailName}`
+      : "Демо-подсказки";
+    elements.catalogNote.textContent = publicRetailCatalogMode
+      ? draftPrompt
+      : "Пока показаны демо-подсказки. Нажмите «Найти», чтобы проверить живой каталог.";
+  } else if (loading) {
     elements.catalogEyebrow.textContent = "Живой каталог";
     elements.catalogNote.textContent = normalizedQuery
       ? "Ищем реальные товары…"
@@ -1785,12 +1833,24 @@ function renderCatalog() {
 
   const hasResults = results.length > 0;
   elements.productGrid.hidden = !hasResults;
-  elements.emptySearch.hidden = loading || hasResults || categoryBrowsing;
+  elements.emptySearch.hidden = draft || loading || hasResults || categoryBrowsing;
+  if (elements.searchPrompt) {
+    elements.searchPrompt.hidden = !draft;
+    elements.searchPromptText.textContent = draftPrompt;
+    elements.searchReset.hidden = !draft || Boolean(normalizedQuery);
+  }
   elements.resultCount.textContent = loading
     ? "…"
-    : categoryBrowsing
+    : draft || categoryBrowsing
       ? "—"
       : String(results.length);
+
+  if (draft) {
+    elements.searchStatus.textContent = normalizedQuery
+      ? draftPrompt
+      : "Введите запрос или нажмите «Показать каталог».";
+    return;
+  }
 
   if (loading) {
     elements.searchStatus.textContent = "Ищем товары в живом каталоге";
@@ -2664,7 +2724,7 @@ function syncSearchDraft() {
   activeQuery = elements.searchInput.value;
   elements.clearSearch.hidden = activeQuery.trim().length === 0;
   catalogSearchState = {
-    status: publicRetailCatalogMode ? "idle" : "demo",
+    status: "draft",
     query: activeQuery.trim(),
     products: [],
     retailCount: 0,
@@ -2678,19 +2738,8 @@ function handleManualSearch() {
   elements.clearSearch.hidden = activeQuery.length === 0;
 
   if (!activeQuery) {
-    if (publicRetailCatalogMode) {
-      return loadInitialRetailCatalog();
-    }
-    catalogRequestVersion += 1;
-    pendingCatalogSearch = null;
-    catalogSearchState = {
-      status: "demo",
-      query: "",
-      products: [],
-      retailCount: 0,
-      discoveredCount: 0
-    };
-    renderCatalog();
+    // Empty submit is not another catalogue load. The explicit clear control
+    // restores the initial catalogue; input/Enter never fetch it implicitly.
     return Promise.resolve();
   }
 
@@ -2989,6 +3038,7 @@ history.replaceState(
   hashForView(currentView)
 );
 
+setupManualSearchControls();
 if (!publicRetailCatalogMode) {
   renderCatalog();
 }

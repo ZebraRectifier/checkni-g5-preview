@@ -68,17 +68,38 @@ body.hori-workspace .hori-shop-pane{min-width:0;min-height:0;overflow:auto;overf
 body.hori-workspace #shop-view>.hero{position:sticky;top:0;z-index:4;max-width:none;min-height:0;margin:0 0 8px;padding:0 0 3px;border:0;border-radius:0;background:var(--bg);box-shadow:none;overflow:visible}
 body.hori-workspace :is(.hero::before,.hero::after,.hero>.hero-identity,.hero>.eyebrow,#shop-title,.hero>.hero-copy,#manual-divider){display:none}
 body.hori-workspace .hero::before,body.hori-workspace .hero::after{display:none}
-body.hori-workspace .search-form{display:flex;align-items:center;gap:8px;margin:0}
+body.hori-workspace .search-form{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0}
 body.hori-workspace .search-form .search-box{flex:1;min-width:0}
-body.hori-workspace .search-box{min-height:40px;padding:0 12px;border:1px solid #b7a0ea;border-radius:4px;background:var(--surface);color:var(--accent);box-shadow:none}
+body.hori-workspace .search-box{min-height:44px;padding:0 12px;border:1px solid #b7a0ea;border-radius:4px;background:var(--surface);color:var(--accent);box-shadow:none}
 body.hori-workspace .search-box::before,body.hori-workspace .search-box::after{display:none}
 body.hori-workspace .search-box input{font-size:15px;color:var(--ink)}
+body.hori-workspace .catalog-search-submit{flex:0 0 68px;min-width:68px;min-height:44px;padding:10px 12px;border:1px solid var(--accent-strong);border-radius:4px;background:var(--accent-strong);color:#fff;font:650 14px/1.25 Inter,system-ui,sans-serif;cursor:pointer}
+body.hori-workspace .catalog-search-submit:hover{box-shadow:inset 0 0 0 1px #fff}
+body.hori-workspace .catalog-search-prompt{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;order:10;flex:1 0 100%;min-width:0;margin:0;font-size:13px;line-height:1.4}
+body.hori-workspace .catalog-search-prompt .catalog-search-reset{min-height:44px;margin:0}
 body.hori-workspace #search-help{display:none}
 body.hori-workspace :is(.field-help,.product-unit,.product-category,.basket-item-info p){color:var(--muted)}
 body.hori-workspace :is(.product-card,.basket-row,.basket-summary,.retail-catalog-nav,.retail-store-card,.retail-category-button,.retail-breadcrumbs button,.catalog-sort select,.empty-state,.stores-section,.stores-list,.nearby-shopping,.pyaterochka-published,.hori-shopping-results){background:var(--surface);color:var(--ink);border-color:var(--line);box-shadow:none}
 body.hori-workspace :is(h1,h2,h3,.product-price strong,.basket-item-info h2,.guided-shopping-table caption,.guided-shopping-table td){color:var(--ink)}
 body.hori-workspace :is(.text-button,.shopping-dialogue-sources a,.guided-shopping-table a,.guided-shopping-table summary,.guided-shopping-table th,.guided-shopping-area){color:var(--accent)}
 body.hori-workspace :is(.stepper,.stepper-button,.remove-button,.back-button,.basket-dock-button,.retail-breadcrumbs .is-current){background:var(--surface-soft);color:var(--ink);border-color:var(--line)}
+/* Pair the legacy comparison panels with the active Hori theme as a whole.
+   Recolouring headings alone leaves dark legacy surfaces with light-theme ink. */
+body.hori-workspace :is(.beta-live-card,.future-step){background:var(--surface);color:var(--ink);border-color:var(--line);box-shadow:none;transition-property:transform}
+/* The legacy reduced-motion rule assigns a nonzero duration to every element.
+   Exclude paint and focus properties so new ink never animates over old paint. */
+body.hori-workspace :is(.beta-live-card,.future-step) :is(a,button){transition-property:transform}
+body.hori-workspace :is(.beta-live-card,.future-step) :is(p,.field-help){color:var(--muted)}
+body.hori-workspace :is(.beta-live-card,.future-step) :is(h2,h3){color:var(--ink)}
+body.hori-workspace :is(.beta-live-card,.future-step) .eyebrow{color:var(--accent)}
+body.hori-workspace :is(.beta-live-card,.future-step) :is(a:not(.primary-button),.text-button){color:var(--accent)}
+body.hori-workspace .future-step .aggregator-link{background:var(--surface);border-color:var(--line)}
+body.hori-workspace .future-step .aggregator-link:hover{background:var(--surface-soft);color:var(--accent);border-color:var(--accent)}
+body.hori-workspace :is(.beta-live-card,.future-step) .mock-chip{background:var(--accent-soft);color:var(--accent);border-color:var(--line)}
+body.hori-workspace :is(.beta-live-card,.future-step) .primary-button{background:var(--accent-strong);color:#fff;box-shadow:none}
+body.hori-workspace :is(.beta-live-card,.future-step) .primary-button:hover{background:var(--accent-strong);box-shadow:inset 0 0 0 1px #fff}
+body.hori-workspace :is(.beta-live-card,.future-step) .primary-button:disabled{background:var(--surface-soft);color:var(--muted);opacity:1;box-shadow:none}
+body.hori-workspace .comparison-output .comparison-progress{color:var(--muted)}
 body.hori-workspace .retail-browser{gap:0;margin:0}
 body.hori-workspace .retail-catalog-nav{padding:0;margin:0 0 6px;border:0;border-radius:0;background:transparent}
 body.hori-workspace .retail-browser-head{min-height:0;gap:6px;margin:0}
@@ -213,19 +234,25 @@ body.hori-workspace .toast-region{top:auto;bottom:14px}
  body.hori-workspace #basket-proposal-submit{width:40px;min-height:38px}
  body.hori-workspace .hori-stage:has(.shopping-welcome[hidden]) .hori-scene{opacity:.16}
  body.hori-workspace :is(.shopping-dialogue-user,.shopping-dialogue-answer,.shopping-dialogue .proposal-status){font-size:13px;padding:8px 10px;max-width:96%}
- body.hori-workspace .app-shell{padding:8px 12px 68px;gap:0}
+ body.hori-workspace .app-shell{padding:4px 12px 68px;gap:0}
  body.hori-workspace .app-shell[data-hori-view=basket]{padding-bottom:10px}
  body.hori-workspace .hori-shop-pane{padding-right:0}
- body.hori-workspace #shop-view>.hero{margin-bottom:5px}
- body.hori-workspace .search-box{min-height:36px;padding:0 8px}
+ body.hori-workspace #shop-view>.hero{margin-bottom:2px}
+ body.hori-workspace .search-form{gap:6px}
+ body.hori-workspace .search-form .search-box{flex:1 1 0}
+ body.hori-workspace .search-box{min-height:44px;gap:4px;padding:0 6px}
+ body.hori-workspace .search-box>svg[aria-hidden=true]{display:none}
+ body.hori-workspace .search-box #clear-search{width:44px;height:44px;flex:0 0 44px}
  body.hori-workspace .search-box input{font-size:16px}
+ body.hori-workspace .catalog-search-submit{flex-basis:60px;min-width:60px;padding-inline:8px}
  body.hori-workspace .retail-category-grid{gap:5px;padding-bottom:3px}
  body.hori-workspace .retail-category-button{min-height:30px;padding:4px 7px}
  body.hori-workspace .retail-category-button strong{font-size:11px}
  body.hori-workspace .section-heading{min-height:23px;margin-bottom:3px}
  body.hori-workspace .section-heading h2{font-size:12px}
- body.hori-workspace .catalog-sort select{min-height:23px;height:23px;font-size:10px;max-width:130px}
- body.hori-workspace .catalog-sort select{width:105px;min-height:34px;height:34px}
+ body.hori-workspace .catalog-sort{flex:0 0 76px;width:76px;margin-left:0}
+ body.hori-workspace .catalog-sort select{width:100%;max-width:100%;min-height:44px;height:44px;font-size:10px}
+ body.hori-workspace .hori-price-note{flex:0 0 24px}
  body.hori-workspace .hori-price-note summary{width:24px;font-size:0}
  body.hori-workspace .hori-price-note summary::before{content:'ⓘ';font-size:20px}
  body.hori-workspace #catalog-note{font-size:9px;line-height:1.25;margin-bottom:4px}
