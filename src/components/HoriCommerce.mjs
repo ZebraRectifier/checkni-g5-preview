@@ -43,7 +43,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   const address = node('button', 'pixel-store-address', 'Выбрать адрес'); address.type = 'button';
   const scope = node('p', 'pixel-store-scope');
   storeHeading.append(back, title, address, scope); storefront.append(storeHeading);
-  for (const selector of ['.hero', '#retail-browser', '.catalog-section', '#beta-live-section']) {
+  for (const selector of ['.hero', '#retail-browser', '.catalog-section']) {
     const existing = shop?.querySelector(selector); if (existing) storefront.append(existing);
   }
 
@@ -53,6 +53,8 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   const summary = node('summary', '', 'Адрес и источники');
   const detailsContent = node('div', 'pixel-store-details-content');
   const pickers = node('div', 'pixel-store-pickers'); pickers.hidden = true;
+  const scopeReference = node('p', 'field-help pixel-store-reference-scope'); scopeReference.hidden = true;
+  pickers.append(scopeReference);
   detailsContent.append(pickers); details.append(summary, detailsContent);
   shop?.prepend(home, storefront); shop?.append(details);
 
@@ -87,6 +89,20 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     navButtons.set(name, button); nav.append(button);
   }
   header.append(location, selected, nav, headerControls, motionHost);
+  // A fixed mobile bar must not share the animated header's stacking context.
+  // Move the original tree, so navigation handlers, counts and focus stay intact.
+  const desktopNavigation = view.matchMedia('(min-width: 1000px)');
+  function mountNavigation() {
+    const parent = desktopNavigation.matches ? header : document.body;
+    if (nav.parentElement === parent) return;
+    const focused = document.activeElement;
+    const restoreFocus = nav.contains(focused);
+    if (desktopNavigation.matches) header.insertBefore(nav, headerControls); else parent.append(nav);
+    if (restoreFocus && document.activeElement !== focused) focused.focus({ preventScroll: true });
+  }
+  mountNavigation();
+  if (desktopNavigation.addEventListener) desktopNavigation.addEventListener('change', mountNavigation);
+  else desktopNavigation.addListener(mountNavigation);
 
   let state = { stage: 'stores', view: 'shop', basketUnits: 0 }; let assistantOpen = false;
   function syncNavigation() {
@@ -110,7 +126,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     for (const selector of ['#globus-store-picker', '#metro-store-picker', '#magnit-store-picker']) {
       const existing = document.querySelector(selector); if (existing && existing.parentElement !== pickers) pickers.append(existing);
     }
-    for (const selector of ['#nearby-shopping', '#pyaterochka-published,.pyat-published', '.okey-directory', '.okey-delivery', '#stores-section']) {
+    for (const selector of ['#beta-live-section', '#nearby-shopping', '#pyaterochka-published,.pyat-published', '.okey-directory', '.okey-delivery', '#stores-section']) {
       for (const existing of document.querySelectorAll(selector)) {
         if (existing.parentElement !== detailsContent) detailsContent.append(existing);
       }
@@ -165,7 +181,13 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     const displayName = typeof state.displayName === 'string' ? state.displayName : 'Магазин';
     selected.textContent = displayName; selected.setAttribute('aria-label', `Категории магазина ${displayName}`);
     title.textContent = displayName; address.textContent = state.storeAddress || 'Выбрать адрес';
-    scope.textContent = state.scopeLabel || ''; scope.hidden = !scope.textContent;
+    const fullScope = typeof state.scopeLabel === 'string' ? state.scopeLabel : '';
+    const storeAddress = typeof state.storeAddress === 'string' ? state.storeAddress : '';
+    const repeatedPrefix = storeAddress && [' · ', ' — ', ' | '].map(separator => storeAddress + separator)
+      .find(prefix => fullScope.startsWith(prefix));
+    scope.textContent = repeatedPrefix ? fullScope.slice(repeatedPrefix.length) : fullScope;
+    scope.hidden = !scope.textContent;
+    scopeReference.textContent = inStore ? fullScope : ''; scopeReference.hidden = !inStore || !fullScope;
     const units = Number.isSafeInteger(state.basketUnits) && state.basketUnits >= 0 ? state.basketUnits : 0;
     count.textContent = String(units);
     navButtons.get('basket').setAttribute('aria-label', `Открыть список покупок, товаров: ${units}`);

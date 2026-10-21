@@ -50,6 +50,24 @@ test('bounded moving cubes pause and preserve the manual basket flow', async ({ 
   await selectStore(page);
   await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
   await addButton(page.locator('#product-grid .product-card')).click();
+  const basketButton = page.locator('[data-pixel-action="basket"]');
+  if (!mobile) await basketButton.scrollIntoViewIfNeeded();
+  await expect(basketButton).toBeInViewport();
+  const hitSamples = await basketButton.evaluate(async button => {
+    const samples = [];
+    for (let frame = 0; frame < 3; frame += 1) {
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      const box = button.getBoundingClientRect();
+      const point = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+      const hit = document.elementFromPoint(point.x, point.y);
+      samples.push({ ...point, owned: button === hit || button.contains(hit),
+        hit: hit ? `${hit.tagName.toLowerCase()}.${hit.className?.baseVal ?? hit.className}` : null });
+    }
+    return samples;
+  });
+  for (const sample of hitSamples) {
+    expect(sample.owned, `The real list button must receive pointer hits: ${JSON.stringify(sample)}`).toBe(true);
+  }
   await openBasket(page);
   await expect(page.locator('#basket-title')).toBeVisible();
   await expect(page.locator('.basket-row')).toHaveCount(1);

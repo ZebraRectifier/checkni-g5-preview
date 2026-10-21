@@ -1058,7 +1058,11 @@ async function loadRetailCollections(categories) {
     return { ...collection, products: result.kind === 'catalog' ? result.products : [] };
   }));
   if (version !== retailCollectionsVersion || currentRetailClient()?.definition?.storeId !== sourceStore) return;
-  retailCollections = loaded.filter(collection => collection.products.length > 0);
+  const seen = new Set();
+  retailCollections = loaded.map(collection => ({ ...collection, products: collection.products.filter(product => {
+    if (seen.has(product.id)) return false;
+    seen.add(product.id); return true;
+  }) })).filter(collection => collection.products.length > 0);
   renderCatalog();
 }
 

@@ -313,6 +313,11 @@ body.pixel-workspace .catalog-sort label { font-size: 14px; }
 body.pixel-workspace .catalog-search-prompt { order: 10; flex: 1 0 100%; margin: 0; color: var(--muted); font-size: 14px; }
 body.pixel-workspace :is(.catalog-search-reset,.text-button) { color: var(--accent); font-size: 14px; }
 body.pixel-workspace #search-help { color: var(--muted); font-size: 14px; }
+/* The visible search and category labels already explain the root flow. Keep
+   nested-category loading/error notes and all price/source disclosures intact. */
+body.pixel-workspace #pixel-storefront #search-form > #search-help,
+body.pixel-workspace #pixel-storefront .retail-browser-head > div > .eyebrow,
+body.pixel-workspace #pixel-storefront #retail-category-back[hidden] + div > #retail-category-note { display: none; }
 
 /* Categories are a grid, never a thin horizontal pill strip. Actual imagery
    can be supplied by the catalogue; these rules do not invent product art. */

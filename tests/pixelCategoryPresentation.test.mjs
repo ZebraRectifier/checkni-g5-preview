@@ -14,12 +14,15 @@ test('priority sorting preserves exact source identities, source metadata and st
     category('Мясо, птица и рыба', 3), category('Молоко, сыр и яйца', 4),
     category('СТМ', 5), category('Готовая еда и кулинария', 6),
     category('Овощи и фрукты', 7), category('Хлеб и выпечка', 8),
-    category('Сыры', 9), category('Бакалея', 10), category('Зоотовары', 11)
+    category('Сыры', 9), category('Бакалея', 10), category('Зоотовары', 11),
+    category('Молочное', 12)
   ]);
   const snapshot = structuredClone(rows);
   const sorted = sortPixelCategories(rows);
   assert.notEqual(sorted, rows);
-  assert.deepEqual(sorted.map(row => row.categoryId), [5, 6, 4, 9, 7, 3, 8, 2, 1, 10, 11]);
+  assert.deepEqual(sorted.map(row => row.categoryId), [5, 6, 4, 9, 12, 7, 3, 8, 2, 1, 10, 11]);
+  assert.equal(sorted[4], rows[11]);
+  assert.equal(pixelCategoryImage(rows[11]), new URL('../src/img/cat-dairy.png', import.meta.url).href);
   for (const row of sorted) assert.equal(row, rows.find(source => source.categoryId === row.categoryId));
   assert.deepEqual(rows, snapshot);
 });
@@ -43,7 +46,7 @@ test('known category illustrations are bundled assets, while ready meals and bra
     assert.equal(image, new URL(`../src/img/${file}`, import.meta.url).href, name);
     await access(new URL(image));
   }
-  for (const name of ['Наши бренды', 'Готовая еда', 'Вся готовая еда', 'Кулинария', 'Для дома', 'Хлебопечки', 'Мясорубки']) {
+  for (const name of ['Наши бренды', 'Готовая еда', 'Вся готовая еда', 'Кулинария', 'Для дома', 'Хлебопечки', 'Мясорубки', 'МолочноеXYZ']) {
     assert.equal(pixelCategoryImage(category(name, 1)), null, name);
   }
   for (const row of [null, undefined, {}, [], { name: 12 }]) assert.equal(pixelCategoryImage(row), null);
