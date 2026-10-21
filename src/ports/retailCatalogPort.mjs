@@ -6,6 +6,7 @@ import { resolveMagnitMoscowOblastStore } from "../data/magnitMoscowOblastBindin
 import { resolveMetroMoscowRegionStore } from "../data/metroMoscowRegionStores.mjs";
 import { resolveGlobusMoscowRegionStore } from "../data/globusMoscowRegionStores.mjs";
 import { getReviewedRetailBasketProduct } from "../catalog/reviewedRetailBasket.mjs";
+import { hintRetailCatalogConnection } from "./retailCatalogConnectionHint.mjs";
 
 export const RETAIL_CATALOG_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/rest/v1/retail_catalog_items";
@@ -14,6 +15,11 @@ export const RETAIL_CATEGORY_ENDPOINT =
 export const RETAIL_CATALOG_TIMEOUT_MS = 2_500;
 export const MAX_RETAIL_CATALOG_RESPONSE_BYTES = 262_144;
 export const MAX_RETAIL_CATALOG_PRODUCTS = 40;
+
+if (typeof globalThis.location?.search === "string"
+    && new URLSearchParams(globalThis.location.search).get("catalog") === "retail") {
+  hintRetailCatalogConnection(globalThis.document, RETAIL_CATALOG_ENDPOINT);
+}
 
 const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
   globus: Object.freeze({

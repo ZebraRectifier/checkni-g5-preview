@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "af3ea7e8fcfe89815cf29167141a1f3e3faa7eb9",
+  "sourceCommit": "644dc997285f713e0b67766d3e3cc9dcd7ae5244",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -2263,6 +2263,85 @@
         "Physical Android keyboard and TalkBack not tested.",
         "Initial full Windows Node execution was not a release pass; Linux mandatory gates passed."
       ]
+    }
+  },
+  "magnitRemainingAddresses": {
+    "sourcePr": 577,
+    "integratedSource": "644dc997285f713e0b67766d3e3cc9dcd7ae5244",
+    "testedExactHead": "ec33b7377375d02587e55098b5b75da6ad7c14bf",
+    "observed": "2026-10-21",
+    "exactBacklogMatches": 119,
+    "additionalVerifiedCurrentPoints": 4,
+    "unresolvedLegacyLabels": 5,
+    "newCatalogues": 123,
+    "productsPerNewCatalogue": 18,
+    "newPriceRows": 2214,
+    "totalBoundPoints": 1460,
+    "directoryLabels": 1465,
+    "fullAssortmentProven": false,
+    "availability": "unknown",
+    "priceCondition": "public-online",
+    "validation": {
+      "at": "2026-10-21T21:24:28.860Z",
+      "sourceRepository": "ZebraRectifier/Checkni",
+      "sourcePr": 577,
+      "testedExactHead": "ec33b7377375d02587e55098b5b75da6ad7c14bf",
+      "integratedSource": "644dc997285f713e0b67766d3e3cc9dcd7ae5244",
+      "treeEqualsTested": true,
+      "exactHeadPassed": true,
+      "actualMainPassed": true,
+      "packagePassed": true,
+      "checks": [
+        {
+          "id": 39669475319,
+          "name": "Public artifact package",
+          "sha": "ec33b7377375d02587e55098b5b75da6ad7c14bf",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39669475319"
+        },
+        {
+          "id": 39669474889,
+          "name": "Perekrestok hosted release gate",
+          "sha": "ec33b7377375d02587e55098b5b75da6ad7c14bf",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39669474889"
+        },
+        {
+          "id": 39669474535,
+          "name": "CI",
+          "sha": "ec33b7377375d02587e55098b5b75da6ad7c14bf",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39669474535"
+        },
+        {
+          "id": 39675546101,
+          "name": "Public artifact package",
+          "sha": "644dc997285f713e0b67766d3e3cc9dcd7ae5244",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39675546101"
+        },
+        {
+          "id": 39675546068,
+          "name": "CI",
+          "sha": "644dc997285f713e0b67766d3e3cc9dcd7ae5244",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39675546068"
+        }
+      ],
+      "physicalAndroidVerified": false,
+      "backendAuthChanged": false,
+      "aiProviderChanged": false,
+      "commercialAdmissionChanged": false
     }
   }
 }
