@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { selectStore, openStores, openBasket, addButton } from './helpers/pixel-surface.mjs';
 
 // Synthetic transport exercises the real manual-search form and basket store.
 // No provider, retailer site, live prices or availability is asserted here.
@@ -48,6 +49,7 @@ async function setup(page, { demo = false } = {}) {
     await route.fulfill({ json: rows });
   });
   await page.goto(demo ? '/?comparison=demo#shop' : '/?comparison=observed&catalog=retail#shop');
+  if (!demo) await selectStore(page);
   await expect(submit(page)).toHaveCount(1);
   await expect(submit(page)).toHaveAttribute('type', 'submit');
   await expect(submit(page)).toBeVisible();
@@ -80,7 +82,7 @@ test('an unsubmitted retail query is an announced draft, without an empty result
   expect(calls.ai).toBe(0);
 });
 
-test('narrow search retains a usable input, native actions and price information on one row', async ({ page }) => {
+test('narrow search retains usable input, native actions and price information without overlap', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 844 });
   const { calls } = await setup(page);
   await page.evaluate(() => document.fonts.ready);
@@ -96,9 +98,13 @@ test('narrow search retains a usable input, native actions and price information
     expect(boxes[0].width, `editable text width at ${width}`).toBeGreaterThanOrEqual(48);
     expect(boxes[1].height).toBeGreaterThanOrEqual(44);
     expect(boxes[2].height).toBeGreaterThanOrEqual(44);
-    const centres = boxes.map(box => box.y + box.height / 2);
-    expect(Math.max(...centres) - Math.min(...centres), `one toolbar row at ${width}`).toBeLessThanOrEqual(1);
-    for (let index = 1; index < boxes.length; index++) expect(boxes[index - 1].x + boxes[index - 1].width).toBeLessThanOrEqual(boxes[index].x);
+    for (const box of boxes.slice(1)) expect(box.height, `action target at ${width}`).toBeGreaterThanOrEqual(44);
+    for (let left = 0; left < boxes.length; left++) for (let right = left + 1; right < boxes.length; right++) {
+      const a=boxes[left],b=boxes[right];
+      const overlapX=Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x));
+      const overlapY=Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y));
+      expect(overlapX*overlapY, `controls ${left}/${right} overlap at ${width}`).toBeLessThanOrEqual(1);
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await expect(page.locator('#clear-search')).toBeVisible();
   }
@@ -111,7 +117,7 @@ test('narrow search retains a usable input, native actions and price information
   expect(calls.retail).toEqual([]);
   await submit(page).click();
   await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
-  expect(calls.gateway).toEqual(['молоко']);
+  expect(calls.gateway).toEqual([]);
   expect(calls.ai).toBe(0);
 });
 
@@ -158,7 +164,7 @@ test(`${method} clearing offers an explicit route back to the catalogue without 
   await expect(page.locator('#empty-search')).toBeHidden();
   await expect(page.locator('#search-status')).toHaveText('Введите запрос или нажмите «Показать каталог».');
   expect(calls.browse).toBe(initialBrowse);
-  expect(calls.gateway).toHaveLength(1);
+  expect(calls.gateway).toHaveLength(0);
   expect(calls.retail).toHaveLength(1);
   await page.getByRole('button', { name: 'Показать каталог', exact: true }).click();
   await expect(page.locator('#product-grid .product-card')).toHaveCount(2);
@@ -169,7 +175,7 @@ test(`${method} clearing offers an explicit route back to the catalogue without 
 }
 
 for (const method of ['button', 'Enter']) {
-  test(`native ${method} submission searches once per existing port and shows results`, async ({ page }) => {
+  test(`native ${method} submission searches the selected retail port once without a global search`, async ({ page }) => {
     const { calls } = await setup(page);
     await search(page).fill('молоко');
     if (method === 'button') await submit(page).click();
@@ -180,7 +186,7 @@ for (const method of ['button', 'Enter']) {
     await expect(page.locator('#catalog-search-prompt')).toBeHidden();
     await expect(page.locator('#empty-search')).toBeHidden();
     await expect(search(page)).toHaveAttribute('aria-label', 'Найти продукты');
-    expect(calls.gateway).toEqual(['молоко']);
+    expect(calls.gateway).toEqual([]);
     expect(calls.retail).toHaveLength(1);
     expect(calls.retail[0]).toEqual({ query: 'молоко', retailer: 'eq.globus', store: 'eq.globus-store-5011' });
     expect(calls.ai).toBe(0);
@@ -204,25 +210,24 @@ test('only a completed empty search shows no results; clear restores the initial
   await expect(search(page)).toBeFocused();
   await expect(page.locator('#clear-search')).toBeHidden();
   expect(calls.browse).toBe(browseBeforeClear + 1);
-  expect(calls.gateway).toHaveLength(1);
+  expect(calls.gateway).toHaveLength(0);
   expect(calls.retail).toHaveLength(1);
 });
 
 test('editing cancels a delayed search, duplicate pending submits coalesce, and the basket survives', async ({ page }) => {
   const { calls, hold } = await setup(page);
-  await page.locator('#product-grid .product-card').first().getByRole('button').click();
+  await addButton(page.locator('#product-grid .product-card').first()).click();
   const savedBasket = await basketValue(page);
   const release = hold('молоко');
   await search(page).fill('молоко');
   await submit(page).click();
-  await expect.poll(() => calls.gateway.length + calls.retail.length).toBe(2);
+  await expect.poll(() => calls.retail.length).toBe(1);
   await search(page).press('Enter');
-  expect(calls.gateway).toHaveLength(1);
+  expect(calls.gateway).toHaveLength(0);
   expect(calls.retail).toHaveLength(1);
   await search(page).fill('рис');
   await expect(page.locator('#catalog-search-prompt')).toBeVisible();
   const oldResponses = Promise.all([
-    page.waitForResponse(response => response.url().includes('/functions/v1/catalog-search')),
     page.waitForResponse(response => response.url().includes('/rest/v1/retail_catalog_items') && new URL(response.url()).searchParams.has('name'))
   ]);
   release();
@@ -236,9 +241,9 @@ test('editing cancels a delayed search, duplicate pending submits coalesce, and 
   await submit(page).click();
   await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
   await expect(page.locator('#product-grid')).toContainText('Рис круглозерный');
-  expect(calls.gateway).toEqual(['молоко', 'рис']);
+  expect(calls.gateway).toEqual([]);
   expect(calls.retail).toHaveLength(2);
-  await page.locator('#open-basket').click();
+  await openBasket(page);
   await expect(page.locator('#basket-view')).toBeVisible();
   await expect(page.locator('.basket-row')).toHaveCount(1);
   await page.locator('#back-to-shop').click();
@@ -248,12 +253,12 @@ test('editing cancels a delayed search, duplicate pending submits coalesce, and 
 
 test('clearing a pending search restores the catalogue and rejects the late result without changing the basket', async ({ page }) => {
   const { calls, hold } = await setup(page);
-  await page.locator('#product-grid .product-card').first().getByRole('button').click();
+  await addButton(page.locator('#product-grid .product-card').first()).click();
   const savedBasket = await basketValue(page);
   const release = hold('молоко');
   await search(page).fill('молоко');
   await submit(page).click();
-  await expect.poll(() => calls.gateway.length + calls.retail.length).toBe(2);
+  await expect.poll(() => calls.retail.length).toBe(1);
   const initialBrowse = calls.browse;
   await page.getByRole('button', { name: 'Очистить поиск', exact: true }).click();
   await expect(page.locator('#product-grid .product-card')).toHaveCount(2);
@@ -261,7 +266,6 @@ test('clearing a pending search restores the catalogue and rejects the late resu
   await expect(search(page)).toBeFocused();
   expect(calls.browse).toBe(initialBrowse + 1);
   const oldResponses = Promise.all([
-    page.waitForResponse(response => response.url().includes('/functions/v1/catalog-search')),
     page.waitForResponse(response => response.url().includes('/rest/v1/retail_catalog_items') && new URL(response.url()).searchParams.has('name'))
   ]);
   release();
@@ -272,7 +276,7 @@ test('clearing a pending search restores the catalogue and rejects the late resu
   await expect(page.locator('#search-status')).toHaveText('Найдено товаров: 2');
   await expect(page.locator('#catalog-search-prompt')).toBeHidden();
   await expect(page.locator('#empty-search')).toBeHidden();
-  expect(calls.gateway).toHaveLength(1);
+  expect(calls.gateway).toHaveLength(0);
   expect(calls.retail).toHaveLength(1);
   expect(await basketValue(page)).toBe(savedBasket);
 });
@@ -283,7 +287,7 @@ test('a retailer change discards the old search and keeps the next request in th
   await search(page).fill('молоко');
   await submit(page).click();
   await expect.poll(() => calls.retail.length).toBe(1);
-  await page.locator('.hori-selected-store').click();
+  await openStores(page);
   const metroBrowseDone = page.waitForResponse(response => {
     const url = new URL(response.url());
     return url.pathname.endsWith('/rest/v1/retail_catalog_items')
@@ -292,7 +296,7 @@ test('a retailer change discards the old search and keeps the next request in th
   });
   await page.locator('#retail-store-card-metro').click();
   await (await metroBrowseDone).finished();
-  await expect(page.locator('.hori-selected-store')).toContainText('METRO');
+  await expect(page.locator('#pixel-storefront')).toContainText('METRO');
   await expect(search(page)).toHaveValue('');
   // Establish the completed replacement catalogue before releasing Globus.
   // Otherwise a later METRO browse could overwrite an incorrectly applied A.
@@ -300,7 +304,6 @@ test('a retailer change discards the old search and keeps the next request in th
   await expect(page.locator('#empty-search-copy')).toHaveText('В живом каталоге по этому запросу ничего не найдено.');
   await expect(page.locator('#catalog-search-prompt')).toBeHidden();
   const oldResponses = Promise.all([
-    page.waitForResponse(response => response.url().includes('/functions/v1/catalog-search')),
     page.waitForResponse(response => response.url().includes('/rest/v1/retail_catalog_items') && new URL(response.url()).searchParams.get('retailer_id') === 'eq.globus')
   ]);
   release();
@@ -310,12 +313,12 @@ test('a retailer change discards the old search and keeps the next request in th
   await expect(page.locator('#search-status')).toHaveText('Подтверждённых товаров не найдено');
   await expect(page.locator('#empty-search-copy')).toHaveText('В живом каталоге по этому запросу ничего не найдено.');
   await expect(search(page)).toHaveValue('');
-  await expect(page.locator('.hori-selected-store')).toContainText('METRO');
+  await expect(page.locator('#pixel-storefront')).toContainText('METRO');
   await search(page).fill('рис');
   await submit(page).click();
   await expect(page.locator('#empty-search')).toBeVisible();
   expect(calls.retail.at(-1).retailer).toBe('eq.metro');
-  expect(calls.gateway).toEqual(['молоко', 'рис']);
+  expect(calls.gateway).toEqual([]);
   expect(calls.ai).toBe(0);
 });
 

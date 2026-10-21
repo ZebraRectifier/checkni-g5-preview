@@ -1,6 +1,7 @@
+import { openHory, selectStore, openStoreDetails } from './helpers/pixel-surface.mjs';
 import{test,expect}from'@playwright/test';import{readFile}from'node:fs/promises';
 const fixture=JSON.parse(await readFile(new URL('../../tests/fixtures/weekly-retail/magnit-buckwheat-773804.json',import.meta.url),'utf8'));
-const say=async(page,text)=>{await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};
+const say=async(page,text)=>{await openHory(page);await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};
 test('selected Magnit → current catalogue without repeating the chain → actual pack table → confirmation/reload',async({page})=>{
  await page.clock.setFixedTime(new Date('2026-10-18T03:30:00Z'));let ai=0;
  await page.route('**/*',r=>['localhost','127.0.0.1'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
@@ -10,7 +11,7 @@ test('selected Magnit → current catalogue without repeating the chain → actu
    const p=new URL(r.request().url()).searchParams,q=(p.get('name')??'').replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ').toLowerCase();
    return r.fulfill({json:fixture.rows.filter(x=>'eq.'+x.store_id===p.get('store_id')&&x.name.toLowerCase().includes(q)).slice(0,Number(p.get('limit')??40))});
  });
- await page.goto('/?comparison=observed&catalog=retail#shop');await page.locator('#retail-store-card-magnit').click();await page.locator('#magnit-store-address').selectOption('773804');
+ await page.goto('/?comparison=observed&catalog=retail#shop');await selectStore(page,'magnit');await openStoreDetails(page);await page.locator('#magnit-store-address').selectOption('773804');
  const output=page.locator('#basket-proposal-status');await say(page,'Собери недорогую корзину на неделю для троих');await expect(output).toContainText('Где закупаемся');
  await say(page,'Текущий магазин');await say(page,'Ограничений нет');const commerce=page.locator('#hori-shopping-results');const table=commerce.getByRole('table');await expect(table.getByRole('row')).toHaveCount(2);
  await expect(table).toContainText('800 г');await expect(table).toContainText('39,99 ₽ / 800 г');await expect(table).toContainText('79,98 ₽');await expect(commerce).toContainText('Ещё нужно подобрать: 12 поз.');

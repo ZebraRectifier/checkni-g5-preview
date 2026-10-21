@@ -75,10 +75,10 @@ class Element extends Events {
   }
 }
 
-function fixture({ compact = false, reduced = false, memory = 8, cores = 8, storage = new Map(), hash = '', beforeMount = () => {} } = {}) {
+function fixture({ compact = false, reduced = false, memory = 8, cores = 8, storage = new Map(), hash = '', separateToggleHost = false, beforeMount = () => {} } = {}) {
   const document = new Events();
   document.hidden = false;
-  document.bounds = { width: compact ? 350 : 900, height: 300 };
+  document.bounds = { width: compact ? 350 : 900, height: separateToggleHost ? compact ? 48 : 56 : 300 };
   document.createElement = name => new Element(name, document);
   document.head = document.createElement('head'); document.head.root = true;
   document.body = document.createElement('body'); document.body.root = true;
@@ -89,6 +89,13 @@ function fixture({ compact = false, reduced = false, memory = 8, cores = 8, stor
   let searchEvents = 0;
   input.addEventListener('input', () => searchEvents++);
   section.append(input); document.body.append(section, shop);
+  const controls = separateToggleHost ? document.createElement('div') : section;
+  const existingControl = separateToggleHost ? document.createElement('button') : null;
+  if (separateToggleHost) {
+    section.className = 'pixel-motion-host'; controls.className = 'pixel-motion-controls';
+    existingControl.textContent = 'Тема'; controls.append(existingControl); document.body.append(controls);
+  }
+  const mountOptions = separateToggleHost ? { toggleHost: controls } : {};
   const view = new Events();
   document.defaultView = view;
   view.navigator = { deviceMemory: memory, hardwareConcurrency: cores };
@@ -122,9 +129,9 @@ function fixture({ compact = false, reduced = false, memory = 8, cores = 8, stor
   view.IntersectionObserver = observerClass(intersectionObservers);
   view.MutationObserver = observerClass(mutationObservers);
   beforeMount({ view, reducedMedia, compactMedia });
-  let controller = createHoriCubes(section);
+  let controller = createHoriCubes(section, mountOptions);
   const getField = () => section.querySelector('.hori-cube-field');
-  const getToggle = () => section.querySelector('.hori-cube-toggle');
+  const getToggle = () => controls.querySelector('.hori-cube-toggle');
   const load = () => document.head.children.at(-1).dispatch('load');
   const intersect = visible => {
     for (const observer of intersectionObservers) if (observer.targets.has(section)) observer.callback([{ target: section, isIntersecting: visible }]);
@@ -133,11 +140,11 @@ function fixture({ compact = false, reduced = false, memory = 8, cores = 8, stor
     for (const observer of resizeObservers) if (observer.targets.size) observer.callback();
   };
   return {
-    document, view, section, shop, input, storage, frames, reducedMedia, compactMedia,
+    document, view, section, controls, existingControl, shop, input, storage, frames, reducedMedia, compactMedia,
     resizeObservers, intersectionObservers, mutationObservers, load, intersect, resize,
     get field() { return getField(); }, get toggle() { return getToggle(); },
     get controller() { return controller; }, get searchEvents() { return searchEvents; },
-    mount() { controller = createHoriCubes(section); return controller; },
+    mount() { controller = createHoriCubes(section, mountOptions); return controller; },
     frame(time) {
       const callbacks = [...frames.values()]; frames.clear();
       for (const callback of callbacks) callback(time);
@@ -173,7 +180,7 @@ test('unsupported decorative capabilities leave the shopping controls untouched'
   }
 });
 
-test('render writes stay capped and an expensive field retains its first twelve cubes', () => {
+test('render writes stay capped and an expensive field retains its first four cubes', () => {
   const f = fixture(); f.load(); f.intersect(true);
   const initial = f.field.querySelectorAll('.hori-cube');
   let costClock = 0, writes = 0, transform = initial[0].style.transform;
@@ -183,8 +190,8 @@ test('render writes stay capped and an expensive field retains its first twelve 
   });
   for (let frame = 0; frame <= 240; frame++) f.frame(frame * 1000 / 60);
   assert.ok(writes <= 121, 'four seconds should not exceed the 30Hz paint ceiling');
-  assert.equal(f.field.querySelectorAll('.hori-cube').length, 12);
-  assert.deepEqual(f.field.querySelectorAll('.hori-cube'), initial.slice(0, 12));
+  assert.equal(f.field.querySelectorAll('.hori-cube').length, 4);
+  assert.deepEqual(f.field.querySelectorAll('.hori-cube'), initial.slice(0, 4));
   assert.equal(f.frames.size, 1);
   f.controller.destroy(); assert.equal(f.frames.size, 0);
 });
@@ -196,7 +203,7 @@ test('motion waits for stylesheet and visibility; repeated signals keep one anim
   assert.equal(f.field.children.length, 0);
   f.load();
   assert.equal(f.frames.size, 0);
-  assert.equal(f.field.children.length, 40);
+  assert.equal(f.field.children.length, 10);
   f.intersect(true);
   assert.equal(f.frames.size, 1);
   f.intersect(true); f.resize(); f.setHidden(false);
@@ -216,17 +223,17 @@ test('motion waits for stylesheet and visibility; repeated signals keep one anim
 
 test('phone and constrained devices stay within their DOM budgets across resize', () => {
   for (const [options, expected] of [
-    [{}, 40], [{ compact: true }, 20], [{ memory: 4 }, 20], [{ cores: 4 }, 20],
-    [{ memory: 2 }, 12], [{ cores: 2 }, 12]
+    [{}, 10], [{ compact: true }, 6], [{ memory: 4 }, 6], [{ cores: 4 }, 6],
+    [{ memory: 2 }, 4], [{ cores: 2 }, 4], [{ compact: true, memory: 2 }, 4]
   ]) {
     const f = fixture(options); f.load(); f.intersect(true);
     assert.equal(f.field.children.length, expected);
     assert.equal(f.field.querySelectorAll('.hori-cube-face').length, expected * 6);
     f.document.bounds.width = 300; f.setCompact(true);
-    assert.ok(f.field.children.length <= Math.min(expected, 20));
+    assert.ok(f.field.children.length <= Math.min(expected, 6));
     assert.equal(f.frames.size, 1);
     f.document.bounds.width = 1200; f.setCompact(false);
-    assert.equal(f.field.children.length, options.memory <= 2 || options.cores <= 2 ? 12 : options.memory <= 4 || options.cores <= 4 ? 20 : 40);
+    assert.equal(f.field.children.length, options.memory <= 2 || options.cores <= 2 ? 4 : options.memory <= 4 || options.cores <= 4 ? 6 : 10);
     assert.equal(f.frames.size, 1);
     f.controller.destroy();
   }
@@ -246,6 +253,67 @@ test('manual pause survives destroy/remount and can be explicitly resumed', () =
   f.controller.destroy();
 });
 
+test('separate header slots preserve existing controls and destroy only owned nodes', () => {
+  const f = fixture({ compact: true, separateToggleHost: true });
+  let themeClicks = 0;
+  f.existingControl.addEventListener('click', () => themeClicks++);
+  f.load(); f.intersect(true);
+  assert.equal(f.field.parentElement, f.section);
+  assert.equal(f.toggle.parentElement, f.controls);
+  assert.equal(f.section.querySelector('.hori-cube-toggle'), null);
+  assert.equal(f.controls.querySelector('.hori-cube-field'), null);
+  assert.equal(f.field.children.length, 6);
+  assert.equal(f.field.querySelectorAll('.hori-cube-face').length, 36);
+  assert.equal(f.controls.children[0], f.existingControl);
+  assert.equal(f.controls.className, 'pixel-motion-controls');
+  const duplicate = createHoriCubes(f.section, { toggleHost: f.controls });
+  duplicate.destroy();
+  assert.equal(f.controls.querySelectorAll('.hori-cube-toggle').length, 1);
+  assert.equal(f.frames.size, 1);
+  f.toggle.dispatch('click'); assert.equal(f.frames.size, 0);
+  f.controller.destroy(); f.mount(); f.load(); f.intersect(true);
+  assert.equal(f.frames.size, 0, 'the existing pause preference also applies to a separate slot');
+  f.toggle.dispatch('click'); assert.equal(f.frames.size, 1);
+  f.controller.destroy();
+  assert.deepEqual(f.controls.children, [f.existingControl]);
+  f.existingControl.dispatch('click'); assert.equal(themeClicks, 1);
+  assert.equal(f.input.value, 'кефир');
+  assert.equal(f.frames.size, 0);
+  assert.equal(f.document.listenerCount + f.view.listenerCount + f.reducedMedia.listenerCount + f.compactMedia.listenerCount, 0);
+  assert.ok([...f.resizeObservers, ...f.intersectionObservers, ...f.mutationObservers].every(observer => observer.targets.size === 0));
+});
+
+test('header motion resumes without a hidden-time jump and stops if its control slot disappears', () => {
+  const f = fixture({ separateToggleHost: true }); f.load(); f.intersect(true);
+  f.frame(0); f.frame(1000 / 60); f.frame(1000 / 30);
+  const point = node => node.style.transform.match(/translate3d\(([-\d.]+)px,([-\d.]+)px/).slice(1).map(Number);
+  const beforePause = f.field.children.map(point);
+  f.setHidden(true); assert.equal(f.frames.size, 0);
+  f.frame(1_000_000);
+  f.setHidden(false); assert.equal(f.frames.size, 1);
+  f.frame(1_000_000);
+  for (const [index, node] of f.field.children.entries()) {
+    const after = point(node), before = beforePause[index];
+    assert.ok(Math.hypot(after[0] - before[0], after[1] - before[1]) < 1,
+      'resuming must not integrate the hidden interval');
+  }
+  f.intersect(false); assert.equal(f.frames.size, 0);
+  f.intersect(true); assert.equal(f.frames.size, 1);
+  f.setReduced(true); assert.equal(f.frames.size, 0); assert.equal(f.toggle.hidden, true);
+  f.setReduced(false); assert.equal(f.frames.size, 1);
+  f.view.history.pushState(null, '', '#basket');
+  f.shop.hidden = true; f.deliverShopMutation();
+  assert.equal(f.frames.size, 0); assert.equal(f.toggle.hidden, true);
+  f.view.history.pushState(null, '', '/');
+  f.shop.hidden = false; f.deliverShopMutation(); f.resize();
+  assert.equal(f.frames.size, 1); assert.equal(f.toggle.hidden, false);
+  f.controls.remove(); f.frame(1_000_034);
+  assert.equal(f.frames.size, 0, 'motion must stop when the pause control is disconnected');
+  f.document.body.append(f.controls); f.setHidden(false);
+  assert.equal(f.frames.size, 1);
+  f.controller.destroy(); assert.equal(f.frames.size, 0);
+});
+
 test('hidden, offscreen, basket and reduced-motion states stop all scheduled frames', () => {
   const f = fixture(); f.load(); f.intersect(true);
   f.setHidden(true); assert.equal(f.frames.size, 0);
@@ -260,7 +328,7 @@ test('hidden, offscreen, basket and reduced-motion states stop all scheduled fra
   assert.equal(f.frames.size, 0); assert.equal(f.field.children.length, 0);
   assert.equal(f.field.hidden, true); assert.equal(f.toggle.hidden, true);
   f.setReduced(false);
-  assert.equal(f.frames.size, 1); assert.equal(f.field.children.length, 40);
+  assert.equal(f.frames.size, 1); assert.equal(f.field.children.length, 10);
   f.view.dispatch('pagehide'); assert.equal(f.frames.size, 0);
   f.view.dispatch('pageshow'); assert.equal(f.frames.size, 1);
   f.controller.destroy();
@@ -271,7 +339,7 @@ test('starting in reduced motion creates no cube DOM or frames until the prefere
   assert.equal(f.frames.size, 0); assert.equal(f.field.children.length, 0);
   assert.equal(f.toggle.hidden, true);
   f.setReduced(false);
-  assert.equal(f.frames.size, 1); assert.equal(f.field.children.length, 40);
+  assert.equal(f.frames.size, 1); assert.equal(f.field.children.length, 10);
   f.controller.destroy();
 });
 
@@ -305,7 +373,7 @@ test('zero-sized hosts pause; resized hosts resume without replacing search cont
   f.document.bounds = { width: 0, height: 0 }; f.resize();
   assert.equal(f.frames.size, 0); assert.equal(f.field.children.length, 0);
   f.document.bounds = { width: 240, height: 90 }; f.resize();
-  assert.equal(f.frames.size, 1); assert.equal(f.field.children.length, 40);
+  assert.equal(f.frames.size, 1); assert.equal(f.field.children.length, 10);
   assert.equal(f.section.children[0], originalInput);
   assert.equal(originalInput.value, 'кефир');
   assert.ok(f.field.children.every(node => !/NaN|Infinity/.test(node.style.transform)));

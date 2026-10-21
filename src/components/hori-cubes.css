@@ -1,7 +1,7 @@
 /* One quiet decorative field. No filters, shadows, textures or extra assets. */
 body.hori-workspace .hori-cube-field{position:absolute;inset:48px 10px 70px;z-index:-1;overflow:hidden;pointer-events:none;contain:strict;perspective:700px;opacity:.38}
 body.hori-workspace .hori-stage:has(.hori-cube-field:not([hidden]))::after{display:none}
-body.hori-workspace .hori-cube{position:absolute;top:0;left:0;width:var(--cube-size);height:var(--cube-size);pointer-events:none}
+body.hori-workspace .hori-cube{position:absolute;top:0;left:0;width:var(--cube-size);height:var(--cube-size);pointer-events:none;transform-style:preserve-3d}
 body.hori-workspace .hori-cube-solid{display:block;position:relative;width:100%;height:100%;transform-style:preserve-3d}
 body.hori-workspace .hori-cube-face{position:absolute;inset:0;display:block;backface-visibility:hidden;background:var(--accent);border:0}
 body.hori-workspace .hori-cube-front{transform:translateZ(calc(var(--cube-size)/2));background:color-mix(in srgb,var(--accent) 60%,var(--surface-soft))}
@@ -11,5 +11,10 @@ body.hori-workspace .hori-cube-right{transform:rotateY(90deg) translateZ(calc(va
 body.hori-workspace .hori-cube-top{transform:rotateX(90deg) translateZ(calc(var(--cube-size)/2));background:color-mix(in srgb,var(--accent) 30%,var(--surface))}
 body.hori-workspace .hori-cube-bottom{transform:rotateX(-90deg) translateZ(calc(var(--cube-size)/2))}
 body.hori-workspace .hori-cube-toggle{position:absolute;right:12px;top:4px;z-index:3;min-width:44px;min-height:44px;padding:6px 10px;border:1px solid var(--line);border-radius:4px;color:var(--muted);background:var(--surface);font:500 12px Inter,system-ui,sans-serif;cursor:pointer}
+/* The compact header reserves a real empty row for motion. Its separate
+   control slot stays in normal flow; cubes cannot reach the controls above. */
+body.hori-workspace .pixel-motion-host>.hori-cube-field{position:relative;inset:auto;z-index:auto;width:100%;height:56px;opacity:.8}
+body.hori-workspace .hori-cube-toggle-inline,body.hori-workspace .pixel-motion-host>.hori-cube-toggle{position:static;inset:auto;z-index:auto;flex:none;white-space:nowrap}
 @media(max-width:899px){body.hori-workspace .hori-cube-field{opacity:.3}}
+@media(max-width:899px){body.hori-workspace .pixel-motion-host>.hori-cube-field{height:48px;opacity:.7}}
 @media(prefers-reduced-motion:reduce){body.hori-workspace .hori-cube-field,body.hori-workspace .hori-cube-toggle{display:none!important}}

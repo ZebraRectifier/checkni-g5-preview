@@ -12,6 +12,8 @@ import {
 } from "./ports/betaRetailPricesPort.mjs";
 import { VALIDATED_MERGE_REASON, createBasketStore, countBasketUnits } from "./state/basketStore.mjs";
 import { createProductCard } from "./components/ProductCard.mjs";
+import { createPixelProductCard } from "./components/PixelProductCard.mjs";
+import { sortPixelCategories, pixelCategoryImage, pixelCollectionCategories } from "./components/pixelCategoryPresentation.mjs";
 import { BASKET_COMPARE_LABEL, renderBasketView, basketHasWeightAmounts } from "./components/BasketView.mjs";
 import {
   createComparisonResult,
@@ -179,6 +181,14 @@ const publicRetailCatalogMode = (
   )
 );
 const DEFAULT_RETAILER_ID = "globus";
+// This is presentation navigation, never a new commercial/store identity.
+// Preserve an older explicit retailer/category history entry on upgrade.
+let retailSurfaceStage = history.state?.checkniRetailSurface === 'store'
+  || (!history.state?.checkniRetailSurface && history.state?.checkniRetailNavigation === true)
+  ? 'store' : 'stores';
+let pixelAllCategories = false;
+let retailCollectionsVersion = 0;
+let retailCollections = [];
 const retailCatalogClients = new Map(
   RETAIL_CATALOG_IDS.map((retailerId) => [
     retailerId,
@@ -247,7 +257,7 @@ const basketProposalFlow = createShoppingConversationFlow({
   resolveProductFactsCatalog: () => publicRetailCatalogMode
     ? catalogSearchState.status === "live" ? catalogSearchState.products : []
     : SHOP_CATALOG,
-  resolveRetailSelectionScope: () => publicRetailCatalogMode
+  resolveRetailSelectionScope: () => publicRetailCatalogMode && retailSurfaceStage === 'store'
     ? retailClientFor(retailBrowserState.retailerId)?.definition ?? {}
     : null,
   resolveLiveCatalog: resolveAiCatalog,
@@ -270,6 +280,7 @@ const basketProposalFlow = createShoppingConversationFlow({
       if (scope.retailerId !== 'globus' || store?.priceStatus !== 'verified'
           || scope.storeId !== `globus-store-${store.officialStoreId}`) return false;
       selectedGlobusStore = store; comparedGlobusStore = null;
+      retailSurfaceStage = 'store';
       comparisonAddressChanged({ guidedStoreId: store.officialStoreId });
       retailBrowserRequestVersion += 1; catalogRequestVersion += 1;
       pendingCatalogSearch = null; activeQuery = ''; elements.searchInput.value = ''; elements.clearSearch.hidden = true;
@@ -287,7 +298,7 @@ const basketProposalFlow = createShoppingConversationFlow({
     compareGuidedBasket: rows => compareSurfaceBasket(rows)
   } : {}),
   resolveCommercialRequest: (text, catalog, context = {}) => shoppingAssistant.resolveCommercialRequest(text, catalog, {
-    retailer: context.retailer ?? (publicRetailCatalogMode ? retailDefinitionFor(retailBrowserState.retailerId)?.displayName : null),
+    retailer: context.retailer ?? (publicRetailCatalogMode && retailSurfaceStage === 'store' ? retailDefinitionFor(retailBrowserState.retailerId)?.displayName : null),
     selectionDiscovery: context.selectionDiscovery === true
   }),
   priceHints: budgetPlannerHints,
@@ -773,7 +784,8 @@ function renderRetailStoreButtons() {
   if (!elements.retailStoreGrid) return;
 
   elements.retailStoreGrid.replaceChildren();
-  for (const retailerId of RETAIL_CATALOG_IDS) {
+  const order = ['magnit', 'globus', 'vkusvill', 'lenta', 'metro', 'perekrestok', 'auchan', 'da'];
+  for (const retailerId of [...RETAIL_CATALOG_IDS].sort((a, b) => order.indexOf(a) - order.indexOf(b))) {
     const definition = retailDefinitionFor(retailerId);
     if (!definition) continue;
 
@@ -783,16 +795,18 @@ function renderRetailStoreButtons() {
     button.id = retailerId === DEFAULT_RETAILER_ID
       ? "retail-store-card"
       : `retail-store-card-${retailerId}`;
-    button.className = selected
+    button.className = selected && retailSurfaceStage === 'store'
       ? "retail-store-card is-selected"
       : "retail-store-card";
     button.dataset.retailerId = retailerId;
-    button.setAttribute("aria-pressed", selected ? "true" : "false");
+    button.setAttribute("aria-pressed", selected && retailSurfaceStage === 'store' ? "true" : "false");
+    button.setAttribute('aria-label', `${definition.displayName}: ${definition.scopeLabel}`);
+    button.title = definition.scopeLabel;
 
     const logo = document.createElement("span");
     logo.className = "retail-store-logo";
     logo.setAttribute("aria-hidden", "true");
-    logo.textContent = definition.logo;
+    logo.textContent = definition.displayName;
 
     const copy = document.createElement("span");
     copy.className = "retail-store-copy";
@@ -800,7 +814,7 @@ function renderRetailStoreButtons() {
     kicker.className = "retail-store-kicker";
     kicker.textContent = "Магазин";
     const name = document.createElement("strong");
-    name.textContent = definition.storeName;
+    name.textContent = definition.displayName;
     const scope = document.createElement("span");
     scope.textContent = definition.scopeLabel;
     copy.append(kicker, name, scope);
@@ -814,11 +828,8 @@ function renderRetailStoreButtons() {
 
     button.append(logo, copy, total);
     button.addEventListener("click", () => {
-      if (selected) {
-        elements.retailCatalogNav?.scrollIntoView?.({
-          behavior: "smooth",
-          block: "start"
-        });
+      if (selected && retailSurfaceStage === 'store') {
+        void navigateRetailPath([]);
         return;
       }
       void selectRetailer(retailerId);
@@ -829,6 +840,7 @@ function renderRetailStoreButtons() {
 
 function renderRetailBrowser() {
   if (!elements.retailBrowser) return;
+  queueMicrotask(publishPixelShopState);
 
   if (!publicRetailCatalogMode) {
     elements.retailBrowser.hidden = true;
@@ -962,7 +974,10 @@ function renderRetailBrowser() {
     return;
   }
 
-  for (const category of retailBrowserState.categories) {
+  const orderedCategories = sortPixelCategories(retailBrowserState.categories);
+  const visibleCategories = publicRetailCatalogMode && retailBrowserState.path.length === 0 && !pixelAllCategories
+    ? orderedCategories.slice(0, 7) : orderedCategories;
+  for (const category of visibleCategories) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "retail-category-button";
@@ -970,6 +985,14 @@ function renderRetailBrowser() {
 
     const title = document.createElement("strong");
     title.textContent = category.name;
+    const illustration = pixelCategoryImage(category);
+    if (illustration) {
+      const image = document.createElement('img');
+      image.className = 'pixel-category-image';
+      image.src = illustration; image.alt = ''; image.loading = 'lazy';
+      image.decoding = 'async'; image.width = 120; image.height = 100;
+      button.append(image);
+    }
     const count = document.createElement("span");
     const productNoun = russianCountNoun(
       category.productCount,
@@ -992,10 +1015,112 @@ function renderRetailBrowser() {
     });
     elements.retailCategoryGrid.append(button);
   }
+  if (visibleCategories.length < orderedCategories.length) {
+    const all = document.createElement('button');
+    all.type = 'button'; all.className = 'retail-category-button pixel-all-categories';
+    all.textContent = 'Все категории';
+    all.addEventListener('click', () => { pixelAllCategories = true; renderRetailBrowser(); });
+    elements.retailCategoryGrid.append(all);
+  }
 
   elements.retailCategoryStatus.textContent = retailBrowserState.categories.length > 0
     ? `Разделов: ${retailBrowserState.categories.length}`
     : "Подкатегорий нет";
+}
+
+function publishPixelShopState() {
+  if (!publicRetailCatalogMode) return;
+  const definition = currentRetailDefinition();
+  document.dispatchEvent(new CustomEvent('checkni:shop-state', { detail: {
+    stage: retailSurfaceStage,
+    retailerId: retailBrowserState.retailerId,
+    displayName: definition?.displayName ?? '',
+    storeAddress: definition?.storeAddress ?? '',
+    scopeLabel: definition?.scopeLabel ?? '',
+    status: retailBrowserState.status,
+    path: retailBrowserState.path,
+    categories: retailBrowserState.categories,
+    view: currentView,
+    basketUnits: countBasketUnits(basket.getSnapshot())
+  } }));
+}
+
+async function loadRetailCollections(categories) {
+  if (!publicRetailCatalogMode || retailSurfaceStage !== 'store') return;
+  const version = ++retailCollectionsVersion;
+  const client = currentRetailClient();
+  const sourceStore = client?.definition?.storeId;
+  const candidates = pixelCollectionCategories(categories);
+  retailCollections = [];
+  if (!candidates.length) { renderRetailCollections(); return; }
+  const loaded = await Promise.all(candidates.map(async collection => {
+    const result = await client.browseCategory(collection.category, { limit: 6 });
+    return { ...collection, products: result.kind === 'catalog' ? result.products : [] };
+  }));
+  if (version !== retailCollectionsVersion || currentRetailClient()?.definition?.storeId !== sourceStore) return;
+  const seen = new Set();
+  retailCollections = loaded.map(collection => ({ ...collection, products: collection.products.filter(product => {
+    if (seen.has(product.id)) return false;
+    seen.add(product.id); return true;
+  }) })).filter(collection => collection.products.length > 0);
+  renderCatalog();
+}
+
+function createCatalogProduct(product, live = true) {
+  const options = {
+    quantity: matchingBasketItemFor(product)?.quantity ?? 0,
+    priceHint: live ? null : snapshotPriceHints.get(product.id),
+    loadPhoto: loadProductPhoto,
+    onRemoveOne: () => {
+      const existing = matchingBasketItemFor(product);
+      if (!existing) return;
+      invalidateHybridForManualTakeover();
+      if (existing.quantity === 1) basket.remove(existing.id);
+      else basket.decrement(existing.id);
+    },
+    onAdd: selectedProduct => {
+      const existing = matchingBasketItemFor(selectedProduct);
+      const merged = basket.mergeValidatedBasket([{ product: existing ?? selectedProduct, quantity: 1 }]);
+      if (merged.rejectedRows.length > 0) {
+        const reason = merged.rejectedRows[0].reason;
+        showToast(reason === VALIDATED_MERGE_REASON.METADATA_CONFLICT
+          ? 'В списке уже другой товар или упаковка. Сначала проверьте его в списке.'
+          : reason === VALIDATED_MERGE_REASON.QUANTITY_LIMIT
+            ? 'Достигнут максимум количества этого товара.'
+            : 'Не удалось добавить товар. Список сохранён.');
+        return;
+      }
+      invalidateHybridForManualTakeover();
+      showToast(`${selectedProduct.name} добавлено`);
+    }
+  };
+  return (publicRetailCatalogMode ? createPixelProductCard : createProductCard)(product, options);
+}
+
+function renderRetailCollections() {
+  if (!publicRetailCatalogMode) return;
+  let host = document.getElementById('pixel-collections');
+  if (!host) {
+    host = document.createElement('div');
+    host.id = 'pixel-collections'; host.className = 'pixel-collections';
+    elements.productGrid.closest('.catalog-section').prepend(host);
+  }
+  host.replaceChildren();
+  host.hidden = retailSurfaceStage !== 'store' || retailBrowserState.path.length > 0 || Boolean(activeQuery.trim());
+  if (host.hidden) return;
+  for (const collection of retailCollections) {
+    const section = document.createElement('section'); section.className = 'pixel-collection';
+    const heading = document.createElement('header');
+    const title = document.createElement('h2'); title.textContent = collection.title;
+    const all = document.createElement('button'); all.type = 'button'; all.textContent = 'Все ›';
+    all.setAttribute('aria-label', `Все товары: ${collection.title}`);
+    all.addEventListener('click', () => void openRetailCategory(collection.category));
+    heading.append(title, all);
+    const row = document.createElement('div'); row.className = 'pixel-collection-row';
+    row.setAttribute('aria-label', collection.title);
+    for (const product of collection.products) row.append(createCatalogProduct(product));
+    section.append(heading, row); host.append(section);
+  }
 }
 
 function normalizeRetailHistoryPath(path) {
@@ -1062,6 +1187,7 @@ function createAppRouteState(
   if (comparisonMode === COMPARISON_MODE.OBSERVED) state.checkniComparisonAddressMode = comparisonAddressMode;
 
   if (publicRetailCatalogMode) {
+    state.checkniRetailSurface = retailSurfaceStage;
     state.checkniRetailNavigation = true;
     state.checkniRetailPath = retailPathForHistory(retailPath);
     state.checkniRetailerId = validRetailerId(retailerId);
@@ -1146,6 +1272,10 @@ async function selectRetailer(retailerId, {
 } = {}) {
   const definition = retailDefinitionFor(retailerId);
   if (!publicRetailCatalogMode || !definition) return;
+  retailSurfaceStage = 'store';
+  pixelAllCategories = false;
+  retailCollectionsVersion += 1;
+  retailCollections = [];
 
   if (guidedComparisonStoreId) comparisonAddressChanged();
 
@@ -1172,6 +1302,7 @@ async function selectRetailer(retailerId, {
     loadRetailRoots({ clearCatalog: false }),
     loadInitialRetailCatalog()
   ]);
+  publishPixelShopState();
 }
 
 async function loadRetailRoots({ clearCatalog = true } = {}) {
@@ -1209,6 +1340,7 @@ async function loadRetailRoots({ clearCatalog = true } = {}) {
     rootProductCount: total > 0 ? total : retailBrowserState.rootProductCount
   };
   renderRetailBrowser();
+  void loadRetailCollections(result.categories);
 }
 
 async function loadRetailChildren(category, path, {
@@ -1268,7 +1400,8 @@ async function navigateRetailPath(path, {
   updateRetailHistory(normalizedPath, { replace: replaceHistory });
 
   if (normalizedPath.length === 0) {
-    await loadRetailRoots();
+    pixelAllCategories = false;
+    await Promise.all([loadRetailRoots({ clearCatalog: false }), loadInitialRetailCatalog()]);
     return;
   }
 
@@ -1475,6 +1608,10 @@ async function loadMoreRetailCategoryProducts() {
 }
 
 function restoreRetailNavigationFromHistory({ initial = false, forceAddressReload = false } = {}) {
+  const restoredStage = history.state?.checkniRetailSurface === 'stores' ? 'stores'
+    : history.state?.checkniRetailSurface === 'store' || history.state?.checkniRetailNavigation === true ? 'store' : 'stores';
+  retailSurfaceStage = restoredStage;
+  pixelAllCategories = false;
   const retailerId = validRetailerId(history.state?.checkniRetailerId);
   const restoredMagnitStore = resolveMagnitMoscowStore({
     shopCode: history.state?.checkniMagnitShopCode
@@ -1507,6 +1644,12 @@ function restoreRetailNavigationFromHistory({ initial = false, forceAddressReloa
   const definition = retailDefinitionFor(retailerId);
 
   if (!definition) return;
+  if (retailSurfaceStage === 'stores') {
+    retailBrowserRequestVersion += 1; catalogRequestVersion += 1; retailCollectionsVersion += 1;
+    pendingCatalogSearch = null;
+    renderRetailBrowser();
+    return;
+  }
 
   if (initial || retailerId !== retailBrowserState.retailerId || addressChanged || forceAddressReload) {
     if (!initial) {
@@ -1687,6 +1830,12 @@ function renderCatalog() {
   document.querySelector("#retail-load-more")?.remove();
   if (elements.searchSubmit) elements.searchSubmit.disabled = !elements.searchInput.value.trim();
   const normalizedQuery = activeQuery.trim();
+  if (publicRetailCatalogMode) {
+    elements.retailCatalogNav.hidden = Boolean(normalizedQuery);
+    document.getElementById('catalog-title').textContent = catalogSearchState.categoryName || (normalizedQuery ? 'Результаты поиска' : 'Товары магазина');
+    renderRetailCollections();
+    queueMicrotask(publishPixelShopState);
+  }
   const retailDefinition = currentRetailDefinition();
   const retailName = retailDefinition?.displayName ?? "магазина";
   const draft = catalogSearchState.status === "draft";
@@ -1707,7 +1856,7 @@ function renderCatalog() {
     && catalogSearchState.status === "category"
   );
 
-  const results = live
+  const orderedResults = live
     ? sortObservedCatalogProducts(catalogSearchState.products, catalogSort)
     : loading
       ? []
@@ -1719,34 +1868,15 @@ function renderCatalog() {
             snapshotPriceHints
           );
 
+  // A root rail and the general catalogue share real identities. Show each
+  // card once so focus/quantity controls never target a duplicate ID.
+  const featuredIds = publicRetailCatalogMode && retailSurfaceStage === 'store'
+    && !retailBrowserState.path.length && !normalizedQuery
+    ? new Set(retailCollections.flatMap(collection => collection.products.map(product => product.id))) : new Set();
+  const results = orderedResults.filter(product => !featuredIds.has(product.id));
   elements.productGrid.replaceChildren();
 
-  results.forEach((product) => {
-    elements.productGrid.append(
-      createProductCard(product, {
-        quantity: matchingBasketItemFor(product)?.quantity ?? 0,
-        priceHint: live ? null : snapshotPriceHints.get(product.id),
-        loadPhoto: loadProductPhoto,
-        onAdd: (selectedProduct) => {
-          const existing = matchingBasketItemFor(selectedProduct);
-          const merged = basket.mergeValidatedBasket([
-            { product: existing ?? selectedProduct, quantity: 1 }
-          ]);
-          if (merged.rejectedRows.length > 0) {
-            const reason = merged.rejectedRows[0].reason;
-            showToast(reason === VALIDATED_MERGE_REASON.METADATA_CONFLICT
-              ? "В корзине уже другой товар или упаковка. Сначала проверьте его в корзине."
-              : reason === VALIDATED_MERGE_REASON.QUANTITY_LIMIT
-                ? "Достигнут максимум количества этого товара в корзине."
-                : "Не удалось добавить товар. Корзина сохранена.");
-            return;
-          }
-          invalidateHybridForManualTakeover();
-          showToast(`${selectedProduct.name} добавлено`);
-        }
-      })
-    );
-  });
+  results.forEach(product => elements.productGrid.append(createCatalogProduct(product, live)));
 
   if (
     live
@@ -1795,7 +1925,7 @@ function renderCatalog() {
       ? `Живой каталог · ${retailName}`
       : catalogSearchState.retailCount > 0
         ? normalizedQuery
-          ? `Живой каталог · ${retailName} + Open Food Facts`
+          ? publicRetailCatalogMode ? `Живой каталог · ${retailName}` : `Живой каталог · ${retailName} + Open Food Facts`
           : `Живой каталог · ${retailName}`
         : "Живой каталог · Open Food Facts";
     elements.catalogNote.textContent = categoryResult
@@ -1832,8 +1962,13 @@ function renderCatalog() {
   }
 
   const hasResults = results.length > 0;
+  const hasVisibleProducts = hasResults || featuredIds.size > 0;
   elements.productGrid.hidden = !hasResults;
-  elements.emptySearch.hidden = draft || loading || hasResults || categoryBrowsing;
+  elements.emptySearch.hidden = draft || loading || hasVisibleProducts || categoryBrowsing;
+  if (publicRetailCatalogMode) {
+    const heading = elements.productGrid.closest('.catalog-section').querySelector('.section-heading');
+    if (heading) heading.hidden = !hasResults && featuredIds.size > 0;
+  }
   if (elements.searchPrompt) {
     elements.searchPrompt.hidden = !draft;
     elements.searchPromptText.textContent = draftPrompt;
@@ -1862,7 +1997,7 @@ function renderCatalog() {
     return;
   }
 
-  if (live && !hasResults) {
+  if (live && !hasVisibleProducts) {
     if (catalogSearchState.categoryName) {
       elements.emptySearchCopy.textContent =
         `В этой категории ${retailName} сейчас нет товаров.`;
@@ -1880,7 +2015,7 @@ function renderCatalog() {
   elements.emptySearchCopy.textContent = fallback
     ? "Живой каталог сейчас не загрузился. Попробуйте ещё раз."
     : "Попробуйте более короткий запрос — например «сыр» или «хлеб».";
-  elements.searchStatus.textContent = hasResults
+  elements.searchStatus.textContent = hasVisibleProducts
     ? (
         live
         && catalogSearchState.categoryName
@@ -1888,7 +2023,7 @@ function renderCatalog() {
         && catalogSearchState.categoryExpectedCount > results.length
       )
       ? `Показано товаров: ${results.length} из ${catalogSearchState.categoryExpectedCount}`
-      : `Найдено товаров: ${results.length}`
+      : `Найдено товаров: ${results.length + featuredIds.size}`
     : fallback
       ? "Живой каталог временно недоступен"
       : "По вашему запросу ничего не найдено";
@@ -2191,6 +2326,10 @@ function renderBasketProposalOutput() {
         view?.secondaryAction || "Искать вручную",
         () => {
           invalidateHybridForManualTakeover();
+          if (publicRetailCatalogMode) {
+            document.dispatchEvent(new CustomEvent('checkni:shop-action', { detail: { action: 'manual-search' } }));
+            return;
+          }
           elements.searchInput.focus({ preventScroll: true });
           elements.searchInput.scrollIntoView({
             block: "center",
@@ -2257,7 +2396,9 @@ async function handleBasketProposal() {
   const nearbyIntent=nearbyShopping&&nearbyShoppingIntent(submittedText,basketProposalFlow.getState().presentation?.locationRequested===true);
   if(nearbyIntent){
     if(isGuidedEntryRequest(localGoal)&&localGoal!==submittedText){await basketProposalFlow.run(localGoal);renderBasketProposalState();}
-    nearbyShopping.open(nearbyIntent.query,nearbyIntent.radiusKm);elements.proposalInput.value='';return;
+    nearbyShopping.open(nearbyIntent.query,nearbyIntent.radiusKm);
+    document.dispatchEvent(new CustomEvent('checkni:shop-action', { detail: { action: 'address', target: 'nearby' } }));
+    elements.proposalInput.value='';return;
   }
   shoppingDialogue.begin(submittedText);
   const pending = basketProposalFlow.run(submittedText);
@@ -2654,9 +2795,17 @@ function renderDock() {
     units === 0 ? "Открыть пустую корзину" : basketHasWeightAmounts(items)
       ? `Открыть корзину, позиций: ${items.length}` : `Открыть корзину, товаров: ${units}`
   );
+  queueMicrotask(publishPixelShopState);
 }
 
 function focusCurrentView(mode) {
+  if (publicRetailCatalogMode && currentView === VIEW.SHOP) {
+    const target = retailSurfaceStage === 'stores'
+      ? (mode === FOCUS_MODE.HEADING ? 'pixel-store-home-title' : 'pixel-store-search')
+      : (mode === FOCUS_MODE.HEADING ? 'pixel-storefront-title' : 'product-search');
+    if (mode !== FOCUS_MODE.NONE) document.getElementById(target)?.focus({ preventScroll: true });
+    return;
+  }
   const targetId = focusTargetId(currentView, mode);
   if (!targetId) return;
 
@@ -2672,6 +2821,7 @@ function renderView({
   elements.shopView.hidden = isBasket;
   elements.basketView.hidden = !isBasket;
   elements.basketDock.hidden = isBasket;
+  publishPixelShopState();
 
   if (isBasket) {
     renderBasket();
@@ -2734,6 +2884,7 @@ function syncSearchDraft() {
 }
 
 function handleManualSearch() {
+  if (publicRetailCatalogMode && retailSurfaceStage !== 'store') return Promise.resolve();
   activeQuery = elements.searchInput.value.trim();
   elements.clearSearch.hidden = activeQuery.length === 0;
 
@@ -2772,7 +2923,7 @@ function handleManualSearch() {
   const executionPromise = (async () => {
     try {
       const [catalogResult, retailResult] = await Promise.all([
-        requestCatalogSearch([query], { limitPerQuery: 8 }),
+        publicRetailCatalogMode ? Promise.resolve({ kind: 'catalog', products: [] }) : requestCatalogSearch([query], { limitPerQuery: 8 }),
         currentRetailClient().search(query, { limit: 24 })
       ]);
       if (requestId !== catalogRequestVersion) return;
@@ -2820,6 +2971,7 @@ function handleManualSearch() {
 }
 
 async function loadInitialRetailCatalog() {
+  if (publicRetailCatalogMode && retailSurfaceStage !== 'store') return;
   if (!publicRetailCatalogMode) {
     renderCatalog();
     return;
@@ -2868,6 +3020,50 @@ const preloadHybridInterpreter = () => {
   void basketProposalFlow.preload().catch(() => {});
 };
 
+document.addEventListener('checkni:shop-action', event => {
+  if (!publicRetailCatalogMode) return;
+  const action = event.detail?.action;
+  if (action === 'basket') { navigate(VIEW.BASKET); return; }
+  if (action === 'address') {
+    if (currentView !== VIEW.SHOP) navigate(VIEW.SHOP, { focusMode: FOCUS_MODE.NONE });
+    return;
+  }
+  if (action === 'manual-search') {
+    if (currentView !== VIEW.SHOP) navigate(VIEW.SHOP, { focusMode: FOCUS_MODE.NONE });
+    const search = retailSurfaceStage === 'stores' ? document.getElementById('pixel-store-search') : elements.searchInput;
+    search?.focus({ preventScroll: true });
+    search?.scrollIntoView({ block: 'center', behavior: 'auto' });
+    return;
+  }
+  if (action === 'stores') {
+    document.getElementById('pixel-hory-dialog')?.close();
+    if (retailSurfaceStage === 'stores' && currentView === VIEW.SHOP) {
+      renderView({ focusMode: FOCUS_MODE.HEADING });
+      updateRetailHistory([], { replace: true });
+      return;
+    }
+    // Capture the old surface before changing its stage. Otherwise a basket
+    // entry would be rewritten as a stores entry and Back would lose context.
+    const previousView = currentView;
+    history.replaceState(createAppRouteState(
+      previousView, history.state?.checkniSurfaceFrom ?? null, window.scrollY
+    ), '');
+    retailSurfaceStage = 'stores';
+    pixelAllCategories = false;
+    catalogRequestVersion += 1; retailBrowserRequestVersion += 1; retailCollectionsVersion += 1;
+    pendingCatalogSearch = null;
+    currentView = VIEW.SHOP;
+    history.pushState(createAppRouteState(VIEW.SHOP, previousView, 0, []), '', hashForView(VIEW.SHOP));
+    renderRetailBrowser(); renderRetailCollections(); publishPixelShopState();
+    renderView({ focusMode: FOCUS_MODE.HEADING });
+    return;
+  }
+  if (action === 'root' && retailSurfaceStage === 'store') {
+    if (currentView !== VIEW.SHOP) navigate(VIEW.SHOP);
+    void navigateRetailPath([]);
+  }
+});
+
 elements.proposalInput.addEventListener("pointerdown", preloadHybridInterpreter, {
   once: true
 });
@@ -2915,6 +3111,10 @@ elements.proposalFallback.addEventListener("click", () => {
   if (!activeHybrid) {
     hybridBetaMetrics.recordAction("manual_fallback");
   }
+  if (publicRetailCatalogMode) {
+    document.dispatchEvent(new CustomEvent('checkni:shop-action', { detail: { action: 'manual-search' } }));
+    return;
+  }
   elements.searchInput.focus({ preventScroll: true });
   elements.searchInput.scrollIntoView({ block: "center", behavior: "auto" });
 });
@@ -2958,6 +3158,10 @@ elements.clearSearch.addEventListener("click", () => {
 
 elements.brandHome.addEventListener("click", (event) => {
   event.preventDefault();
+  if (publicRetailCatalogMode) {
+    document.dispatchEvent(new CustomEvent('checkni:shop-action', { detail: { action: 'stores' } }));
+    return;
+  }
   returnToShop();
 });
 elements.openBasket.addEventListener("click", () => navigate(VIEW.BASKET));
@@ -2991,6 +3195,7 @@ window.addEventListener("popstate", () => {
   renderStoreMapSelection();
   const addressChanged = currentComparisonStoreScope().key !== previousScopeKey;
   if (addressChanged) comparisonFlow.invalidate();
+  if (publicRetailCatalogMode) retailSurfaceStage = history.state?.checkniRetailSurface === 'stores' ? 'stores' : 'store';
   currentView = viewFromHash(location.hash);
   renderView({
     focusMode: FOCUS_MODE.HEADING,
@@ -3000,7 +3205,6 @@ window.addEventListener("popstate", () => {
   if (
     publicRetailCatalogMode
     && currentView === VIEW.SHOP
-    && (previousView === VIEW.SHOP || addressChanged)
   ) {
     restoreRetailNavigationFromHistory({ forceAddressReload: addressChanged });
   }

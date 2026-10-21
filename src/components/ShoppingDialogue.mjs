@@ -26,7 +26,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
   const header = document.createElement("div");
   header.className = "shopping-dialogue-header";
   const heading = document.createElement("strong");
-  heading.textContent = "Хори";
+  heading.textContent = "Хоря";
   const clear = document.createElement("button");
   clear.type = "button";
   clear.id = "shopping-dialogue-clear";
@@ -223,7 +223,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
     active = null;
     previous = [];
     const greeting = welcome.querySelector('.hori-greeting');
-    if (greeting) greeting.textContent = 'Привет! Я Хори. Что покупаем?';
+    if (greeting) greeting.textContent = 'Привет! Я Хоря. Что покупаем?';
     user.hidden = true;
     speaker.hidden = true;
     renderHistory();

@@ -1,6 +1,6 @@
 // Decorative circle envelopes for CSS 3D cubes. Coordinates are pixels and
 // velocities are pixels/second; the renderer and animation clock live elsewhere.
-const MAX_BODIES = 40;
+const MAX_BODIES = 10;
 const RESTITUTION = 0.95;
 const EPSILON = 1e-9;
 
@@ -39,7 +39,7 @@ export function seedBodies(count, width, height, random = Math.random) {
   const bodies = [];
   for (let i = 0; i < count; i++) {
     const size = 6 + rnd() * 6;
-    const r = Math.max(0.25, Math.min(size * 0.76, width / 2, height / 2));
+    const r = Math.max(0.25, Math.min(size * 0.9, width / 2, height / 2));
     let x = width / 2;
     let y = height / 2;
     // Placement attempts are bounded even when a tiny host cannot fit all cubes.
@@ -49,7 +49,7 @@ export function seedBodies(count, width, height, random = Math.random) {
       if (bodies.every(other => Math.hypot(other.x - x, other.y - y) >= other.r + r + 1)) break;
     }
     const heading = rnd() * Math.PI * 2;
-    const speed = 6 + rnd() * 9;
+    const speed = 6 + rnd() * 4;
     bodies.push({ x, y, vx: Math.cos(heading) * speed, vy: Math.sin(heading) * speed,
       r, size, angle: rnd() * Math.PI * 2 });
   }
@@ -57,7 +57,7 @@ export function seedBodies(count, width, height, random = Math.random) {
 }
 
 // Mutates the array and bodies, returning the number of approaching contacts.
-// The hard cap also bounds accidental callers to 1,560 pair checks per step.
+// The hard cap also bounds accidental callers to ninety pair checks per step.
 export function stepBodies(bodies, width, height, dt) {
   if (!Array.isArray(bodies) || !Number.isFinite(dt) || dt <= 0) return 0;
   width = dimension(width);
@@ -79,7 +79,7 @@ export function stepBodies(bodies, width, height, dt) {
     confine(body, width, height);
   }
   let collisions = 0;
-  // At most forty bodies make direct pairs cheaper and simpler than allocating
+  // At most ten bodies make direct pairs cheaper and simpler than allocating
   // hash grids every frame. Two gentle position passes reduce persistent overlap.
   for (let pass = 0; pass < 2; pass++) {
     for (let i = 0; i < bodies.length; i++) {

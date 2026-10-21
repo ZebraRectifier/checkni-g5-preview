@@ -1,8 +1,9 @@
+import { openHory, selectStore, openStoreDetails } from './helpers/pixel-surface.mjs';
 import {test,expect} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
 import {parsePublishedCatalogue,PUBLISHED_URL} from '../../src/observations/okeyPublishedPromotions.mjs';
 const rows=JSON.parse(await readFile(new URL('../../tests/fixtures/weekly-retail/magnit.json',import.meta.url),'utf8'));
-const say=async(page,text)=>{await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};
+const say=async(page,text)=>{await openHory(page);await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};
 test('weekly Magnit and OKEY selection shows real-unit fixtures, incomplete coverage, confirmation and reload',async({page,context})=>{
   let ai=0;
   await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
@@ -19,6 +20,7 @@ test('weekly Magnit and OKEY selection shows real-unit fixtures, incomplete cove
   await page.clock.setFixedTime(new Date('2026-10-18T00:00:00Z'));
   await page.route('**/src/data/okeyPublishedPromotions.json',r=>r.fulfill({json:snapshot}));
   await page.goto('/?comparison=observed&catalog=retail#shop');
+  await selectStore(page);
   const output=page.locator('#basket-proposal-status');
   await say(page,'Собери недорогую корзину на неделю для троих в Магните и О’КЕЙ');
   await expect(output).toContainText('Какие продукты исключить');await say(page,'Ограничений нет');
@@ -48,7 +50,8 @@ test('weekly grocery completion labels weighed portions and persists all 16 expl
     return r.fulfill({json:fixture.rows.filter(x=>x.store_id===id&&x.name.toLowerCase().includes(q.toLowerCase())).slice(0,Number(p.get('limit')??40))});
   });
   await page.goto('/?comparison=observed&catalog=retail#shop');
-  await page.locator('#retail-store-card-magnit').click();
+  await selectStore(page,'magnit');
+  await openStoreDetails(page);
   await page.locator('#magnit-store-address').selectOption('773505');
   const output=page.locator('#basket-proposal-status');
   await say(page,'Собери недорогую корзину на неделю для троих в Магните');await say(page,'Ограничений нет');

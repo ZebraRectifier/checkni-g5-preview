@@ -13,8 +13,9 @@ const view = (headline, message, extra = {}) => ({ status: 'clarification', resu
 
 export function createGuidedShoppingFlow(options) {
   let plan = null, state = null, version = 0;
-  const contextKey = () => { try { const scope = options.getContext?.(); return scope?.retailerId && scope?.storeId
-    ? JSON.stringify([scope.retailerId, scope.storeId,options.getRetailContextKey?.()??null]) : null; } catch { return null; } };
+  const contextKey = () => { try { const scope = options.getContext?.();
+    return JSON.stringify([scope?.retailerId ?? null, scope?.storeId ?? null, options.getRetailContextKey?.() ?? null]);
+  } catch { return null; } };
   const presentIntake = () => {
     const presentation = guidedIntakeView(plan, options.getMemory());
     if (!plan.question) plan.stage = 'outline';
@@ -54,12 +55,12 @@ export function createGuidedShoppingFlow(options) {
     if (options.getMemory().facts.unresolvedConstraints) return view('Сначала уточним ограничение.', 'В условиях есть непонятая часть. Уточни её или явно отмени перед подбором товаров.');
     let scope = options.getContext?.();
     const key = contextKey();
-    if (!key || typeof options.searchCatalog !== 'function') {
+    if(plan.retailers?.length>2)return state=view('Выберем два каталога.', 'Сейчас можно сопоставить два каталога за один подбор. Напиши, например, «Магнит и Пятёрочка» или «Магнит и О’КЕЙ». Список продуктов сохраняю.');
+    const retailScopes=plan.retailers?.length?options.getRetailContexts?.(plan.retailers)??[]:[];
+    if (!key || (!retailScopes.length && (!scope?.retailerId || !scope?.storeId)) || typeof options.searchCatalog !== 'function') {
       state = view('Список готов, выберем магазин.', 'Открой каталог нужного магазина, затем нажми «Подобрать товары и цены». Условия и список сохраняю.',
         { conversationChoices: choices(['Подобрать товары и цены', 'Изменить список']) }); return state;
     }
-    if(plan.retailers?.length>2)return state=view('Выберем два каталога.', 'Сейчас можно сопоставить два каталога за один подбор. Напиши, например, «Магнит и Пятёрочка» или «Магнит и О’КЕЙ». Список продуктов сохраняю.');
-    const retailScopes=plan.retailers?.length?options.getRetailContexts?.(plan.retailers)??[]:[];
     if(plan.retailers?.length&&plan.location) return state=view('Уточним охват магазинов.',
       plan.retailers.includes('pyaterochka')?'Для Пятёрочки есть акции Москвы, расстояние до конкретного магазина неизвестно. Выбери «Пятёрочка» без радиуса или «текущий магазин».':
       'Для О’КЕЙ есть городской каталог Москвы, расстояние до конкретного магазина неизвестно. Выбери «Магнит и О’КЕЙ» без радиуса или «текущий магазин».');
