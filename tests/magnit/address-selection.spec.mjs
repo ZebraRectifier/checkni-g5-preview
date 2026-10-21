@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { openStoreDetails, selectStore } from "../../test/e2e/helpers/pixel-surface.mjs";
 
 async function fixture(page, { delayFirst = false } = {}) {
   let release;
@@ -45,7 +46,8 @@ const card = (page, code) => page.locator('[data-product-id="retail:magnit:magni
 test("Magnit address changes prices, persists on reload, and restores on Back without fallback", async ({page}) => {
   await fixture(page);
   await page.goto("/?comparison=observed&catalog=retail#shop");
-  await page.locator("#retail-store-card-magnit").click();
+  await selectStore(page, "magnit");
+  await openStoreDetails(page);
   const picker = page.locator("#magnit-store-address");
   await expect(picker).toBeVisible();
   await expect(card(page,"777312")).toContainText("79,99 ₽");
@@ -53,6 +55,7 @@ test("Magnit address changes prices, persists on reload, and restores on Back wi
   await expect(card(page,"303857")).toContainText("149,99 ₽");
   await expect(card(page,"777312")).toHaveCount(0);
   await page.reload();
+  await openStoreDetails(page);
   await expect(picker).toHaveValue("303857");
   await expect(card(page,"303857")).toContainText("149,99 ₽");
   await picker.selectOption("908621");
@@ -61,13 +64,14 @@ test("Magnit address changes prices, persists on reload, and restores on Back wi
   await page.goBack();
   await expect(picker).toHaveValue("303857");
   await expect(card(page,"303857")).toContainText("149,99 ₽");
-  await expect(page.locator("#retail-store-card-magnit")).toContainText("3 кв-л");
+  await expect(page.locator(".pixel-store-address")).toContainText("3 кв-л");
 });
 
 test("late response from the previous Magnit address cannot replace the selected address", async ({page}) => {
   const control = await fixture(page, {delayFirst:true});
   await page.goto("/?comparison=observed&catalog=retail#shop");
-  await page.locator("#retail-store-card-magnit").click();
+  await selectStore(page, "magnit");
+  await openStoreDetails(page);
   await expect.poll(control.requested).toBe(true);
   await page.locator("#magnit-store-address").selectOption("303857");
   await expect(card(page,"303857")).toContainText("149,99 ₽");

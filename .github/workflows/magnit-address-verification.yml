@@ -1,10 +1,18 @@
 name: Magnit address release verification
 on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/magnit/**"
+      - "test/e2e/helpers/pixel-surface.mjs"
+      - "playwright.magnit.config.mjs"
+      - ".github/workflows/magnit-address-verification.yml"
   push:
     branches: [main, fix/magnit-address-selection]
     paths:
       - "src/**"
       - "tests/magnit/**"
+      - "test/e2e/helpers/pixel-surface.mjs"
       - "playwright.magnit.config.mjs"
       - ".github/workflows/magnit-address-verification.yml"
 permissions:
@@ -15,6 +23,13 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact candidate SHA
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - name: Verify switching and real address-bound cards on desktop and mobile
