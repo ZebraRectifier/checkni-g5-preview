@@ -10,6 +10,12 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   const publicHost = view.location.hostname === 'zebrarectifier.github.io' || view.location.hostname.endsWith('.vercel.app');
   const retailSurface = publicHost || new URLSearchParams(view.location.search).get('catalog') === 'retail';
   if (!section || !main || !header || !retailSurface) return { present() {} };
+  // The app restores its own per-entry scroll coordinates. Disable the
+  // browser's independent reload restoration before mounting changes layout,
+  // otherwise a late native restore can overwrite renderView's position.
+  if ('scrollRestoration' in view.history) view.history.scrollRestoration = 'manual';
+  const savedScrollY = view.history.state?.checkniSurfaceScrollY;
+  view.scrollTo({ top: Number.isFinite(savedScrollY) && savedScrollY >= 0 ? savedScrollY : 0, behavior: 'instant' });
   const sheet = document.createElement('link'); sheet.rel = 'stylesheet';
   sheet.href = new URL('./pixel-storefront.css', import.meta.url).href; document.head.append(sheet);
   document.body.classList.add('hori-workspace', 'pixel-workspace');

@@ -47,16 +47,35 @@ test('approved PixelCharacter has stable stores-first and storefront visual base
  await expect(page.locator('#product-grid .product-card')).toHaveCount(3);
  await expect.poll(()=>page.locator('#product-grid .product-photo').evaluateAll(images=>images.length===3&&images.every(img=>img.complete&&img.naturalWidth>0))).toBe(true);
  const first=page.locator('#product-grid .product-card').first();
+ // The storefront now scrolls as a document, with categories before products.
+ // Check that the real add control is reachable instead of assuming it starts
+ // above the fold as it did in the retired split-pane layout.
+ await addButton(first).scrollIntoViewIfNeeded();
  await expect(addButton(first)).toBeInViewport();
  for(const card of await page.locator('#product-grid .product-card').all()){
-  await expect(card.locator('a.product-unit')).toContainText('19.10');
-  await expect(card).toContainText('без карты');
+  const condition=card.locator('.product-price-unit');
+  await expect(condition).toBeVisible();
+  await expect(condition).toContainText('без карты');
+  // Provenance is an intentional disclosure. Exercise its actual summary so
+  // the date and source are available to a user, not merely present in the DOM.
+  const details=card.locator('details.pixel-product-details');
+  await expect(details).toHaveJSProperty('open',false);
+  await details.locator(':scope > summary').click();
+  await expect(details).toHaveJSProperty('open',true);
+  const source=details.locator('a.product-unit');
+  await expect(source).toBeVisible();
+  await expect(source).toContainText('19.10');
+  await expect(source).toHaveAttribute('href',products[0].source_url);
+  await details.locator(':scope > summary').click();
+  await expect(details).toHaveJSProperty('open',false);
   const button=await addButton(card).boundingBox();
+  expect(button).not.toBeNull();
   expect(button.width).toBeGreaterThanOrEqual(44);expect(button.height).toBeGreaterThanOrEqual(44);
  }
  await expectNoOverflow(page);
+ await page.locator('#pixel-storefront-title').scrollIntoViewIfNeeded();
  await expect(page).toHaveScreenshot('pixel-character-storefront-'+(mobile?'mobile':'desktop')+'.png',{
-  scale:'css',animations:'disabled',maxDiffPixelRatio:.01,threshold:.2
+  fullPage:true,scale:'css',animations:'disabled',maxDiffPixelRatio:.01,threshold:.2
  });
 });
 
