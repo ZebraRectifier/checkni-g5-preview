@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { selectStore, openBasket, addButton } from './helpers/pixel-surface.mjs';
+import { selectStore, openBasket, addButton, expectNoOverflow } from './helpers/pixel-surface.mjs';
 
 // Synthetic catalogue only: active animation must not intercept the manual
 // shopping path. These are browser tests, not physical Android/FPS evidence.
@@ -33,7 +33,13 @@ test('bounded moving cubes pause and preserve the manual basket flow', async ({ 
   const mobile = info.project.name.includes('mobile');
   await page.setViewportSize(mobile ? { width: 390, height: 844 } : { width: 1280, height: 720 });
   await setup(page);
+  const expectStableViewport = async () => {
+    expect(await page.evaluate(() => innerWidth), 'Motion controls must not widen the layout viewport').toBe(page.viewportSize().width);
+    await expectNoOverflow(page);
+  };
+  await expectStableViewport();
   const field = page.locator('.hori-cube-field'), cubes = page.locator('.hori-cube');
+  const motionHost = page.locator('.pixel-motion-host');
   await expect(field).toHaveAttribute('aria-hidden', 'true');
   await expect(cubes).toHaveCount(mobile ? 6 : 10);
   await expect(cubes.first().locator('.hori-cube-face')).toHaveCount(6);
@@ -42,11 +48,13 @@ test('bounded moving cubes pause and preserve the manual basket flow', async ({ 
   await expect.poll(() => cubes.first().getAttribute('style')).not.toBe(before);
   await page.getByRole('button', { name: 'Остановить анимацию фона', exact: true }).click();
   await expect(field).toHaveAttribute('data-running', 'false');
+  await expectStableViewport();
   const paused = await cubes.first().getAttribute('style');
   await page.waitForTimeout(120);
   expect(await cubes.first().getAttribute('style')).toBe(paused);
   await page.getByRole('button', { name: 'Включить анимацию фона', exact: true }).click();
   await expect(field).toHaveAttribute('data-running', 'true');
+  await expectStableViewport();
   await selectStore(page);
   await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
   await addButton(page.locator('#product-grid .product-card')).click();
@@ -68,12 +76,26 @@ test('bounded moving cubes pause and preserve the manual basket flow', async ({ 
   for (const sample of hitSamples) {
     expect(sample.owned, `The real list button must receive pointer hits: ${JSON.stringify(sample)}`).toBe(true);
   }
+  if (mobile) {
+    const stablyOffscreen = await motionHost.evaluate(async host => {
+      for (let frame = 0; frame < 3; frame += 1) {
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        const box = host.getBoundingClientRect();
+        if (!(box.bottom < 0 || box.top > innerHeight || box.right < 0 || box.left > innerWidth)) return false;
+      }
+      return true;
+    });
+    if (stablyOffscreen) await expect(field).toHaveAttribute('data-running', 'false');
+  }
   await openBasket(page);
   await expect(page.locator('#basket-title')).toBeVisible();
   await expect(page.locator('.basket-row')).toHaveCount(1);
   await expect(field).toBeHidden();
   await expect(field).toHaveAttribute('data-running', 'false');
   await page.goBack();
+  await expect(field).toBeVisible();
+  await motionHost.scrollIntoViewIfNeeded();
+  await expect(motionHost).toBeInViewport();
   await expect(field).toHaveAttribute('data-running', 'true');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

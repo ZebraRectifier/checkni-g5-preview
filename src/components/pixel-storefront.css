@@ -21,11 +21,11 @@
   unicode-range: U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;
 }
 
-/* Root scrolling must finish before a catalogue control is hit-tested. Reserve
-   the fixed navigation and optional list dock when revealing or focusing it. */
+/* Keep the root viewport usable for fixed navigation; only content controls
+   reserve the navigation and dock space when they are revealed or focused. */
 html:has(> body.pixel-workspace) {
   scroll-behavior: auto;
-  scroll-padding-block: 16px calc(76px + 64px + 24px + env(safe-area-inset-bottom,0px));
+  scroll-padding: 0;
 }
 
 body.hori-workspace.pixel-workspace {
@@ -144,8 +144,10 @@ body.pixel-workspace #hori-theme span { display: grid; place-items: center; widt
 body.pixel-workspace[data-hori-theme='light'] #hori-theme span:first-child,
 body.pixel-workspace:not([data-hori-theme='light']) #hori-theme span:last-child { background: var(--accent-soft); color: var(--accent); }
 body.pixel-workspace .pixel-motion-controls { display: flex; justify-content: end; min-width: 0; }
-body.pixel-workspace .hori-cube-toggle-inline { width: 64px; min-width: 0; padding: 4px; font-size: 14px; white-space: normal; line-height: 1.1; }
-body.pixel-workspace .pixel-motion-band { position: absolute; z-index: 0; top: 10px; right: 72px; width: 64px; height: 48px; overflow: hidden; pointer-events: none; }
+/* This selector must beat the later-loaded shared cube stylesheet: its
+   nowrap control must not widen Android's layout viewport when paused. */
+body.pixel-workspace .pixel-motion-controls > .hori-cube-toggle-inline { width: 76px; min-width: 76px; max-width: 76px; padding: 4px; font-size: 14px; white-space: normal; overflow-wrap: anywhere; line-height: 1.1; }
+body.pixel-workspace .pixel-motion-band { position: absolute; z-index: 0; top: 10px; right: 84px; width: 64px; height: 48px; overflow: hidden; pointer-events: none; }
 body.pixel-workspace .pixel-header > :not(.pixel-motion-band):not(.pixel-nav) { position: relative; z-index: 1; }
 body.pixel-workspace .app-shell {
   display: block;
@@ -158,6 +160,7 @@ body.pixel-workspace .app-shell {
   overflow: visible;
   background: var(--bg);
 }
+body.pixel-workspace .app-shell :is(button,input,select,textarea,summary,a) { scroll-margin-block: 16px calc(var(--pixel-nav-height) + var(--pixel-dock-height) + 24px + env(safe-area-inset-bottom,0px)); }
 body.pixel-workspace .pixel-shop-pane { min-width: 0; min-height: 0; height: auto; padding: 0; overflow: visible; }
 body.pixel-workspace :is(#shop-view,#basket-view,.pixel-store-home,.pixel-storefront,.catalog-section) { min-width: 0; max-width: 100%; }
 body.pixel-workspace .hori-basket-preview { display: none; }
@@ -300,17 +303,20 @@ body.pixel-workspace #pixel-storefront > .hero { position: relative; inset: auto
 body.pixel-workspace #pixel-storefront > .hero :is(.hero-identity,.eyebrow,.hero-copy,#shop-title,#manual-divider),
 body.pixel-workspace .hero::before,
 body.pixel-workspace .hero::after { display: none; }
-body.pixel-workspace .search-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; margin: 0; }
-body.pixel-workspace .search-form .search-box { flex: 1; min-width: 0; }
+body.pixel-workspace .search-form { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px; min-width: 0; margin: 0; }
+body.pixel-workspace .search-form .search-box { grid-column: 1; grid-row: 1; min-width: 0; }
+body.pixel-workspace .search-form .catalog-search-submit { grid-column: 2; grid-row: 1; }
 body.pixel-workspace .search-box { min-width: 0; min-height: 48px; padding: 0 10px; border: 2px solid var(--line); border-radius: 2px; background: var(--surface); color: var(--muted); box-shadow: none; transform: none; }
 body.pixel-workspace .search-box:focus-within { border-color: var(--accent); box-shadow: none; transform: none; }
-body.pixel-workspace .search-box input { width: 100%; min-width: 0; min-height: 44px; color: var(--ink); font-size: 16px; }
+body.pixel-workspace .search-box input { width: 100%; min-width: 48px; min-height: 44px; color: var(--ink); font-size: 16px; }
 body.pixel-workspace .search-box input::placeholder { color: var(--muted); opacity: 1; }
 body.pixel-workspace .search-box .icon-button { width: 44px; min-width: 44px; height: 44px; flex: 0 0 44px; padding: 0; border: 0; border-radius: 2px; background: transparent; color: var(--muted); }
-body.pixel-workspace .catalog-sort { min-width: 0; margin: 0; }
-body.pixel-workspace .catalog-sort select { max-width: 100%; min-height: 44px; padding: 8px; border: 1px solid var(--line); border-radius: 2px; background: var(--surface); color: var(--ink); font-size: 14px; }
+body.pixel-workspace .catalog-sort { grid-column: 1; grid-row: 2; min-width: 0; max-width: 100%; margin: 0; }
+body.pixel-workspace .catalog-sort select { width: 100%; min-width: 0; max-width: 100%; min-height: 44px; padding: 8px; border: 1px solid var(--line); border-radius: 2px; background: var(--surface); color: var(--ink); font-size: 14px; }
 body.pixel-workspace .catalog-sort label { font-size: 14px; }
-body.pixel-workspace .catalog-search-prompt { order: 10; flex: 1 0 100%; margin: 0; color: var(--muted); font-size: 14px; }
+body.pixel-workspace .catalog-search-prompt { grid-column: 1/-1; grid-row: 3; margin: 0; color: var(--muted); font-size: 14px; }
+body.pixel-workspace .search-form > .hori-price-note { grid-column: 2; grid-row: 2; }
+body.pixel-workspace .search-form > .hori-price-note > summary { display: flex; align-items: center; justify-content: center; min-height: 44px; }
 body.pixel-workspace :is(.catalog-search-reset,.text-button) { color: var(--accent); font-size: 14px; }
 body.pixel-workspace #search-help { color: var(--muted); font-size: 14px; }
 /* The visible search and category labels already explain the root flow. Keep
@@ -501,7 +507,6 @@ body.pixel-workspace #basket-proposal-help { margin: 0; color: var(--muted); fon
   body.pixel-workspace .product-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
 }
 @media (min-width: 1000px) {
-  html:has(> body.pixel-workspace) { scroll-padding-block-end: calc(64px + 24px + env(safe-area-inset-bottom,0px)); }
   body.hori-workspace.pixel-workspace { --pixel-nav-height: 0px; }
   body.pixel-workspace :is(.pixel-header,.app-shell) { width: min(1160px,calc(100% - 40px)); max-width: 1160px; }
   body.pixel-workspace .pixel-header { display: flex; flex-wrap: wrap; gap: 12px 18px; min-height: 88px; padding: 18px 0; }
@@ -510,7 +515,7 @@ body.pixel-workspace #basket-proposal-help { margin: 0; color: var(--muted); fon
   body.pixel-workspace .pixel-location { flex: none; }
   body.pixel-workspace .pixel-header-controls { display: flex; flex-wrap: nowrap; width: auto; margin-left: auto; }
   body.pixel-workspace .pixel-motion-controls { min-width: 76px; }
-  body.pixel-workspace .hori-cube-toggle-inline { width: auto; max-width: 128px; padding: 6px 8px; white-space: nowrap; }
+  body.pixel-workspace .pixel-motion-controls > .hori-cube-toggle-inline { width: auto; max-width: 128px; padding: 6px 8px; white-space: nowrap; }
   body.pixel-workspace .pixel-motion-band { position: relative; top: auto; right: auto; flex: 0 0 128px; width: 128px; height: 56px; }
   body.pixel-workspace .pixel-nav { position: static; display: flex; flex: 1 1 auto; justify-content: flex-end; align-items: center; gap: 8px; min-height: 44px; padding: 0; border: 0; background: transparent; }
   body.pixel-workspace .pixel-nav-button { flex-direction: row; gap: 8px; min-height: 48px; padding: 8px 12px; border: 1px solid transparent; background: transparent; font-size: 14px; }
