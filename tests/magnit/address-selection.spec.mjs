@@ -45,7 +45,7 @@ const card = (page, code) => page.locator('[data-product-id="retail:magnit:magni
 
 test("Magnit address changes prices, persists on reload, and restores on Back without fallback", async ({page}) => {
   await fixture(page);
-  await page.goto("/?comparison=observed&catalog=retail#shop");
+  await page.goto("./?comparison=observed&catalog=retail#shop");
   await selectStore(page, "magnit");
   await openStoreDetails(page);
   const picker = page.locator("#magnit-store-address");
@@ -69,7 +69,7 @@ test("Magnit address changes prices, persists on reload, and restores on Back wi
 
 test("late response from the previous Magnit address cannot replace the selected address", async ({page}) => {
   const control = await fixture(page, {delayFirst:true});
-  await page.goto("/?comparison=observed&catalog=retail#shop");
+  await page.goto("./?comparison=observed&catalog=retail#shop");
   await selectStore(page, "magnit");
   await openStoreDetails(page);
   await expect.poll(control.requested).toBe(true);
