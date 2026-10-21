@@ -91,13 +91,37 @@ jobs:
           }
 
           async function storeFacts(card) {
-            assert(await card.isVisible(), "Store selector must be visible");
             const name = await card.locator("strong").innerText();
-            const copy = (await card.locator(".retail-store-copy").textContent()).trim();
+            const scope = (await card.locator(".retail-store-copy > span").last().textContent()).trim();
             const tooltip = await card.getAttribute("title");
-            assert(name && tooltip === copy && tooltip.includes(name),
-              "Compact selector must expose its full store/source scope in its tooltip");
-            return tooltip + "\n" + await card.locator(".retail-store-total").textContent();
+            const label = await card.getAttribute("aria-label");
+            assert(name && tooltip === scope && label === name + ": " + scope,
+              "Store card must expose its chain and complete source scope");
+            return name + " · " + scope + "\n" + await card.locator(".retail-store-total").textContent();
+          }
+
+          async function allCategories(page) {
+            await page.waitForFunction(() => document.querySelectorAll(
+              "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
+            ).length > 0, null, {timeout:15000});
+            const all = page.locator("#retail-category-grid .pixel-all-categories");
+            if (await all.isVisible()) await all.click();
+          }
+          async function chooseStore(page, selector) {
+            if (!await page.locator("#pixel-store-home").isVisible())
+              await page.locator('[data-pixel-action="stores"]').click();
+            await page.locator(selector).click();
+            await page.locator("#pixel-storefront").waitFor({state:"visible"});
+            await allCategories(page);
+          }
+          async function details(page, open) {
+            const node = page.locator("#pixel-store-details");
+            if (await node.evaluate(e => e.open) !== open) await node.locator(":scope > summary").click();
+          }
+          async function priceDetails(card) {
+            const disclosure = card.locator("details").first();
+            if (await disclosure.count() && !await disclosure.evaluate(e => e.open))
+              await disclosure.locator(":scope > summary").click();
           }
 
           function validDateKey(value, label) {
@@ -191,16 +215,22 @@ jobs:
               raceReady,
               "Published page never exposed the Lenta selector for the race gate"
             );
+            console.log("RACE_BEFORE_SELECT", await racePage.evaluate(() => ({
+              homeHidden:document.querySelector("#pixel-store-home")?.hidden,
+              selected:document.querySelector("#retail-store-card")?.getAttribute("aria-pressed"),
+              bounds:document.querySelector("#retail-store-card")?.getBoundingClientRect().toJSON()
+            })));
+            await racePage.locator("#retail-store-card").click({noWaitAfter:true});
             for (let attempt = 0; attempt < 40 && !globusRootHeld; attempt += 1) {
               await racePage.waitForTimeout(100);
             }
             assert(globusRootHeld, "Did not capture the initial GLOBUS root request");
-            await racePage.locator("#retail-store-card-lenta").click();
+            await chooseStore(racePage, "#retail-store-card-lenta");
             await racePage.waitForFunction(() => (
               document.querySelector("#retail-store-card-lenta")
                 ?.getAttribute("aria-pressed") === "true"
               && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
+                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
               ).length === 22
             ), null, { timeout: 15000 });
             releaseGlobusRoot();
@@ -212,7 +242,7 @@ jobs:
             );
             assert(
               await racePage.locator(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
+                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
               ).count() === 22,
               "Late GLOBUS response repainted Lenta categories"
             );
@@ -248,6 +278,8 @@ jobs:
             // GitHub Pages can lag a branch push briefly. Do not validate the
             // previous artifact by accident: bounded-reload until the exact
             // Moscow Magnit release is visible.
+            await chooseStore(page, "#retail-store-card-magnit");
+            await details(page, true);
             let moscowMagnitPublished = false;
             for (let attempt = 0; attempt < 18; attempt += 1) {
               if (
@@ -272,19 +304,25 @@ jobs:
 
             const globus = page.locator("#retail-store-card");
             stage("globus:start");
-            assert(await globus.getAttribute("aria-pressed") === "true", "GLOBUS must be initially selected");
+            await chooseStore(page, "#retail-store-card");
+            await details(page, true);
+            assert(await globus.getAttribute("aria-pressed") === "true", "GLOBUS must be explicitly selected");
             const picker = page.locator("#globus-store-address");
             await picker.waitFor({state:"visible",timeout:15000});
             assert(await picker.locator("option").count()===16,"All 16 official Moscow/MO addresses must be visible");
             for (const code of ["5011","5001","5023"]) {
+              await details(page, true);
               await picker.selectOption(code);
+              await details(page, false);
+              await allCategories(page);
               await page.waitForFunction(code => (
                 document.querySelector("#globus-store-address")?.value === code
-                && document.querySelectorAll("#retail-category-grid .retail-category-button:not(.is-loading)").length > 0
+                && document.querySelectorAll("#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)").length > 0
               ), code, {timeout:15000});
               await page.getByRole("button",{name:/Молочные продукты, сыр, яйца/}).click();
               const card = page.locator('#product-grid [data-product-id^="retail:globus:globus-store-'+code+':"]').first();
               await card.waitFor({state:"visible",timeout:15000});
+              await priceDetails(card);
               const text = await card.innerText();
               assert(/\d[\d\s]*,\d{2} ₽/u.test(text),"GLOBUS exact-address card must expose a positive RUB observation");
               assert(text.includes("Обычная цена без карты"),"GLOBUS loyalty discount must not masquerade as the no-card price");
@@ -301,16 +339,17 @@ jobs:
             stage("lenta:start");
             // Address/category checks above scroll the independent commerce
             // pane. Return to its store row before switching retailers.
-            await page.locator("#hori-shop-pane").evaluate(pane => pane.scrollTo({top:0,behavior:"instant"}));
-            await lenta.click();
+            await chooseStore(page, "#retail-store-card-lenta");
             await page.waitForFunction(() => (
               document.querySelector("#retail-store-card-lenta")
                 ?.getAttribute("aria-pressed") === "true"
               && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
+                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
               ).length === 22
             ), null, { timeout: 15000 });
 
+            await page.goBack({ waitUntil: "domcontentloaded" });
+            await page.locator("#pixel-store-home").waitFor({state:"visible"});
             await page.goBack({ waitUntil: "domcontentloaded" });
             await page.waitForFunction(() => (
               document.querySelector("#retail-store-card")
@@ -325,24 +364,28 @@ jobs:
             );
 
             await page.goForward({ waitUntil: "domcontentloaded" });
+            await page.locator("#pixel-store-home").waitFor({state:"visible"});
+            await page.goForward({ waitUntil: "domcontentloaded" });
+            await allCategories(page);
             await page.waitForFunction(() => (
               document.querySelector("#retail-store-card-lenta")
                 ?.getAttribute("aria-pressed") === "true"
               && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
+                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
               ).length === 22
             ), null, { timeout: 15000 });
 
             await page.reload({ waitUntil: "domcontentloaded" });
+            await allCategories(page);
             await page.waitForFunction(() => (
               document.querySelector("#retail-store-card-lenta")
                 ?.getAttribute("aria-pressed") === "true"
               && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
+                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
               ).length === 22
             ), null, { timeout: 15000 });
             assert(
-              (await storeFacts(lenta)).includes("Лента · публичный каталог"),
+              (await storeFacts(lenta)).includes("Лента · Публичный каталог"),
               "Lenta selector has the wrong store label"
             );
             assert(
@@ -359,11 +402,11 @@ jobs:
             );
 
             const categoryButtons = page.locator(
-              "#retail-category-grid .retail-category-button:not(.is-loading)"
+              "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
             );
             await page.waitForFunction(() => (
               document.querySelectorAll(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
+                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
               ).length === 22
             ), null, { timeout: 15000 });
             assert(
@@ -421,7 +464,7 @@ jobs:
               await page.waitForFunction(() => (
                 document.querySelectorAll("#product-grid .product-card").length > 0
                 || document.querySelectorAll(
-                  "#retail-category-grid .retail-category-button:not(.is-loading)"
+                  "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
                 ).length > 0
               ), null, { timeout: 15000 });
 
@@ -431,7 +474,7 @@ jobs:
               }
 
               const candidates = page.locator(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
+                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
               );
               const candidateTexts = await candidates.allTextContents();
               let nextIndex = candidateTexts.findIndex((text) => {
@@ -532,6 +575,7 @@ jobs:
               "Published Lenta leaf rendered a product from another retailer"
             );
 
+            await priceDetails(card);
             const cardText = await card.innerText();
             assert(
               /\d[\d\s]*,\d{2} ₽/u.test(cardText),
@@ -577,7 +621,7 @@ jobs:
             await page.waitForFunction(() => (
               document.querySelectorAll("#product-grid .product-card").length === 0
               && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
+                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
               ).length > 0
             ), null, { timeout: 15000 });
             assert(
@@ -601,9 +645,11 @@ jobs:
             stage("lenta:ok");
             stage("magnit:start");
             const magnit = page.locator("#retail-store-card-magnit");
-            await magnit.waitFor({ state: "visible", timeout: 15000 });
-            await magnit.click();
+            await chooseStore(page, "#retail-store-card-magnit");
+            await details(page, true);
             await page.locator("#magnit-store-address").selectOption("771878");
+            await details(page, false);
+            await allCategories(page);
             await page.waitForFunction(() => (
               document.querySelector("#magnit-store-address")?.value === "771878"
               && document.querySelector("#retail-store-card-magnit")
@@ -627,12 +673,12 @@ jobs:
               document.querySelector("#retail-store-card-magnit")
                 ?.getAttribute("aria-pressed") === "true"
               && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
+                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
               ).length === 18
             ), null, { timeout: 15000 });
 
             const magnitCategories = page.locator(
-              "#retail-category-grid .retail-category-button:not(.is-loading)"
+              "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
             );
             assert(
               await magnitCategories.count() === 18,
@@ -669,6 +715,7 @@ jobs:
               "Published Magnit leaf rendered a product from another retailer"
             );
 
+            await priceDetails(magnitCard);
             const magnitCardText = await magnitCard.innerText();
             assert(
               /\d[\d\s]*,\d{2} ₽/u.test(magnitCardText),
@@ -731,12 +778,12 @@ jobs:
               );
 
               const da = page.locator("#retail-store-card-da");
-              await da.click();
+              await chooseStore(page, "#retail-store-card-da");
               await page.waitForFunction(() => (
                 document.querySelector("#retail-store-card-da")
                   ?.getAttribute("aria-pressed") === "true"
                 && document.querySelectorAll(
-                  "#retail-category-grid .retail-category-button:not(.is-loading)"
+                  "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
                 ).length === 1
               ), null, { timeout: 15000 });
 
@@ -835,12 +882,12 @@ jobs:
               );
 
               const auchanStore = page.locator("#retail-store-card-auchan");
-              await auchanStore.click();
+              await chooseStore(page, "#retail-store-card-auchan");
               await page.waitForFunction(() => (
                 document.querySelector("#retail-store-card-auchan")
                   ?.getAttribute("aria-pressed") === "true"
                 && document.querySelectorAll(
-                  "#retail-category-grid .retail-category-button:not(.is-loading)"
+                  "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
                 ).length === 1
               ), null, { timeout: 15000 });
 

@@ -43,16 +43,42 @@ jobs:
           }
 
           async function storeFacts(card) {
-            assert(await card.isVisible(), "Store selector must be visible");
             const name = await card.locator("strong").innerText();
-            const copy = (await card.locator(".retail-store-copy").textContent()).trim();
+            const scope = (await card.locator(".retail-store-copy > span").last().textContent()).trim();
             const tooltip = await card.getAttribute("title");
-            assert(name && tooltip === copy && tooltip.includes(name),
-              "Compact selector must expose its full store/source scope in its tooltip");
-            return tooltip + "\n" + await card.locator(".retail-store-total").textContent();
+            const label = await card.getAttribute("aria-label");
+            assert(name && tooltip === scope && label === name + ": " + scope,
+              "Store card must expose its chain and complete source scope");
+            return name + " · " + scope + "\n" + await card.locator(".retail-store-total").textContent();
+          }
+
+          async function allCategories(page) {
+            await page.waitForFunction(() => document.querySelectorAll(
+              "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
+            ).length > 0, null, {timeout:15000});
+            const all = page.locator("#retail-category-grid .pixel-all-categories");
+            if (await all.isVisible()) await all.click();
+          }
+          async function chooseStore(page, selector) {
+            if (!await page.locator("#pixel-store-home").isVisible())
+              await page.locator('[data-pixel-action="stores"]').click();
+            await page.locator(selector).click();
+            await page.locator("#pixel-storefront").waitFor({state:"visible"});
+            await allCategories(page);
+          }
+          async function details(page, open) {
+            const node = page.locator("#pixel-store-details");
+            if (await node.evaluate(e => e.open) !== open) await node.locator(":scope > summary").click();
+          }
+          async function priceDetails(card) {
+            const disclosure = card.locator("details").first();
+            if (await disclosure.count() && !await disclosure.evaluate(e => e.open))
+              await disclosure.locator(":scope > summary").click();
           }
 
           (async () => {
+            const {createRetailCatalogClient,normalizeRetailCategory} = await import("./src/ports/retailCatalogPort.mjs");
+            const definition = createRetailCatalogClient({retailerId:"perekrestok"}).definition;
             const browser = await chromium.launch({
               headless: true,
               executablePath: process.env.CHROME_BIN,
@@ -72,7 +98,7 @@ jobs:
               const text = await storeFacts(page.locator("#retail-store-card-perekrestok"))
                 .catch(() => "");
               if (
-                text.includes("Перекрёсток · Москва, Большой Овчинниковский пер. 16 · Яндекс Еда")
+                text.includes("Перекрёсток · Москва · цены доставки Яндекс Еды")
                 && /58 категорий/u.test(text)
                 && /5.?460 товаров/u.test(text)
                 && text.includes("наличие неизвестно")
@@ -85,19 +111,31 @@ jobs:
             assert(published, "Published Pages artifact does not expose mass Perekrestok");
 
             const store = page.locator("#retail-store-card-perekrestok");
-            await store.click();
-            await page.waitForFunction(() => (
+            const rootResponse = page.waitForResponse(response => {
+              const url = new URL(response.url());
+              return url.pathname.endsWith("/rest/v1/retail_catalog_categories")
+                && url.searchParams.get("retailer_id") === "eq.perekrestok"
+                && url.searchParams.get("depth") === "eq.0" && response.status() === 200;
+            }, {timeout:15000});
+            await chooseStore(page, "#retail-store-card-perekrestok");
+            const sourceRows = await (await rootResponse).json();
+            assert(Array.isArray(sourceRows) && sourceRows.length > 0, "Source roots missing");
+            const expectedIds = sourceRows.map(row => normalizeRetailCategory(row, definition)).filter(Boolean)
+              .map(category => String(category.categoryId)).sort();
+            assert(expectedIds.length > 0, "No source roots passed admission");
+            console.log("PEREKRESTOK_ADMITTED_ROOTS", JSON.stringify({sourceRows:sourceRows.length,admitted:expectedIds.length}));
+            await page.waitForFunction(expected => (
               document.querySelector("#retail-store-card-perekrestok")
                 ?.getAttribute("aria-pressed") === "true"
-              && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button:not(.is-loading)"
-              ).length === 58
-            ), null, { timeout: 15000 });
+              && JSON.stringify(Array.from(document.querySelectorAll(
+                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
+              ),node=>node.dataset.categoryId).sort()) === JSON.stringify(expected)
+            ), expectedIds, { timeout: 15000 });
 
             const roots = page.locator(
-              "#retail-category-grid .retail-category-button:not(.is-loading)"
+              "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
             );
-            assert(await roots.count() === 58, "Perekrestok root must expose 58 categories");
+            assert(await roots.count() === expectedIds.length, "Perekrestok root must expose every currently admitted source category");
 
             const rootTexts = await roots.allTextContents();
             let index = rootTexts.findIndex((text) => {
@@ -116,6 +154,7 @@ jobs:
             const card = page.locator(
               '#product-grid .product-card[data-product-id^="retail:perekrestok:perekrestok-yandex-3186917:"]'
             ).first();
+            await priceDetails(card);
             const cardText = await card.innerText();
 
             assert(/\d[\d\s]*,\d{2} ₽/u.test(cardText), "Perekrestok card has no observed RUB price");
@@ -135,7 +174,7 @@ jobs:
 
             console.log("PEREKRESTOK_MASS_LIVE", JSON.stringify({
               store: await storeFacts(store),
-              categoryCount: await roots.count(),
+              categoryCount: expectedIds.length,
               product: cardText
             }));
             await browser.close();

@@ -80,13 +80,37 @@ jobs:
           };
 
           async function storeFacts(card) {
-            assert(await card.isVisible(), "Store selector must be visible");
             const name = await card.locator("strong").innerText();
-            const copy = (await card.locator(".retail-store-copy").textContent()).trim();
+            const scope = (await card.locator(".retail-store-copy > span").last().textContent()).trim();
             const tooltip = await card.getAttribute("title");
-            assert(name && tooltip === copy && tooltip.includes(name),
-              "Compact selector must expose its full store/source scope in its tooltip");
-            return tooltip + "\n" + await card.locator(".retail-store-total").textContent();
+            const label = await card.getAttribute("aria-label");
+            assert(name && tooltip === scope && label === name + ": " + scope,
+              "Store card must expose its chain and complete source scope");
+            return name + " · " + scope + "\n" + await card.locator(".retail-store-total").textContent();
+          }
+
+          async function allCategories(page) {
+            await page.waitForFunction(() => document.querySelectorAll(
+              "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
+            ).length > 0, null, {timeout:15000});
+            const all = page.locator("#retail-category-grid .pixel-all-categories");
+            if (await all.isVisible()) await all.click();
+          }
+          async function chooseStore(page, selector) {
+            if (!await page.locator("#pixel-store-home").isVisible())
+              await page.locator('[data-pixel-action="stores"]').click();
+            await page.locator(selector).click();
+            await page.locator("#pixel-storefront").waitFor({state:"visible"});
+            await allCategories(page);
+          }
+          async function details(page, open) {
+            const node = page.locator("#pixel-store-details");
+            if (await node.evaluate(e => e.open) !== open) await node.locator(":scope > summary").click();
+          }
+          async function priceDetails(card) {
+            const disclosure = card.locator("details").first();
+            if (await disclosure.count() && !await disclosure.evaluate(e => e.open))
+              await disclosure.locator(":scope > summary").click();
           }
 
           (async () => {
@@ -110,7 +134,7 @@ jobs:
               });
               await page.waitForTimeout(1200);
               const text = await storeFacts(page.locator("#retail-store-card-metro")).catch(() => "");
-              if (text.includes("METRO · Москва, Ленинградское ш. 71Г")
+              if (text.includes("METRO · Ленинградское ш. 71Г")
                   && /\d+ категор/u.test(text)
                   && /\d+ товар/u.test(text)) {
                 ready = true;
@@ -121,7 +145,8 @@ jobs:
             assert(ready, "Published Pages artifact does not expose current METRO store card");
 
             const store = page.locator("#retail-store-card-metro");
-            await store.click();
+            await chooseStore(page, "#retail-store-card-metro");
+            await details(page, true);
             const picker = page.locator("#metro-store-picker");
             await picker.waitFor({ state: "visible", timeout: 15000 });
 
@@ -133,17 +158,21 @@ jobs:
             const select = picker.locator("#metro-store-address");
             const expected = [{"storeNumber":"1317","bindingId":"metro-address-17mcpb2","address":"142204, Московская область, г. Серпухов, городской округ Серпухов, бульвар 65 лет Победы, д.4","categoryId":930542483,"sku":"215144","observedAt":"2026-10-10T04:49:02.897Z"},{"storeNumber":"49","bindingId":"metro-address-10o1hl3","address":"108811, г. Москва, внутригородская территория муниципальный округ Ново-Переделкино, квартал 2, д.3, с.1","categoryId":930542483,"sku":"375122","observedAt":"2026-10-10T06:34:50.123Z"},{"storeNumber":"1307","bindingId":"metro-address-7v4tds","address":"142434, Московская Область, Богородский городской округ, деревня Новые Псарьки, ул Парковая, дом 4","categoryId":930542483,"sku":"135490","observedAt":"2026-10-10T06:39:46.743Z"}];
             for (const item of expected) {
+              await details(page, true);
               await select.selectOption(item.storeNumber);
+              await details(page, false);
+              await allCategories(page);
               await page.waitForFunction((item) => (
                 document.querySelector("#metro-store-address")?.value === item.storeNumber
-                && document.querySelector("#retail-store-card-metro")?.textContent?.includes(item.address)
-                && document.querySelectorAll("#retail-category-grid .retail-category-button:not(.is-loading)").length > 0
+                && document.querySelector("#metro-store-address option:checked")?.textContent?.includes(item.address)
+                && document.querySelectorAll("#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)").length > 0
               ), item, { timeout: 15000 });
               const category = page.locator('#retail-category-grid [data-category-id="' + item.categoryId + '"]');
               await category.waitFor({state:"visible",timeout:15000});
               await category.click();
               const card = page.locator('[data-product-id="retail:metro:' + item.bindingId + ':' + item.sku + '"]');
               await card.waitFor({state:"visible",timeout:15000});
+              await priceDetails(card);
               const cardText=await card.innerText();
               assert(/\d[\d\s]*,\d{2} ₽/u.test(cardText),"Current exact-store RUB price missing: "+item.storeNumber);
               assert(cardText.includes("Обычная онлайн-цена"),"METRO price condition missing");
@@ -152,7 +181,8 @@ jobs:
               const ids=await page.locator("#product-grid .product-card").evaluateAll(nodes=>nodes.map(n=>n.getAttribute("data-product-id")));
               assert(ids.length>0 && ids.every(id=>id?.startsWith("retail:metro:"+item.bindingId+":")),"Foreign address rows leaked into "+item.storeNumber);
               console.log("METRO_LIVE_ADDRESS_OK",JSON.stringify({storeNumber:item.storeNumber,bindingId:item.bindingId,sku:item.sku,observedAt:item.observedAt,cardText}));
-              await store.click();
+              await page.locator("#retail-breadcrumbs").getByRole("button", {name:"Категории", exact:true}).click();
+              await allCategories(page);
             }
             assert(pageErrors.length===0,"Published page errors: "+pageErrors.join(" | "));
             await browser.close();
