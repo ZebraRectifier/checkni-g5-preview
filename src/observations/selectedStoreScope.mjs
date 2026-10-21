@@ -13,8 +13,8 @@ function scope(mode, stores, valid = true) {
   return Object.freeze({ kind: "selected-store-scope", valid, mode, stores: frozen,
     key: JSON.stringify([mode, valid, frozen.map(store => [store.retailerId, store.storeIds, store.addressKeys])]) });
 }
-function magnitStore(shopCode, address) {
-  return { retailerId: "magnit", name: "Магнит", address, shopCode,
+function magnitStore(shopCode, address, shopType = "1") {
+  return { retailerId: "magnit", name: "Магнит", address, shopCode, shopType,
     storeIds: [`magnit-shop-${shopCode}`, `magnit-${shopCode}`], addressKeys: [textKey(address)] };
 }
 function metroStore(store) {
@@ -34,7 +34,7 @@ export function createSelectedStoreScope(selection) {
     const store = shopCode && (resolveMagnitMoscowStore({ shopCode })
       ?? resolveMagnitMoscowOblastStore({ shopCode }));
     if (!store) return scope("selected", [], false);
-    stores.push(magnitStore(shopCode, store.address));
+    stores.push(magnitStore(shopCode, store.address, store.shopType ?? "1"));
   }
   if (Object.hasOwn(selection, "metro")) {
     const store = ref(selection.metro) && resolveMetroMoscowRegionStore({ storeNumber: selection.metro });
@@ -78,7 +78,7 @@ function magnitUrlMatches(offer, store) {
       && url.searchParams.getAll("shopCode").length === 1
       && url.searchParams.get("shopCode") === store.shopCode
       && url.searchParams.getAll("shopType").length === 1
-      && url.searchParams.get("shopType") === "1"
+      && url.searchParams.get("shopType") === store.shopType
       && [...url.searchParams.keys()].every(key => ["shopCode", "shopType"].includes(key));
   } catch { return false; }
 }

@@ -1,3 +1,4 @@
+import { MAGNIT_REMAINING_ADDRESS_BINDINGS } from "./magnitRemainingAddressBindings.mjs";
 // Exact official public-selector bindings; partial prices are separate.
 export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
   {
@@ -5084,7 +5085,7 @@ export const MAGNIT_MOSCOW_OBLAST_BINDINGS = Object.freeze([
     "sourceUrl": "https://magnit.ru/shops?shopCode=976944&shopType=1",
     "observedAt": "2026-10-09T13:28:55.365Z"
   }
-].map(record=>Object.freeze(record)));
+].concat(MAGNIT_REMAINING_ADDRESS_BINDINGS.filter(s => !s.address.startsWith("г Москва,"))).map(record=>Object.freeze(record)));
 export function resolveMagnitMoscowOblastStore({shopCode,address}={}) {
   if(typeof shopCode!=="string") return null;
   const store=MAGNIT_MOSCOW_OBLAST_BINDINGS.find(s=>s.shopCode===shopCode);
