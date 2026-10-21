@@ -20,6 +20,8 @@ jobs:
           package-manager-cache: false
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
+      - name: Remove only the four capture targets so every new frame is written
+        run: node -e "const fs=require('node:fs');for(const s of ['home','storefront'])for(const d of ['desktop','mobile'])fs.unlinkSync('test/e2e/reference-v13/linux/pixel-character-'+s+'-'+d+'.png');"
       - name: Render fixed fixtures for visual review, not acceptance
         run: npx playwright test --config=playwright.weekly.config.mjs hori-v13.spec.mjs --grep 'stable stores-first' --update-snapshots --workers=1
       - name: Preserve bounded original PNGs in job log without artifact storage
