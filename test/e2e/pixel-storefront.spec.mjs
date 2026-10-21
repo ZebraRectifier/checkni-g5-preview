@@ -206,7 +206,7 @@ test('nonempty source collections deduplicate shared SKUs and keep list controls
  await expectNoOverflow(page);
 });
 
-test('store → basket → Back/reload → stores preserves quantities and restores the chosen surface',async({page})=>{
+test('store → basket → Back/reload → stores and brand home preserve quantities and surface history',async({page})=>{
  await setup(page);await selectStore(page);
  const card=page.locator('#product-grid .product-card').filter({hasText:'Молоко Parmalat'});
  await addButton(card).click();
@@ -217,7 +217,20 @@ test('store → basket → Back/reload → stores preserves quantities and resto
  await expect(page.locator('#pixel-store-home')).toBeHidden();
  await page.reload();await expect(page.locator('#pixel-storefront')).toBeVisible();
  expect(await savedBasket(page)).toBe(saved);
+ await page.locator('.brand').click();
+ await expect(page.locator('#pixel-store-home')).toBeVisible();
+ await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);
+ await page.goBack();await expect(page.locator('#pixel-storefront')).toBeVisible();
+ await expect(card.locator('.pixel-quantity')).toHaveText('1');
+ await openBasket(page);await page.locator('.brand').click();
+ await expect(page.locator('#pixel-store-home')).toBeVisible();
+ await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);
+ await page.goBack();await expect(page.locator('#basket-view')).toBeVisible();
+ await expect(page.locator('.basket-row')).toHaveCount(1);
+ await page.goBack();await expect(page.locator('#pixel-storefront')).toBeVisible();
+ await expect(card.locator('.pixel-quantity')).toHaveText('1');
  await openStores(page);await expect(page.locator('#pixel-storefront')).toBeHidden();
+ await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);
  await page.reload();await expect(page.locator('#pixel-store-home')).toBeVisible();
  await expect(page.locator('#pixel-storefront')).toBeHidden();expect(await savedBasket(page)).toBe(saved);
  await selectStore(page);await expect(card.locator('.pixel-quantity')).toHaveText('1');

@@ -3038,16 +3038,24 @@ document.addEventListener('checkni:shop-action', event => {
   if (action === 'stores') {
     document.getElementById('pixel-hory-dialog')?.close();
     if (retailSurfaceStage === 'stores' && currentView === VIEW.SHOP) {
-      focusCurrentView(FOCUS_MODE.HEADING); return;
+      renderView({ focusMode: FOCUS_MODE.HEADING });
+      updateRetailHistory([], { replace: true });
+      return;
     }
+    // Capture the old surface before changing its stage. Otherwise a basket
+    // entry would be rewritten as a stores entry and Back would lose context.
+    const previousView = currentView;
+    history.replaceState(createAppRouteState(
+      previousView, history.state?.checkniSurfaceFrom ?? null, window.scrollY
+    ), '');
     retailSurfaceStage = 'stores';
     pixelAllCategories = false;
     catalogRequestVersion += 1; retailBrowserRequestVersion += 1; retailCollectionsVersion += 1;
     pendingCatalogSearch = null;
-    if (currentView !== VIEW.SHOP) navigate(VIEW.SHOP, { focusMode: FOCUS_MODE.HEADING });
-    else updateRetailHistory([], { replace: false });
+    currentView = VIEW.SHOP;
+    history.pushState(createAppRouteState(VIEW.SHOP, previousView, 0, []), '', hashForView(VIEW.SHOP));
     renderRetailBrowser(); renderRetailCollections(); publishPixelShopState();
-    focusCurrentView(FOCUS_MODE.HEADING);
+    renderView({ focusMode: FOCUS_MODE.HEADING });
     return;
   }
   if (action === 'root' && retailSurfaceStage === 'store') {
@@ -3150,6 +3158,10 @@ elements.clearSearch.addEventListener("click", () => {
 
 elements.brandHome.addEventListener("click", (event) => {
   event.preventDefault();
+  if (publicRetailCatalogMode) {
+    document.dispatchEvent(new CustomEvent('checkni:shop-action', { detail: { action: 'stores' } }));
+    return;
+  }
   returnToShop();
 });
 elements.openBasket.addEventListener("click", () => navigate(VIEW.BASKET));
