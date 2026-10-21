@@ -6,7 +6,7 @@ test("real Magnit cards are scoped to each imported Moscow address",async({page}
   const u=new URL(response.url());
   // Compare the primary product grid with its own response, independently of
   // the new source-backed category previews requested for the same address.
-  if(!u.pathname.endsWith("/rest/v1/retail_catalog_items") || u.searchParams.get("retailer_id")!=="eq.magnit" || response.status()!==200 || u.searchParams.has("category_url"))return;
+  if(!u.pathname.endsWith("/rest/v1/retail_catalog_items") || u.searchParams.get("retailer_id")!=="eq.magnit" || response.status()!==200 || u.searchParams.has("category_url") || u.searchParams.has("main_category_id"))return;
   try{responses.set(u.searchParams.get("store_id"),await response.json());}catch{}
  });
  await page.goto("./?comparison=observed&catalog=retail#shop");
