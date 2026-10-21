@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "c8b82185fb85d8ff6085208ee522f2c3f2add546",
+  "sourceCommit": "af3ea7e8fcfe89815cf29167141a1f3e3faa7eb9",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -1970,13 +1970,14 @@
     "layout": "equal-assistant-and-commerce-halves-below-header",
     "appearance": "soft-light-default-or-explicit-saved-choice",
     "data": "existing real observations, conditions and source dates; unchanged Core and provider",
-    "physicalAndroid": "unverified"
+    "physicalAndroid": "unverified",
+    "status": "historical_layout_superseded_20261021"
   },
   "horiCubes": {
     "scope": "One decorative field on the shopping home screen",
-    "maxPhoneCubes": 20,
-    "maxDesktopCubes": 40,
-    "lowResourceCubes": 12,
+    "maxPhoneCubes": 6,
+    "maxDesktopCubes": 10,
+    "lowResourceCubes": 4,
     "maxTransformUpdatesPerSecond": 30,
     "threeDimensionalAppearance": "six CSS faces; planar circle-envelope collisions",
     "pause": true,
@@ -2006,6 +2007,95 @@
       "actualMainPackage": 39491454228,
       "actualMainGatesRequiredBeforePublication": true,
       "physicalAndroidVerified": false
+    },
+    "currentValidation": {
+      "at": "2026-10-21T12:26:13.343Z",
+      "sourceRepository": "ZebraRectifier/Checkni",
+      "sourcePr": 576,
+      "testedExactHead": "5a6e6bc60cc38b6c4860fab6fa4299ec7d1a07bd",
+      "integratedSource": "af3ea7e8fcfe89815cf29167141a1f3e3faa7eb9",
+      "treeEqualsTested": true,
+      "exactHeadPassed": true,
+      "actualMainPassed": true,
+      "packagePassed": true,
+      "checks": [
+        {
+          "label": "exact-CI",
+          "id": 39588967902,
+          "sha": "5a6e6bc60cc38b6c4860fab6fa4299ec7d1a07bd",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39588967902"
+        },
+        {
+          "label": "exact-OKEY",
+          "id": 39588967928,
+          "sha": "5a6e6bc60cc38b6c4860fab6fa4299ec7d1a07bd",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39588967928"
+        },
+        {
+          "label": "exact-Perekrestok",
+          "id": 39588968249,
+          "sha": "5a6e6bc60cc38b6c4860fab6fa4299ec7d1a07bd",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39588968249"
+        },
+        {
+          "label": "exact-package",
+          "id": 39588967972,
+          "sha": "5a6e6bc60cc38b6c4860fab6fa4299ec7d1a07bd",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39588967972"
+        },
+        {
+          "label": "actual-main-CI",
+          "id": 39596850162,
+          "sha": "af3ea7e8fcfe89815cf29167141a1f3e3faa7eb9",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39596850162"
+        },
+        {
+          "label": "actual-main-package",
+          "id": 39596850129,
+          "sha": "af3ea7e8fcfe89815cf29167141a1f3e3faa7eb9",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39596850129"
+        }
+      ],
+      "exactHeadValidation": {
+        "nodePassed": 2419,
+        "browserPassed": 470,
+        "completeGates": [
+          "CI",
+          "OKEY",
+          "Perekrestok"
+        ],
+        "browserRetries": 0
+      },
+      "actualMainValidation": {
+        "nodePassed": 2419,
+        "browserPassed": 470,
+        "browserRetries": 0
+      },
+      "focusedWindowsValidation": {
+        "browserPassed": 20,
+        "formerlyFlakyScenarioPassed": 12,
+        "retries": 0
+      },
+      "visualToleranceChanged": false,
+      "backendChanged": false,
+      "keysAuthQuotasChanged": false,
+      "physicalAndroidVerified": false,
+      "limitations": [
+        "Physical Android keyboard and TalkBack not tested.",
+        "Initial full Windows Node execution was not a release pass; Linux mandatory gates passed."
+      ]
     }
   },
   "manualSearchUx": {
@@ -2065,6 +2155,114 @@
         "retries": 0
       },
       "evidenceBoundary": "Browser fixtures do not prove current retailer prices, stock, paid provider operation, physical Android or TalkBack."
+    }
+  },
+  "activeInterface": "pixel-character-20261021",
+  "pixelCharacter": {
+    "approved": "2026-10-21",
+    "sourcePr": 576,
+    "integratedSource": "af3ea7e8fcfe89815cf29167141a1f3e3faa7eb9",
+    "testedExactHead": "5a6e6bc60cc38b6c4860fab6fa4299ec7d1a07bd",
+    "reference": "ChatGPT Pixel Character desktop and Android",
+    "flow": "stores -> explicit chain/address -> categories -> products -> list -> comparison",
+    "assistant": "single inviting navigation button; native dialog, preserved draft and focus",
+    "mascot": "Хоря, black sunglasses and black/violet hoodie; hory-avatar-v5.webp",
+    "themes": [
+      "dark",
+      "light"
+    ],
+    "photos": "original retailer photography",
+    "commercialTruth": "unchanged source contracts and Core",
+    "provider": "existing GPTunnel transport/auth/quotas unchanged",
+    "physicalAndroid": "unverified",
+    "validation": {
+      "at": "2026-10-21T12:26:13.343Z",
+      "sourceRepository": "ZebraRectifier/Checkni",
+      "sourcePr": 576,
+      "testedExactHead": "5a6e6bc60cc38b6c4860fab6fa4299ec7d1a07bd",
+      "integratedSource": "af3ea7e8fcfe89815cf29167141a1f3e3faa7eb9",
+      "treeEqualsTested": true,
+      "exactHeadPassed": true,
+      "actualMainPassed": true,
+      "packagePassed": true,
+      "checks": [
+        {
+          "label": "exact-CI",
+          "id": 39588967902,
+          "sha": "5a6e6bc60cc38b6c4860fab6fa4299ec7d1a07bd",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39588967902"
+        },
+        {
+          "label": "exact-OKEY",
+          "id": 39588967928,
+          "sha": "5a6e6bc60cc38b6c4860fab6fa4299ec7d1a07bd",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39588967928"
+        },
+        {
+          "label": "exact-Perekrestok",
+          "id": 39588968249,
+          "sha": "5a6e6bc60cc38b6c4860fab6fa4299ec7d1a07bd",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39588968249"
+        },
+        {
+          "label": "exact-package",
+          "id": 39588967972,
+          "sha": "5a6e6bc60cc38b6c4860fab6fa4299ec7d1a07bd",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39588967972"
+        },
+        {
+          "label": "actual-main-CI",
+          "id": 39596850162,
+          "sha": "af3ea7e8fcfe89815cf29167141a1f3e3faa7eb9",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39596850162"
+        },
+        {
+          "label": "actual-main-package",
+          "id": 39596850129,
+          "sha": "af3ea7e8fcfe89815cf29167141a1f3e3faa7eb9",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/39596850129"
+        }
+      ],
+      "exactHeadValidation": {
+        "nodePassed": 2419,
+        "browserPassed": 470,
+        "completeGates": [
+          "CI",
+          "OKEY",
+          "Perekrestok"
+        ],
+        "browserRetries": 0
+      },
+      "actualMainValidation": {
+        "nodePassed": 2419,
+        "browserPassed": 470,
+        "browserRetries": 0
+      },
+      "focusedWindowsValidation": {
+        "browserPassed": 20,
+        "formerlyFlakyScenarioPassed": 12,
+        "retries": 0
+      },
+      "visualToleranceChanged": false,
+      "backendChanged": false,
+      "keysAuthQuotasChanged": false,
+      "physicalAndroidVerified": false,
+      "limitations": [
+        "Physical Android keyboard and TalkBack not tested.",
+        "Initial full Windows Node execution was not a release pass; Linux mandatory gates passed."
+      ]
     }
   }
 }
