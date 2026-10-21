@@ -205,6 +205,15 @@ body.pixel-workspace .pixel-nav-icon img,
 body.pixel-workspace .pixel-hory-avatar { image-rendering: pixelated; }
 body.pixel-workspace .pixel-hory-avatar { display: block; width: 32px; height: 32px; object-fit: cover; object-position: 50% 16%; border-radius: 0; }
 body.pixel-workspace .pixel-nav-label { display: inline; overflow-wrap: anywhere; }
+body.pixel-workspace .pixel-hory-copy { display: grid; gap: 2px; text-align: left; }
+body.pixel-workspace .pixel-hory-hint { display: none; }
+body.pixel-workspace .pixel-nav-button[data-pixel-action='hory'] { border: 1px solid var(--accent); background: var(--accent-soft); color: var(--ink); }
+body.pixel-workspace .pixel-nav-button[data-pixel-action='hory'] .pixel-nav-icon,
+body.pixel-workspace .pixel-nav-button[data-pixel-action='hory'] .pixel-nav-icon img { width: 38px; height: 34px; object-fit: contain; }
+body.pixel-workspace .pixel-nav-button[data-pixel-action='hory'] .pixel-nav-icon { transition: transform 160ms ease-out; }
+body.pixel-workspace .pixel-nav-button[data-pixel-action='hory']:is(:hover,:focus-visible) { border-color: var(--accent); background: var(--surface-soft); box-shadow: inset 0 -3px 0 var(--accent); }
+body.pixel-workspace .pixel-nav-button[data-pixel-action='hory']:is(:hover,:focus-visible) .pixel-nav-icon { transform: translateY(-2px) rotate(-4deg); }
+body.pixel-workspace .pixel-nav-button[data-pixel-action='hory']:active .pixel-nav-icon { transform: translateY(1px); }
 body.pixel-workspace .pixel-nav-count { position: absolute; top: 1px; left: calc(50% + 12px); display: inline-block; min-width: 18px; padding: 0 3px; border-radius: 2px; background: var(--accent-soft); color: var(--accent); font-size: 14px; font-variant-numeric: tabular-nums; }
 
 /* Stores: coloured logo faces, real logos, restrained pixel edges. */
@@ -466,6 +475,9 @@ body.pixel-workspace .pixel-hory-dialog { position: fixed; inset: 0; width: min(
 body.pixel-workspace .pixel-hory-dialog::backdrop { background: #09060dcc; }
 body.pixel-workspace .pixel-hory-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 body.pixel-workspace .pixel-hory-header h2 { margin: 0; font-size: 26px; }
+body.pixel-workspace .pixel-hory-identity { display: flex; gap: 12px; align-items: center; min-width: 0; }
+body.pixel-workspace .pixel-hory-identity img { flex: none; width: 56px; height: 56px; object-fit: contain; image-rendering: pixelated; }
+body.pixel-workspace .pixel-hory-identity p { margin: 4px 0 0; color: var(--muted); font-size: 14px; line-height: 1.4; }
 body.pixel-workspace .pixel-dialog-close { flex: none; min-width: 44px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 2px; background: var(--surface-soft); color: var(--ink); font-size: 14px; }
 body.pixel-workspace .pixel-hory-section { position: static; display: block; width: 100%; max-width: none; min-height: 0; height: auto; padding: 0; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
 body.pixel-workspace .pixel-hory-section :is(.hori-scene,.hero-identity,.phrase-entry-heading,.proposal-help) { display: none; }
@@ -521,6 +533,8 @@ body.pixel-workspace #basket-proposal-help { margin: 0; color: var(--muted); fon
   body.pixel-workspace .pixel-nav-button { flex-direction: row; gap: 8px; min-height: 48px; padding: 8px 12px; border: 1px solid transparent; background: transparent; font-size: 14px; }
   body.pixel-workspace .pixel-nav-button:is([aria-current='page'],[aria-pressed='true']) { border-color: var(--accent); }
   body.pixel-workspace .pixel-nav-icon { width: 26px; height: 26px; }
+  body.pixel-workspace .pixel-hory-hint { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; }
+  body.pixel-workspace .pixel-nav-button[data-pixel-action='hory'] { padding: 6px 10px; }
   body.pixel-workspace .pixel-nav-count { position: static; min-width: 18px; padding: 1px 4px; }
   body.pixel-workspace .app-shell { padding-top: 28px; padding-bottom: 112px; }
   body.pixel-workspace .pixel-store-search { margin-bottom: 24px; }
@@ -556,6 +570,8 @@ body.pixel-workspace #basket-proposal-help { margin: 0; color: var(--muted); fon
 @media (prefers-reduced-motion: reduce) {
   body.pixel-workspace { scroll-behavior: auto; }
   body.pixel-workspace :is(button,a,input,.product-card,.retail-store-card) { transition: none; }
+  body.pixel-workspace .pixel-nav-button[data-pixel-action='hory'] .pixel-nav-icon,
+  body.pixel-workspace .pixel-nav-button[data-pixel-action='hory']:is(:hover,:focus-visible,:active) .pixel-nav-icon { transition: none; transform: none; }
   body.pixel-workspace .pixel-collection-row { scroll-behavior: auto; scroll-snap-type: x proximity; }
 }
 @media (forced-colors: active) {

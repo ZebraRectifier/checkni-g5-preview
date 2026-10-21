@@ -77,7 +77,14 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
       mascot.src = new URL('../img/hory-avatar-v5.webp', import.meta.url).href;
       mascot.alt = ''; mascot.width = 40; mascot.height = 32; icon.append(mascot);
     } else icon.innerHTML = name === 'stores' ? storeIcon : listIcon;
-    button.append(icon, node('span', 'pixel-nav-label', label));
+    const caption = node('span', 'pixel-nav-label', label);
+    if (name === 'hory') {
+      const copy = node('span', 'pixel-hory-copy');
+      copy.append(caption, node('span', 'pixel-hory-hint', 'Помогу с покупками'));
+      button.append(icon, copy);
+      button.title = 'Хоря поможет подобрать продукты и собрать список';
+      button.setAttribute('aria-label', 'Хоря — помогу с покупками');
+    } else button.append(icon, caption);
     if (name === 'basket') {
       count = node('span', 'pixel-nav-count', '0'); count.id = 'pixel-list-count';
       count.setAttribute('aria-hidden', 'true'); button.append(count);
@@ -207,7 +214,14 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   if (products) new view.MutationObserver(() => {
     if (!productSearch?.value.trim()) revealSearch = false;
     if (revealSearch && products.querySelector('.product-card')) {
-      revealSearch = false; view.requestAnimationFrame(() => reveal(products.closest('.catalog-section')));
+      revealSearch = false;
+      const query = productSearch.value;
+      const retailer = state.retailerId;
+      view.requestAnimationFrame(() => {
+        if (state.view !== 'shop' || state.stage !== 'store' || assistantOpen
+          || productSearch.value !== query || state.retailerId !== retailer) return;
+        reveal(products.closest('.catalog-section'));
+      });
     }
   }).observe(products, { childList: true });
   return Object.freeze({ reveal, mountExtras, motionHost, motionControls, headerControls,

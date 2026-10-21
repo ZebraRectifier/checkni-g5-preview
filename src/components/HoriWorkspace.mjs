@@ -31,7 +31,13 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   const dialogHeader = document.createElement('header'); dialogHeader.className = 'pixel-hory-header';
   const dialogTitle = document.createElement('h2'); dialogTitle.id = 'pixel-hory-title'; dialogTitle.textContent = 'Хоря';
   const close = document.createElement('button'); close.className = 'pixel-dialog-close'; close.type = 'button'; close.textContent = 'Закрыть';
-  dialogHeader.append(dialogTitle, close); horyDialog.append(dialogHeader, section); document.body.append(horyDialog);
+  const identity = document.createElement('div'); identity.className = 'pixel-hory-identity';
+  const portrait = document.createElement('img'); portrait.src = new URL('../img/hory-avatar-v5.webp', import.meta.url).href;
+  portrait.alt = ''; portrait.width = 64; portrait.height = 64;
+  const identityCopy = document.createElement('div');
+  const subtitle = document.createElement('p'); subtitle.textContent = 'Помогу выбрать продукты и собрать список.';
+  identityCopy.append(dialogTitle, subtitle); identity.append(portrait, identityCopy);
+  dialogHeader.append(identity, close); horyDialog.append(dialogHeader, section); document.body.append(horyDialog);
   section.classList.remove('phrase-entry', 'phrase-entry-primary'); section.classList.add('pixel-hory-section');
   section.setAttribute('aria-label', 'Хоря — помощник с покупками');
   const heading = section.querySelector('.phrase-entry-heading'); if (heading) heading.hidden = true;
@@ -65,7 +71,7 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   close.addEventListener('click', () => closeAssistant());
   horyDialog.addEventListener('close', () => {
     commerce.setAssistantOpen(false);
-    if (restoreAssistantFocus && currentView !== 'basket') commerce.assistantButton.focus({ preventScroll: true });
+    if (restoreAssistantFocus) commerce.assistantButton.focus({ preventScroll: true });
     restoreAssistantFocus = true;
   });
   // Nearby/published catalogue controls may submit this same existing form.

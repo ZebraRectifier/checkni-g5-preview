@@ -239,8 +239,12 @@ test('store → basket → Back/reload → stores and brand home preserve quanti
 
 test('optional Hory opens and closes over the same store without applying draft changes to the basket',async({page})=>{
  const calls=await setup(page);await selectStore(page);
+ const entry=page.getByRole('button',{name:'Хоря — помогу с покупками',exact:true});
+ await expect(entry).toBeVisible();
+ const hit=await entry.boundingBox(); expect(hit.width).toBeGreaterThanOrEqual(44); expect(hit.height).toBeGreaterThanOrEqual(44);
  await addButton(page.locator('#product-grid .product-card').first()).click();const saved=await savedBasket(page);
  await openHory(page);await expect(page.locator('#pixel-hory-dialog')).toHaveJSProperty('open',true);
+ await expect(page.locator('#pixel-hory-dialog')).toContainText('Помогу выбрать продукты и собрать список.');
  await page.locator('#basket-proposal-input').fill('Два молока и рис');
  await closeHory(page);await expect(page.locator('[data-pixel-action="hory"]')).toBeFocused();
  await expect(page.locator('#pixel-storefront')).toBeVisible();
