@@ -29,17 +29,18 @@ function assertConfined(bodies, width, height) {
 
 test('seeding caps body count and produces small cubes with calm finite velocities', () => {
   const bodies = seedBodies(10_000, 840, 480, seededRandom());
-  assert.equal(bodies.length, 40);
+  assert.equal(bodies.length, 10);
   assertConfined(bodies, 840, 480);
   for (const item of bodies) {
     assert.ok(item.size >= 6 && item.size <= 12);
     const speed = Math.hypot(item.vx, item.vy);
-    assert.ok(speed >= 6 - 1e-9 && speed <= 15 + 1e-9);
+    assert.ok(speed >= 6 - 1e-9 && speed <= 10 + 1e-9);
+    assert.ok(item.r >= item.size * 0.85, 'the envelope must cover the rotating cube projection');
   }
   assert.deepEqual(seedBodies(-1, 100, 100), []);
   const oversized = Array.from({ length: 100 }, (_, i) => body(10 + i * 12, 20, 0, 0));
   stepBodies(oversized, 2000, 100, 1 / 60);
-  assert.equal(oversized.length, 40);
+  assert.equal(oversized.length, 10);
 });
 
 test('approaching cubes rebound, separate and do not gain kinetic energy', () => {
@@ -73,20 +74,22 @@ test('identical centres recover finite positions, and walls reflect outward moti
   assertConfined(atWall, 100, 100);
 });
 
-test('40 bodies remain finite and bounded for 10,000 fixed steps without energy growth', () => {
-  const bodies = seedBodies(40, 840, 480, seededRandom());
-  const before = energy(bodies);
-  let contacts = 0;
-  for (let frame = 0; frame < 10_000; frame++) {
-    contacts += stepBodies(bodies, 840, 480, 1 / 60);
-    assertConfined(bodies, 840, 480);
+test('compact phone and desktop bands stay bounded for 10,000 steps without energy growth', () => {
+  for (const [count, width, height] of [[6, 320, 48], [10, 1280, 56]]) {
+    const bodies = seedBodies(count, width, height, seededRandom());
+    const before = energy(bodies);
+    let contacts = 0;
+    for (let frame = 0; frame < 10_000; frame++) {
+      contacts += stepBodies(bodies, width, height, 1 / 60);
+      assertConfined(bodies, width, height);
+    }
+    assert.ok(contacts > 0);
+    assert.ok(energy(bodies) <= before + 1e-7);
   }
-  assert.ok(contacts > 0);
-  assert.ok(energy(bodies) <= before + 1e-7);
 });
 
 test('a host too small for all cubes remains finite and confines every centre', () => {
-  const bodies = seedBodies(40, 1, 2, seededRandom());
+  const bodies = seedBodies(10, 1, 2, seededRandom());
   for (let frame = 0; frame < 500; frame++) {
     stepBodies(bodies, 1, 2, 1 / 60);
     assertConfined(bodies, 1, 2);

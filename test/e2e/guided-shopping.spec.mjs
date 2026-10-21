@@ -1,9 +1,10 @@
+import { openHory, closeHory, selectStore, openStoreDetails } from './helpers/pixel-surface.mjs';
 import { test, expect } from '@playwright/test';
 import { resolveGlobusMoscowRegionStore } from '../../src/data/globusMoscowRegionStores.mjs';
 
 // Controlled transport fixtures prove the complete interaction and arithmetic,
 // not live prices. The separate manual preview uses the real catalogue.
-const submit = async (page, text) => { await page.locator('#basket-proposal-input').fill(text); await page.locator('#basket-proposal-submit').click(); };
+const submit = async (page, text) => { await openHory(page); await page.locator('#basket-proposal-input').fill(text); await page.locator('#basket-proposal-submit').click(); };
 const products = [
   ['mayo', 'Майонез на перепелином яйце', '400 мл', 12799],
   ['yogurt', 'Йогурт греческий', '250 г', 8799], ['porridge', 'Каша яблоко-корица', '60 г', 9799],
@@ -31,6 +32,8 @@ test('the user dialogue → intake → editable real-card table → honest compa
       binding_id: 'store:5014', location_label: 'г. Пушкино, Красноармейское ш., вл. 105' })) : products });
   });
   await page.goto('/?comparison=observed&catalog=retail#shop');
+  await selectStore(page);
+  await openStoreDetails(page);
   await page.locator('#globus-store-address').selectOption({ label: 'МО · Глобус Пушкино · г. Пушкино, Красноармейское ш., вл. 105 — цены подтверждены' });
   const output = page.locator('#basket-proposal-status');
   await submit(page, 'хочу качественную еду на 3 дня');
@@ -101,8 +104,11 @@ test('welcome → inexpensive weekly groceries for three near Zavety Ilyicha →
     return route.fulfill({ json: rows });
   });
   await page.goto('/?comparison=observed&catalog=retail#shop');
+  await selectStore(page);
+  await openStoreDetails(page);
+  await openHory(page);
   const welcome = page.getByRole('region', { name: 'С чего начнём покупки' });
-  await expect(welcome).toContainText('Привет! Я Хори. Что покупаем?');
+  await expect(welcome).toContainText('Привет! Я Хоря. Что покупаем?');
   await welcome.getByRole('button', { name: 'Собрать корзину', exact: true }).click();
   const output = page.locator('#basket-proposal-status');
   await expect(output).toContainText('На сколько человек');
@@ -140,7 +146,8 @@ test('welcome → inexpensive weekly groceries for three near Zavety Ilyicha →
   await expect(page.locator('#basket-content')).not.toContainText('Изменить адрес Магнит');
   await expect(page.locator('#basket-content')).not.toContainText('Изменить адрес METRO');
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('checkni.surface.basket.v1')))).toEqual(basket);
-  await page.goBack(); await expect(welcome).toBeVisible();
+  await page.goBack(); await openHory(page); await expect(welcome).toBeVisible();
+  await closeHory(page);
   await page.goForward(); await expect(page.locator('#basket-content')).toContainText('Глобус Королёв');
   await expect(page.locator('#basket-content')).not.toContainText('Изменить адрес Магнит');
 });

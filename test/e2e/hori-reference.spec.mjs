@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { openHory, closeHory, selectStore, openStoreDetails, openBasket, addButton, expectNoOverflow } from './helpers/pixel-surface.mjs';
 
 // Explicit synthetic transport fixture. Live API/price evidence is separate.
 const milk = {
@@ -20,35 +21,28 @@ async function setup(page) {
   await page.route('**/src/ports/observedOffersPort.mjs', route => route.fulfill({ contentType:'text/javascript',
     body:'export const observedOffersPort={async load(){return [];}};' }));
   await page.goto('/?comparison=observed&catalog=retail#shop');
-  await expect(page.locator('.hori-greeting')).toBeVisible();
-  await expect(page.locator('body')).toHaveCSS('display', 'grid');
+  await expect(page.locator('#pixel-store-home')).toBeVisible();
+  await expect(page.locator('#pixel-hory-dialog')).toBeHidden();
 }
 
-test('reference scene, equal working panes, first entry, address access and theme remain usable', async ({ page }, info) => {
+test('stores-first reference keeps optional Hory draft, theme, address access and a usable short viewport', async ({ page }, info) => {
   await setup(page);
-  const image = page.locator('.hori-scene img');
-  await expect.poll(() => image.evaluate(img => img.complete && img.naturalWidth > 1000)).toBe(true);
-  const box = await image.boundingBox();
-  const ai = await page.locator('#basket-proposal-section').boundingBox();
-  const commerce = await page.locator('#main').boundingBox();
-  expect(Math.abs(ai.height - commerce.height)).toBeLessThanOrEqual(2);
-  expect(box.width).toBeGreaterThanOrEqual(info.project.name.includes('mobile') ? 120 : 350);
-  // v13 reserves a full-width composer below the room, unlike the old v8
-  // full-height left illustration. The working assistant still owns half.
-  expect(box.height).toBeGreaterThanOrEqual(info.project.name.includes('mobile') ? 90 : 200);
-  if (!info.project.name.includes('mobile')) {
-    const heading = await page.locator('#phrase-entry-title').boundingBox();
-    expect(box.x).toBeGreaterThan(heading.x);
-  }
+  await openHory(page);
   await expect(page.locator('.shopping-welcome')).not.toContainText(/3 человека|7 дней|600/);
   await page.locator('#basket-proposal-input').fill('Молоко и яблоки');
+  await closeHory(page);
   await page.locator('#hori-theme').click();
+  await openHory(page);
   await expect(page.locator('#basket-proposal-input')).toHaveValue('Молоко и яблоки');
-  await page.locator('.hori-location').click();
+  await closeHory(page);
+  await page.locator('.pixel-location').click();
+  await expect(page.locator('#pixel-store-details')).toHaveJSProperty('open', true);
+  await page.locator('#nearby-shopping').getByRole('button', { name:'📍 Найти магазины рядом', exact:true }).click();
   await expect(page.locator('#nearby-address')).toBeVisible();
-  await expect(page.locator('#basket-proposal-input')).toBeInViewport();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.screenshot({ path:info.outputPath('reference-layout.png') });
+  await openHory(page);
+  await expect(page.locator('#basket-proposal-input')).toHaveValue('Молоко и яблоки');
+  await expectNoOverflow(page);
+  await page.screenshot({ path:info.outputPath('pixel-optional-hory.png') });
   if (info.project.name.includes('mobile')) {
     await page.setViewportSize({ width:390, height:550 });
     await expect(page.locator('#basket-proposal-input')).toBeInViewport();
@@ -56,50 +50,53 @@ test('reference scene, equal working panes, first entry, address access and them
   }
 });
 
-test('retail catalogue → live basket controls → compare → Back and reload preserves the basket', async ({ page }, info) => {
+test('selected retail catalogue → original basket quantity controls → compare → Back and reload retains the basket', async ({ page }) => {
   await setup(page);
-  await page.locator('#retail-store-card-metro').click();
+  await selectStore(page, 'metro');
   const card = page.locator('[data-product-id="retail:metro:metro-address-c5gsqz:241097"]');
   await expect(card).toContainText('100,00 ₽');
   await page.locator('#product-search').fill('молоко');
   await page.locator('#product-search').press('Enter');
   await expect(page.locator('#retail-catalog-nav')).toBeHidden();
-  await page.locator('#retail-store-card').click();
+  await selectStore(page, 'globus');
   await expect(page.locator('#product-search')).toHaveValue('');
   await expect(page.locator('#retail-catalog-nav')).toBeVisible();
-  await page.locator('#retail-store-card-metro').click();
+  await selectStore(page, 'metro');
   await expect(card).toContainText('100,00 ₽');
-  await card.getByRole('button').click();
+  await addButton(card).click();
   await expect(page.locator('#basket-dock-copy')).toContainText('1 шт.');
-  if (!info.project.name.includes('mobile')) {
-    await expect(page.locator('#hori-basket-preview')).toContainText('Молоко');
-    const plus = page.locator('#hori-basket-preview').getByRole('button', { name:/Быстрая корзина: увеличить/ });
-    await plus.click();
-    await expect(plus).toBeFocused();
-    await expect(page.locator('#hori-basket-preview output')).toHaveText('2');
-    await expect(card.getByRole('button')).toContainText('2 в корзине');
-  }
-  await page.locator('#open-basket').click();
-  await expect(page.locator('#basket-view')).toBeVisible();
-  await expect(page.locator('#hori-basket-preview')).toBeHidden();
-  await expect(page.locator('#basket-proposal-input')).toBeInViewport();
+  await openBasket(page);
+  await expect(page.locator('.basket-row')).toContainText('Молоко');
+  const plus = page.locator('.basket-row').getByRole('button', { name:/Увеличить количество/ });
+  await plus.click();
+  await expect(plus).toBeFocused();
+  await expect(page.locator('.basket-row .stepper-value')).toHaveText('2');
+  await expect(page.locator('#pixel-hory-dialog')).toBeHidden();
   await page.locator('#compare-basket').click();
   await expect(page.locator('#comparison-output')).toContainText(/недостаточно|нет|не удалось/i);
   const basket = await page.evaluate(() => localStorage.getItem('checkni.surface.basket.v1'));
   await page.goBack();
   await expect(page.locator('#shop-view')).toBeVisible();
+  await expect(page.locator('#pixel-storefront')).toBeVisible();
+  await expect(card.locator('.pixel-quantity')).toHaveText('2');
   await page.reload();
+  await expect(page.locator('#pixel-storefront')).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('checkni.surface.basket.v1'))).toBe(basket);
-  await expect(page.locator('.hori-scene img')).toBeVisible();
+  await expectNoOverflow(page);
 });
 
-test('active dialogue hides the fresh greeting and keeps its composer and reply in the upper pane', async ({ page }) => {
+test('active optional dialogue hides its fresh welcome and keeps the composer and reply usable', async ({ page }) => {
   await setup(page);
+  await selectStore(page);
+  await openHory(page);
   await page.locator('#basket-proposal-input').fill('Нужна недорогая еда на неделю для троих');
   await page.locator('#basket-proposal-submit').click();
   await expect(page.locator('#basket-proposal-status')).toContainText('Где закупаемся');
   await expect(page.locator('.shopping-welcome')).toBeHidden();
-  await expect(page.locator('.hori-greeting')).toBeHidden();
   await expect(page.locator('#basket-proposal-input')).toBeInViewport();
   await expect(page.locator('#basket-proposal-status')).toBeInViewport();
+  await closeHory(page);
+  await expect(page.locator('#pixel-storefront')).toBeVisible();
+  await openHory(page);
+  await expect(page.locator('#basket-proposal-status')).toContainText('Где закупаемся');
 });

@@ -1,27 +1,30 @@
 import { seedBodies, stepBodies } from './horiCubePhysics.mjs';
 
 // Decorative only. One bounded field, no network/data/basket dependencies.
-export function createHoriCubes(section) {
-  const document = section.ownerDocument;
+export function createHoriCubes(host, { toggleHost } = {}) {
+  const document = host.ownerDocument;
   const view = document.defaultView;
   if (!view?.requestAnimationFrame || !view.cancelAnimationFrame || !view.matchMedia
     || !view.ResizeObserver || !view.IntersectionObserver || !view.MutationObserver
     || !view.performance?.now || !view.navigator || !view.location) return { destroy() {} };
-  const existing = section.querySelector('.hori-cube-field');
+  const existing = host.querySelector('.hori-cube-field');
   if (existing) return { destroy() {} };
   const reduced = view.matchMedia('(prefers-reduced-motion: reduce)');
   const compact = view.matchMedia('(max-width: 899px)');
   if (!reduced?.addEventListener || !reduced.removeEventListener
     || !compact?.addEventListener || !compact.removeEventListener) return { destroy() {} };
   const shop = document.getElementById('shop-view');
+  // The header owns its layout. Only append the owned button to its supplied
+  // control slot; do not replace or restyle that slot's existing controls.
+  const controls = toggleHost?.ownerDocument === document && typeof toggleHost.append === 'function' ? toggleHost : host;
   const field = document.createElement('div');
   field.className = 'hori-cube-field';
   field.setAttribute('aria-hidden', 'true');
   field.hidden = true;
   const toggle = document.createElement('button');
-  toggle.className = 'hori-cube-toggle';
+  toggle.className = controls === host ? 'hori-cube-toggle' : 'hori-cube-toggle hori-cube-toggle-inline';
   toggle.type = 'button'; toggle.hidden = true;
-  section.append(field, toggle);
+  host.append(field); controls.append(toggle);
   const sheet = document.createElement('link');
   sheet.rel = 'stylesheet';
   sheet.href = new URL('./hori-cubes.css', import.meta.url).href;
@@ -34,11 +37,11 @@ export function createHoriCubes(section) {
     || (Number.isFinite(view.navigator.hardwareConcurrency) && view.navigator.hardwareConcurrency <= 4);
   const minimalDevice = (Number.isFinite(view.navigator.deviceMemory) && view.navigator.deviceMemory <= 2)
     || (Number.isFinite(view.navigator.hardwareConcurrency) && view.navigator.hardwareConcurrency <= 2);
-  const count = () => Math.min(compact.matches ? 20 : 40, minimalDevice ? 12 : smallDevice ? 20 : 40, degraded ? 12 : 40);
+  const count = () => Math.min(compact.matches ? 6 : 10, minimalDevice ? 4 : smallDevice ? 6 : 10, degraded ? 4 : 10);
   const inShop = () => view.location.hash !== '#basket' && !shop?.hidden;
   const resetClock = () => { previousTime = null; lastPaint = null; accumulator = 0; };
   const canRun = () => alive && ready && !paused && !reduced.matches && visible
-    && inShop() && !document.hidden && width > 0 && height > 0 && section.isConnected;
+    && inShop() && !document.hidden && width > 0 && height > 0 && host.isConnected && controls.isConnected;
   const stop = () => {
     if (raf) view.cancelAnimationFrame(raf);
     raf = 0; resetClock(); field.dataset.running = 'false';
@@ -95,7 +98,7 @@ export function createHoriCubes(section) {
     if (lastPaint === null || time - lastPaint >= 1000 / 30 - .1) {
       paint(Math.min(1, accumulator * 60)); lastPaint = time;
       // Measure only this field's work, not unrelated network/browser delays.
-      // A sustained expensive field drops to 12 cubes; never upgrades mid-session.
+      // A sustained expensive field drops to four cubes; never upgrades mid-session.
       expensive = view.performance.now() - start > 4 ? expensive + 1 : Math.max(0, expensive - 1);
       if (!degraded && expensive >= 45) {
         degraded = true;
@@ -147,7 +150,7 @@ export function createHoriCubes(section) {
   const onLoad = () => {
     if (!alive) return;
     ready = true; field.hidden = reduced.matches;
-    resizeObserver.observe(field); intersectionObserver.observe(section);
+    resizeObserver.observe(field); intersectionObserver.observe(host);
     resize(); sync();
   };
   sheet.addEventListener('load', onLoad, { once: true });

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { selectStore, openBasket, addButton } from './helpers/pixel-surface.mjs';
 
 // Synthetic catalogue only: active animation must not intercept the manual
 // shopping path. These are browser tests, not physical Android/FPS evidence.
@@ -34,7 +35,9 @@ test('bounded moving cubes pause and preserve the manual basket flow', async ({ 
   await setup(page);
   const field = page.locator('.hori-cube-field'), cubes = page.locator('.hori-cube');
   await expect(field).toHaveAttribute('aria-hidden', 'true');
-  await expect(cubes).toHaveCount(mobile ? 20 : 40);
+  await expect(cubes).toHaveCount(mobile ? 6 : 10);
+  await expect(cubes.first().locator('.hori-cube-face')).toHaveCount(6);
+  await expect(field).toHaveCSS('pointer-events', 'none');
   const before = await cubes.first().getAttribute('style');
   await expect.poll(() => cubes.first().getAttribute('style')).not.toBe(before);
   await page.getByRole('button', { name: 'Остановить анимацию фона', exact: true }).click();
@@ -44,9 +47,10 @@ test('bounded moving cubes pause and preserve the manual basket flow', async ({ 
   expect(await cubes.first().getAttribute('style')).toBe(paused);
   await page.getByRole('button', { name: 'Включить анимацию фона', exact: true }).click();
   await expect(field).toHaveAttribute('data-running', 'true');
+  await selectStore(page);
   await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
-  await page.locator('#product-grid .product-card').getByRole('button').click();
-  await page.locator('#open-basket').click();
+  await addButton(page.locator('#product-grid .product-card')).click();
+  await openBasket(page);
   await expect(page.locator('#basket-title')).toBeVisible();
   await expect(page.locator('.basket-row')).toHaveCount(1);
   await expect(field).toBeHidden();
@@ -56,14 +60,14 @@ test('bounded moving cubes pause and preserve the manual basket flow', async ({ 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test('reduced motion removes cubes and low memory uses twelve', async ({ page }) => {
+test('reduced motion removes cubes and a two-gigabyte device uses four', async ({ page }) => {
   await setup(page, 2);
-  await expect(page.locator('.hori-cube')).toHaveCount(12);
+  await expect(page.locator('.hori-cube')).toHaveCount(4);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(page.locator('.hori-cube')).toHaveCount(0);
   await expect(page.locator('.hori-cube-toggle')).toBeHidden();
   await expect(page.locator('.hori-cube-field')).toHaveAttribute('data-running', 'false');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await expect(page.locator('.hori-cube')).toHaveCount(12);
+  await expect(page.locator('.hori-cube')).toHaveCount(4);
   await expect(page.locator('.hori-cube-field')).toHaveAttribute('data-running', 'true');
 });

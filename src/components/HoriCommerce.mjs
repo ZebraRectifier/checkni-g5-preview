@@ -1,216 +1,194 @@
-// Retail-only presentation. Reuse the live controls and their handlers; never
-// derive prices, totals, eligibility or a recommendation in this component.
-export function createHoriCommerce({ document, main, shop, header }) {
-  const basketView = document.getElementById('basket-view');
-  const basketContent = document.getElementById('basket-content');
-  const openBasket = document.getElementById('open-basket');
-  const dock = document.getElementById('basket-dock');
-  const pane = document.createElement('div');
-  pane.id = 'hori-shop-pane';
-  pane.className = 'hori-shop-pane';
-  main.append(pane);
+// Presentation only. The app owns navigation, selected addresses, catalogue
+// requests and every basket mutation; this shell only reuses their real nodes.
+export function createHoriCommerce({ document, main, shop, header, onOpenHory, onOpenAddress }) {
+  const view = document.defaultView;
+  const node = (tag, className, text) => {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (text !== undefined) element.textContent = text;
+    return element;
+  };
+  const action = name => document.dispatchEvent(new view.CustomEvent('checkni:shop-action', { detail: { action: name } }));
+  const pane = node('div', 'hori-shop-pane pixel-shop-pane');
+  pane.id = 'hori-shop-pane'; main.append(pane);
   if (shop) pane.append(shop);
+  const basketView = document.getElementById('basket-view');
   if (basketView) pane.append(basketView);
 
-  const nearby = document.createElement('button');
-  nearby.type = 'button'; nearby.className = 'hori-location';
-  nearby.textContent = '⌖ Адрес и радиус';
-  nearby.addEventListener('click', () => {
-    if (shop.hidden) document.getElementById('back-to-shop')?.click();
-    const target = document.getElementById('nearby-shopping');
-    const trigger = target?.querySelector('button[aria-controls="nearby-shopping-panel"]');
-    if (trigger?.getAttribute('aria-expanded') !== 'true') trigger?.click();
-    requestAnimationFrame(() => {
-      reveal(target);
-      document.getElementById('nearby-address')?.focus({ preventScroll: true });
-    });
-  });
-  const selected = document.createElement('button');
-  selected.type = 'button';
-  selected.className = 'hori-selected-store';
-  selected.setAttribute('aria-label', 'Выбранный каталог');
-  selected.setAttribute('aria-haspopup', 'dialog');
-  const storeDialog = document.createElement('dialog');
-  storeDialog.id = 'hori-store-dialog';
-  storeDialog.setAttribute('aria-labelledby', 'hori-store-dialog-title');
-  const dialogHeader = document.createElement('header');
-  const dialogTitle = document.createElement('h2');
-  dialogTitle.id = 'hori-store-dialog-title';
-  dialogTitle.textContent = 'Выбери магазин';
-  const closeStores = document.createElement('button');
-  closeStores.type = 'button'; closeStores.textContent = 'Готово';
-  closeStores.addEventListener('click', () => storeDialog.close());
-  dialogHeader.append(dialogTitle, closeStores); storeDialog.append(dialogHeader);
-  document.body.append(storeDialog);
-  const movedControls = [];
-  storeDialog.addEventListener('close', () => {
-    for (const { node, anchor } of movedControls.splice(0)) { anchor.replaceWith(node); }
-    selected.setAttribute('aria-expanded', 'false');
-  });
-  storeDialog.addEventListener('click', event => {
-    if (event.target.closest('.retail-store-card')) {
-      storeDialog.close();
-      requestAnimationFrame(() => { pane.scrollTop = 0; });
-    }
-  });
-  selected.addEventListener('click', () => {
-    if (shop.hidden) document.getElementById('back-to-shop')?.click();
-    for (const selector of ['#retail-store-grid', '#globus-store-picker', '#metro-store-picker', '#magnit-store-picker']) {
-      const node = document.querySelector(selector);
-      if (!node || storeDialog.contains(node)) continue;
-      const anchor = document.createComment('Hori store control return position');
-      node.before(anchor); movedControls.push({ node, anchor }); storeDialog.append(node);
-    }
-    selected.setAttribute('aria-expanded', 'true');
-    storeDialog.showModal();
-  });
-  header.querySelector('.brand')?.after(nearby, selected);
-
-  const aside = document.createElement('aside');
-  aside.id = 'hori-basket-preview';
-  aside.className = 'hori-basket-preview';
-  aside.setAttribute('aria-label', 'Быстрая корзина');
-  main.append(aside);
-
-  function reveal(target) {
-    const searchHeight = shop?.querySelector('.hero')?.getBoundingClientRect().height || 0;
-    if (target) pane.scrollTop += target.getBoundingClientRect().top - pane.getBoundingClientRect().top - searchHeight - 12;
-  }
-
-  let currentView = shop?.hidden ? 'basket' : 'shop';
-  const scrollPositions = { shop:0, basket:0 };
-  pane.addEventListener('scroll', () => { scrollPositions[currentView] = pane.scrollTop; }, { passive:true });
-  function syncView() {
-    const nextView = shop?.hidden ? 'basket' : 'shop';
-    const changed = nextView !== currentView;
-    currentView = nextView;
-    main.dataset.horiView = currentView;
-    aside.hidden = Boolean(shop?.hidden);
-    if (changed) pane.scrollTop = scrollPositions[currentView];
-  }
-
-  function syncStore() {
-    const card = document.querySelector('.retail-store-card.is-selected');
-    const name = card?.querySelector('strong')?.textContent?.trim();
-    const logo = card?.querySelector('.retail-store-logo')?.cloneNode(true);
-    if (logo) logo.setAttribute('aria-hidden', 'true');
-    const label = document.createElement('span'); label.className = 'hori-store-label';
-    label.textContent = name || 'Выбери магазин';
-    selected.replaceChildren(...(logo ? [logo, label] : [label]));
-    selected.title = card?.querySelector('.retail-store-copy')?.textContent?.trim() || '';
-    for (const card of document.querySelectorAll('.retail-store-card')) {
-      card.title = card.querySelector('.retail-store-copy')?.textContent?.trim() || '';
-    }
-  }
-
-  function renderPreview() {
-    const focusKey = aside.contains(document.activeElement) ? document.activeElement.dataset.horiControl : null;
-    aside.replaceChildren();
-    const heading = document.createElement('h2'); heading.textContent = '🛒 Корзина';
-    const count = document.createElement('p'); count.className = 'hori-basket-count';
-    count.textContent = basketContent?.querySelector('.basket-summary > span')?.textContent || 'Пока пусто';
-    const list = document.createElement('div'); list.className = 'hori-basket-items';
-    const rows = basketContent?.querySelectorAll('.basket-row') || [];
-    for (const [index, row] of [...rows].entries()) {
-      const item = document.createElement('article'); item.className = 'hori-mini-item';
-      const name = row.querySelector('h2')?.textContent || '';
-      const title = document.createElement('strong'); title.textContent = name;
-      const unit = document.createElement('small'); unit.textContent = row.querySelector('.basket-item-info p')?.textContent || '';
-      const controls = document.createElement('div'); controls.className = 'hori-mini-stepper';
-      const quantity = document.createElement('output');
-      quantity.textContent = row.querySelector('.stepper-value')?.textContent || '';
-      for (const [offset, label] of [[0, 'Уменьшить'], [1, 'Увеличить']]) {
-        const original = row.querySelectorAll('.stepper-button')[offset];
-        if (!original) continue;
-        const button = document.createElement('button'); button.type = 'button';
-        button.textContent = original.textContent;
-        button.disabled = original.disabled;
-        button.setAttribute('aria-label', `Быстрая корзина: ${label.toLowerCase()} ${name}`);
-        button.dataset.horiControl = original.dataset.focusKey || `${index}-${offset}`;
-        button.addEventListener('click', () => { if (original.isConnected && !original.disabled) original.click(); });
-        controls.append(button);
-        if (offset === 0) controls.append(quantity);
-      }
-      item.append(title, unit, controls); list.append(item);
-    }
-    if (!rows.length) {
-      const empty = document.createElement('p'); empty.className = 'hori-basket-empty';
-      const icon = document.createElement('span'); icon.className = 'hori-empty-basket';
-      icon.setAttribute('aria-hidden', 'true');
-      icon.innerHTML = '<svg viewBox="0 0 80 72" width="80" height="72" fill="none"><path d="M20 26 32 6h8L29 26m15 0L39 6h8l13 20" stroke="#aa8fe5" stroke-width="6"/><path d="m8 25 52-4 13 8-11 36-43 3-11-43Z" fill="#c4b0f3"/><path d="m8 25 11 43 8-7-8-32" fill="#dfd2fc"/><path d="m19 29 54 0-11 36-35-4-8-32Z" fill="#b39ae9"/><path d="m8 25 52-4 13 8-54 0-11-4Z" fill="#e9dfff"/><path d="m30 36 3 19m10-20-1 20m12-20-4 20" stroke="#f1eaff" stroke-width="5"/></svg>';
-      const title = document.createElement('strong'); title.textContent = 'Здесь появятся покупки';
-      const copy = document.createElement('span'); copy.textContent = 'Добавляй товары из каталога или попроси Хори помочь.';
-      empty.append(icon, title, copy);
-      list.append(empty);
-    }
-    aside.append(heading, count, list);
-    if (dock) aside.append(dock);
-    if (focusKey) [...aside.querySelectorAll('[data-hori-control]')].find(node => node.dataset.horiControl === focusKey)?.focus({ preventScroll: true });
-  }
-  // Existing controllers remain the only writers of basket and store state.
-  if (basketContent) new MutationObserver(renderPreview).observe(basketContent, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['disabled'] });
-  if (shop) new MutationObserver(syncView).observe(shop, { attributes: true, attributeFilter: ['hidden'] });
+  const home = node('section', 'pixel-store-home');
+  home.id = 'pixel-store-home'; home.setAttribute('aria-labelledby', 'pixel-store-home-title');
+  const homeTitle = node('h1', '', 'Магазины');
+  homeTitle.id = 'pixel-store-home-title'; homeTitle.tabIndex = -1;
+  const storeSearch = node('form', 'pixel-store-search');
+  storeSearch.id = 'pixel-store-search-form'; storeSearch.setAttribute('role', 'search');
+  const searchLabel = node('label', 'sr-only', 'Найти магазин'); searchLabel.htmlFor = 'pixel-store-search';
+  const searchInput = node('input');
+  searchInput.id = 'pixel-store-search'; searchInput.type = 'search'; searchInput.name = 'store';
+  searchInput.placeholder = 'Найти магазин'; searchInput.autocomplete = 'off'; searchInput.maxLength = 100;
+  searchInput.setAttribute('enterkeyhint', 'search'); searchInput.setAttribute('aria-describedby', 'pixel-store-status');
+  const searchButton = node('button', 'pixel-store-search-submit', 'Найти'); searchButton.type = 'submit';
+  storeSearch.append(searchLabel, searchInput, searchButton);
+  const storeStatus = node('p', 'pixel-store-status');
+  storeStatus.id = 'pixel-store-status'; storeStatus.setAttribute('role', 'status');
   const stores = document.getElementById('retail-store-grid');
-  if (stores) new MutationObserver(syncStore).observe(stores, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['aria-pressed'] });
-  const search = document.getElementById('product-search');
-  const grid = document.getElementById('product-grid');
-  let revealSearch = false;
-  document.getElementById('search-form')?.addEventListener('submit', () => {
-    revealSearch = Boolean(search?.value.trim());
-  });
-  search?.addEventListener('input', () => {
-    if (!search.value.trim()) revealSearch = false;
-  });
-  document.getElementById('clear-search')?.addEventListener('click', () => { revealSearch = false; });
-  if (grid) new MutationObserver(() => {
-    if (!search?.value.trim()) revealSearch = false;
-    if (revealSearch && grid.querySelector('.product-card')) {
-      revealSearch = false;
-      requestAnimationFrame(() => {
-        const catalog = grid.closest('.catalog-section');
-        reveal(catalog);
-      });
+  home.append(homeTitle, storeSearch, storeStatus); if (stores) home.append(stores);
+
+  const storefront = node('section', 'pixel-storefront');
+  storefront.id = 'pixel-storefront'; storefront.hidden = true;
+  storefront.setAttribute('aria-labelledby', 'pixel-storefront-title');
+  const storeHeading = node('header', 'pixel-store-heading');
+  const back = node('button', 'pixel-back', '← К магазинам');
+  back.type = 'button'; back.addEventListener('click', () => action('stores'));
+  const title = node('h1', '', 'Каталог магазина'); title.id = 'pixel-storefront-title'; title.tabIndex = -1;
+  const address = node('button', 'pixel-store-address', 'Выбрать адрес'); address.type = 'button';
+  const scope = node('p', 'pixel-store-scope');
+  storeHeading.append(back, title, address, scope); storefront.append(storeHeading);
+  for (const selector of ['.hero', '#retail-browser', '.catalog-section', '#beta-live-section']) {
+    const existing = shop?.querySelector(selector); if (existing) storefront.append(existing);
+  }
+
+  // Shared references are reachable without implicitly selecting the default
+  // retailer. Chain-specific pickers appear only in an explicit storefront.
+  const details = node('details', 'pixel-store-details'); details.id = 'pixel-store-details';
+  const summary = node('summary', '', 'Адрес и источники');
+  const detailsContent = node('div', 'pixel-store-details-content');
+  const pickers = node('div', 'pixel-store-pickers'); pickers.hidden = true;
+  detailsContent.append(pickers); details.append(summary, detailsContent);
+  shop?.prepend(home, storefront); shop?.append(details);
+
+  const location = node('button', 'hori-location pixel-location', '⌖ Москва и МО'); location.type = 'button';
+  const selected = node('button', 'hori-selected-store pixel-selected-store');
+  selected.type = 'button'; selected.hidden = true; selected.addEventListener('click', () => action('root'));
+  const headerControls = node('div', 'pixel-header-controls');
+  const motionControls = node('div', 'pixel-motion-controls'); motionControls.setAttribute('aria-label', 'Анимация фона');
+  headerControls.append(motionControls);
+  const motionHost = node('div', 'pixel-motion-band pixel-motion-host'); motionHost.setAttribute('aria-hidden', 'true');
+  const nav = node('nav', 'pixel-nav'); nav.setAttribute('aria-label', 'Основная навигация');
+  const navButtons = new Map(); let count;
+  const storeIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="M4 3h16v3h2v5h-2v10h-7v-7H9v7H4V11H2V6h2zm2 3v3h3V6zm6 0v3h3V6zm6 0v3h2V6z"/></svg>';
+  const listIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="M3 3h4v4H3zm7 0h11v4H10zM3 10h4v4H3zm7 0h11v4H10zM3 17h4v4H3zm7 0h11v4H10z"/></svg>';
+  for (const [name, label] of [['stores', 'Магазины'], ['basket', 'Список'], ['hory', 'Хоря']]) {
+    const button = node('button', 'pixel-nav-button'); button.type = 'button'; button.dataset.pixelAction = name;
+    const icon = node('span', 'pixel-nav-icon'); icon.setAttribute('aria-hidden', 'true');
+    if (name === 'hory') {
+      const mascot = node('img', 'pixel-hory-avatar');
+      mascot.src = new URL('../img/hory-avatar-v5.webp', import.meta.url).href;
+      mascot.alt = ''; mascot.width = 40; mascot.height = 32; icon.append(mascot);
+    } else icon.innerHTML = name === 'stores' ? storeIcon : listIcon;
+    button.append(icon, node('span', 'pixel-nav-label', label));
+    if (name === 'basket') {
+      count = node('span', 'pixel-nav-count', '0'); count.id = 'pixel-list-count';
+      count.setAttribute('aria-hidden', 'true'); button.append(count);
     }
-  }).observe(grid, { childList:true });
-  renderPreview(); syncView(); syncStore();
-  openBasket?.addEventListener('click', () => { pane.scrollTop = 0; });
-  // Keep the actual product browser before the long reference directories.
-  // Reparent existing nodes without replacing any picker, data or listeners.
-  queueMicrotask(() => {
-    const catalog = shop?.querySelector('.catalog-section');
-    if (!catalog) return;
+    if (name === 'hory') {
+      button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-controls', 'pixel-hory-dialog');
+      button.setAttribute('aria-expanded', 'false'); button.addEventListener('click', () => onOpenHory?.());
+    } else button.addEventListener('click', () => action(name));
+    navButtons.set(name, button); nav.append(button);
+  }
+  header.append(location, selected, nav, headerControls, motionHost);
+
+  let state = { stage: 'stores', view: 'shop', basketUnits: 0 }; let assistantOpen = false;
+  function syncNavigation() {
+    const active = assistantOpen ? 'hory' : state.view === 'basket' ? 'basket' : 'stores';
+    for (const [name, button] of navButtons) {
+      if (name === active) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
+    }
+    navButtons.get('hory').setAttribute('aria-expanded', String(assistantOpen));
+  }
+  function mountExtras() {
     const searchForm = document.getElementById('search-form');
-    const sort = catalog.querySelector('.catalog-sort');
+    const sort = document.querySelector('.catalog-section .catalog-sort');
     if (searchForm && sort) searchForm.append(sort);
     const note = document.getElementById('catalog-note');
-    if (searchForm && note) {
-      const details = document.createElement('details'); details.className = 'hori-price-note';
-      const summary = document.createElement('summary'); summary.textContent = 'О ценах';
-      summary.setAttribute('aria-label', 'О ценах и источниках каталога');
-      details.append(summary, note); searchForm.append(details);
+    if (searchForm && note && !note.closest('.hori-price-note')) {
+      const priceNote = node('details', 'hori-price-note');
+      const priceSummary = node('summary', '', 'О ценах');
+      priceSummary.setAttribute('aria-label', 'О ценах и источниках каталога');
+      priceNote.append(priceSummary, note); searchForm.append(priceNote);
     }
-    const extras = document.createElement('section');
-    extras.className = 'hori-store-extras';
-    extras.setAttribute('aria-label', 'Адреса, источники и справочники магазинов');
-    catalog.after(extras);
-    for (const selector of ['#nearby-shopping', '.pyat-published', '#globus-store-picker', '#metro-store-picker', '#magnit-store-picker']) {
-      const node = document.querySelector(selector);
-      if (node) extras.append(node);
+    for (const selector of ['#globus-store-picker', '#metro-store-picker', '#magnit-store-picker']) {
+      const existing = document.querySelector(selector); if (existing && existing.parentElement !== pickers) pickers.append(existing);
     }
-    const browser = document.getElementById('retail-browser');
-    for (const node of [...(browser?.children || [])]) {
-      if (!['retail-store-grid', 'retail-catalog-nav'].includes(node.id)) extras.append(node);
+    for (const selector of ['#nearby-shopping', '#pyaterochka-published,.pyat-published', '.okey-directory', '.okey-delivery', '#stores-section']) {
+      for (const existing of document.querySelectorAll(selector)) {
+        if (existing.parentElement !== detailsContent) detailsContent.append(existing);
+      }
     }
-    // One real store picker: the header opens it in a modal. Its original
-    // controls remain below the catalogue for navigation/recovery, without
-    // consuming the first visible row of products or duplicating handlers.
-    const stores = document.getElementById('retail-store-grid');
-    if (stores) {
-      extras.prepend(stores);
-      stores.addEventListener('click', event => {
-        if (event.target.closest('.retail-store-card')) requestAnimationFrame(() => { pane.scrollTop = 0; });
-      });
-    }
+  }
+  function reveal(target) {
+    if (!target?.isConnected) return;
+    const dialog = target.closest('dialog');
+    if (dialog) { if (dialog.open) target.scrollIntoView({ block: 'nearest', behavior: 'auto' }); return; }
+    if (details.contains(target)) details.open = true;
+    target.scrollIntoView({ block: 'start', behavior: 'auto' });
+  }
+  function openDetails({ focusNearby = false, emit = true } = {}) {
+    mountExtras(); details.open = true; if (emit) action('address');
+    view.requestAnimationFrame(() => {
+      reveal(details);
+      const target = focusNearby ? detailsContent.querySelector('#nearby-address') : state.stage === 'store'
+        ? [...pickers.querySelectorAll('select')].find(control => !control.closest('[hidden]'))
+        : detailsContent.querySelector('#nearby-shopping button');
+      (target || summary).focus({ preventScroll: true });
+    });
+  }
+  address.addEventListener('click', () => openDetails()); location.addEventListener('click', () => openDetails());
+  document.addEventListener('checkni:shop-action', event => {
+    if (event.detail?.action !== 'address' || event.detail?.target !== 'nearby') return;
+    onOpenAddress?.();
+    openDetails({ focusNearby: true, emit: false });
   });
-  return Object.freeze({ reveal });
+
+  function filterStores() {
+    if (!stores) return;
+    const words = searchInput.value.trim().toLocaleLowerCase('ru-RU').split(/\s+/u).filter(Boolean);
+    let visible = 0;
+    for (const card of stores.querySelectorAll('.retail-store-card')) {
+      const text = card.textContent.toLocaleLowerCase('ru-RU');
+      card.hidden = !words.every(word => text.includes(word)); if (!card.hidden) visible += 1;
+    }
+    storeStatus.textContent = words.length && !visible ? 'Магазин не найден. Попробуйте другое название.' : `Магазинов: ${visible}`;
+  }
+  storeSearch.addEventListener('submit', event => { event.preventDefault(); filterStores(); });
+  searchInput.addEventListener('input', filterStores);
+  if (stores) new view.MutationObserver(filterStores).observe(stores, { childList: true });
+
+  function applyState(detail = {}) {
+    state = { ...state, ...detail,
+      stage: detail.stage === 'store' ? 'store' : detail.stage === 'stores' ? 'stores' : state.stage,
+      view: detail.view === 'basket' ? 'basket' : detail.view === 'shop' ? 'shop' : state.view };
+    const inStore = state.stage === 'store';
+    document.body.dataset.pixelStage = state.stage; document.body.dataset.pixelView = state.view;
+    main.dataset.horiView = state.view === 'basket' ? 'basket' : state.stage;
+    home.hidden = inStore; storefront.hidden = !inStore; pickers.hidden = !inStore; selected.hidden = !inStore;
+    const displayName = typeof state.displayName === 'string' ? state.displayName : 'Магазин';
+    selected.textContent = displayName; selected.setAttribute('aria-label', `Категории магазина ${displayName}`);
+    title.textContent = displayName; address.textContent = state.storeAddress || 'Выбрать адрес';
+    scope.textContent = state.scopeLabel || ''; scope.hidden = !scope.textContent;
+    const units = Number.isSafeInteger(state.basketUnits) && state.basketUnits >= 0 ? state.basketUnits : 0;
+    count.textContent = String(units);
+    navButtons.get('basket').setAttribute('aria-label', `Открыть список покупок, товаров: ${units}`);
+    const dock = document.getElementById('basket-dock');
+    if (dock) dock.hidden = state.view === 'basket' || !inStore || units === 0;
+    syncNavigation(); mountExtras(); filterStores();
+  }
+  document.addEventListener('checkni:shop-state', event => applyState(event.detail));
+  queueMicrotask(() => { mountExtras(); filterStores(); }); applyState();
+
+  // Keep the app's original search request and stale-response guards.
+  const productSearch = document.getElementById('product-search');
+  const products = document.getElementById('product-grid'); let revealSearch = false;
+  document.getElementById('search-form')?.addEventListener('submit', () => { revealSearch = Boolean(productSearch?.value.trim()); });
+  productSearch?.addEventListener('input', () => { if (!productSearch.value.trim()) revealSearch = false; });
+  document.getElementById('clear-search')?.addEventListener('click', () => { revealSearch = false; });
+  if (products) new view.MutationObserver(() => {
+    if (!productSearch?.value.trim()) revealSearch = false;
+    if (revealSearch && products.querySelector('.product-card')) {
+      revealSearch = false; view.requestAnimationFrame(() => reveal(products.closest('.catalog-section')));
+    }
+  }).observe(products, { childList: true });
+  return Object.freeze({ reveal, mountExtras, motionHost, motionControls, headerControls,
+    assistantButton: navButtons.get('hory'),
+    setAssistantOpen(open) { assistantOpen = Boolean(open); syncNavigation(); } });
 }
