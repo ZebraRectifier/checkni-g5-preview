@@ -466,6 +466,14 @@ body.pixel-workspace .pixel-store-details :is(p,span,small,label,li,summary) { f
 body.pixel-workspace .pixel-store-details :is(input,select,button) { max-width: 100%; min-height: 44px; font-size: 14px; }
 body.pixel-workspace .pixel-store-details :is(input,select) { min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 2px; background: var(--surface); color: var(--ink); }
 body.pixel-workspace .pixel-store-details :is(.field-help,.okey-directory-note,.nearby-shopping-note) { color: var(--muted); }
+body.pixel-workspace .okey-directory { border-color: var(--line); border-radius: 2px; background: var(--surface); color: var(--ink); }
+body.pixel-workspace .okey-directory :is(summary strong,h3,li span) { color: var(--ink); }
+body.pixel-workspace .okey-directory :is(li a,details > a) { color: var(--accent); }
+body.pixel-workspace .okey-catalog-refresh { min-height: 44px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 2px; background: var(--surface-soft); color: var(--ink); }
+body.pixel-workspace .okey-catalog-refresh:disabled { color: var(--muted); }
+body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='okey'] { --retailer-face: #f9f5ff; --retailer-ink: #b21d2f; }
+body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='pyaterochka'] { --retailer-face: #d72231; --retailer-ink: #fff; }
+body.pixel-workspace #pixel-store-home .pixel-published-store-card .retail-store-copy .retail-store-kicker { position: static; display: block; width: auto; height: auto; padding: 0; margin: 0 0 4px; overflow: visible; clip-path: none; white-space: normal; color: var(--muted); font-size: 12px; }
 body.pixel-workspace .hori-price-note { position: relative; flex: none; margin: 0; color: var(--muted); font-size: 14px; }
 body.pixel-workspace .hori-price-note summary { display: grid; place-items: center; min-height: 44px; padding: 6px; color: var(--accent); font-size: 14px; }
 body.pixel-workspace .hori-price-note #catalog-note { position: absolute; z-index: 20; inset: 100% 0 auto auto; width: min(420px,calc(100vw - 32px)); max-width: calc(100vw - 32px); margin: 4px 0 0; padding: 14px; border: 2px solid var(--line); border-radius: 2px; background: var(--surface); color: var(--ink); font-size: 14px; box-shadow: none; }

@@ -46,7 +46,7 @@ test('denied geolocation and an unavailable address service leave manual recover
   await say(page,'Найти магазины рядом');await closeHory(page);await openStoreDetails(page);await page.locator('#nearby-locate').click();
   await expect(page.locator('#nearby-status')).toContainText('Доступ к геолокации закрыт');
   await page.locator('#nearby-address').fill('Москва, Тверская, 7');await page.locator('#nearby-address-search').click();
-  await expect(page.locator('#nearby-status')).toContainText('Адрес не удалось найти');
+  await expect(page.locator('#nearby-status')).toContainText('Сервис поиска адресов временно недоступен');
   await page.locator('#nearby-shopping').getByRole('button',{name:'Выбрать точку на карте',exact:true}).click();
   await page.locator('.stores-map').press('Enter');await page.locator('#nearby-connected-only').check();
   await expect(page.locator('#nearby-status')).toContainText('Точка на карте');

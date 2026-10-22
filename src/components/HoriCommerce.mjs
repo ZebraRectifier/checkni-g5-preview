@@ -31,6 +31,13 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   const storeStatus = node('p', 'pixel-store-status');
   storeStatus.id = 'pixel-store-status'; storeStatus.setAttribute('role', 'status');
   const stores = document.getElementById('retail-store-grid');
+  const publishedEntries = [
+    { id: 'okey', name: 'О’КЕЙ', selector: '[data-okey-official="true"]', aliases: 'окей okey o\'key',
+      scope: 'Акции Москвы · цена в конкретном магазине не подтверждена' },
+    { id: 'pyaterochka', name: 'Пятёрочка', selector: '#pyaterochka-published', aliases: 'пятерочка',
+      scope: 'Акции Москвы · цена в конкретном магазине не подтверждена' }
+  ];
+  const publishedButtons = new Map();
   home.append(homeTitle, storeSearch, storeStatus); if (stores) home.append(stores);
 
   const storefront = node('section', 'pixel-storefront');
@@ -138,6 +145,39 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
         if (existing.parentElement !== detailsContent) detailsContent.append(existing);
       }
     }
+    ensurePublishedEntries();
+  }
+  // These entries reveal existing city-promotion readers. They do not select
+  // an exact store or create a new catalogue/price/comparison definition.
+  function ensurePublishedEntries() {
+    if (!stores) return;
+    for (const entry of publishedEntries) {
+      const target = document.querySelector(entry.selector);
+      if (!target) continue;
+      let button = publishedButtons.get(entry.id);
+      if (!button) {
+        button = node('button', 'retail-store-card pixel-published-store-card');
+        button.type = 'button'; button.id = `retail-store-card-${entry.id}`;
+        button.dataset.retailerId = entry.id; button.dataset.storeSearchAliases = entry.aliases;
+        button.setAttribute('aria-label', `${entry.name}: ${entry.scope}`);
+        button.setAttribute('aria-controls', target.id);
+        const logo = node('span', 'retail-store-logo', entry.name); logo.setAttribute('aria-hidden', 'true');
+        const copy = node('span', 'retail-store-copy');
+        copy.append(node('span', 'retail-store-kicker', 'Акции Москвы'), node('strong', '', entry.name), node('span', '', entry.scope));
+        button.append(logo, copy, node('span', 'retail-store-total', 'Посмотреть акции'));
+        button.addEventListener('click', () => {
+          action('address'); mountExtras(); details.open = true; target.open = true;
+          view.requestAnimationFrame(() => {
+            if (!target.isConnected) return;
+            reveal(target); target.querySelector(':scope > summary')?.focus({ preventScroll: true });
+          });
+        });
+        target.addEventListener('toggle', () => button.setAttribute('aria-expanded', String(target.open)));
+        publishedButtons.set(entry.id, button);
+      }
+      button.setAttribute('aria-expanded', String(target.open));
+      if (button.parentElement !== stores) stores.append(button);
+    }
   }
   function reveal(target) {
     if (!target?.isConnected) return;
@@ -165,10 +205,12 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
 
   function filterStores() {
     if (!stores) return;
-    const words = searchInput.value.trim().toLocaleLowerCase('ru-RU').split(/\s+/u).filter(Boolean);
+    ensurePublishedEntries();
+    const fold = value => String(value).normalize('NFKC').toLocaleLowerCase('ru-RU').replaceAll('ё', 'е').replace(/[’']/gu, '');
+    const words = fold(searchInput.value).trim().split(/\s+/u).filter(Boolean);
     let visible = 0;
     for (const card of stores.querySelectorAll('.retail-store-card')) {
-      const text = card.textContent.toLocaleLowerCase('ru-RU');
+      const text = fold(`${card.textContent} ${card.dataset.storeSearchAliases || ''}`);
       card.hidden = !words.every(word => text.includes(word)); if (!card.hidden) visible += 1;
     }
     storeStatus.textContent = words.length && !visible ? 'Магазин не найден. Попробуйте другое название.' : `Магазинов: ${visible}`;
