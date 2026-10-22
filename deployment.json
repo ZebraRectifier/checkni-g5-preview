@@ -2357,54 +2357,87 @@
   },
   "browserOverrides": {
     "repository": "ZebraRectifier/checkni-g5-preview",
-    "publicBase": "667b44c4bff129c3d5c2dae486b415de50360c54",
-    "parentReleaseManifest": "release/magnit-fresh-addresses-20261022.json",
-    "releaseManifest": "release/catalog-access-recovery-20261022.json",
-    "reason": "Independent public production hotfix. sourceCommit identifies the verified private baseline; per-file public origins identify the actual browser runtime. This is not a byte-identical private publication.",
+    "publicBase": "4b36e6051ac4df5cc00385c15fbb4358ca1e8ed7",
+    "parentReleaseManifest": "release/catalog-access-recovery-20261022.json",
+    "releaseManifest": "release/collection-navigation-recovery-20261022.json",
+    "reason": "Independent public navigation hotfix, composed on actual public main. The private sourceCommit is a baseline, not a parity claim; current per-path records define this runtime.",
     "paths": [
       {
-        "path": "index.html",
-        "baseBlob": "4f1a4d6e19f0f526336d841160ec5f595aafdffa",
-        "blob": "49d89f3429a0a97df85e799b02a09d53b912b48d",
-        "sha256": "d168f114e5e8152d345d1dc68e3a6cd758b94d196c8621503843499347831b98",
-        "reason": "Permit only the already admitted avatars.mds.yandex.net product-photo origin in img-src; keep script and connection policies unchanged."
-      },
-      {
         "path": "src/app.mjs",
-        "baseBlob": "f47e97e440173d55390de43cd21faea447651c18",
-        "blob": "4931c71b52d5fb09f882d476e9e792ed6a3ac300",
-        "sha256": "9081ee8eac9ba3a7f9f080b6a1031e9698a0efb0c027a1a9741478aad5df4da5",
-        "reason": "In public manual search require the selected retailer result to succeed, keep unavailable/timeout distinct from a genuine empty result, and identify the selected retailer rather than Open Food Facts. Preserve nonpublic OR success and existing price/Core/timeout conditions."
-      },
-      {
-        "path": "src/components/HoriCommerce.mjs",
-        "baseBlob": "157bb9083b471532c31747e7a0c4cd4a8ddcf1bf",
-        "blob": "8df6cfdbeb58e71cbbf5759729c4adfb5b2bcc05",
-        "sha256": "7f1710f1828f23cf2b326569c76cbe8eecc064d9f53f02c75187cf354b1a3934",
-        "reason": "Expose existing Moscow city-promotion readers with visible scope labels and spelling-tolerant store navigation; preserve exact-store selection, basket and optional Hory."
-      },
-      {
-        "path": "src/components/NearbyShopping.mjs",
-        "baseBlob": "25479a5a850a2d3fef55487a1384848fe8aed168",
-        "blob": "dd96e5e0c3c30b951daadf0ea9932aeef0719764",
-        "sha256": "31e5968ffef6bfeeacbf5e6dfc9c24034325e61de967deeefa4e9490b9579511",
-        "reason": "Distinguish an unavailable address service from a successful empty lookup and keep an explicit retry or map recovery available without claiming location persistence."
-      },
-      {
-        "path": "src/components/OkeyOfficialCatalog.mjs",
-        "baseBlob": "05faf86add0900229d66ecda2799e0645263cab3",
-        "blob": "219f16104108a298048ac5a945515e7b5cc2b3ec",
-        "sha256": "e58f4213c0f7634a885d3cf63a63a4c163c57ebe7e974d8fcd8601163a90b848",
-        "reason": "Bound static feed headers/body reads by 5000ms, expose explicit retry, preserve independent validated observations with original dates and expiry rules."
-      },
-      {
-        "path": "src/components/pixel-storefront.css",
-        "baseBlob": "c1faf07cc28b5ab8c7b353aef4018771084e9f80",
-        "blob": "8eb9c5549a53fdc0aa98802d7c95d6eb9fb033ad",
-        "sha256": "bd063b74b1be04740eb804ca17741a7b215f4e767e9eea39aa45b53cae2929bf",
-        "reason": "Make the existing OKEY directory readable in both pixel themes and identify the two city-promotion navigation cards without altering retailer product photos."
+        "baseBlob": "4931c71b52d5fb09f882d476e9e792ed6a3ac300",
+        "blob": "473bbe73c4a367124b043fe9c25396b9560d3fd0",
+        "sha256": "9a8a60229cad3fb4bac875f5e956885955e4ae4aaa0b9857630d0b07e7e6c68f",
+        "reason": "A collection is a root destination even while root loading is pending; use existing navigation generations to reject late root results. Preserve the public-only manual-search success/empty/503/timeout contract."
       }
     ],
+    "inheritedBrowserOverrides": {
+      "repository": "ZebraRectifier/checkni-g5-preview",
+      "publicBase": "667b44c4bff129c3d5c2dae486b415de50360c54",
+      "parentReleaseManifest": "release/magnit-fresh-addresses-20261022.json",
+      "releaseManifest": "release/catalog-access-recovery-20261022.json",
+      "reason": "Independent public production hotfix. sourceCommit identifies the verified private baseline; per-file public origins identify the actual browser runtime. This is not a byte-identical private publication.",
+      "paths": [
+        {
+          "path": "index.html",
+          "baseBlob": "4f1a4d6e19f0f526336d841160ec5f595aafdffa",
+          "blob": "49d89f3429a0a97df85e799b02a09d53b912b48d",
+          "sha256": "d168f114e5e8152d345d1dc68e3a6cd758b94d196c8621503843499347831b98",
+          "reason": "Permit only the already admitted avatars.mds.yandex.net product-photo origin in img-src; keep script and connection policies unchanged."
+        },
+        {
+          "path": "src/app.mjs",
+          "baseBlob": "f47e97e440173d55390de43cd21faea447651c18",
+          "blob": "4931c71b52d5fb09f882d476e9e792ed6a3ac300",
+          "sha256": "9081ee8eac9ba3a7f9f080b6a1031e9698a0efb0c027a1a9741478aad5df4da5",
+          "reason": "In public manual search require the selected retailer result to succeed, keep unavailable/timeout distinct from a genuine empty result, and identify the selected retailer rather than Open Food Facts. Preserve nonpublic OR success and existing price/Core/timeout conditions."
+        },
+        {
+          "path": "src/components/HoriCommerce.mjs",
+          "baseBlob": "157bb9083b471532c31747e7a0c4cd4a8ddcf1bf",
+          "blob": "8df6cfdbeb58e71cbbf5759729c4adfb5b2bcc05",
+          "sha256": "7f1710f1828f23cf2b326569c76cbe8eecc064d9f53f02c75187cf354b1a3934",
+          "reason": "Expose existing Moscow city-promotion readers with visible scope labels and spelling-tolerant store navigation; preserve exact-store selection, basket and optional Hory."
+        },
+        {
+          "path": "src/components/NearbyShopping.mjs",
+          "baseBlob": "25479a5a850a2d3fef55487a1384848fe8aed168",
+          "blob": "dd96e5e0c3c30b951daadf0ea9932aeef0719764",
+          "sha256": "31e5968ffef6bfeeacbf5e6dfc9c24034325e61de967deeefa4e9490b9579511",
+          "reason": "Distinguish an unavailable address service from a successful empty lookup and keep an explicit retry or map recovery available without claiming location persistence."
+        },
+        {
+          "path": "src/components/OkeyOfficialCatalog.mjs",
+          "baseBlob": "05faf86add0900229d66ecda2799e0645263cab3",
+          "blob": "219f16104108a298048ac5a945515e7b5cc2b3ec",
+          "sha256": "e58f4213c0f7634a885d3cf63a63a4c163c57ebe7e974d8fcd8601163a90b848",
+          "reason": "Bound static feed headers/body reads by 5000ms, expose explicit retry, preserve independent validated observations with original dates and expiry rules."
+        },
+        {
+          "path": "src/components/pixel-storefront.css",
+          "baseBlob": "c1faf07cc28b5ab8c7b353aef4018771084e9f80",
+          "blob": "8eb9c5549a53fdc0aa98802d7c95d6eb9fb033ad",
+          "sha256": "bd063b74b1be04740eb804ca17741a7b215f4e767e9eea39aa45b53cae2929bf",
+          "reason": "Make the existing OKEY directory readable in both pixel themes and identify the two city-promotion navigation cards without altering retailer product photos."
+        }
+      ],
+      "retainedPublicPaths": [
+        "src/components/OkeyOfficialCatalog.mjs",
+        "src/components/OkeyDeliveryCatalog.mjs",
+        "src/data/okeyDeliveryHistory.json",
+        "src/data/okeyDeliveryRefresh.json",
+        "src/data/okeyOfficialPromotions.json",
+        "src/data/okeyOfficialRefresh.json",
+        "src/data/okeyPublishedPromotions.json",
+        "src/data/okeyPublishedRefresh.json",
+        "src/data/pyaterochkaPublishedPromotions.json",
+        "src/data/pyaterochkaPublishedRefresh.json",
+        "index.html",
+        "src/app.mjs",
+        "src/components/HoriCommerce.mjs",
+        "src/components/NearbyShopping.mjs",
+        "src/components/pixel-storefront.css"
+      ]
+    },
     "retainedPublicPaths": [
       "src/components/OkeyOfficialCatalog.mjs",
       "src/components/OkeyDeliveryCatalog.mjs",
@@ -2422,5 +2455,63 @@
       "src/components/NearbyShopping.mjs",
       "src/components/pixel-storefront.css"
     ]
+  },
+  "collectionNavigationRecovery": {
+    "releaseManifest": "release/collection-navigation-recovery-20261022.json",
+    "publicBase": "4b36e6051ac4df5cc00385c15fbb4358ca1e8ed7",
+    "independentPublicOverride": true,
+    "privateSourceParity": false,
+    "parentReleaseManifest": {
+      "path": "release/catalog-access-recovery-20261022.json",
+      "blob": "e3a7cce1a00dbccdf0129301a590031e61a3dda5",
+      "sha256": "3b3ae4bf8f0ec4aadec0bc9cc7b9c75899b9cd9be3a8ad01fbae24677c304c8d",
+      "publicPr": 68,
+      "publicPrUrl": "https://github.com/ZebraRectifier/checkni-g5-preview/pull/68",
+      "mergeCommit": "05e6d012c042afa8e35809f4a0943ec4c2b72447",
+      "testedHead": "3eb9ee8cd5166e6831da43e659511052c562214b",
+      "history": "Immutable PR #68 release record; its six override records are retained below as parent history."
+    },
+    "runtimeFiles": 210,
+    "publicBaseFiles": 209,
+    "reviewedAppOverrides": 1,
+    "preservedInheritedOverrides": 6,
+    "retainedPublicPaths": 15,
+    "publicManualSearchOverridePreserved": true,
+    "change": "A collection is a root destination even while root loading is pending; use existing navigation generations to reject late root results. Preserve the public-only manual-search success/empty/503/timeout contract.",
+    "validation": {
+      "preparedAt": "2026-10-22T19:14:40.490Z",
+      "status": "local-fixture-verified; not committed, CI-verified or published",
+      "browser": {
+        "cases": 18,
+        "passed": 18,
+        "collectionCases": 12,
+        "publicManualSearchCases": 6,
+        "failed": 0,
+        "retries": 0,
+        "skipped": 0,
+        "report": "outputs/collection-navigation-public-20261022/browser.json",
+        "viewports": [
+          "Desktop Chrome",
+          "Pixel 7 Chromium emulation"
+        ]
+      },
+      "physicalAndroidVerified": false,
+      "retailerHttpRequests": 0,
+      "paidAiCalls": 0,
+      "upstreamReviewedPatch": {
+        "repository": "ZebraRectifier/Checkni",
+        "base": "c75b3f0461d7074bf668e6e4f8aa1addf2dbc490",
+        "patchSha256": "c31984f5eb9ab7c24477cfccb30e9602b4f44834a4cdbe47b54eb45fe07894d4",
+        "runtimeBlob": "58036022c113b0a08abe6636bdda06eabef1f35f",
+        "testBlob": "e0a49763e23d0dfd246755d1eafad241ffdce031",
+        "state": "reviewed prepared source; upstream full integration/CI pending"
+      },
+      "requiredBeforePublication": [
+        "fresh ownership/base check",
+        "own exact-head public CI",
+        "actual-main public CI",
+        "deployed runtime verification"
+      ]
+    }
   }
 }
