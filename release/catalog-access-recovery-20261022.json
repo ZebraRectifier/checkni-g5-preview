@@ -120,13 +120,22 @@
       "desktop": "passed unchanged",
       "win32MobileHome": "approved native recapture for8visiblechains; targeted regeneration passed",
       "win32MobileStorefront": "passed unchanged",
-      "linuxMobileHome": "pending native Linux CI capture; existing Linux baseline untouched",
+      "linuxMobileHome": {
+        "status": "reviewed native Linux CI recapture for eight visible chains",
+        "path": "test/e2e/reference-v13/linux/pixel-character-home-mobile.png",
+        "sha256": "3a9c306434ef65679445394684cc24d6706aa0b59c2e25923965fabbb328bf83",
+        "blob": "416f4058af124418512cca48a9af36ee6548ab0b",
+        "runId": 39829090616,
+        "artifactId": 12449480265,
+        "attemptsIdentical": true,
+        "review": "Compared actual/diff with the approved Android reference. Changes limited to store count and third row; all other pixels unchanged. One-percent threshold remains unchanged."
+      },
       "toleranceUnchanged": 0.01,
       "updatedBaseline": "test/e2e/reference-v13/win32/pixel-character-home-mobile.png",
       "updatedBaselineSha256": "f1c6b1f1e1c76b0518c7d7c14fb4f119f488bcae999ddefb95a3504e0d76b551",
       "localLinuxAlternative": {
         "dockerCli": "absent",
-        "wsl": "Ubuntu2 registered, Stopped; not started"
+        "wsl": "Inspected existing Ubuntu2; Linux Node/Chromium absent. No installation or baseline generated there."
       }
     },
     "focusedNode": {
@@ -134,11 +143,17 @@
       "failed": 0
     },
     "publicSecretScan": "passed on reviewed fixture base",
-    "finalPublicCandidateVerification": "pending after shipped-base synchronization; no exact-head or actual-main CI pass is asserted here",
+    "finalPublicCandidateVerification": "Exact synchronized draft:159 Node checks and123 browser cases passed; only the expected native Linux mobile-home visual baseline failed. Final exact-head and actual-main gates are required after this reviewed baseline update.",
     "physicalAndroidVerified": false,
     "paidAiCalls": 0,
     "retailerHttpRequests": 0,
-    "runtimeTextFilesCheckedForNul": 192
+    "runtimeTextFilesCheckedForNul": 192,
+    "composedMagnitAliases": {
+      "passed": 8,
+      "failed": 0,
+      "retries": 0,
+      "base": "667b44c4bff129c3d5c2dae486b415de50360c54"
+    }
   },
   "verificationAssets": [
     {
@@ -199,6 +214,18 @@
         "shopping-dialogue-recovery.spec.mjs",
         "weekly-retail-basket.spec.mjs"
       ]
+    },
+    {
+      "path": "test/e2e/reference-v13/linux/pixel-character-home-mobile.png",
+      "origin": {
+        "kind": "reviewed-native-linux-ci-capture",
+        "repository": "ZebraRectifier/checkni-g5-preview",
+        "commit": "76bfe5cf0c67a369b8dd1aefbe068ce4149064da",
+        "runId": 39829090616,
+        "artifactId": 12449480265
+      },
+      "sha256": "3a9c306434ef65679445394684cc24d6706aa0b59c2e25923965fabbb328bf83",
+      "blob": "416f4058af124418512cca48a9af36ee6548ab0b"
     }
   ],
   "files": [
