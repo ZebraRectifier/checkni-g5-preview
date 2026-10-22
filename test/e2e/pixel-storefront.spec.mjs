@@ -206,6 +206,60 @@ test('nonempty source collections deduplicate shared SKUs and keep list controls
  await expectNoOverflow(page);
 });
 
+test('a category click supersedes a pending root load and late root responses preserve the chosen category and basket',async({page})=>{
+ const calls=await setup(page,{collections:true,expandedRoots:true});await selectStore(page);
+ const rails=page.locator('#pixel-collections');
+ const brands=rails.locator('.pixel-collection').filter({has:page.getByRole('heading',{name:'Наши бренды',exact:true})});
+ const ready=rails.locator('.pixel-collection').filter({has:page.getByRole('heading',{name:'Вся готовая еда',exact:true})});
+ await expect(rails.locator('.pixel-collection')).toHaveCount(2);
+ await expect(page.getByRole('button',{name:'Все категории',exact:true})).toBeVisible();
+ await addButton(brands.locator('.product-card')).click();await expect(page.locator('#pixel-list-count')).toHaveText('1');
+ const saved=await savedBasket(page);
+ await brands.getByRole('button',{name:'Все товары: Наши бренды',exact:true}).click();
+ await expect(page.locator('#catalog-title')).toHaveText('Наши бренды');
+
+ let releaseRoot;const pendingRoot=new Promise(resolve=>{releaseRoot=resolve;});
+ let held=0;
+ const isRoot=request=>{
+  const u=new URL(request.url()),p=u.searchParams;
+  return p.get('retailer_id')==='eq.globus'&&p.get('store_id')==='eq.globus-store-5011'
+   &&(u.pathname.endsWith('/retail_catalog_categories')?!p.has('parent_id')
+    :!p.has('category_url')&&!p.has('main_category_id')&&!p.has('name'));
+ };
+ const holdRoot=async route=>{if(isRoot(route.request())){held++;await pendingRoot;}return route.fallback();};
+ await page.route('**/rest/v1/retail_catalog_categories**',holdRoot);
+ await page.route('**/rest/v1/retail_catalog_items**',holdRoot);
+ try{
+  await page.locator('#retail-breadcrumbs').getByRole('button',{name:'Категории',exact:true}).click();
+  await expect.poll(()=>held).toBe(2);
+  // The category grid removes its old tiles and "all" button synchronously;
+  // collection links are the visible root destinations during this refresh.
+  await expect(page.locator('#retail-category-grid button[data-category-id]')).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Все категории',exact:true})).toHaveCount(0);
+  await expect(page.locator('#retail-category-grid .is-loading')).toBeDisabled();
+  await ready.getByRole('button',{name:'Все товары: Вся готовая еда',exact:true}).click();
+  await expect(page.locator('#catalog-title')).toHaveText('Вся готовая еда');
+  await expect(page.locator('#retail-breadcrumbs .is-current')).toHaveText('Вся готовая еда');
+  await expect(page.locator('#product-grid .product-card')).toHaveCount(2);
+  expect(await savedBasket(page)).toBe(saved);
+
+  const oldCategories=page.waitForResponse(response=>isRoot(response.request())&&response.url().includes('/retail_catalog_categories'));
+  const oldProducts=page.waitForResponse(response=>isRoot(response.request())&&response.url().includes('/retail_catalog_items'));
+  releaseRoot();
+  const responses=await Promise.all([oldCategories,oldProducts]);expect(responses.map(response=>response.status())).toEqual([200,200]);
+  await Promise.all(responses.map(response=>response.finished()));
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  await expect(rails).toBeHidden();
+  await expect(page.locator('#catalog-title')).toHaveText('Вся готовая еда');
+  await expect(page.locator('#retail-breadcrumbs .is-current')).toHaveText('Вся готовая еда');
+  await expect(page.locator('#product-grid .product-card')).toHaveCount(2);
+  expect(await page.evaluate(()=>history.state.checkniRetailPath.map(category=>category.categoryId))).toEqual([readyId]);
+  expect(await savedBasket(page)).toBe(saved);await expect(page.locator('#pixel-list-count')).toHaveText('1');
+  expect(calls.items.some(call=>call.category_url===`like.${categoryUrl(readyId)}*`&&call.limit==='40')).toBe(true);
+  expect(calls.global).toBe(0);expect(calls.ai).toBe(0);
+ }finally{releaseRoot();}
+});
+
 test('store → basket → Back/reload → stores and brand home preserve quantities and surface history',async({page})=>{
  await setup(page);await selectStore(page);
  const card=page.locator('#product-grid .product-card').filter({hasText:'Молоко Parmalat'});

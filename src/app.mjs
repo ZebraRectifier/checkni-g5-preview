@@ -1114,7 +1114,9 @@ function renderRetailCollections() {
     const title = document.createElement('h2'); title.textContent = collection.title;
     const all = document.createElement('button'); all.type = 'button'; all.textContent = 'Все ›';
     all.setAttribute('aria-label', `Все товары: ${collection.title}`);
-    all.addEventListener('click', () => void openRetailCategory(collection.category));
+    // Collections are root destinations, including while a root refresh is pending.
+    // Existing navigation generations keep the newest selection over older responses.
+    all.addEventListener('click', () => void navigateRetailPath([collection.category]));
     heading.append(title, all);
     const row = document.createElement('div'); row.className = 'pixel-collection-row';
     row.setAttribute('aria-label', collection.title);
