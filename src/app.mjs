@@ -1927,7 +1927,7 @@ function renderCatalog() {
         ? normalizedQuery
           ? publicRetailCatalogMode ? `Живой каталог · ${retailName}` : `Живой каталог · ${retailName} + Open Food Facts`
           : `Живой каталог · ${retailName}`
-        : "Живой каталог · Open Food Facts";
+        : publicRetailCatalogMode ? `Живой каталог · ${retailName}` : "Живой каталог · Open Food Facts";
     elements.catalogNote.textContent = categoryResult
       ? catalogSearchState.retailCount > 0
         ? `${catalogSearchState.categoryName}: реальные товары ${retailName} с наблюдаемыми ценами.`
@@ -2929,8 +2929,9 @@ function handleManualSearch() {
       if (requestId !== catalogRequestVersion) return;
 
       if (
-        catalogResult.kind === "catalog"
-        || retailResult.kind === "catalog"
+        publicRetailCatalogMode
+          ? retailResult.kind === "catalog"
+          : catalogResult.kind === "catalog" || retailResult.kind === "catalog"
       ) {
         const canonicalProducts = catalogResult.kind === "catalog"
           ? surfaceProductsFromCatalog(catalogResult.products)

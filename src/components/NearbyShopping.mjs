@@ -83,6 +83,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     geo.clear();const token=++version;clearSelection();position=null;candidates.replaceChildren();results.replaceChildren();addressButton.disabled=true;
     status.textContent='Ищу адрес…';
     const response=await port.address(query);if(token!==version){addressButton.disabled=false;return;}addressButton.disabled=false;
+    if(response.kind==='unavailable'){status.textContent='Сервис поиска адресов временно недоступен. Попробуй ещё раз или выбери точку на карте.';return;}
     if(response.kind!=='results'||!response.candidates.length){status.textContent=response.kind==='limited'?'Слишком частые запросы. Подожди немного или выбери место на карте.':'Адрес не удалось найти. Добавь город и номер дома или укажи место на карте.';return;}
     status.textContent='Это нужное место? Выбери один из адресов.';
     for(const p of response.candidates){if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon)||typeof p.label!=='string'||p.label.length>500)continue;
