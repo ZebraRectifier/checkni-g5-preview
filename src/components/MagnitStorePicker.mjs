@@ -1,6 +1,4 @@
-import { REGISTERED_MAGNIT_STORES as MAGNIT_MOSCOW_STORES, resolveRegisteredMagnitStore as resolveMagnitMoscowStore } from "../data/registeredMagnitStores.mjs";
-
-const normalized = (text) => text.normalize("NFKC").toLocaleLowerCase("ru").replaceAll("ё", "е");
+import { filterRegisteredMagnitStores, resolveRegisteredMagnitStore as resolveMagnitMoscowStore } from "../data/registeredMagnitStores.mjs";
 
 export function createMagnitStorePicker({ shopCode, onSelect }) {
   const section = document.createElement("section");
@@ -27,10 +25,19 @@ export function createMagnitStorePicker({ shopCode, onSelect }) {
 
   let selectedCode = shopCode;
   function renderOptions() {
-    const terms = normalized(search.value).trim().split(/\s+/u).filter(Boolean);
+    const matches = filterRegisteredMagnitStores(search.value);
     select.replaceChildren();
-    for (const [index, store] of MAGNIT_MOSCOW_STORES.entries()) {
-      if (store.shopCode !== selectedCode && !terms.every(term => normalized(store.address).includes(term))) continue;
+    // Keep selection explicit when a search filters out the current address: selecting
+    // the only result must still emit change, rather than silently changing the UI.
+    if (!matches.some(store => store.shopCode === selectedCode)) {
+      const prompt = document.createElement("option");
+      prompt.value = "";
+      prompt.textContent = matches.length ? "Выберите найденный адрес" : "Адрес не найден";
+      prompt.disabled = true;
+      prompt.selected = true;
+      select.append(prompt);
+    }
+    for (const [index, store] of matches.entries()) {
       const option = document.createElement("option");
       option.value = store.shopCode ?? "unresolved-" + index;
       option.textContent = store.address + (store.shopCode ? "" : " — цены пока недоступны");

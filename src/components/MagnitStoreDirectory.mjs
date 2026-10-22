@@ -3,6 +3,8 @@ import { MAGNIT_MOSCOW_OBLAST_STORES } from "../data/magnitMoscowOblastStores.mj
 
 import { createRetailCatalogClient } from "../ports/retailCatalogPort.mjs";
 import { MAGNIT_MOSCOW_OBLAST_BINDINGS } from "../data/magnitMoscowOblastBindings.mjs";
+import { resolveRegisteredMagnitStore } from "../data/registeredMagnitStores.mjs";
+import { resolveMagnitLegacyAddressAlias } from "../data/magnitLegacyAddressAliases.mjs";
 
 export const MAGNIT_DIRECTORY_PAGE_SIZE = 60;
 
@@ -15,11 +17,24 @@ export const MAGNIT_STORE_DIRECTORY = Object.freeze([
     sourceUrl: store.sourceUrl,
     observedAt: store.observedAt
   })),
-  ...MAGNIT_MOSCOW_OBLAST_STORES.map(store => Object.freeze({
-    ...store,
-    shopCode: MAGNIT_MOSCOW_OBLAST_BINDINGS.find(binding => binding.address === store.address)?.shopCode ?? null
-  }))
+  ...MAGNIT_MOSCOW_OBLAST_STORES.map(store => {
+    const alias = resolveMagnitLegacyAddressAlias(store.address);
+    const binding = MAGNIT_MOSCOW_OBLAST_BINDINGS.find(candidate => candidate.address === store.address)
+      ?? (alias && resolveRegisteredMagnitStore({ shopCode: alias.shopCode, address: alias.canonicalAddress }));
+    return Object.freeze({ ...store, shopCode: binding?.shopCode ?? null,
+      ...(binding && binding.address !== store.address ? { canonicalAddress: binding.address } : {}) });
+  })
 ]);
+
+export function getMagnitDirectoryCatalogStore(store) {
+  if (typeof store?.address !== "string") return null;
+  const exact = resolveRegisteredMagnitStore({ shopCode: store.shopCode, address: store.address });
+  if (exact) return exact;
+  const alias = resolveMagnitLegacyAddressAlias(store.address);
+  if (!alias || alias.shopCode !== store.shopCode
+      || (store.canonicalAddress !== undefined && store.canonicalAddress !== alias.canonicalAddress)) return null;
+  return resolveRegisteredMagnitStore({ shopCode: alias.shopCode, address: alias.canonicalAddress });
+}
 
 export const MAGNIT_STORE_DIRECTORY_COUNTS = Object.freeze({
   moscow: MAGNIT_MOSCOW_STORES.length,
@@ -221,7 +236,8 @@ export function createMagnitStoreDirectory() {
 }
 
 function createAddressPrices(store) {
-  if (!store.shopCode) return element("span", null, "Цены пока не подтверждены");
+  const catalogStore = getMagnitDirectoryCatalogStore(store);
+  if (!catalogStore) return element("span", null, "Цены пока не подтверждены");
   const details = document.createElement("details");
   details.className = "magnit-address-prices";
   details.append(element("summary", null, "Посмотреть цены"));
@@ -232,8 +248,10 @@ function createAddressPrices(store) {
   const more = element("button", null, "Ещё цены");
   more.type = "button";
   more.hidden = true;
+  if (catalogStore.address !== store.address) details.append(element("p", "magnit-directory-note",
+    "Текущий адрес Магнита: " + catalogStore.address));
   details.append(status, list, more);
-  const client = createRetailCatalogClient({retailerId:"magnit",store:{shopCode:store.shopCode,address:store.address}});
+  const client = createRetailCatalogClient({retailerId:"magnit",store:catalogStore});
   let loaded = false;
   let loading = false;
   let offset = 0;
