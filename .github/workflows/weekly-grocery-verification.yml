@@ -2,10 +2,10 @@ name: Weekly grocery artifact verification
 
 on:
   pull_request:
-    paths: ['src/**', 'index.html', 'prices.html', 'deployment.json', 'release/**', 'tests/**', 'test/**', 'tools/security/**', 'playwright.weekly.config.mjs', '.github/workflows/weekly-grocery-verification.yml']
+    paths: ['src/**', 'index.html', 'prices.html', 'deployment.json', 'release/**', 'tests/**', 'test/**', 'tools/security/**', 'playwright.weekly.config.mjs', '.github/workflows/weekly-grocery-verification.yml', '.github/workflows/live-retail-smoke.yml']
   push:
     branches: [main]
-    paths: ['src/**', 'index.html', 'prices.html', 'deployment.json', 'release/**', 'tests/**', 'test/**', 'tools/security/**', 'playwright.weekly.config.mjs', '.github/workflows/weekly-grocery-verification.yml']
+    paths: ['src/**', 'index.html', 'prices.html', 'deployment.json', 'release/**', 'tests/**', 'test/**', 'tools/security/**', 'playwright.weekly.config.mjs', '.github/workflows/weekly-grocery-verification.yml', '.github/workflows/live-retail-smoke.yml']
 
 permissions:
   contents: read
