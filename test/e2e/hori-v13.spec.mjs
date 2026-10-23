@@ -74,7 +74,9 @@ test('approved PixelCharacter has stable stores-first and storefront visual base
  }
  await expectNoOverflow(page);
  await page.locator('#pixel-storefront-title').scrollIntoViewIfNeeded();
- await expect(page).toHaveScreenshot('pixel-character-storefront-'+(mobile?'mobile':'desktop')+'.png',{
+ // Weekly-entry baselines are separate; retain the previous storefront PNGs
+ // and the unchanged approved home images and mismatch tolerances.
+ await expect(page).toHaveScreenshot('pixel-character-weekly-storefront-'+(mobile?'mobile':'desktop')+'.png',{
   fullPage:true,scale:'css',animations:'disabled',maxDiffPixelRatio:.01,threshold:.2
  });
 });

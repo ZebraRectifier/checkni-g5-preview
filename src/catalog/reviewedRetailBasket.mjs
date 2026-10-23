@@ -3,6 +3,7 @@ import {
   BETA_EVERYDAY_PROOF_PRODUCTS,
   BETA_REAL_PRODUCTS
 } from "../data/betaRealBasket.mjs";
+import { WEEKLY_ROUTE_PRODUCTS } from './weeklyRouteProducts.mjs';
 
 // Identity only. These are the reviewed SKUs from the existing live proof,
 // not a name search, a price observation or a retailer stock assertion.
@@ -30,7 +31,9 @@ const BINDINGS = Object.freeze([
   ["magnit", "1899800689", "kefir-1l", "Кефир Простоквашино 2.5% 930г",
     "/product/1899800689-kefir_prostokvashino_2_5_930g"],
   ["magnit", "1000084229", "butter-825-180", "Масло сладко-сливочное Брест-Литовск 82.5% 180г",
-    "/product/1000084229-maslo_sladko_slivochnoe_brest_litovsk_82_5_180g"]
+    "/product/1000084229-maslo_sladko_slivochnoe_brest_litovsk_82_5_180g"],
+  ...WEEKLY_ROUTE_PRODUCTS.filter(p => p.id.startsWith('globus-weekly-')).map(p =>
+    ['globus', p.sourceProductId, p.id, p.sourceName, new URL(p.productUrl).pathname])
 ].map(([retailerId, sourceProductId, productId, name, path]) => Object.freeze({
   retailerId, sourceProductId, productId, name, path
 })));
@@ -49,7 +52,9 @@ const GLOBUS_PRODUCTS = Object.freeze([
   Object.freeze({ id: "globus-water-shishkin-les-still-1l",
     name: "Вода питьевая Шишкин Лес негазированная", unit: "1 л", category: "Вода" }),
   Object.freeze({ id: "globus-buckwheat-agro-alliance-extra-elite-900g",
-    name: "Крупа гречневая Агро-Альянс Экстра Элитная", unit: "900 г", category: "Бакалея" })
+    name: "Крупа гречневая Агро-Альянс Экстра Элитная", unit: "900 г", category: "Бакалея" }),
+  ...WEEKLY_ROUTE_PRODUCTS.filter(p => p.id.startsWith('globus-weekly-')).map(p =>
+    Object.freeze({ id:p.id, name:p.name, unit:p.unit, category:'Продукты на неделю' }))
 ]);
 
 function normalizedName(value) {

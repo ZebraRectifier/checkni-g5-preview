@@ -41,6 +41,8 @@ import { resolveMetroMoscowRegionStore } from "./data/metroMoscowRegionStores.mj
 import { resolveGlobusMoscowRegionStore } from "./data/globusMoscowRegionStores.mjs";
 import { nearbyShoppingStores } from "./data/shoppingLocations.mjs";
 import { createGlobusStorePicker, resolveGlobusComparisonPeer } from "./components/GlobusStorePicker.mjs";
+import { createWeeklyRoute } from './components/WeeklyRoute.mjs';
+import { applyWeeklyBasket } from './runtime/weeklyBasketFlow.mjs';
 import { createOkeyDeliveryCatalog } from "./components/OkeyDeliveryCatalog.mjs";
 import { createSelectedComparisonStores } from "./components/SelectedComparisonStores.mjs";
 import { createSelectedStoreScope, createLiveExampleStoreScope } from "./observations/selectedStoreScope.mjs";
@@ -383,6 +385,7 @@ let guidedComparisonStoreId = history.state?.checkniGuidedComparisonStoreId === 
 let comparedGlobusStore = resolveGlobusComparisonPeer(selectedGlobusStore.officialStoreId,
   history.state?.checkniGlobusCompareStoreId);
 let globusStorePicker = null;
+let weeklyRoute = null;
 let storesSection = null;
 let comparisonAddressMode = history.state?.checkniComparisonAddressMode === "live-example"
   ? "live-example" : "selected";
@@ -873,6 +876,8 @@ function renderRetailBrowser() {
   globusStorePicker?.update({ visible: retailBrowserState.retailerId === "globus", store: selectedGlobusStore,
     comparisonStore: comparedGlobusStore, status: retailBrowserState.status,
     hasCategories: retailBrowserState.path.length > 0 || retailBrowserState.categories.length > 0 });
+  weeklyRoute?.update({visible:retailSurfaceStage==='store'&&retailBrowserState.retailerId==='globus',
+    store:selectedGlobusStore,peer:comparedGlobusStore});
   elements.retailCategoryGrid.replaceChildren();
 
   const current = retailBrowserState.path.at(-1) ?? null;
@@ -1752,6 +1757,16 @@ function setupRetailBrowser() {
       }
     });
     elements.retailCatalogNav.before(globusStorePicker.element);
+    weeklyRoute=createWeeklyRoute({getBasket:()=>basket.getSnapshot(),onChoosePeer:id=>{
+      const peer=resolveGlobusComparisonPeer(selectedGlobusStore.officialStoreId,id);
+      if(!peer)return;
+      comparedGlobusStore=peer;comparisonAddressChanged();
+      updateRetailHistory(retailBrowserState.path,{replace:true,retailerId:'globus'});renderRetailBrowser();
+    },onApply:({rows,replace,expected})=>{
+      if(!applyWeeklyBasket({basket,rows,replace,expected}))return false;
+      comparisonAddressChanged();navigate(VIEW.BASKET);void handleCompare();return true;
+    }});
+    globusStorePicker.element.after(weeklyRoute.element);
   }
   renderRetailBrowser();
   if (!publicRetailCatalogMode) return;

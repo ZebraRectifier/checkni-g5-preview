@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "efa2e9c4f4e137fe491860bd9f2b36a6ffb7490b",
+  "sourceCommit": "b5130823f5989ec0973ee941b9b526f06226a4ae",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -2731,5 +2731,23 @@
     "publicManualSearchOverridePreserved": true,
     "retainedPublicPaths": 15,
     "byteIdenticalRetainedPaths": 14
+  },
+  "weeklyRoute": {
+    "sourceCommit": "b5130823f5989ec0973ee941b9b526f06226a4ae",
+    "testedSourceHead": "ba3d31f18e11262c98161c40c61dd50f55f49e7f",
+    "manifest": "release/weekly-route-20261023.json",
+    "retailer": "globus",
+    "physicalStoreIds": [
+      "5011",
+      "5020"
+    ],
+    "products": 12,
+    "people": 3,
+    "days": 7,
+    "editableQuantities": true,
+    "runtimeFiles": 215,
+    "sourceFreshnessVerified": false,
+    "livePriceVerificationRequired": true,
+    "gptunnelPreserved": true
   }
 }
