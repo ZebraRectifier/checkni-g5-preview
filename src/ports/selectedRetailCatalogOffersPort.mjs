@@ -1,7 +1,7 @@
 import { createRetailCatalogClient } from "./retailCatalogPort.mjs";
 import { normalizeBetaRetailPricesResponse, isBetaRetailIdentityConfirmed } from "./betaRetailPricesPort.mjs";
 import { BETA_METRO_MAGNIT_EVERYDAY_PROOF_PROFILE_ID } from "../data/betaRealBasket.mjs";
-import * as observedOffers from "./observedOffersPort.mjs";
+import { METRO_CATALOG_PRICE_MAX_AGE_MS, markAdmittedMetroCatalogOffer } from "../observations/retailCatalogFreshnessPolicy.mjs";
 import { resolveMetroMoscowRegionStore } from "../data/metroMoscowRegionStores.mjs";
 import {
   getReviewedRetailBasketProduct,
@@ -29,7 +29,7 @@ export async function loadSelectedRetailCatalogOffers(coreBasket, storeScope, op
   try { response = await client.bySourceProductIds(sourceProductIds); } catch { return []; }
   if (response?.kind !== "catalog" || !Array.isArray(response.products)) return [];
   const nowMs = options.nowMs ?? Date.now();
-  const maxAgeMs = observedOffers.BETA_RETAIL_PRICE_MAX_AGE_MS;
+  const maxAgeMs = METRO_CATALOG_PRICE_MAX_AGE_MS;
   if (!Number.isFinite(nowMs) || !Number.isFinite(maxAgeMs) || maxAgeMs < 0) return [];
 
   const offers = [];
@@ -59,7 +59,7 @@ export async function loadSelectedRetailCatalogOffers(coreBasket, storeScope, op
         minimumQuantity: evidence.minimumQuantity, storeId: evidence.storeId,
         storeName: product.storeName, locationLabel: evidence.locationLabel, availability: product.availability
       }] });
-    if (Array.isArray(normalized.offers)) offers.push(...normalized.offers);
+    if (Array.isArray(normalized.offers)) offers.push(...normalized.offers.map(markAdmittedMetroCatalogOffer));
   }
   return selectStoreScopedOffers(offers, storeScope);
 }

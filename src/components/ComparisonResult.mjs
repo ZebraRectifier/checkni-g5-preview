@@ -2,6 +2,7 @@ import {
   OBSERVED_COMPARISON_CONCLUSION
 } from "../core/observed-price-core.mjs";
 import { getRetailerNavigation } from "../navigation/retailerNavigation.mjs";
+import { metroCatalogLineMaxAgeMs, METRO_CATALOG_PRICE_MAX_AGE_MS } from "../observations/retailCatalogFreshnessPolicy.mjs";
 
 export function formatRubMinor(minor) {
   if (!Number.isSafeInteger(minor) || minor < 0) return null;
@@ -191,7 +192,23 @@ export function buildWinnerResultModel(result) {
   });
 }
 
-export function buildObservedResultModel(result) {
+function catalogueFreshnessLabels(result, nowMs) {
+  return (Array.isArray(result?.candidates) ? result.candidates : []).flatMap(candidate => {
+    const times = (Array.isArray(candidate?.lines) ? candidate.lines : [])
+      .filter(line => line?.status === "priced-observation"
+        && metroCatalogLineMaxAgeMs(line.provenance?.sourceId ?? candidate.sourceId, line, candidate, nowMs)
+          === METRO_CATALOG_PRICE_MAX_AGE_MS)
+      .map(line => Date.parse(line.observedAt));
+    if (!times.length) return [];
+    const oldest = Math.min(...times);
+    const newest = Math.max(...times);
+    const format = time => formatObservedAt(new Date(time).toISOString());
+    const observed = oldest === newest ? format(oldest) : `${format(oldest)} — ${format(newest)}`;
+    return [`Сохранённые цены METRO · ${observedCandidateName(candidate)} · наблюдались ${observed} · окно сравнения — 1 час от наблюдения, до ${format(oldest + METRO_CATALOG_PRICE_MAX_AGE_MS)}`];
+  });
+}
+
+export function buildObservedResultModel(result, { nowMs = Date.now() } = {}) {
   const conclusion = result?.conclusion;
   if (
     !conclusion
@@ -199,6 +216,8 @@ export function buildObservedResultModel(result) {
   ) {
     return null;
   }
+  const labels = catalogueFreshnessLabels(result, nowMs);
+  const freshness = labels.length ? { catalogueFreshnessLabels: Object.freeze(labels) } : {};
 
   if (conclusion.kind === OBSERVED_COMPARISON_CONCLUSION.INSUFFICIENT_COVERAGE) {
     const confirmedCandidates = Array.isArray(result?.candidates)
@@ -211,6 +230,7 @@ export function buildObservedResultModel(result) {
       : [];
 
     return Object.freeze({
+      ...freshness,
       kind: conclusion.kind,
       title: "Недостаточно данных для «дешевле»",
       note: conclusion.reason === "incomparable_geography_or_truth_level"
@@ -241,6 +261,7 @@ export function buildObservedResultModel(result) {
       : [];
 
     return Object.freeze({
+      ...freshness,
       kind: conclusion.kind,
       title: "Одинаковая минимальная сумма",
       totalLabel,
@@ -287,6 +308,7 @@ export function buildObservedResultModel(result) {
   const channelLabel = salesChannelLabel(candidate);
 
   return Object.freeze({
+    ...freshness,
     kind: conclusion.kind,
     candidateId: candidate.candidateId,
     title: observedCandidateName(candidate),
@@ -395,6 +417,13 @@ export function createObservedComparisonResult(result) {
   const heading = document.createElement("h2");
   heading.textContent = model.title;
   section.append(heading);
+
+  for (const label of model.catalogueFreshnessLabels ?? []) {
+    const freshness = document.createElement("p");
+    freshness.className = "comparison-provenance";
+    freshness.textContent = label;
+    section.append(freshness);
+  }
 
   if (model.kind === OBSERVED_COMPARISON_CONCLUSION.INSUFFICIENT_COVERAGE) {
     const note = document.createElement("p");

@@ -60,6 +60,7 @@ import {
 } from "./runtime/comparisonFlow.mjs";
 import { observedComparisonExpiresAt } from "./runtime/observedComparisonExpiry.mjs";
 import { GLOBUS_CATALOG_PRICE_MAX_AGE_MS } from "./ports/selectedGlobusCatalogOffersPort.mjs";
+import { metroCatalogLineMaxAgeMs, LIVE_BETA_RESULT_MAX_AGE_MS } from "./observations/retailCatalogFreshnessPolicy.mjs";
 import {
   HYBRID_BASKET_FLOW_STATUS,
 } from "./runtime/hybridBasketFlow.mjs";
@@ -198,8 +199,15 @@ const retailCatalogClients = new Map(
 const comparisonFlow = createComparisonFlow((surfaceBasket) =>
   compareSurfaceBasket(surfaceBasket), {
     getContext: () => ({ mode: comparisonMode, scope: currentComparisonStoreScope() }),
-    getResultExpiresAt: result => observedComparisonExpiresAt(result, sourceId =>
-      sourceId === "globus-physical-catalog" ? GLOBUS_CATALOG_PRICE_MAX_AGE_MS : null),
+    getResultExpiresAt: result => {
+      const nowMs = Date.now();
+      return observedComparisonExpiresAt(result, (sourceId, line, candidate) => {
+        const catalogueAge = metroCatalogLineMaxAgeMs(sourceId, line, candidate, nowMs);
+        if (catalogueAge !== undefined) return catalogueAge;
+        if (sourceId === "metro-public-live" || sourceId === "magnit-public-live") return LIVE_BETA_RESULT_MAX_AGE_MS;
+        return sourceId === "globus-physical-catalog" ? GLOBUS_CATALOG_PRICE_MAX_AGE_MS : null;
+      });
+    },
     onExpire: () => renderComparisonState(),
     onReceiptInvalidated: () => {
       if (basketProposalFlow.checkCurrentComparisonExplanation()) renderBasketProposalState();
