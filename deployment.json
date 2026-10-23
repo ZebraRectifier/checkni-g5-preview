@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "76cb3da68c7b021840171ff8997039498a754965",
+  "sourceCommit": "efa2e9c4f4e137fe491860bd9f2b36a6ffb7490b",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -2357,69 +2357,102 @@
   },
   "browserOverrides": {
     "repository": "ZebraRectifier/checkni-g5-preview",
-    "publicBase": "4b36e6051ac4df5cc00385c15fbb4358ca1e8ed7",
-    "parentReleaseManifest": "release/catalog-access-recovery-20261022.json",
-    "releaseManifest": "release/collection-navigation-recovery-20261022.json",
-    "reason": "Independent public navigation hotfix, composed on actual public main. The private sourceCommit is a baseline, not a parity claim; current per-path records define this runtime.",
+    "publicBase": "3f857338bb89490c3bd465b287239d80d1bd3862",
+    "releaseManifest": "release/metro-da-catalog-recovery-20261022.json",
+    "parentReleaseManifest": "release/collection-navigation-recovery-20261022.json",
+    "privateSourceParity": false,
     "paths": [
       {
         "path": "src/app.mjs",
-        "baseBlob": "4931c71b52d5fb09f882d476e9e792ed6a3ac300",
-        "blob": "473bbe73c4a367124b043fe9c25396b9560d3fd0",
-        "sha256": "9a8a60229cad3fb4bac875f5e956885955e4ae4aaa0b9857630d0b07e7e6c68f",
-        "reason": "A collection is a root destination even while root loading is pending; use existing navigation generations to reject late root results. Preserve the public-only manual-search success/empty/503/timeout contract."
+        "baseBlob": "473bbe73c4a367124b043fe9c25396b9560d3fd0",
+        "blob": "1544346e0f04a76a0b7e6abb99efd1503126ec1c",
+        "sha256": "07e34533207eee1fbad2ddd10939d70a9a01e96a14cdee5233f02ee9b6a33116",
+        "reason": "Apply only reviewed METRO lifetime wiring over the existing public app; preserve public-only manual-search outage/empty handling and navigation."
       }
     ],
     "inheritedBrowserOverrides": {
       "repository": "ZebraRectifier/checkni-g5-preview",
-      "publicBase": "667b44c4bff129c3d5c2dae486b415de50360c54",
-      "parentReleaseManifest": "release/magnit-fresh-addresses-20261022.json",
-      "releaseManifest": "release/catalog-access-recovery-20261022.json",
-      "reason": "Independent public production hotfix. sourceCommit identifies the verified private baseline; per-file public origins identify the actual browser runtime. This is not a byte-identical private publication.",
+      "publicBase": "4b36e6051ac4df5cc00385c15fbb4358ca1e8ed7",
+      "parentReleaseManifest": "release/catalog-access-recovery-20261022.json",
+      "releaseManifest": "release/collection-navigation-recovery-20261022.json",
+      "reason": "Independent public navigation hotfix, composed on actual public main. The private sourceCommit is a baseline, not a parity claim; current per-path records define this runtime.",
       "paths": [
         {
-          "path": "index.html",
-          "baseBlob": "4f1a4d6e19f0f526336d841160ec5f595aafdffa",
-          "blob": "49d89f3429a0a97df85e799b02a09d53b912b48d",
-          "sha256": "d168f114e5e8152d345d1dc68e3a6cd758b94d196c8621503843499347831b98",
-          "reason": "Permit only the already admitted avatars.mds.yandex.net product-photo origin in img-src; keep script and connection policies unchanged."
-        },
-        {
           "path": "src/app.mjs",
-          "baseBlob": "f47e97e440173d55390de43cd21faea447651c18",
-          "blob": "4931c71b52d5fb09f882d476e9e792ed6a3ac300",
-          "sha256": "9081ee8eac9ba3a7f9f080b6a1031e9698a0efb0c027a1a9741478aad5df4da5",
-          "reason": "In public manual search require the selected retailer result to succeed, keep unavailable/timeout distinct from a genuine empty result, and identify the selected retailer rather than Open Food Facts. Preserve nonpublic OR success and existing price/Core/timeout conditions."
-        },
-        {
-          "path": "src/components/HoriCommerce.mjs",
-          "baseBlob": "157bb9083b471532c31747e7a0c4cd4a8ddcf1bf",
-          "blob": "8df6cfdbeb58e71cbbf5759729c4adfb5b2bcc05",
-          "sha256": "7f1710f1828f23cf2b326569c76cbe8eecc064d9f53f02c75187cf354b1a3934",
-          "reason": "Expose existing Moscow city-promotion readers with visible scope labels and spelling-tolerant store navigation; preserve exact-store selection, basket and optional Hory."
-        },
-        {
-          "path": "src/components/NearbyShopping.mjs",
-          "baseBlob": "25479a5a850a2d3fef55487a1384848fe8aed168",
-          "blob": "dd96e5e0c3c30b951daadf0ea9932aeef0719764",
-          "sha256": "31e5968ffef6bfeeacbf5e6dfc9c24034325e61de967deeefa4e9490b9579511",
-          "reason": "Distinguish an unavailable address service from a successful empty lookup and keep an explicit retry or map recovery available without claiming location persistence."
-        },
-        {
-          "path": "src/components/OkeyOfficialCatalog.mjs",
-          "baseBlob": "05faf86add0900229d66ecda2799e0645263cab3",
-          "blob": "219f16104108a298048ac5a945515e7b5cc2b3ec",
-          "sha256": "e58f4213c0f7634a885d3cf63a63a4c163c57ebe7e974d8fcd8601163a90b848",
-          "reason": "Bound static feed headers/body reads by 5000ms, expose explicit retry, preserve independent validated observations with original dates and expiry rules."
-        },
-        {
-          "path": "src/components/pixel-storefront.css",
-          "baseBlob": "c1faf07cc28b5ab8c7b353aef4018771084e9f80",
-          "blob": "8eb9c5549a53fdc0aa98802d7c95d6eb9fb033ad",
-          "sha256": "bd063b74b1be04740eb804ca17741a7b215f4e767e9eea39aa45b53cae2929bf",
-          "reason": "Make the existing OKEY directory readable in both pixel themes and identify the two city-promotion navigation cards without altering retailer product photos."
+          "baseBlob": "4931c71b52d5fb09f882d476e9e792ed6a3ac300",
+          "blob": "473bbe73c4a367124b043fe9c25396b9560d3fd0",
+          "sha256": "9a8a60229cad3fb4bac875f5e956885955e4ae4aaa0b9857630d0b07e7e6c68f",
+          "reason": "A collection is a root destination even while root loading is pending; use existing navigation generations to reject late root results. Preserve the public-only manual-search success/empty/503/timeout contract."
         }
       ],
+      "inheritedBrowserOverrides": {
+        "repository": "ZebraRectifier/checkni-g5-preview",
+        "publicBase": "667b44c4bff129c3d5c2dae486b415de50360c54",
+        "parentReleaseManifest": "release/magnit-fresh-addresses-20261022.json",
+        "releaseManifest": "release/catalog-access-recovery-20261022.json",
+        "reason": "Independent public production hotfix. sourceCommit identifies the verified private baseline; per-file public origins identify the actual browser runtime. This is not a byte-identical private publication.",
+        "paths": [
+          {
+            "path": "index.html",
+            "baseBlob": "4f1a4d6e19f0f526336d841160ec5f595aafdffa",
+            "blob": "49d89f3429a0a97df85e799b02a09d53b912b48d",
+            "sha256": "d168f114e5e8152d345d1dc68e3a6cd758b94d196c8621503843499347831b98",
+            "reason": "Permit only the already admitted avatars.mds.yandex.net product-photo origin in img-src; keep script and connection policies unchanged."
+          },
+          {
+            "path": "src/app.mjs",
+            "baseBlob": "f47e97e440173d55390de43cd21faea447651c18",
+            "blob": "4931c71b52d5fb09f882d476e9e792ed6a3ac300",
+            "sha256": "9081ee8eac9ba3a7f9f080b6a1031e9698a0efb0c027a1a9741478aad5df4da5",
+            "reason": "In public manual search require the selected retailer result to succeed, keep unavailable/timeout distinct from a genuine empty result, and identify the selected retailer rather than Open Food Facts. Preserve nonpublic OR success and existing price/Core/timeout conditions."
+          },
+          {
+            "path": "src/components/HoriCommerce.mjs",
+            "baseBlob": "157bb9083b471532c31747e7a0c4cd4a8ddcf1bf",
+            "blob": "8df6cfdbeb58e71cbbf5759729c4adfb5b2bcc05",
+            "sha256": "7f1710f1828f23cf2b326569c76cbe8eecc064d9f53f02c75187cf354b1a3934",
+            "reason": "Expose existing Moscow city-promotion readers with visible scope labels and spelling-tolerant store navigation; preserve exact-store selection, basket and optional Hory."
+          },
+          {
+            "path": "src/components/NearbyShopping.mjs",
+            "baseBlob": "25479a5a850a2d3fef55487a1384848fe8aed168",
+            "blob": "dd96e5e0c3c30b951daadf0ea9932aeef0719764",
+            "sha256": "31e5968ffef6bfeeacbf5e6dfc9c24034325e61de967deeefa4e9490b9579511",
+            "reason": "Distinguish an unavailable address service from a successful empty lookup and keep an explicit retry or map recovery available without claiming location persistence."
+          },
+          {
+            "path": "src/components/OkeyOfficialCatalog.mjs",
+            "baseBlob": "05faf86add0900229d66ecda2799e0645263cab3",
+            "blob": "219f16104108a298048ac5a945515e7b5cc2b3ec",
+            "sha256": "e58f4213c0f7634a885d3cf63a63a4c163c57ebe7e974d8fcd8601163a90b848",
+            "reason": "Bound static feed headers/body reads by 5000ms, expose explicit retry, preserve independent validated observations with original dates and expiry rules."
+          },
+          {
+            "path": "src/components/pixel-storefront.css",
+            "baseBlob": "c1faf07cc28b5ab8c7b353aef4018771084e9f80",
+            "blob": "8eb9c5549a53fdc0aa98802d7c95d6eb9fb033ad",
+            "sha256": "bd063b74b1be04740eb804ca17741a7b215f4e767e9eea39aa45b53cae2929bf",
+            "reason": "Make the existing OKEY directory readable in both pixel themes and identify the two city-promotion navigation cards without altering retailer product photos."
+          }
+        ],
+        "retainedPublicPaths": [
+          "src/components/OkeyOfficialCatalog.mjs",
+          "src/components/OkeyDeliveryCatalog.mjs",
+          "src/data/okeyDeliveryHistory.json",
+          "src/data/okeyDeliveryRefresh.json",
+          "src/data/okeyOfficialPromotions.json",
+          "src/data/okeyOfficialRefresh.json",
+          "src/data/okeyPublishedPromotions.json",
+          "src/data/okeyPublishedRefresh.json",
+          "src/data/pyaterochkaPublishedPromotions.json",
+          "src/data/pyaterochkaPublishedRefresh.json",
+          "index.html",
+          "src/app.mjs",
+          "src/components/HoriCommerce.mjs",
+          "src/components/NearbyShopping.mjs",
+          "src/components/pixel-storefront.css"
+        ]
+      },
       "retainedPublicPaths": [
         "src/components/OkeyOfficialCatalog.mjs",
         "src/components/OkeyDeliveryCatalog.mjs",
@@ -2513,5 +2546,190 @@
         "deployed runtime verification"
       ]
     }
+  },
+  "sourceCommitHistoricalBaseline": "76cb3da68c7b021840171ff8997039498a754965",
+  "metroDaCatalogRecovery": {
+    "releaseManifest": "release/metro-da-catalog-recovery-20261022.json",
+    "runtimeFiles": 211,
+    "publicBase": "3f857338bb89490c3bd465b287239d80d1bd3862",
+    "privateSourceParity": false,
+    "integration": {
+      "status": "SOURCE26_AND_DEPLOYED29_VERIFIED_PUBLIC_CI_PENDING",
+      "testedPrivateHead": "b1298d7bf1e86d9e7244d523a26746d0fc6db73a",
+      "exactHeadCi": {
+        "passed": true,
+        "sha": "b1298d7bf1e86d9e7244d523a26746d0fc6db73a",
+        "linuxSupervisor": {
+          "passed": true,
+          "checkedOutSha": "b1298d7bf1e86d9e7244d523a26746d0fc6db73a",
+          "skippedCounts": [
+            0
+          ],
+          "logSha256": "bb175f8bd8b21df670af6b7b0fa33409762fa070a606e3dc0dd705fab7f886b4",
+          "jobId": 120129988862,
+          "runId": 39866526194
+        },
+        "checks": [
+          {
+            "id": 120129988862,
+            "name": "baseline",
+            "status": "completed",
+            "conclusion": "success",
+            "workflowPath": ".github/workflows/ci.yml",
+            "runId": 39866526194
+          },
+          {
+            "id": 120139505289,
+            "name": "e2e",
+            "status": "completed",
+            "conclusion": "success",
+            "workflowPath": ".github/workflows/ci.yml",
+            "runId": 39866526194
+          },
+          {
+            "id": 120129988090,
+            "name": "package",
+            "status": "completed",
+            "conclusion": "success",
+            "workflowPath": ".github/workflows/pages.yml",
+            "runId": 39866526041
+          },
+          {
+            "id": 120129987997,
+            "name": "release-gate",
+            "status": "completed",
+            "conclusion": "success",
+            "workflowPath": ".github/workflows/perekrestok-hosted-release-gate.yml",
+            "runId": 39866526066
+          }
+        ],
+        "runs": [
+          {
+            "id": 39866526194,
+            "event": "pull_request",
+            "path": ".github/workflows/ci.yml",
+            "head": "b1298d7bf1e86d9e7244d523a26746d0fc6db73a",
+            "attempt": 1,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 39866526041,
+            "event": "pull_request",
+            "path": ".github/workflows/pages.yml",
+            "head": "b1298d7bf1e86d9e7244d523a26746d0fc6db73a",
+            "attempt": 1,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 39866526066,
+            "event": "pull_request",
+            "path": ".github/workflows/perekrestok-hosted-release-gate.yml",
+            "head": "b1298d7bf1e86d9e7244d523a26746d0fc6db73a",
+            "attempt": 1,
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      "actualPrivateMain": "efa2e9c4f4e137fe491860bd9f2b36a6ffb7490b",
+      "actualMainCi": {
+        "passed": true,
+        "sha": "efa2e9c4f4e137fe491860bd9f2b36a6ffb7490b",
+        "linuxSupervisor": {
+          "passed": true,
+          "checkedOutSha": "efa2e9c4f4e137fe491860bd9f2b36a6ffb7490b",
+          "skippedCounts": [
+            0
+          ],
+          "logSha256": "435dd23373bfd3da8ef9cc2d5ebff3910f9d72472e835a7de7c9f99691ed6d8c",
+          "jobId": 120150120313,
+          "runId": 39872519477
+        },
+        "checks": [
+          {
+            "id": 120150120313,
+            "name": "baseline",
+            "status": "completed",
+            "conclusion": "success",
+            "workflowPath": ".github/workflows/ci.yml",
+            "runId": 39872519477
+          },
+          {
+            "id": 120151042383,
+            "name": "e2e",
+            "status": "completed",
+            "conclusion": "success",
+            "workflowPath": ".github/workflows/ci.yml",
+            "runId": 39872519477
+          },
+          {
+            "id": 120150120610,
+            "name": "package",
+            "status": "completed",
+            "conclusion": "success",
+            "workflowPath": ".github/workflows/pages.yml",
+            "runId": 39872519476
+          }
+        ],
+        "runs": [
+          {
+            "id": 39872519477,
+            "event": "push",
+            "path": ".github/workflows/ci.yml",
+            "head": "efa2e9c4f4e137fe491860bd9f2b36a6ffb7490b",
+            "attempt": 1,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 39872519476,
+            "event": "push",
+            "path": ".github/workflows/pages.yml",
+            "head": "efa2e9c4f4e137fe491860bd9f2b36a6ffb7490b",
+            "attempt": 1,
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      "packetPath": "outputs/retail-source-recovery-20261022-v5-corrected/combined-packet.sealed.json",
+      "packetSha256": "8de5dfe2fb8253a2a493f92533737064722277e43730b891527036a65e78e356",
+      "required": [
+        "Bind eventual integrated/tested private head and actual main with green exact CI before publication",
+        "Fresh public main/ownership check",
+        "Own exact-head public CI",
+        "Actual-main public CI and served closure verification"
+      ],
+      "fullSourceFreshnessApproved": false,
+      "okeySourceFreshnessPassed": false,
+      "expectedPrivateHead": "b1298d7bf1e86d9e7244d523a26746d0fc6db73a",
+      "commitReceipt": {
+        "path": "outputs/retail-source-recovery-20261022-v5-corrected/commit-receipt.json",
+        "sha256": "f567f37dd3882e542e049cc7420b69e88859d7c5d02ece2cb49b8c225ffe4c81"
+      },
+      "sourceProof": {
+        "path": "outputs/retail-source-recovery-20261022-v5-corrected/release-gates/2026-10-23T00-00-11-229Z-integrated-pr583/source-proof26.json",
+        "sha256": "f0c5a8625a001c793cfb7a8e5f3c38274ba04573c5ec0525c109118b00bc499b"
+      },
+      "metroDeploymentProof": {
+        "path": "outputs/retail-source-recovery-20261022-v5-corrected/metro-edge-finalize/bound/efa2e9c4f4e137fe491860bd9f2b36a6ffb7490b/deployed-proof.json",
+        "sha256": "fcf989b9f04ca7207c99d2e1be71e11025acac1359e3ce0ba4226c5af70ac36b"
+      },
+      "metroDeploymentManifest": {
+        "path": "outputs/retail-source-recovery-20261022-v5-corrected/metro-edge-finalize/bound/efa2e9c4f4e137fe491860bd9f2b36a6ffb7490b/edge-closure-manifest.json",
+        "sha256": "2ae92f97bca356801edbedd2ee6eecd2ca2061fcfdfa55710eb52a28e0641f67"
+      },
+      "originalPublicPreparation": {
+        "path": "outputs/metro-da-public-runtime-20261022-v3/packet.sealed.json",
+        "sha256": "f26c480b0bb3a9e4d5497931d49a2e0bda89615f622001acac90a03ad932db6b",
+        "historicalCandidate": "7d852400117705d09a9caba31b5139640651c877"
+      }
+    },
+    "inherited210ManifestImmutable": "release/collection-navigation-recovery-20261022.json",
+    "publicManualSearchOverridePreserved": true,
+    "retainedPublicPaths": 15,
+    "byteIdenticalRetainedPaths": 14
   }
 }

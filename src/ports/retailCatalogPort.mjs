@@ -261,12 +261,12 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     localityName: "Сеть ДА!",
     displayName: "ДА!",
     catalogLabel: "ДА! · текущий промо-каталог",
-    scopeLabel: "Промо 1–14 октября · наличие зависит от магазина",
+    scopeLabel: "Публичный промо-каталог · наличие зависит от магазина",
     logo: "Д",
-    defaultProductCount: 94,
+    defaultProductCount: null,
     rootCategoryCount: 1,
-    catalogValidFrom: "2026-10-01",
-    catalogValidTo: "2026-10-14",
+    // Each observed row must prove its own current promo period below. The
+    // network entry is not permanently tied to a previously published issue.
     requiresPromoValidity: true,
     productUrlRules: Object.freeze([
       Object.freeze({ host: "market-da.ru", prefix: "/sale.html" })

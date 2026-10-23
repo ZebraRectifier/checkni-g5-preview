@@ -2,7 +2,7 @@ import {defineConfig,devices} from '@playwright/test';
 
 export default defineConfig({
   testDir:'./test/e2e',
-  testMatch:['pixel-storefront.spec.mjs','manual-search-ux.spec.mjs','hori-panel-contrast.spec.mjs','hori-cubes.spec.mjs','hori-v13.spec.mjs','hori-reference.spec.mjs','hori-workspace.spec.mjs','magnit-current-catalog.spec.mjs','magnit-legacy-aliases.spec.mjs','catalog-access-recovery.spec.mjs','pyaterochka-published.spec.mjs','nearby-shopping.spec.mjs','guided-shopping.spec.mjs','shopping-dialogue-recovery.spec.mjs','weekly-retail-basket.spec.mjs'],
+  testMatch:['da-published-catalog.spec.mjs','metro-catalog-freshness.spec.mjs','pixel-storefront.spec.mjs','manual-search-ux.spec.mjs','hori-panel-contrast.spec.mjs','hori-cubes.spec.mjs','hori-v13.spec.mjs','hori-reference.spec.mjs','hori-workspace.spec.mjs','magnit-current-catalog.spec.mjs','magnit-legacy-aliases.spec.mjs','catalog-access-recovery.spec.mjs','pyaterochka-published.spec.mjs','nearby-shopping.spec.mjs','guided-shopping.spec.mjs','shopping-dialogue-recovery.spec.mjs','weekly-retail-basket.spec.mjs'],
   fullyParallel:false,
   expect:{toHaveScreenshot:{pathTemplate:'{testDir}/reference-v13/{platform}/{arg}{ext}'}},
   forbidOnly:Boolean(process.env.CI),

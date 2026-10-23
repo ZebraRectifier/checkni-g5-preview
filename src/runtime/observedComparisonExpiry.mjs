@@ -9,7 +9,9 @@ export function observedComparisonExpiresAt(result, sourceMaxAgeMs) {
     for (const line of Array.isArray(candidate?.lines) ? candidate.lines : []) {
       if (line?.status !== OBSERVED_LINE_STATUS.PRICED) continue;
       const sourceId = line.provenance?.sourceId ?? candidate.sourceId;
-      const maxAgeMs = sourceMaxAgeMs(sourceId);
+      // The line/candidate allow a trusted catalogue proof to have a distinct
+      // lifetime while same-source live observations retain their own policy.
+      const maxAgeMs = sourceMaxAgeMs(sourceId, line, candidate);
       // A source with no supplied lifetime is outside this integration's
       // scope. It is never assigned a guessed retailer freshness interval.
       if (maxAgeMs === null || maxAgeMs === undefined) continue;
