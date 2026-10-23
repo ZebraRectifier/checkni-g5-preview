@@ -158,7 +158,6 @@ jobs:
           }
 
           const promoPeriods = {
-            da: promoPeriod(deployment.da, "da"),
             auchan: promoPeriod(deployment.auchan, "auchan")
           };
 
@@ -750,105 +749,67 @@ jobs:
 
             const daDay = moscowDateKey();
             stage("da:start:" + daDay);
-            if (promoCurrent(promoPeriods.da, daDay)) {
-              // Verify the dated public-network DA promo catalog only after the
-              // corresponding Pages artifact is actually published.
-              let daPublished = false;
-              for (let attempt = 0; attempt < 16; attempt += 1) {
-                const daSelector = page.locator("#retail-store-card-da");
-                const daText = await storeFacts(daSelector).catch(() => "");
-                if (
-                  daText.includes("ДА! · публичный промо-каталог")
-                  && daText.includes("1 категория · 94 товара")
-                  && daText.includes("Промо 1–14 октября")
-                ) {
-                  daPublished = true;
-                  break;
-                }
-                await page.waitForTimeout(2500);
-                await page.goto(
-                  url + "&da_release=7bc40759&attempt=" + attempt,
-                  { waitUntil: "domcontentloaded", timeout: 30000 }
-                );
-                await page.waitForTimeout(900);
-              }
-              assert(
-                daPublished,
-                "GitHub Pages did not publish DA 94-product promo artifact"
-              );
-
-              const da = page.locator("#retail-store-card-da");
-              await chooseStore(page, "#retail-store-card-da");
-              await page.waitForFunction(() => (
-                document.querySelector("#retail-store-card-da")
-                  ?.getAttribute("aria-pressed") === "true"
-                && document.querySelectorAll(
-                  "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
-                ).length === 1
-              ), null, { timeout: 15000 });
-
-              const daCategory = page.getByRole("button", {
-                name: /Текущий промо-каталог/
-              });
-              await daCategory.waitFor({ state: "visible", timeout: 15000 });
-              await daCategory.click();
-
-              await page.waitForFunction(() => (
-                document.querySelectorAll(
-                  '#product-grid [data-product-id^="retail:da:da-public-promo:"]'
-                ).length > 0
-              ), null, { timeout: 15000 });
-
-              const daCard = page.locator(
-                '#product-grid [data-product-id^="retail:da:da-public-promo:"]'
-              ).first();
-              await daCard.waitFor({ state: "visible", timeout: 15000 });
-              const daCardText = await daCard.innerText();
-              assert(
-                /\d[\d\s]*,\d{2} ₽/u.test(daCardText),
-                "Published DA card is missing an observed RUB promo price"
-              );
-              assert(
-                daCardText.includes("Промо-цена каталога"),
-                "Published DA card lost promo price condition"
-              );
-              assert(
-                /до (?:07|14)\.10/u.test(daCardText),
-                "Published DA card lost promo validity"
-              );
-              assert(
-                daCardText.includes("ДА! · публичный промо-каталог · источник"),
-                "Published DA card lost network/source provenance"
-              );
-
-              const daImage = daCard.locator("img.product-photo");
-              await daImage.waitFor({ state: "visible", timeout: 15000 });
-              const daImageState = await daImage.evaluate((node) => ({
-                src: node.currentSrc || node.src,
-                complete: node.complete,
-                naturalWidth: node.naturalWidth
-              }));
-              assert(
-                daImageState.src.startsWith("https://market-da.ru/assets/"),
-                "DA card is not using the official image host"
-              );
-              assert(
-                daImageState.complete && daImageState.naturalWidth > 0,
-                "Official DA promo image did not load"
-              );
-              assert(
-                await daCard.getByRole("button").isDisabled(),
-                "Display-only DA promo observation must not enter the comparison basket"
-              );
+            // DA remains discoverable between issues. Current eligibility belongs
+            // to each fetched row, not the date/count of an archived deployment.
+            const da = page.locator("#retail-store-card-da");
+            assert(await da.count() === 1, "DA network entry must remain discoverable");
+            assert((await storeFacts(da)).includes("Публичный промо-каталог"),
+              "DA entry lost its public-network scope");
+            await chooseStore(page, "#retail-store-card-da");
+            const daCategory = page.locator(
+              "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
+            ).first();
+            const daResponse = page.waitForResponse(response => {
+              const requestUrl = new URL(response.url());
+              return requestUrl.origin === "https://cxpneczhczashanbetgj.supabase.co"
+                && requestUrl.pathname === "/rest/v1/retail_catalog_items"
+                && requestUrl.searchParams.get("retailer_id") === "eq.da"
+                && requestUrl.searchParams.get("store_id") === "eq.da-public-promo"
+                && response.request().method() === "GET";
+            }, { timeout: 20000 });
+            await daCategory.click();
+            const response = await daResponse;
+            assert(response.status() === 200, "DA catalogue read failed");
+            const rawDaRows = await response.json();
+            assert(Array.isArray(rawDaRows) && rawDaRows.length <= 160,
+              "DA category response exceeded the existing bounded catalogue contract");
+            const { normalizeRetailRow } = await import("./src/ports/retailCatalogPort.mjs");
+            const expectedDaRows = rawDaRows
+              .map(row => normalizeRetailRow(row, "da", { nowMs: Date.now() }))
+              .filter(Boolean);
+            const daCards = page.locator('#product-grid [data-product-id^="retail:da:da-public-promo:"]');
+            if (expectedDaRows.length === 0) {
+              await page.locator("#empty-search-copy").filter({ hasText: /сейчас нет товаров/ })
+                .waitFor({ state: "visible", timeout: 15000 });
+              assert(await daCards.count() === 0,
+                "Expired or unproven DA observations must not become current product cards");
+              stage("da:no-current-rows:honest-empty");
             } else {
-              assert(await page.locator("#retail-store-card-da").count() === 0,
-                "Non-current da promo selector must be absent on " + daDay);
-              assert(await page.locator('.product-card[data-product-id^="retail:da:"]').count() === 0,
-                "Non-current da promo cards must be absent on " + daDay);
-              stage("da:not-current:absent");
+              await daCards.first().waitFor({ state: "visible", timeout: 15000 });
+              const ids = await daCards.evaluateAll(nodes => nodes.map(n => n.dataset.productId));
+              const expectedIds = new Set(expectedDaRows.map(row => row.id));
+              assert(ids.length > 0 && ids.every(id => expectedIds.has(id)),
+                "DA rendered a row outside the current-period normalizer result");
+              const daCard = daCards.first();
+              await priceDetails(daCard);
+              const daCardText = await daCard.innerText();
+              assert(/\d[\d\s]*,\d{2} ₽/u.test(daCardText), "DA card lost observed RUB price");
+              assert(daCardText.includes("Промо-цена каталога"), "DA card lost promo condition");
+              assert(/до \d{2}\.\d{2}/u.test(daCardText), "DA card lost its row-specific validity");
+              assert(daCardText.includes("ДА! · публичный промо-каталог · источник"),
+                "DA card lost source provenance");
+              assert(await daCard.locator(".add-button").isDisabled(),
+                "Display-only DA observation must not enter the comparison basket");
+              const image = daCard.locator("img.product-photo");
+              await image.waitFor({ state: "visible", timeout: 15000 });
+              await image.evaluate(node => node.decode());
+              assert(await image.evaluate(node => node.naturalWidth > 0
+                && (node.currentSrc || node.src).startsWith("https://market-da.ru/assets/")),
+              "DA current card lost its official product image");
+              stage("da:current-row-truth:ok");
             }
             assert(moscowDateKey() === daDay,
-              "Moscow date changed during da promo smoke; rerun on the new day");
+              "Moscow date changed during DA smoke; preserve result and inspect next day");
             stage("da:ok");
 
             const auchanDay = moscowDateKey();

@@ -9,10 +9,12 @@ on:
       - "src/data/metroMoscowRegionStores.mjs"
       - "src/ports/retailCatalogPort.mjs"
       - ".github/workflows/metro-live-address-smoke.yml"
+      - ".github/workflows/live-retail-smoke.yml"
   pull_request:
     paths:
       - "src/data/metroMoscowRegionStores.mjs"
       - ".github/workflows/metro-live-address-smoke.yml"
+      - ".github/workflows/live-retail-smoke.yml"
   workflow_dispatch:
 
 permissions:

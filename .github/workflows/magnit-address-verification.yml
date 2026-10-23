@@ -7,6 +7,7 @@ on:
       - "test/e2e/helpers/pixel-surface.mjs"
       - "playwright.magnit.config.mjs"
       - ".github/workflows/magnit-address-verification.yml"
+      - ".github/workflows/live-retail-smoke.yml"
   push:
     branches: [main, fix/magnit-address-selection]
     paths:
@@ -15,6 +16,7 @@ on:
       - "test/e2e/helpers/pixel-surface.mjs"
       - "playwright.magnit.config.mjs"
       - ".github/workflows/magnit-address-verification.yml"
+      - ".github/workflows/live-retail-smoke.yml"
 permissions:
   contents: read
 jobs:
