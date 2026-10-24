@@ -1,4 +1,4 @@
-import { WEEKLY_ROUTE_PRODUCTS } from '../catalog/weeklyRouteProducts.mjs';
+import { WEEKLY_BASKET_RECIPE } from '../catalog/weeklyBasketRecipe.mjs';
 import { quoteCatalogDraft } from './catalogDraft.mjs';
 
 // Price arithmetic stays in Core. Missing/expired observations cannot become a
@@ -9,7 +9,7 @@ export function quoteWeeklyRoute(cards,quantities={},nowMs=Date.now()){
   if(index.has(card.sourceProductId))index.set(card.sourceProductId,null);
   else index.set(card.sourceProductId,card);
  }
- const rows=WEEKLY_ROUTE_PRODUCTS.map(p=>{
+ const rows=WEEKLY_BASKET_RECIPE.map(p=>{
   const card=index.get(p.sourceProductId);
   const valid=card?.basketProductId===p.id&&card.name===p.sourceName&&card.unit===p.unit
     &&card.retailerId==='globus'&&card.priceCondition==='regular'&&card.catalogPurchaseBasis==='piece';
@@ -18,6 +18,6 @@ export function quoteWeeklyRoute(cards,quantities={},nowMs=Date.now()){
    quantity:Number.isInteger(q)&&q>=1&&q<=99?q:0};
  });
  const quote=quoteCatalogDraft(rows,{nowMs,maxAgeMs:3600000});
- return {...quote,ready:quote.complete&&quote.allRecent&&quote.basket.length===WEEKLY_ROUTE_PRODUCTS.length,
-  missingProductIds:quote.lines.flatMap((line,i)=>!line.addable||line.freshness!=='recent'?[WEEKLY_ROUTE_PRODUCTS[i].id]:[])};
+ return {...quote,ready:quote.complete&&quote.allRecent&&quote.basket.length===WEEKLY_BASKET_RECIPE.length,
+  missingProductIds:quote.lines.flatMap((line,i)=>!line.addable||line.freshness!=='recent'?[WEEKLY_BASKET_RECIPE[i].id]:[])};
 }

@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "b5130823f5989ec0973ee941b9b526f06226a4ae",
+  "sourceCommit": "8bda8b9e61d59f2bc6b9044a2019b95c1f18edfc",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -2733,21 +2733,23 @@
     "byteIdenticalRetainedPaths": 14
   },
   "weeklyRoute": {
-    "sourceCommit": "b5130823f5989ec0973ee941b9b526f06226a4ae",
-    "testedSourceHead": "ba3d31f18e11262c98161c40c61dd50f55f49e7f",
-    "manifest": "release/weekly-route-20261023.json",
+    "sourceCommit": "8bda8b9e61d59f2bc6b9044a2019b95c1f18edfc",
+    "testedSourceHead": "5d1224af73da74345b5bb6c9bb91e75a6ef23960",
+    "manifest": "release/weekly-route-20261024.json",
     "retailer": "globus",
     "physicalStoreIds": [
       "5011",
       "5020"
     ],
-    "products": 12,
+    "products": 10,
     "people": 3,
     "days": 7,
     "editableQuantities": true,
-    "runtimeFiles": 215,
+    "runtimeFiles": 216,
     "sourceFreshnessVerified": false,
     "livePriceVerificationRequired": true,
-    "gptunnelPreserved": true
+    "gptunnelPreserved": true,
+    "sourceObservationProducts": 14,
+    "collectorContract": "globus-weekly-route-v1"
   }
 }
