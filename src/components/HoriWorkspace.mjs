@@ -69,6 +69,11 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   commerce = createHoriCommerce({ document, main, shop: document.getElementById('shop-view'), header,
     onOpenHory: openAssistant, onOpenAddress: () => { if (horyDialog.open) closeAssistant({ restoreFocus: false }); } });
   close.addEventListener('click', () => closeAssistant());
+  // History is owned by app.mjs. Dismiss this transient surface before its
+  // navigation handler focuses the destination, preserving the draft inside.
+  view.addEventListener('popstate', () => {
+    if (horyDialog.open) closeAssistant({ restoreFocus: false });
+  });
   horyDialog.addEventListener('close', () => {
     commerce.setAssistantOpen(false);
     if (restoreAssistantFocus) commerce.assistantButton.focus({ preventScroll: true });
