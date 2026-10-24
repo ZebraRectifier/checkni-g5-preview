@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "8bda8b9e61d59f2bc6b9044a2019b95c1f18edfc",
+  "sourceCommit": "81a5c51780003978afaaa8661ab33c948346b4c9",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -2751,5 +2751,150 @@
     "gptunnelPreserved": true,
     "sourceObservationProducts": 14,
     "collectorContract": "globus-weekly-route-v1"
+  },
+  "perekrestokCatalogTransport": {
+    "sourcePr": 589,
+    "sourceCommit": "81a5c51780003978afaaa8661ab33c948346b4c9",
+    "testedSourceHead": "6206a6bc681e3f8f7ad1423fc42d3f28d102056a",
+    "sourceMainCi": 40063851341,
+    "sourceExactCi": 40060793906,
+    "timeoutMs": 5000,
+    "otherRetailersKeepExistingTimeout": true,
+    "requestsPerRead": 1,
+    "manifest": "release/perekrestok-catalog-timeout-20261024.json",
+    "scope": "Perekrestok public catalogue transport only; price freshness and admission are unchanged",
+    "sourceFreshnessVerified": false,
+    "aiProviderChanged": false
+  },
+  "browserComposition": {
+    "manifest": "release/perekrestok-catalog-timeout-20261024.json",
+    "parentManifest": "release/weekly-route-20261024.json",
+    "sourceCommit": "81a5c51780003978afaaa8661ab33c948346b4c9",
+    "testedSourceHead": "6206a6bc681e3f8f7ad1423fc42d3f28d102056a",
+    "publicBase": "f825c6610dcca58b68d7a048974b6cf62ff0f0ef",
+    "privateSourceParity": false,
+    "publicManualSearchOverridesPreserved": true,
+    "runtimeFiles": 216,
+    "changedRuntimePaths": [
+      "src/ports/retailCatalogPort.mjs"
+    ],
+    "retainedPublicPaths": [
+      "src/components/OkeyOfficialCatalog.mjs",
+      "src/components/OkeyDeliveryCatalog.mjs",
+      "src/data/okeyDeliveryHistory.json",
+      "src/data/okeyDeliveryRefresh.json",
+      "src/data/okeyOfficialPromotions.json",
+      "src/data/okeyOfficialRefresh.json",
+      "src/data/okeyPublishedPromotions.json",
+      "src/data/okeyPublishedRefresh.json",
+      "src/data/pyaterochkaPublishedPromotions.json",
+      "src/data/pyaterochkaPublishedRefresh.json",
+      "index.html",
+      "src/app.mjs",
+      "src/components/HoriCommerce.mjs",
+      "src/components/NearbyShopping.mjs",
+      "src/components/pixel-storefront.css"
+    ],
+    "actualPublicOverrides": [
+      {
+        "path": "index.html",
+        "bytes": 10544,
+        "sha256": "d168f114e5e8152d345d1dc68e3a6cd758b94d196c8621503843499347831b98",
+        "blob": "49d89f3429a0a97df85e799b02a09d53b912b48d",
+        "sourceBlob": "4f1a4d6e19f0f526336d841160ec5f595aafdffa"
+      },
+      {
+        "path": "src/app.mjs",
+        "bytes": 127339,
+        "sha256": "743a71106d9b31aa6478bb5d5d1ec37070c51e3db92d5941f5112032d69a6c6d",
+        "blob": "79cff46b0169dd8164ee5364317132917b52d8ad",
+        "sourceBlob": "e0bfc16fd6a43c8ea3c1092b0c3711bf1ace3b4d"
+      },
+      {
+        "path": "src/components/HoriCommerce.mjs",
+        "bytes": 17831,
+        "sha256": "7f1710f1828f23cf2b326569c76cbe8eecc064d9f53f02c75187cf354b1a3934",
+        "blob": "8df6cfdbeb58e71cbbf5759729c4adfb5b2bcc05",
+        "sourceBlob": "157bb9083b471532c31747e7a0c4cd4a8ddcf1bf"
+      },
+      {
+        "path": "src/components/NearbyShopping.mjs",
+        "bytes": 12386,
+        "sha256": "31e5968ffef6bfeeacbf5e6dfc9c24034325e61de967deeefa4e9490b9579511",
+        "blob": "dd96e5e0c3c30b951daadf0ea9932aeef0719764",
+        "sourceBlob": "25479a5a850a2d3fef55487a1384848fe8aed168"
+      },
+      {
+        "path": "src/components/OkeyDeliveryCatalog.mjs",
+        "bytes": 6972,
+        "sha256": "6048eb2961b9a8e8b85fd54a26d8880a1e974e08bb4be4ceb3e115382506fc03",
+        "blob": "efa0e0e368467d9263b8a2c006916e9bbdfde678",
+        "sourceBlob": "a863f14a91eba72302fcc55e007b0d1352e5dcb4"
+      },
+      {
+        "path": "src/components/OkeyOfficialCatalog.mjs",
+        "bytes": 6656,
+        "sha256": "e58f4213c0f7634a885d3cf63a63a4c163c57ebe7e974d8fcd8601163a90b848",
+        "blob": "219f16104108a298048ac5a945515e7b5cc2b3ec",
+        "sourceBlob": null
+      },
+      {
+        "path": "src/components/pixel-storefront.css",
+        "bytes": 47640,
+        "sha256": "bd063b74b1be04740eb804ca17741a7b215f4e767e9eea39aa45b53cae2929bf",
+        "blob": "8eb9c5549a53fdc0aa98802d7c95d6eb9fb033ad",
+        "sourceBlob": "c1faf07cc28b5ab8c7b353aef4018771084e9f80"
+      },
+      {
+        "path": "src/data/okeyDeliveryRefresh.json",
+        "bytes": 185,
+        "sha256": "dee21f0aef541de12fdd3ae992f28d3724bffb802c40ca180c3825873b86f712",
+        "blob": "a9715a052cb7e6275874c2cfb553bad2bfc4150e",
+        "sourceBlob": "8f4f3d52d847749fd8081769d489a039a613bfed"
+      },
+      {
+        "path": "src/data/okeyOfficialPromotions.json",
+        "bytes": 28,
+        "sha256": "eb133637ed9475c3dc3980f624f09f3ccc90d3f9cfe101aa47cb92340c72d43b",
+        "blob": "9ba514a07cc9832ca8343154671c97dcc36744f6",
+        "sourceBlob": null
+      },
+      {
+        "path": "src/data/okeyOfficialRefresh.json",
+        "bytes": 209,
+        "sha256": "28db435da62cd1f1c92baa41c7fcd95fec59e38afbd56d5665922f8852d7c174",
+        "blob": "ed8e7727ae6436648ee7034474a5d0397dfa0cd0",
+        "sourceBlob": null
+      },
+      {
+        "path": "src/data/okeyPublishedPromotions.json",
+        "bytes": 79960,
+        "sha256": "6b537502dd76fc7408f6b96efc30fa47fe3c24364eb250cc7116c35bda69ea4c",
+        "blob": "44c95e207c2252c8e76241a16310f5d51add3caf",
+        "sourceBlob": "bc7596aa9a3e194e6a429f2c704d54347d03df6b"
+      },
+      {
+        "path": "src/data/okeyPublishedRefresh.json",
+        "bytes": 249,
+        "sha256": "fe716d439aa9c53925b190ac6767b8f7e10809f39a781dea14177cde34bb08d0",
+        "blob": "76533f691621ca068d59fe0096f7adfb793bb40d",
+        "sourceBlob": null
+      },
+      {
+        "path": "src/data/pyaterochkaPublishedPromotions.json",
+        "bytes": 90342,
+        "sha256": "fa85254691395d190e80ffb64dfc37ec3c5046d43c2c78c1a6204efd4cd5becb",
+        "blob": "cbe96f0c689530dfac470ec60115a3ce76841b7f",
+        "sourceBlob": "909abaf315b5702d5880ff87a0ff79f1d5342360"
+      },
+      {
+        "path": "src/data/pyaterochkaPublishedRefresh.json",
+        "bytes": 335,
+        "sha256": "b4b4aa1b979337b22bf47c10a1a5bab68518e520a6e2e8dc6a3ab9a1c242500c",
+        "blob": "a4a340037c0ea346011b063cfd5b0f752842920d",
+        "sourceBlob": "e7e55a9eb9c701573c22fcfe931d20c246dd460a"
+      }
+    ],
+    "historicalNestedProvenance": "Earlier browserOverrides and feature records describe their historical release; this composition records the current full runtime."
   }
 }
