@@ -1622,7 +1622,7 @@ async function loadMoreRetailCategoryProducts() {
   renderCatalog();
 }
 
-function restoreRetailNavigationFromHistory({ initial = false, forceAddressReload = false } = {}) {
+function restoreRetailNavigationFromHistory({ initial = false, forceAddressReload = false, preserveCatalog = false } = {}) {
   const restoredStage = history.state?.checkniRetailSurface === 'stores' ? 'stores'
     : history.state?.checkniRetailSurface === 'store' || history.state?.checkniRetailNavigation === true ? 'store' : 'stores';
   retailSurfaceStage = restoredStage;
@@ -1661,8 +1661,29 @@ function restoreRetailNavigationFromHistory({ initial = false, forceAddressReloa
   if (!definition) return;
   if (retailSurfaceStage === 'stores') {
     retailBrowserRequestVersion += 1; catalogRequestVersion += 1; retailCollectionsVersion += 1;
+    retailCollections = [];
     pendingCatalogSearch = null;
+    renderRetailCollections();
     renderRetailBrowser();
+    return;
+  }
+
+  // A basket round trip keeps the same catalogue in this document, including
+  // a submitted search or an unfinished draft. Reloading it would replace
+  // those cards with a root/category browse while leaving the input behind.
+  const sameAddress = retailerId === 'globus'
+    ? restoredGlobusStore?.officialStoreId === selectedGlobusStore.officialStoreId
+    : retailerId === 'magnit'
+      ? restoredMagnitStore?.shopCode === selectedMagnitStore.shopCode
+      : retailerId === 'metro'
+        ? restoredMetroStore?.storeNumber === selectedMetroStore.storeNumber
+        : true;
+  const samePath = restoredPath.length === retailBrowserState.path.length
+    && restoredPath.every((category, index) => category.categoryId === retailBrowserState.path[index].categoryId);
+  if (preserveCatalog && !initial && !forceAddressReload && !addressChanged
+      && sameAddress && samePath && retailerId === retailBrowserState.retailerId) {
+    renderRetailBrowser();
+    renderCatalog();
     return;
   }
 
@@ -1673,6 +1694,9 @@ function restoreRetailNavigationFromHistory({ initial = false, forceAddressReloa
     }
     retailBrowserRequestVersion += 1;
     catalogRequestVersion += 1;
+    retailCollectionsVersion += 1;
+    retailCollections = [];
+    renderRetailCollections();
     pendingCatalogSearch = null;
     retailBrowserState = {
       retailerId,
@@ -3006,6 +3030,8 @@ async function loadInitialRetailCatalog() {
   const requestId = ++catalogRequestVersion;
   pendingCatalogSearch = null;
   activeQuery = "";
+  elements.searchInput.value = "";
+  elements.clearSearch.hidden = true;
   catalogSearchState = {
     status: "loading",
     query: "",
@@ -3193,6 +3219,17 @@ elements.brandHome.addEventListener("click", (event) => {
 elements.openBasket.addEventListener("click", () => navigate(VIEW.BASKET));
 elements.backToShop.addEventListener("click", returnToShop);
 
+// The content shortcut changes focus, not the shopping route. A native #main
+// navigation would otherwise be interpreted as a trip out of the basket.
+document.querySelector('.skip-link[href="#main"]')?.addEventListener('click', event => {
+  const main = document.getElementById('main');
+  if (!main) return;
+  event.preventDefault();
+  main.tabIndex = -1;
+  main.focus({ preventScroll: true });
+  main.scrollIntoView({ block: 'start', behavior: 'auto' });
+});
+
 // Background throttling, sleep and the back/forward cache can defer timers.
 // These checks clear expired commercial output without fetching or changing
 // basket/address state; the user's compare action remains the retry path.
@@ -3204,6 +3241,7 @@ document.addEventListener("visibilitychange", () => {
 
 window.addEventListener("popstate", () => {
   const previousView = currentView;
+  const previousRetailSurfaceStage = retailSurfaceStage;
   const previousScopeKey = currentComparisonStoreScope().key;
   if (publicRetailCatalogMode) {
     const magnit = resolveMagnitMoscowStore({ shopCode: history.state?.checkniMagnitShopCode });
@@ -3232,7 +3270,10 @@ window.addEventListener("popstate", () => {
     publicRetailCatalogMode
     && currentView === VIEW.SHOP
   ) {
-    restoreRetailNavigationFromHistory({ forceAddressReload: addressChanged });
+    restoreRetailNavigationFromHistory({
+      forceAddressReload: addressChanged,
+      preserveCatalog: previousView === VIEW.BASKET && previousRetailSurfaceStage === retailSurfaceStage
+    });
   }
 });
 
