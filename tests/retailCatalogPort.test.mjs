@@ -773,6 +773,31 @@ test("Perekrestok adapter rejects wrong scope, stock claims and foreign URLs", (
   );
 });
 
+test('Perekrestok accepts one slow category response within five seconds without retry; the old default aborts it', async t => {
+  t.mock.timers.enable({apis:['setTimeout']});
+  for(const [timeoutMs,expected] of [[2500,'unavailable'],[undefined,'categories']]){
+    let calls=0;
+    const client=createRetailCatalogClient({retailerId:'perekrestok',...(timeoutMs?{timeoutMs}:{}),fetchImpl:(_url,{signal})=>{
+      calls++;
+      return new Promise((resolve,reject)=>{
+        signal.addEventListener('abort',()=>reject(Object.assign(Error('aborted'),{name:'AbortError'})),{once:true});
+        setTimeout(()=>resolve(new Response(JSON.stringify([perekrestokCategoryRow()]),{headers:{'Content-Type':'application/json'}})),3100);
+      });
+    }});
+    const pending=client.rootCategories();t.mock.timers.tick(3100);
+    const result=await pending;assert.equal(result.kind,expected);assert.equal(calls,1);
+  }
+});
+
+test('Perekrestok still aborts a stalled read at five seconds with one request',async t=>{
+  t.mock.timers.enable({apis:['setTimeout']});let calls=0,aborted=false;
+  const client=createRetailCatalogClient({retailerId:'perekrestok',fetchImpl:(_url,{signal})=>{
+    calls++;return new Promise((_resolve,reject)=>signal.addEventListener('abort',()=>{aborted=true;reject(Error('aborted'));},{once:true}));
+  }});
+  const pending=client.rootCategories();t.mock.timers.tick(4999);assert.equal(aborted,false);
+  t.mock.timers.tick(1);assert.equal((await pending).kind,'unavailable');assert.equal(aborted,true);assert.equal(calls,1);
+});
+
 function perekrestokCategoryRow(overrides = {}) {
   return {
     retailer_id: "perekrestok",

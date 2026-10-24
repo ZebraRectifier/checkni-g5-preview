@@ -788,8 +788,10 @@ export function createRetailCatalogClient(options = {}) {
   const publishableKey =
     options.publishableKey ?? CATALOG_SEARCH_PUBLISHABLE_KEY;
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
-  const timeoutMs = options.timeoutMs ?? RETAIL_CATALOG_TIMEOUT_MS;
   const definition = resolveDefinition({ ...options, retailerId: options.retailerId ?? "globus" });
+  // Perekrestok's larger public catalogue needs the same finite read margin as
+  // the weekly list. This changes transport waiting, never price freshness.
+  const timeoutMs = options.timeoutMs ?? (options.retailerId === 'perekrestok' ? 5000 : RETAIL_CATALOG_TIMEOUT_MS);
   const normalizeOptions = Object.freeze({
     ...(Number.isFinite(options.nowMs) ? { nowMs: options.nowMs } : {}),
     includeComparisonEvidence: options.includeComparisonEvidence === true
