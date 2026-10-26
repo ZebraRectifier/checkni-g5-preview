@@ -18,10 +18,12 @@ test('arbitrary needs survive reload, correction and acknowledgement without inv
   await expect(page.locator('#shopping-dialogue-history')).not.toContainText('Запрос отменён');
   await submit(page,'не 12, а 6');await expect.poll(async()=>(await needs(page))[0].quantity.value).toBe('6');
   await page.reload();await submit(page,'ещё две');await expect.poll(async()=>(await needs(page))[0].quantity.value).toBe('8');
-  await submit(page,'2 пачки тофу, 1,5 кг картофеля');await expect.poll(async()=>(await needs(page)).map(x=>x.requestedName)).toEqual(['кефира','тофу','картофеля']);
+  await submit(page,'2 пачки тофу, 1,5 кг картофеля, два банана');await expect.poll(async()=>(await needs(page)).map(x=>x.requestedName)).toEqual(['кефира','тофу','картофеля','банана']);
+  expect((await needs(page))[3].quantity).toMatchObject({value:'2',unit:'piece'});
   await openBasket(page);await expect(page.locator('#shopping-needs')).toContainText('тофу — 2 уп.');
-  await expect(page.locator('#shopping-needs-coverage')).toContainText('3 из 3');
-  await expect(page.locator('[data-pixel-action="basket"]')).toContainText('3 поз.');
+  await expect(page.locator('#shopping-needs')).toContainText('банана — 2 шт.');
+  await expect(page.locator('#shopping-needs-coverage')).toContainText('4 из 4');
+  await expect(page.locator('[data-pixel-action="basket"]')).toContainText('4 поз.');
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')??'[]'))).toEqual([]);
 });
 test('a second tab retains both purchases and cannot silently repeat a request',async({page,context})=>{

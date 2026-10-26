@@ -3,7 +3,22 @@ export const NEED_LIMIT = 80;
 export const normalizeNeedText = value => String(value ?? '').normalize('NFKC').toLocaleLowerCase('ru').replaceAll('ё', 'е').replace(/\s+/gu, ' ').trim();
 const words = { один:1, одна:1, одну:1, одно:1, два:2, две:2, три:3, четыре:4, пять:5, шесть:6, семь:7, восемь:8, девять:9, десять:10, одиннадцать:11, двенадцать:12, тринадцать:13, четырнадцать:14, пятнадцать:15, шестнадцать:16, семнадцать:17, восемнадцать:18, девятнадцать:19, двадцать:20, тридцать:30, сорок:40, пятьдесят:50, сто:100, полтора:'1.5', полторы:'1.5', полкило:'0.5', поллитра:'0.5', половину:'0.5', половина:'0.5' };
 const numberPattern = `(?:\\d+(?:[.,]\\d+)?|${Object.keys(words).join('|')})`;
-const unitPattern = '(?:бутыл[а-я]*|пач[а-я]*|упаков[а-я]*|пакет[а-я]*|короб[а-я]*|бан[а-я]*|пуч[а-я]*|голов[а-я]*|штук[а-я]*|шт\\.?|килограмм[а-я]*|кг|грамм[а-я]*|гр?\\.?|миллилитр[а-я]*|мл|литр[а-я]*|л)';
+// Recognize complete unit forms, not arbitrary words with the same prefix:
+// «банана» is a product name, whereas «банки» can introduce its container.
+const feminineCase = '(?:а|и|у|ой|ою|ами|ах|е)';
+const measureCase = '(?:а|ов|ы|у|ом|ами|ах|е)?';
+const unitPattern = `(?:${[
+  `бутыл(?:к${feminineCase}|ок|очк${feminineCase}|очек)`,
+  `пач(?:к${feminineCase}|ек|ечк${feminineCase}|ечек)`,
+  `упаков(?:к${feminineCase}|ок|очк${feminineCase}|очек)`,
+  `пакет${measureCase}`, 'пакетик(?:а|ов|и|у|ом|ами|ах|е)?',
+  `короб(?:к${feminineCase}|ок|очк${feminineCase}|очек|${measureCase})`,
+  `бан(?:к${feminineCase}|ок|очк${feminineCase}|очек)`,
+  'пуч(?:ок|к(?:а|и|ов|у|ом|ами|ах|е))',
+  `голов(?:к${feminineCase}|ок|очк${feminineCase}|очек|(?:а|ы|у|ой|ою|ами|ах|е)?)`,
+  `штук(?:${feminineCase})?`, 'шт\\.?',
+  `(?:килограмм|грамм|миллилитр|литр)${measureCase}`, 'кг', 'гр?\\.?', 'мл', 'л'
+].join('|')})`;
 const quantityRe = new RegExp(`^(${numberPattern})(?:\\s*(${unitPattern}))?(?:\\s+|$)`, 'iu');
 const packageRe = new RegExp(`\\s+по\\s+(${numberPattern})\\s*(${unitPattern})(?=\\s|$)`, 'iu');
 export function decimal(value) {

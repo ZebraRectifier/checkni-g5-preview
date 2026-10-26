@@ -6,9 +6,9 @@
   "sourceRepository": "ZebraRectifier/Checkni",
   "sourcePr": 596,
   "sourceCommit": null,
-  "testedSourceHead": "27fdda081227d9998e046dd97808d57e09bcd1ba",
+  "testedSourceHead": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
   "sourceBase": "2399d5d4cee752f3444cd918d02df3c9b557eeea",
-  "sourceTree": "38506fed70413eef10ceff4afc9a61c78fe1f217",
+  "sourceTree": "0fc2c77ddc293937819cbcbdbafc9adc3d26292d",
   "publicBase": "ce00a4e017a97187c67b0cf73f3b5ed7cf5bdf22",
   "parent": {
     "path": "release/retail-category-search-ownership-20261026.json",
@@ -977,9 +977,9 @@
     },
     {
       "path": "src/intelligence/shoppingNeeds.mjs",
-      "bytes": 11877,
-      "sha256": "b5fd0cb66aae018598367f8a6a6cf693c206e7b8210fb29a33beb65253928773",
-      "blob": "04e00c030a24acf5ec40fb3105270c3c6f6f60cf"
+      "bytes": 12697,
+      "sha256": "6ec3eb8e89a505915d75d730397713af43dc301b40ae23b13dd6c3d7cd8938fd",
+      "blob": "6e6714bfde851abab536d334ab5fca4a09765329"
     },
     {
       "path": "src/intelligence/shoppingProductFacts.mjs",
@@ -1486,23 +1486,15 @@
     "measuredNeedsAutomaticallyConvertedToLegacyPacks": false
   },
   "validation": {
-    "sourceExactHeadCi": "https://github.com/ZebraRectifier/Checkni/actions/runs/40398262697",
+    "sourceExactHeadCi": "https://github.com/ZebraRectifier/Checkni/actions/runs/40416482037",
     "sourceExactHeadNode": {
-      "head": "27fdda081227d9998e046dd97808d57e09bcd1ba",
-      "passed": 2657,
+      "head": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
+      "passed": 2658,
       "failed": 0,
       "cancelled": 0,
       "skipped": 0
     },
-    "sourceExactHeadBrowser": {
-      "head": "27fdda081227d9998e046dd97808d57e09bcd1ba",
-      "job": 121839821582,
-      "passed": 534,
-      "failed": 0,
-      "durationMinutes": 23.4,
-      "platform": "linux",
-      "conclusion": "success"
-    },
+    "sourceExactHeadBrowser": "pending",
     "sourceActualMain": "required before public merge; evidence will be recorded in source PR 596",
     "publicExactHead": "pending",
     "publicActualMain": "pending",
@@ -1510,51 +1502,45 @@
     "physicalAndroidVerified": false,
     "sourceBase": "2399d5d4cee752f3444cd918d02df3c9b557eeea",
     "publicBase": "ce00a4e017a97187c67b0cf73f3b5ed7cf5bdf22",
-    "previousSourceExactHeadNode": {
-      "head": "a9279654b70431edd49fa8da9239b09aa0e86297",
-      "passed": 2652,
-      "failed": 0,
-      "cancelled": 0,
-      "skipped": 0
-    },
     "sourceExactHeadPackage": {
-      "head": "27fdda081227d9998e046dd97808d57e09bcd1ba",
-      "run": 40398262816,
+      "head": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
+      "run": 40416482112,
       "conclusion": "success"
     },
-    "sourceLocalFullBrowser": {
+    "precedingMain": {
+      "head": "2399d5d4cee752f3444cd918d02df3c9b557eeea",
+      "run": 40397609020,
+      "conclusion": "success"
+    },
+    "sourceLocalFocused": {
+      "head": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
+      "node": 94,
+      "browser": 24,
+      "result": "passed",
+      "port": 49317
+    },
+    "previousVerifiedSource": {
       "head": "27fdda081227d9998e046dd97808d57e09bcd1ba",
-      "passed": 534,
-      "failed": 0,
-      "durationMinutes": 17.6,
-      "platform": "win32",
-      "port": 49317,
-      "retries": 0
+      "node": 2657,
+      "browser": 534,
+      "ci": 40398262697,
+      "packageRun": 40398262816,
+      "conclusion": "success",
+      "localFullBrowser": 534
+    },
+    "publicLocalNodeChecks": 386,
+    "publicLocalBrowserCases": 204,
+    "previousPublicFullBrowser": {
+      "sourceRuntime": "a9279654b70431edd49fa8da9239b09aa0e86297",
+      "publicBase": "ce00a4e017a97187c67b0cf73f3b5ed7cf5bdf22",
+      "passed": 204
     },
     "publicLocalFullBrowser": {
-      "cases": 204,
-      "result": "passed",
-      "sourceRuntime": "a9279654b70431edd49fa8da9239b09aa0e86297",
-      "publicBase": "ce00a4e017a97187c67b0cf73f3b5ed7cf5bdf22"
-    },
-    "historicalPublicDialogueChecks": {
-      "cases": 16,
-      "result": "passed",
-      "sourceRuntime": "94046883d9cf03c023a3b662b2c5ef07e5a85a6a"
-    },
-    "publicLocalIntegrityChecks": {
-      "cases": 35,
-      "result": "passed",
-      "sourceRuntime": "a9279654b70431edd49fa8da9239b09aa0e86297"
-    },
-    "publicLocalNodeChecks": 385,
-    "publicLocalBrowserCases": 204,
-    "sourceLocalRoutingChecks": {
-      "node": 145,
-      "browser": 22,
-      "result": "passed",
-      "sourceRuntime": "27fdda081227d9998e046dd97808d57e09bcd1ba",
-      "browserPort": 49317
+      "sourceRuntime": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
+      "publicBase": "ce00a4e017a97187c67b0cf73f3b5ed7cf5bdf22",
+      "passed": 204,
+      "durationMinutes": 8,
+      "result": "passed"
     }
   },
   "aiProviderChanged": false,

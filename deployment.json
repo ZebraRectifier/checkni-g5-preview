@@ -2784,7 +2784,7 @@
     "manifest": "release/hory-shopping-needs-20261025.json",
     "parentManifest": "release/retail-category-search-ownership-20261026.json",
     "sourceCommit": null,
-    "testedSourceHead": "27fdda081227d9998e046dd97808d57e09bcd1ba",
+    "testedSourceHead": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
     "publicBase": "ce00a4e017a97187c67b0cf73f3b5ed7cf5bdf22",
     "privateSourceParity": false,
     "publicManualSearchOverridesPreserved": true,

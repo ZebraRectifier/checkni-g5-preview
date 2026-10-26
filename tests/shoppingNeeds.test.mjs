@@ -55,6 +55,20 @@ test('explicit properties remain in the requested name and are not supplied by s
   assert.equal(s.lines()[0].requestedName,'молоко без лактозы');assert.equal(s.lines()[0].attributes['без лактозы'],true);
   assert.deepEqual(s.basket.getSnapshot(),[]);
 });
+
+test('unit prefixes cannot consume a product name or erase it from a mixed purchase',async()=>{
+  for(const [input,name,amount,unit] of [
+    ['два банана','банана','2','piece'],['пять бананов','бананов','5','piece'],
+    ['2 грамматики','грамматики','2','piece'],['3 литрес','литрес','3','piece'],
+    ['две коробочки тофу','тофу','2','box'],['три баночки тунца','тунца','3','can']
+  ]) {
+    const row=parseNeedLine(input);assert.ok(row,input);
+    assert.equal(row.requestedName,name,input);assert.equal(row.quantity.value,amount,input);assert.equal(row.quantity.unit,unit,input);
+  }
+  const s=session();await s.flow.run('два банана, 2 банки тунца');
+  assert.deepEqual(s.lines().map(row=>[row.requestedName,row.quantity.value,row.quantity.unit]),[['банана','2','piece'],['тунца','2','can']]);
+  assert.deepEqual(s.basket.getSnapshot(),[]);assert.equal(s.calls(),0);
+});
 test('reload restores focus, quantities and idempotent receipt in one persisted record',async()=>{
   const storage=memoryStorage();const one=session(storage);
   await one.flow.run('кефир 12',{requestId:'first'});await one.flow.run('ещё две',{requestId:'plus'});
