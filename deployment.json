@@ -2767,17 +2767,16 @@
     "aiProviderChanged": false
   },
   "browserComposition": {
-    "manifest": "release/globus-bread-substitution-20261026.json",
-    "parentManifest": "release/nearby-catalog-connections-20261025.json",
+    "manifest": "release/retail-category-search-ownership-20261026.json",
+    "parentManifest": "release/globus-bread-substitution-20261026.json",
     "sourceCommit": "e38d02eb9ce5ee2db3bcd162ff9eb5444a5fed32",
     "testedSourceHead": "d9c4c82b819f79b11c287be7a42d043407773fb8",
-    "publicBase": "ea19d53ee6e7f1592d947bafe6976e86ef5ce75e",
+    "publicBase": "90d94305ba57ef3cc614d183b50b161fdb78b591",
     "privateSourceParity": false,
     "publicManualSearchOverridesPreserved": true,
     "runtimeFiles": 217,
     "changedRuntimePaths": [
-      "src/catalog/weeklyBasketRecipe.mjs",
-      "src/catalog/weeklyRouteProducts.mjs"
+      "src/app.mjs"
     ],
     "actualPublicOverrides": [
       {
@@ -2789,9 +2788,9 @@
       },
       {
         "path": "src/app.mjs",
-        "bytes": 129224,
-        "sha256": "dfee5c45d67ecbe398eb3576ded0e6cabee575e2a401fb4984d6bdd440fb4073",
-        "blob": "8d05a1f0ea6abfb52bbee0a067c50b1d16eb0da1",
+        "bytes": 129483,
+        "sha256": "525e448b34ad60d308f51053fdda6c92cd4fdde46412b32f052d78f6ff180116",
+        "blob": "1a341dd2bf0d6915dec095eab5936b8b08825d46",
         "sourceBlob": "fce08b8a8f3f16cea24a5274d4d9faad6b71eef6"
       },
       {
@@ -2934,5 +2933,14 @@
       "packageApplicable": true,
       "proof": "followup-597-main-proof.json"
     }
+  },
+  "retailCategorySearchOwnership": {
+    "manifest": "release/retail-category-search-ownership-20261026.json",
+    "publicBase": "90d94305ba57ef3cc614d183b50b161fdb78b591",
+    "scope": "Keep a submitted in-store search authoritative when an older category response arrives later.",
+    "newBrowserCases": 2,
+    "priceRefreshPerformed": false,
+    "sourceFreshnessVerified": false,
+    "aiProviderChanged": false
   }
 }

@@ -438,6 +438,53 @@ test('basket Back retains an unsubmitted search draft without any search request
   expect(calls.ai).toBe(0);
 });
 
+test('submitted store search survives a category response that arrives afterward', async ({ page }) => {
+  const { calls } = await setup(page, { history: true });
+  const category = page.locator('#retail-category-grid').getByRole('button', { name: /Молочные продукты, сыр, яйца/ });
+  await expect(category).toBeVisible();
+  let releaseChildren;
+  const heldChildren = new Promise(resolve => { releaseChildren = resolve; });
+  let noteChildrenRequest;
+  const childrenRequested = new Promise(resolve => { noteChildrenRequest = resolve; });
+  await page.route('**/rest/v1/retail_catalog_categories**', async route => {
+    const params = new URL(route.request().url()).searchParams;
+    if (params.get('parent_id') === 'eq.10118965') {
+      noteChildrenRequest();
+      await heldChildren;
+    }
+    await route.fallback();
+  });
+  const browseBefore = calls.browse;
+  await category.click();
+  await childrenRequested;
+  try {
+    await search(page).fill('молоко');
+    await submit(page).click();
+    await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
+    await expect(page.locator('#product-grid')).toContainText('Молоко Parmalat');
+    await expect(search(page)).toHaveValue('молоко');
+    const lateResponse = page.waitForResponse(response => {
+      const url = new URL(response.url());
+      return url.pathname.endsWith('/rest/v1/retail_catalog_categories')
+        && url.searchParams.get('parent_id') === 'eq.10118965';
+    });
+    releaseChildren();
+    await (await lateResponse).finished();
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await expect(page.locator('#retail-category-title')).toHaveText('Молочные продукты, сыр, яйца');
+    await expect(search(page)).toHaveValue('молоко');
+    await expect(page.locator('#catalog-title')).toHaveText('Результаты поиска');
+    await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
+    await expect(page.locator('#product-grid')).toContainText('Молоко Parmalat');
+    expect(calls.browse).toBe(browseBefore);
+    expect(calls.retail).toHaveLength(1);
+    expect(calls.gateway).toEqual([]);
+    expect(calls.ai).toBe(0);
+  } finally {
+    releaseChildren();
+  }
+});
+
 test('a pending search survives basket Back and a later response cannot overwrite the next retailer', async ({ page }) => {
   const { calls, hold } = await setup(page, { history: true });
   await addButton(page.locator('#product-grid .product-card').first()).click();
