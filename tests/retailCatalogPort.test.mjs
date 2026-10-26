@@ -773,29 +773,118 @@ test("Perekrestok adapter rejects wrong scope, stock claims and foreign URLs", (
   );
 });
 
-test('Perekrestok accepts one slow category response within five seconds without retry; the old default aborts it', async t => {
-  t.mock.timers.enable({apis:['setTimeout']});
-  for(const [timeoutMs,expected] of [[2500,'unavailable'],[undefined,'categories']]){
-    let calls=0;
-    const client=createRetailCatalogClient({retailerId:'perekrestok',...(timeoutMs?{timeoutMs}:{}),fetchImpl:(_url,{signal})=>{
-      calls++;
-      return new Promise((resolve,reject)=>{
-        signal.addEventListener('abort',()=>reject(Object.assign(Error('aborted'),{name:'AbortError'})),{once:true});
-        setTimeout(()=>resolve(new Response(JSON.stringify([perekrestokCategoryRow()]),{headers:{'Content-Type':'application/json'}})),3100);
+test('Perekrestok cold category and product reads survive 8.5 seconds with one request', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  for (const type of ['categories', 'products']) {
+    for (const [timeoutMs, expected] of [[5000, 'unavailable'], [undefined, type === 'categories' ? 'categories' : 'catalog']]) {
+      let calls = 0;
+      const client = createRetailCatalogClient({
+        retailerId: 'perekrestok',
+        ...(timeoutMs ? { timeoutMs } : {}),
+        fetchImpl: (_url, { signal }) => {
+          calls += 1;
+          return new Promise((resolve, reject) => {
+            signal.addEventListener('abort', () => reject(Error('aborted')), { once: true });
+            setTimeout(() => resolve(Response.json(type === 'categories'
+              ? [perekrestokCategoryRow()] : [perekrestokRow()])), 8500);
+          });
+        }
       });
-    }});
-    const pending=client.rootCategories();t.mock.timers.tick(3100);
-    const result=await pending;assert.equal(result.kind,expected);assert.equal(calls,1);
+      const pending = type === 'categories' ? client.rootCategories() : client.browse();
+      t.mock.timers.tick(8500);
+      assert.equal((await pending).kind, expected);
+      assert.equal(calls, 1);
+    }
   }
 });
 
-test('Perekrestok still aborts a stalled read at five seconds with one request',async t=>{
-  t.mock.timers.enable({apis:['setTimeout']});let calls=0,aborted=false;
-  const client=createRetailCatalogClient({retailerId:'perekrestok',fetchImpl:(_url,{signal})=>{
-    calls++;return new Promise((_resolve,reject)=>signal.addEventListener('abort',()=>{aborted=true;reject(Error('aborted'));},{once:true}));
-  }});
-  const pending=client.rootCategories();t.mock.timers.tick(4999);assert.equal(aborted,false);
-  t.mock.timers.tick(1);assert.equal((await pending).kind,'unavailable');assert.equal(aborted,true);assert.equal(calls,1);
+test('Perekrestok still aborts stalled category and product reads at fifteen seconds', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  for (const type of ['categories', 'products']) {
+    let calls = 0, aborted = false;
+    const client = createRetailCatalogClient({ retailerId: 'perekrestok', fetchImpl: (_url, { signal }) => {
+      calls += 1;
+      return new Promise((_resolve, reject) => signal.addEventListener('abort', () => {
+        aborted = true;
+        reject(Error('aborted'));
+      }, { once: true }));
+    } });
+    const pending = type === 'categories' ? client.rootCategories() : client.browse();
+    t.mock.timers.tick(14999);
+    assert.equal(aborted, false);
+    t.mock.timers.tick(1);
+    assert.equal((await pending).kind, 'unavailable');
+    assert.equal(aborted, true);
+    assert.equal(calls, 1);
+  }
+});
+
+test('GLOBUS cold category and product reads survive 8.4 seconds with one request', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  for (const type of ['categories', 'products']) {
+    for (const [timeoutMs, expected] of [[2500, 'unavailable'], [undefined, type === 'categories' ? 'categories' : 'catalog']]) {
+      let calls = 0;
+      const client = createRetailCatalogClient({
+        retailerId: 'globus',
+        ...(timeoutMs ? { timeoutMs } : {}),
+        fetchImpl: (_url, { signal }) => {
+          calls += 1;
+          return new Promise((resolve, reject) => {
+            signal.addEventListener('abort', () => reject(Error('aborted')), { once: true });
+            setTimeout(() => resolve(Response.json(type === 'categories'
+              ? [categoryRow()] : [row()])), 8400);
+          });
+        }
+      });
+      const pending = type === 'categories' ? client.rootCategories() : client.browse();
+      t.mock.timers.tick(8400);
+      assert.equal((await pending).kind, expected);
+      assert.equal(calls, 1);
+    }
+  }
+});
+
+test('explicit and default GLOBUS clients abort stalled reads at fifteen seconds', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  for (const retailerId of [undefined, 'globus']) {
+    let calls = 0, aborted = false;
+    const client = createRetailCatalogClient({
+      ...(retailerId ? { retailerId } : {}),
+      fetchImpl: (_url, { signal }) => {
+        calls += 1;
+        return new Promise((_resolve, reject) => signal.addEventListener('abort', () => {
+          aborted = true;
+          reject(Error('aborted'));
+        }, { once: true }));
+      }
+    });
+    const pending = client.rootCategories();
+    t.mock.timers.tick(14999);
+    assert.equal(aborted, false);
+    t.mock.timers.tick(1);
+    assert.equal((await pending).kind, 'unavailable');
+    assert.equal(aborted, true);
+    assert.equal(calls, 1);
+  }
+});
+
+test('other retailer catalog reads keep the 2.5-second abort', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let calls = 0, aborted = false;
+  const client = createRetailCatalogClient({ retailerId: 'magnit', fetchImpl: (_url, { signal }) => {
+    calls += 1;
+    return new Promise((_resolve, reject) => signal.addEventListener('abort', () => {
+      aborted = true;
+      reject(Error('aborted'));
+    }, { once: true }));
+  } });
+  const pending = client.rootCategories();
+  t.mock.timers.tick(2499);
+  assert.equal(aborted, false);
+  t.mock.timers.tick(1);
+  assert.equal((await pending).kind, 'unavailable');
+  assert.equal(aborted, true);
+  assert.equal(calls, 1);
 });
 
 function perekrestokCategoryRow(overrides = {}) {
@@ -815,6 +904,9 @@ function perekrestokCategoryRow(overrides = {}) {
 }
 
 test("Perekrestok category reads stay pinned to the Yandex delivery store binding", async () => {
+  const definition = getRetailCatalogDefinition("perekrestok");
+  assert.equal(definition.defaultProductCount, null);
+  assert.equal(definition.rootCategoryCount, null);
   let requestedUrl;
   const client = createRetailCatalogClient({
     retailerId: "perekrestok",
@@ -825,7 +917,11 @@ test("Perekrestok category reads stay pinned to the Yandex delivery store bindin
     fetchImpl: async (url) => {
       requestedUrl = new URL(url);
       const payload = requestedUrl.pathname.includes("categories")
-        ? [perekrestokCategoryRow()]
+        ? Array.from({ length: 47 }, (_, index) => perekrestokCategoryRow({
+            category_id: 2910 + index,
+            root_id: 2910 + index,
+            product_count: index + 1
+          }))
         : [perekrestokRow()];
       return new Response(JSON.stringify(payload), {
         status: 200,
@@ -836,13 +932,14 @@ test("Perekrestok category reads stay pinned to the Yandex delivery store bindin
 
   const roots = await client.rootCategories();
   assert.equal(roots.kind, "categories");
-  assert.equal(roots.categories.length, 1);
+  assert.equal(roots.categories.length, 47);
+  assert.equal(roots.categories.reduce((sum, category) => sum + category.productCount, 0), 1128);
   assert.equal(requestedUrl.searchParams.get("retailer_id"), "eq.perekrestok");
   assert.equal(
     requestedUrl.searchParams.get("store_id"),
     "eq.perekrestok-yandex-3186917"
   );
-  assert.equal(requestedUrl.searchParams.get("limit"), "58");
+  assert.equal(requestedUrl.searchParams.get("limit"), "160");
 
   const products = await client.browseCategory(2910, { limit: 20 });
   assert.equal(products.kind, "catalog");
