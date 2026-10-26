@@ -1,11 +1,40 @@
 import { openHory, closeHory, selectStore, openStoreDetails } from './helpers/pixel-surface.mjs';
 import{test,expect}from'@playwright/test';
+import fs from 'node:fs';
+const joinedDirectory = JSON.parse(fs.readFileSync(new URL('../../src/data/nearbyGroceryStores.json',import.meta.url),'utf8'));
 test.setTimeout(60000);
 const say=async(page,text)=>{await openHory(page);await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};
 async function isolate(page){
   await page.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
   await page.route('**/rest/v1/**',r=>r.fulfill({json:[]}));
 }
+
+test('exact newly connected Moscow and regional addresses select their own Magnit catalogue without AI', async ({page}) => {
+  await isolate(page); let ai = 0;
+  await page.route('**/functions/v1/ai-basket-proposal', r => { ai++; return r.abort(); });
+  let point;
+  await page.route('**/functions/v1/nearby-address', r => r.fulfill({json:{version:1,candidates:[{
+    lat:point.lat,lon:point.lon,label:point.address,precision:'house'
+  }]}}));
+  for (const shopCode of ['699415','834496']) {
+    point=joinedDirectory.stores.find(p=>p.catalogBinding?.shopCode===shopCode);
+    expect(point).toBeTruthy();
+    await page.goto('/?comparison=observed&catalog=retail#shop'); await selectStore(page); await openStoreDetails(page);
+    await page.locator('#nearby-shopping').getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
+    await page.locator('#nearby-address').fill(point.address); await page.locator('#nearby-address-search').click();
+    await page.locator('#nearby-address-candidates').getByRole('button').click();
+    await page.locator('#nearby-radius').selectOption('1');
+    const row=page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
+    await expect(row).toContainText('Каталог этого адреса подключён');
+    await row.getByRole('button',{name:'Выбрать магазин',exact:true}).click();
+    await expect(page.locator('#magnit-store-address')).toHaveValue(shopCode);
+    await expect(page.locator('#nearby-selected-store')).toContainText(point.address);
+    await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
+    const stored=await page.evaluate(()=>JSON.stringify({...localStorage}));
+    expect(stored).not.toContain(point.address);
+  }
+  expect(ai).toBe(0);
+});
 test('address consent → candidate → radius → agreed store → household intake preserves basket and forgets location on reload',async({page})=>{
   await isolate(page);let addressCalls=0,ai=0;
   await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
