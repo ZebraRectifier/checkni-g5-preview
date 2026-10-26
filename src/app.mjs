@@ -1370,6 +1370,7 @@ async function loadRetailChildren(category, path, {
   const retailerId = retailBrowserState.retailerId;
   const client = currentRetailClient();
   const requestId = beginRetailNavigation(normalizedPath, { clearCatalog });
+  const catalogRequestId = catalogRequestVersion;
   const result = await client.subcategories(category.categoryId, {
     limit: 160
   });
@@ -1397,6 +1398,9 @@ async function loadRetailChildren(category, path, {
     categories: result.categories
   };
   renderRetailBrowser();
+  // Search or another catalogue action may supersede this category while its
+  // subcategories load. Keep the latest catalogue action authoritative.
+  if (catalogRequestId !== catalogRequestVersion) return;
   await loadRetailCategoryProducts(category, {
     navigationRequestId: requestId,
     scrollToProducts: hasChildren ? false : scrollToProducts
