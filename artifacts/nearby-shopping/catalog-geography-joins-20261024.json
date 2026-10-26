@@ -1,0 +1,66 @@
+{
+  "kind": "additive-exact-catalog-geography-connections",
+  "reviewedAt": "2026-10-24T04:08:15.100Z",
+  "geographyObservedAt": "2026-10-18T00:49:32.311Z",
+  "priceEvidence": false,
+  "priceRefreshPerformed": false,
+  "retainedPoints": 15071,
+  "beforeSha256": "03bb15acfb3ff2b88302a68e73d29e601ad16c11ebcdfe52ada1358520763e3f",
+  "afterSha256": "c478a94a2090cea53774b778c5ab5e729b565a3582ea6c25c147494f730a18a0",
+  "added": [
+    {
+      "pointId": "osm:node:12900402617",
+      "sourceUrl": "https://www.openstreetmap.org/node/12900402617",
+      "sourceAddress": "Москва, Тайнинская улица, 9",
+      "shopCode": "699415",
+      "officialAddress": "Москва, Тайнинская ул, 9",
+      "officialSourceUrl": "https://magnit.ru/shops",
+      "officialObservedAt": "2026-10-04T18:26:30.826Z"
+    },
+    {
+      "pointId": "osm:node:4777169373",
+      "sourceUrl": "https://www.openstreetmap.org/node/4777169373",
+      "sourceAddress": "Талдом, улица Собцова, 4",
+      "shopCode": "834496",
+      "officialAddress": "Московская обл, г Талдом, ул Собцова, д 4",
+      "officialSourceUrl": "https://magnit.ru/shops?shopCode=834496&shopType=9",
+      "officialObservedAt": "2026-10-21T19:23:07.079Z"
+    },
+    {
+      "pointId": "osm:node:4787585584",
+      "sourceUrl": "https://www.openstreetmap.org/node/4787585584",
+      "sourceAddress": "Электрогорск, улица Ухтомского, 4Б",
+      "shopCode": "502549",
+      "officialAddress": "Московская обл, г Электрогорск, ул Ухтомского, д 4Б",
+      "officialSourceUrl": "https://magnit.ru/shops?shopCode=502549&shopType=1",
+      "officialObservedAt": "2026-10-21T19:24:39.599Z"
+    },
+    {
+      "pointId": "osm:node:4827792607",
+      "sourceUrl": "https://www.openstreetmap.org/node/4827792607",
+      "sourceAddress": "Реутов, Лесная улица, 7",
+      "shopCode": "502843",
+      "officialAddress": "Московская обл, г Реутов, ул Лесная, д 7",
+      "officialSourceUrl": "https://magnit.ru/shops?shopCode=502843&shopType=1",
+      "officialObservedAt": "2026-10-21T19:18:15.392Z"
+    },
+    {
+      "pointId": "osm:node:7572716790",
+      "sourceUrl": "https://www.openstreetmap.org/node/7572716790",
+      "sourceAddress": "Егорьевск, улица Александра Невского, 4",
+      "shopCode": "503739",
+      "officialAddress": "Московская обл, г Егорьевск, ул Александра Невского, д 4",
+      "officialSourceUrl": "https://magnit.ru/shops?shopCode=503739&shopType=9",
+      "officialObservedAt": "2026-10-21T18:55:33.447Z"
+    },
+    {
+      "pointId": "osm:way:40119749",
+      "sourceUrl": "https://www.openstreetmap.org/way/40119749",
+      "sourceAddress": "Лобня, улица Комиссара Агапова, 9А",
+      "shopCode": "502780",
+      "officialAddress": "Московская обл, г Лобня, ул Комиссара Агапова, д 9А",
+      "officialSourceUrl": "https://magnit.ru/shops?shopCode=502780&shopType=1",
+      "officialObservedAt": "2026-10-21T19:10:16.852Z"
+    }
+  ]
+}

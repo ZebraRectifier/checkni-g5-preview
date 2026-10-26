@@ -53,19 +53,24 @@ jobs:
             return name + " · " + scope + "\n" + await card.locator(".retail-store-total").textContent();
           }
 
-          async function allCategories(page) {
-            await page.waitForFunction(() => document.querySelectorAll(
+          async function allCategories(page, expectedCount) {
+            await page.waitForFunction(count => (
+              document.querySelector('#retail-store-card-perekrestok')?.getAttribute('aria-pressed') === 'true'
+              && document.querySelector('#retail-category-status')?.textContent.trim() === 'Разделов: ' + count
+              && document.querySelectorAll(
               "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
-            ).length > 0, null, {timeout:15000});
+            ).length > 0), expectedCount, {timeout:15000});
             const all = page.locator("#retail-category-grid .pixel-all-categories");
-            if (await all.isVisible()) await all.click();
+            if (expectedCount > 7) {
+              await all.waitFor({state:'visible',timeout:15000});
+              await all.click();
+            }
           }
           async function chooseStore(page, selector) {
             if (!await page.locator("#pixel-store-home").isVisible())
               await page.locator('[data-pixel-action="stores"]').click();
             await page.locator(selector).click();
             await page.locator("#pixel-storefront").waitFor({state:"visible"});
-            await allCategories(page);
           }
           async function details(page, open) {
             const node = page.locator("#pixel-store-details");
@@ -125,6 +130,12 @@ jobs:
               .map(category => String(category.categoryId)).sort();
             assert(expectedIds.length > 0, "No source roots passed admission");
             console.log("PEREKRESTOK_ADMITTED_ROOTS", JSON.stringify({sourceRows:sourceRows.length,admitted:expectedIds.length}));
+            await allCategories(page, expectedIds.length);
+            console.log("PEREKRESTOK_RENDERED_ROOTS", JSON.stringify(await page.evaluate(() => ({
+              selected: document.querySelector('#retail-store-card-perekrestok')?.getAttribute('aria-pressed'),
+              ids: Array.from(document.querySelectorAll('#retail-category-grid [data-category-id]'),node=>node.dataset.categoryId),
+              status: document.querySelector('#retail-category-status')?.textContent
+            }))));
             await page.waitForFunction(expected => (
               document.querySelector("#retail-store-card-perekrestok")
                 ?.getAttribute("aria-pressed") === "true"

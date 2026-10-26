@@ -2,6 +2,7 @@ import{distanceMeters}from'../runtime/storeGeolocation.mjs';
 import{resolveRegisteredMagnitStore}from'../data/registeredMagnitStores.mjs';
 import{resolveGlobusMoscowRegionStore}from'../data/globusMoscowRegionStores.mjs';
 import{GLOBUS_MAP_LOCATIONS}from'../data/storeMapLocations.mjs';
+import{exactMagnitAddressKey}from'./magnitAddressJoin.mjs';
 export const NEARBY_RADIUS_KM=Object.freeze([1,3,5,10,20]);
 export function nearbyShoppingIntent(text,expectLocation=false){
   const raw=String(text??'').trim(),v=raw.toLowerCase().replaceAll('ё','е');
@@ -20,7 +21,8 @@ export function nearbyCatalogBinding(point){
   const b=point?.catalogBinding;if(!b)return null;
   if(point.retailerId==='magnit'&&b.retailerId==='magnit'&&b.kind==='exact-locality-street-house-join'){
     const store=resolveRegisteredMagnitStore({shopCode:b.shopCode});
-    return store?.address===b.address&&point.address===b.sourceAddress?{retailerId:'magnit',store}:null;
+    const key=exactMagnitAddressKey(point.address);
+    return store?.address===b.address&&point.address===b.sourceAddress&&key&&key===exactMagnitAddressKey(store.address)?{retailerId:'magnit',store}:null;
   }
   if(point.retailerId==='globus'&&b.retailerId==='globus'&&b.kind==='official-directory-point'){
     const store=resolveGlobusMoscowRegionStore(b.officialStoreId);

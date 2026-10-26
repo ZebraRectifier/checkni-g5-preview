@@ -69,7 +69,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     }catch{if(token===version)status.textContent='Справочник сейчас не загрузился. Место сохранилось; попробуй ещё раз или выбери магазин в каталоге.';}
   }
   async function choose(row){
-    const token=version;clearSelection();status.textContent='Выбираю адрес каталога…';
+    const token=++version;clearSelection();status.textContent='Выбираю адрес каталога…';
     const accepted=await onChoose?.(row.catalog,row,()=>token===version);
     if(token!==version)return;
     if(accepted!==true){status.textContent='Этот адрес не удалось подключить. Корзина сохранилась; выбери другой магазин.';return;}
