@@ -105,8 +105,7 @@ jobs:
                 .catch(() => "");
               if (
                 text.includes("Перекрёсток · Москва · цены доставки Яндекс Еды")
-                && /58 категорий/u.test(text)
-                && /5.?460 товаров/u.test(text)
+                && text.includes("Каталог выбранного адреса")
                 && text.includes("наличие неизвестно")
               ) {
                 published = true;

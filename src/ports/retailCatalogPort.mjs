@@ -13,6 +13,7 @@ export const RETAIL_CATALOG_ENDPOINT =
 export const RETAIL_CATEGORY_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/rest/v1/retail_catalog_categories";
 export const RETAIL_CATALOG_TIMEOUT_MS = 2_500;
+const COLD_RETAIL_CATALOG_TIMEOUT_MS = 15_000;
 export const MAX_RETAIL_CATALOG_RESPONSE_BYTES = 262_144;
 export const MAX_RETAIL_CATALOG_PRODUCTS = 40;
 
@@ -201,8 +202,10 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     catalogLabel: "Перекрёсток · Москва · Яндекс Еда",
     scopeLabel: "Москва · цены доставки Яндекс Еды · наличие неизвестно",
     logo: "П",
-    defaultProductCount: 5460,
-    rootCategoryCount: 58,
+    // The delivery snapshot changes at every refresh; counts come from live category rows.
+    defaultProductCount: null,
+    rootCategoryCount: null,
+    rootCategoryReadLimit: 160,
     productUrlRules: Object.freeze([
       Object.freeze({ host: "eda.yandex.ru", prefix: "/retail/perekrestok" })
     ]),
@@ -789,9 +792,11 @@ export function createRetailCatalogClient(options = {}) {
     options.publishableKey ?? CATALOG_SEARCH_PUBLISHABLE_KEY;
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const definition = resolveDefinition({ ...options, retailerId: options.retailerId ?? "globus" });
-  // Perekrestok's larger public catalogue needs the same finite read margin as
-  // the weekly list. This changes transport waiting, never price freshness.
-  const timeoutMs = options.timeoutMs ?? (options.retailerId === 'perekrestok' ? 5000 : RETAIL_CATALOG_TIMEOUT_MS);
+  // Cold public Perekrestok and GLOBUS REST reads took about 8.5s.
+  // Give only these catalogues finite margin; price freshness is unchanged.
+  const coldCatalogue = definition?.retailerId === 'perekrestok' || definition?.retailerId === 'globus';
+  const timeoutMs = options.timeoutMs ?? (coldCatalogue
+    ? COLD_RETAIL_CATALOG_TIMEOUT_MS : RETAIL_CATALOG_TIMEOUT_MS);
   const normalizeOptions = Object.freeze({
     ...(Number.isFinite(options.nowMs) ? { nowMs: options.nowMs } : {}),
     includeComparisonEvidence: options.includeComparisonEvidence === true
@@ -1053,9 +1058,11 @@ export function createRetailCatalogClient(options = {}) {
       });
     },
     async rootCategories(categoryOptions = {}) {
-      const defaultRootLimit = Number.isSafeInteger(definition?.rootCategoryCount)
-        ? Math.min(160, Math.max(40, definition.rootCategoryCount))
-        : 40;
+      const defaultRootLimit = Number.isSafeInteger(definition?.rootCategoryReadLimit)
+        ? definition.rootCategoryReadLimit
+        : Number.isSafeInteger(definition?.rootCategoryCount)
+          ? Math.min(160, Math.max(40, definition.rootCategoryCount))
+          : 40;
       return requestCategories({
         rootsOnly: true,
         limit: categoryOptions.limit ?? defaultRootLimit

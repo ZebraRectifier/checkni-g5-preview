@@ -9,7 +9,7 @@
   "testedSourceHead": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
   "sourceBase": "2399d5d4cee752f3444cd918d02df3c9b557eeea",
   "sourceTree": "0fc2c77ddc293937819cbcbdbafc9adc3d26292d",
-  "publicBase": "ce00a4e017a97187c67b0cf73f3b5ed7cf5bdf22",
+  "publicBase": "fc7ad04d94b3811bb63add5c3693a2c1b2a08403",
   "parent": {
     "path": "release/retail-category-search-ownership-20261026.json",
     "sha256": "ee58531d95e0773725b48ea48626e71683e57c14e39a9cc31038c9bfe7b308e9"
@@ -1157,9 +1157,9 @@
     },
     {
       "path": "src/ports/retailCatalogPort.mjs",
-      "bytes": 39244,
-      "sha256": "2257f14715daebe1205ead99f0ba103660b23a87435cbb9fab12164204bae136",
-      "blob": "5e89f03f5f835aae1a59890c7a4079e4ebe472b5"
+      "bytes": 39630,
+      "sha256": "3beaf53f522234128195761ad6efa16fcd654096e2504052b93b71664db02340",
+      "blob": "ce56327970de5c2349e26d9a4d929d78e04d8b07"
     },
     {
       "path": "src/ports/selectedGlobusCatalogOffersPort.mjs",
@@ -1501,7 +1501,7 @@
     "liveBrowser": "pending",
     "physicalAndroidVerified": false,
     "sourceBase": "2399d5d4cee752f3444cd918d02df3c9b557eeea",
-    "publicBase": "ce00a4e017a97187c67b0cf73f3b5ed7cf5bdf22",
+    "publicBase": "fc7ad04d94b3811bb63add5c3693a2c1b2a08403",
     "sourceExactHeadPackage": {
       "head": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
       "run": 40416482112,
@@ -1528,7 +1528,7 @@
       "conclusion": "success",
       "localFullBrowser": 534
     },
-    "publicLocalNodeChecks": 386,
+    "publicLocalNodeChecks": 389,
     "publicLocalBrowserCases": 204,
     "previousPublicFullBrowser": {
       "sourceRuntime": "a9279654b70431edd49fa8da9239b09aa0e86297",
@@ -1536,6 +1536,13 @@
       "passed": 204
     },
     "publicLocalFullBrowser": {
+      "sourceRuntime": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
+      "publicBase": "fc7ad04d94b3811bb63add5c3693a2c1b2a08403",
+      "passed": 204,
+      "durationMinutes": 5.2,
+      "result": "passed"
+    },
+    "previousPublicUnitFormValidation": {
       "sourceRuntime": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
       "publicBase": "ce00a4e017a97187c67b0cf73f3b5ed7cf5bdf22",
       "passed": 204,

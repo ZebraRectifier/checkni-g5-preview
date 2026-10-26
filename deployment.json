@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "e38d02eb9ce5ee2db3bcd162ff9eb5444a5fed32",
+  "sourceCommit": "2399d5d4cee752f3444cd918d02df3c9b557eeea",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -18,9 +18,9 @@
   "perekrestok": {
     "storeId": "perekrestok-yandex-3186917",
     "scope": "Москва · Яндекс Еда delivery",
-    "products": 5460,
-    "categories": 58,
-    "autoRefresh": "Supabase Cron every 6 hours"
+    "products": null,
+    "categories": null,
+    "autoRefresh": "Supabase Cron 06:17, 12:17, 18:17 UTC daily; source availability permitting"
   },
   "da": {
     "storeId": "da-public-promo",
@@ -2767,25 +2767,25 @@
     "collectorContract": "globus-weekly-route-v1"
   },
   "perekrestokCatalogTransport": {
-    "sourcePr": 589,
-    "sourceCommit": "81a5c51780003978afaaa8661ab33c948346b4c9",
-    "testedSourceHead": "6206a6bc681e3f8f7ad1423fc42d3f28d102056a",
-    "sourceMainCi": 40063851341,
-    "sourceExactCi": 40060793906,
-    "timeoutMs": 5000,
+    "sourcePr": 598,
+    "sourceCommit": "2399d5d4cee752f3444cd918d02df3c9b557eeea",
+    "testedSourceHead": "01af36115ecffafb5bb3dafa99ef1d190cece95d",
+    "timeoutMs": 15000,
+    "globusTimeoutMs": 15000,
     "otherRetailersKeepExistingTimeout": true,
     "requestsPerRead": 1,
-    "manifest": "release/perekrestok-catalog-timeout-20261024.json",
-    "scope": "Perekrestok public catalogue transport only; price freshness and admission are unchanged",
+    "manifest": "release/perek-globus-cold-catalog-20261026.json",
+    "scope": "Finite first-load catalogue transport for Perekrestok and GLOBUS; no price or stock policy change",
     "sourceFreshnessVerified": false,
-    "aiProviderChanged": false
+    "allRegionsAndStoresCovered": false,
+    "physicalAndroidVerified": false
   },
   "browserComposition": {
     "manifest": "release/hory-shopping-needs-20261025.json",
     "parentManifest": "release/retail-category-search-ownership-20261026.json",
     "sourceCommit": null,
     "testedSourceHead": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
-    "publicBase": "ce00a4e017a97187c67b0cf73f3b5ed7cf5bdf22",
+    "publicBase": "fc7ad04d94b3811bb63add5c3693a2c1b2a08403",
     "privateSourceParity": false,
     "publicManualSearchOverridesPreserved": true,
     "runtimeFiles": 221,
