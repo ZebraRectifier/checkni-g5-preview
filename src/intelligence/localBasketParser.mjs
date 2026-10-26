@@ -506,6 +506,7 @@ function candidatesForSegment(segment, catalog) {
   let candidates = catalog.filter((product) => (
     productMatchesExactStems(product, parsed.stems)
   ));
+  const approximate = candidates.length === 0;
 
   if (candidates.length === 0 && parsed.stems.length === 1) {
     candidates = catalog.filter((product) => (
@@ -525,7 +526,7 @@ function candidatesForSegment(segment, catalog) {
     ));
   }
 
-  return { ...parsed, identitySpecification, candidates };
+  return { ...parsed, identitySpecification, candidates, approximate };
 }
 
 function parseUniqueWhitespaceList(text, catalog) {
@@ -555,7 +556,7 @@ function parseUniqueWhitespaceList(text, catalog) {
         continue;
       }
 
-      walk(end, [...parts, [match.candidates[0].id, match.quantity]]);
+      walk(end, [...parts, [match.candidates[0].id, match.quantity, match.approximate ? phrase : null]]);
     }
   };
 
@@ -572,7 +573,7 @@ function parseUniqueWhitespaceList(text, catalog) {
     if (quantity > 99) return null;
     totals.set(productId, quantity);
   }
-  return totals;
+  return { totals, approximateTerms: items.map(row => row[2]).filter(Boolean) };
 }
 
 function hasAmbiguousUnitQuantity(segment, match) {
@@ -603,7 +604,7 @@ function singleCorrectionTarget(text, catalog) {
     });
   }
 
-  if (match.candidates.length !== 1) {
+  if (match.candidates.length !== 1 || match.approximate) {
     return Object.freeze({ kind: "unresolved" });
   }
 
@@ -649,6 +650,7 @@ function addOrdinaryCorrectionClause(clause, catalog, totals) {
     if (
       match.invalidQuantity
       || match.identitySpecification
+      || match.approximate
       || match.candidates.length !== 1
       || hasAmbiguousUnitQuantity(segment, match)
     ) {
@@ -825,14 +827,18 @@ function parseInlineCorrections(text, catalog) {
   });
 }
 
-function proposalFromTotals(totals) {
+function proposalFromTotals(totals, approximateTerms = []) {
   const items = [...totals.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([productId, quantity]) => Object.freeze({ productId, quantity }));
 
   return Object.freeze({
     kind: LOCAL_BASKET_DECISION.LOCAL,
-    confidence: LOCAL_BASKET_CONFIDENCE.HIGH,
+    confidence: approximateTerms.length ? "review" : LOCAL_BASKET_CONFIDENCE.HIGH,
+    ...(approximateTerms.length ? {
+      requiresConfirmation: true,
+      approximateTerms: Object.freeze([...approximateTerms])
+    } : {}),
     proposal: Object.freeze({ items: Object.freeze(items) })
   });
 }
@@ -882,6 +888,7 @@ export function parseLocalBasketText(text, catalog) {
   if (segments.length === 0) return reject("empty");
 
   const totals = new Map();
+  const approximateTerms = [];
 
   for (const [segmentIndex, segment] of segments.entries()) {
     const match = candidatesForSegment(segment, normalizedCatalog);
@@ -903,7 +910,8 @@ export function parseLocalBasketText(text, catalog) {
     if (match.candidates.length === 0) {
       const whitespaceTotals = parseUniqueWhitespaceList(segment, normalizedCatalog);
       if (whitespaceTotals) {
-        for (const [id, count] of whitespaceTotals) {
+        approximateTerms.push(...whitespaceTotals.approximateTerms);
+        for (const [id, count] of whitespaceTotals.totals) {
           const quantity = (totals.get(id) ?? 0) + count;
           if (!Number.isSafeInteger(quantity) || quantity > 99) return fallback("quantity_out_of_range", { segmentIndex });
           totals.set(id, quantity);
@@ -930,9 +938,10 @@ export function parseLocalBasketText(text, catalog) {
       return fallback("quantity_out_of_range", { segmentIndex });
     }
     totals.set(productId, nextQuantity);
+    if (match.approximate) approximateTerms.push(segment);
   }
 
-  return proposalFromTotals(totals);
+  return proposalFromTotals(totals, approximateTerms);
 }
 
 export {

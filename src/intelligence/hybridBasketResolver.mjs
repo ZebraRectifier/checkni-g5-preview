@@ -245,6 +245,16 @@ export async function resolveHybridBasketProposal(
       });
     }
 
+    if (localDecision.requiresConfirmation) {
+      return typedResult(HYBRID_BASKET_RESULT.CLARIFICATION, {
+        source: HYBRID_BASKET_SOURCE.LOCAL,
+        reason: "confirmation_required",
+        triggerReason: "approximate_match",
+        approximateTerms: localDecision.approximateTerms,
+        draftProposal: localDecision.proposal,
+        validation
+      });
+    }
     return acceptedResult(
       HYBRID_BASKET_SOURCE.LOCAL,
       localDecision.proposal,

@@ -4,6 +4,7 @@ export const HYBRID_DRAFT_CONFIRMATION = Object.freeze({
 });
 
 const CONFIRMABLE_TRIGGER_REASONS = new Set([
+  "approximate_match",
   "budget_request",
   "semantic_intent",
   "unresolved_segment",

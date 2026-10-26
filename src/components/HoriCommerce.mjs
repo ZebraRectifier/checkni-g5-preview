@@ -238,8 +238,9 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     scope.hidden = !scope.textContent;
     scopeReference.textContent = inStore ? fullScope : ''; scopeReference.hidden = !inStore || !fullScope;
     const units = Number.isSafeInteger(state.basketUnits) && state.basketUnits >= 0 ? state.basketUnits : 0;
-    count.textContent = String(units);
-    navButtons.get('basket').setAttribute('aria-label', `Открыть список покупок, товаров: ${units}`);
+    const needs = Number.isSafeInteger(state.unresolvedNeeds) && state.unresolvedNeeds > 0 ? state.unresolvedNeeds : 0;
+    count.textContent = needs ? units ? `${units} · +${needs} поз.` : `${needs} поз.` : String(units);
+    navButtons.get('basket').setAttribute('aria-label', `Открыть список покупок, выбранных товаров: ${units}${needs ? `, ещё выбрать позиций: ${needs}` : ''}`);
     const dock = document.getElementById('basket-dock');
     if (dock) dock.hidden = state.view === 'basket' || !inStore || units === 0;
     syncNavigation(); mountExtras(); filterStores();
