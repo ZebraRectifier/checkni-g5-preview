@@ -19,6 +19,8 @@ async function setup(page,baseURL,state){
   let rows=['5011','5020'].includes(id)?weeklyRows[id].map(x=>({...x,observed_at:at,snapshot_collected_at:at,price_minor:x.price_minor+(id==='5020'?500:0)})):[];
   // The observed source subset can omit packs outside the visible recipe.
   rows=rows.filter(x=>!['000000000000495119_ST','000000000000322766_ST'].includes(x.source_product_id));
+  if(state.mode==='old-bread-missing')rows=rows.filter(x=>x.source_product_id!=='000000000000257140_ST');
+  if(state.mode==='replacement-bread-missing'&&id==='5020')rows=rows.filter(x=>x.source_product_id!=='000000000093100502_ST');
   if(state.mode==='missing'&&id==='5020')rows=rows.slice(1);
   const ids=q.get('source_product_id');if(ids)rows=rows.filter(x=>ids.includes(x.source_product_id));
   const response=r.fulfill({json:rows.slice(0,Number(q.get('limit')??40))});
@@ -54,6 +56,23 @@ test('a delayed current-price response still completes the recipe within the bou
  const section=page.locator('#weekly-route');
  await expect(section.getByRole('button',{name:'Добавить и сравнить',exact:true})).toBeEnabled();
  await expect(section.locator('#weekly-route-status')).toContainText('10 из 10 цен свежее часа');
+ await expectNoOverflow(page);
+});
+test('current replacement bread completes both exact-store baskets when the old bread disappears',async({page,baseURL})=>{
+ await setup(page,baseURL,{mode:'old-bread-missing'});
+ const section=page.locator('#weekly-route'),apply=section.getByRole('button',{name:'Добавить и сравнить',exact:true});
+ await expect(section.locator('#weekly-route-status')).toContainText('10 из 10 цен свежее часа');
+ await expect(apply).toBeEnabled();
+ await apply.click();
+ await expect(page.getByLabel('Результат по наблюдаемым ценам')).toContainText('10 из 10 позиций');
+ await expectNoOverflow(page);
+});
+test('old bread cannot fill a missing current replacement price at the second address',async({page,baseURL})=>{
+ await setup(page,baseURL,{mode:'replacement-bread-missing'});
+ const section=page.locator('#weekly-route'),apply=section.getByRole('button',{name:'Добавить и сравнить',exact:true});
+ await expect(section.locator('#weekly-route-status')).toContainText('не хватает свежих цен');
+ await expect(apply).toBeDisabled();
+ await expect(section.locator('#weekly-route-total')).toBeEmpty();
  await expectNoOverflow(page);
 });
 for(const mode of ['missing','stale','outage'])test(`${mode} prices prevent a complete basket and recover with fresh qualified rows`,async({page,baseURL})=>{

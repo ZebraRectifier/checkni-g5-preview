@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "f31a9b0fc75a4b9d7b8fdadeebbdc43c2576dbdb",
+  "sourceCommit": "e38d02eb9ce5ee2db3bcd162ff9eb5444a5fed32",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -2767,19 +2767,17 @@
     "aiProviderChanged": false
   },
   "browserComposition": {
-    "manifest": "release/nearby-catalog-connections-20261025.json",
-    "parentManifest": "release/shopping-navigation-recovery-20261024.json",
-    "sourceCommit": "f31a9b0fc75a4b9d7b8fdadeebbdc43c2576dbdb",
-    "testedSourceHead": "f745afcad67e808906356d1060afc313f7c27019",
-    "publicBase": "eb189746d4075ed1a4ed3ac216ff722a9e2f338f",
+    "manifest": "release/globus-bread-substitution-20261026.json",
+    "parentManifest": "release/nearby-catalog-connections-20261025.json",
+    "sourceCommit": "e38d02eb9ce5ee2db3bcd162ff9eb5444a5fed32",
+    "testedSourceHead": "d9c4c82b819f79b11c287be7a42d043407773fb8",
+    "publicBase": "ea19d53ee6e7f1592d947bafe6976e86ef5ce75e",
     "privateSourceParity": false,
     "publicManualSearchOverridesPreserved": true,
     "runtimeFiles": 217,
     "changedRuntimePaths": [
-      "src/intelligence/nearbyShopping.mjs",
-      "src/intelligence/magnitAddressJoin.mjs",
-      "src/data/nearbyGroceryStores.json",
-      "src/components/NearbyShopping.mjs"
+      "src/catalog/weeklyBasketRecipe.mjs",
+      "src/catalog/weeklyRouteProducts.mjs"
     ],
     "actualPublicOverrides": [
       {
@@ -2914,5 +2912,27 @@
     "retainedGeographicPoints": 15071,
     "newPriceEvidence": false,
     "sourceFreshnessVerified": false
+  },
+  "weeklyBreadReplacement": {
+    "sourcePr": 597,
+    "sourceCommit": "e38d02eb9ce5ee2db3bcd162ff9eb5444a5fed32",
+    "testedSourceHead": "d9c4c82b819f79b11c287be7a42d043407773fb8",
+    "manifest": "release/globus-bread-substitution-20261026.json",
+    "oldSourceProductId": "000000000000257140_ST",
+    "replacementSourceProductId": "000000000093100502_ST",
+    "visibleRecipeLines": 10,
+    "collectorIdentities": 15,
+    "publicAddressConnectionsPreserved": 6,
+    "exactStorePricesRequiredAtBothAddresses": true,
+    "priceRefreshPerformed": false,
+    "sourceFreshnessVerified": false,
+    "status": "SOURCE_MAIN_CI_VERIFIED_PRICE_FRESHNESS_PENDING",
+    "sourceCi": {
+      "main": "e38d02eb9ce5ee2db3bcd162ff9eb5444a5fed32",
+      "nodeChecks": 2615,
+      "browserChecks": 522,
+      "packageApplicable": true,
+      "proof": "followup-597-main-proof.json"
+    }
   }
 }

@@ -545,6 +545,45 @@
       "metadata_state": "catalog-row-with-images",
       "old_price_minor": null,
       "active": true
+    },
+    {
+      "retailer_id": "globus",
+      "store_id": "globus-store-5011",
+      "store_name": "Глобус Красногорск",
+      "locality_id": "city-moscow",
+      "locality_name": "Москва",
+      "source_product_id": "000000000093100502_ST",
+      "name": "Батон с отрубями, 350г",
+      "price_minor": 3999,
+      "currency": "RUB",
+      "price_condition": "regular",
+      "sales_channel": "store",
+      "minimum_quantity": 1,
+      "quantity_semantics": {
+        "packageType": "piece",
+        "basketMinVolume": 1,
+        "basketStep": 1,
+        "unitPriceText": "1 шт"
+      },
+      "availability": "unknown",
+      "product_url": "https://www.globus.ru/products/baton-s-otrubyami-350g-93100502_ST/",
+      "image_url": "https://image.globus.ru/mobile/offline-weekly.jpg",
+      "image_urls": [
+        "https://image.globus.ru/mobile/offline-weekly.jpg"
+      ],
+      "weight_text": null,
+      "main_category_id": 10112701,
+      "source_url": "https://www.globus.ru/catalog/xleb-vypechka-10112701",
+      "category_url": "https://www.globus.ru/catalog/xleb-vypechka-10112701",
+      "location_label": "г. Москва, вн.тер.г. муниципальный округ Кунцево, Новорижское шоссе 22-й км, д. 1 стр. 1",
+      "scope_binding": "same-source",
+      "binding_id": "store:5011",
+      "scope_evidence_url": "https://www.globus.ru/catalog/xleb-vypechka-10112701",
+      "observed_at": "2026-10-23T10:00:00.000Z",
+      "snapshot_collected_at": "2026-10-23T10:00:00.000Z",
+      "metadata_state": "catalog-row-with-images",
+      "old_price_minor": null,
+      "active": true
     }
   ],
   "5020": [
@@ -1076,6 +1115,45 @@
       },
       "availability": "unknown",
       "product_url": "https://www.globus.ru/products/xleb-darniczkij-dedovskij-xleb-narezannaya-chast-350g-257140_ST/",
+      "image_url": "https://image.globus.ru/mobile/offline-weekly.jpg",
+      "image_urls": [
+        "https://image.globus.ru/mobile/offline-weekly.jpg"
+      ],
+      "weight_text": null,
+      "main_category_id": 10112701,
+      "source_url": "https://www.globus.ru/catalog/xleb-vypechka-10112701",
+      "category_url": "https://www.globus.ru/catalog/xleb-vypechka-10112701",
+      "location_label": "г. Москва, м. Медведково, ул. Широкая, 2а",
+      "scope_binding": "same-source",
+      "binding_id": "store:5020",
+      "scope_evidence_url": "https://www.globus.ru/catalog/xleb-vypechka-10112701",
+      "observed_at": "2026-10-23T10:00:00.000Z",
+      "snapshot_collected_at": "2026-10-23T10:00:00.000Z",
+      "metadata_state": "catalog-row-with-images",
+      "old_price_minor": null,
+      "active": true
+    },
+    {
+      "retailer_id": "globus",
+      "store_id": "globus-store-5020",
+      "store_name": "Глобус Медведково",
+      "locality_id": "city-moscow",
+      "locality_name": "Москва",
+      "source_product_id": "000000000093100502_ST",
+      "name": "Батон с отрубями, 350г",
+      "price_minor": 3999,
+      "currency": "RUB",
+      "price_condition": "regular",
+      "sales_channel": "store",
+      "minimum_quantity": 1,
+      "quantity_semantics": {
+        "packageType": "piece",
+        "basketMinVolume": 1,
+        "basketStep": 1,
+        "unitPriceText": "1 шт"
+      },
+      "availability": "unknown",
+      "product_url": "https://www.globus.ru/products/baton-s-otrubyami-350g-93100502_ST/",
       "image_url": "https://image.globus.ru/mobile/offline-weekly.jpg",
       "image_urls": [
         "https://image.globus.ru/mobile/offline-weekly.jpg"
