@@ -12,8 +12,9 @@ export const RETAIL_CATALOG_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/rest/v1/retail_catalog_items";
 export const RETAIL_CATEGORY_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/rest/v1/retail_catalog_categories";
-export const RETAIL_CATALOG_TIMEOUT_MS = 2_500;
-const COLD_RETAIL_CATALOG_TIMEOUT_MS = 15_000;
+// A cold connection on some client networks can take longer than 2.5 seconds
+// even when the public catalogue returns HTTP 200. Keep one finite read window.
+export const RETAIL_CATALOG_TIMEOUT_MS = 15_000;
 export const MAX_RETAIL_CATALOG_RESPONSE_BYTES = 262_144;
 export const MAX_RETAIL_CATALOG_PRODUCTS = 40;
 
@@ -792,11 +793,7 @@ export function createRetailCatalogClient(options = {}) {
     options.publishableKey ?? CATALOG_SEARCH_PUBLISHABLE_KEY;
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const definition = resolveDefinition({ ...options, retailerId: options.retailerId ?? "globus" });
-  // Cold public Perekrestok and GLOBUS REST reads took about 8.5s.
-  // Give only these catalogues finite margin; price freshness is unchanged.
-  const coldCatalogue = definition?.retailerId === 'perekrestok' || definition?.retailerId === 'globus';
-  const timeoutMs = options.timeoutMs ?? (coldCatalogue
-    ? COLD_RETAIL_CATALOG_TIMEOUT_MS : RETAIL_CATALOG_TIMEOUT_MS);
+  const timeoutMs = options.timeoutMs ?? RETAIL_CATALOG_TIMEOUT_MS;
   const normalizeOptions = Object.freeze({
     ...(Number.isFinite(options.nowMs) ? { nowMs: options.nowMs } : {}),
     includeComparisonEvidence: options.includeComparisonEvidence === true

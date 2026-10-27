@@ -34,7 +34,7 @@ test('the user dialogue → intake → editable real-card table → honest compa
   await page.goto('/?comparison=observed&catalog=retail#shop');
   await selectStore(page);
   await openStoreDetails(page);
-  await page.locator('#globus-store-address').selectOption({ label: 'МО · Глобус Пушкино · г. Пушкино, Красноармейское ш., вл. 105 — цены подтверждены' });
+  await page.locator('#globus-store-address').selectOption('5014');
   const output = page.locator('#basket-proposal-status');
   await submit(page, 'хочу качественную еду на 3 дня');
   await expect(output.getByRole('button', { name: 'Собрать корзину', exact: true })).toBeVisible();

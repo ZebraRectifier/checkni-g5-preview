@@ -15,6 +15,28 @@ function session(storage=null) {
     loader:{load:async()=>interpreter},requestAiProposal:async()=>{calls++;return {kind:'unavailable'};}});
   return {flow,basket,store:needsStore,calls:()=>calls,lines:()=>needsStore.getSnapshot().lines};
 }
+test('a standalone food refusal is remembered without becoming a requested need',async()=>{
+  const s=session();
+  await s.flow.run('Морковь не добавляй');
+  assert.equal(s.flow.getConversation().rejected.carrots?.value,true);
+  assert.deepEqual(s.lines(),[]);
+  assert.deepEqual(s.basket.getSnapshot(),[]);
+  assert.equal(s.calls(),0);
+});
+test('an address-turn refusal leaves an existing needs list and reviewed basket untouched',async()=>{
+  const s=session();
+  await s.flow.run('хочу 12 бутылок кефира');
+  const before=s.lines();
+  const reviewed={id:'retail:test:apple',name:'Яблоки',unit:'1 кг',quantity:1};
+  assert.equal(s.basket.replaceReviewedBasket([],[reviewed]).applied,true);
+  const beforeBasket=s.basket.getSnapshot();
+  assert.equal(s.flow.rememberLocationConstraint('Морковь не добавляй'),true);
+  assert.equal(s.flow.getConversation().rejected.carrots?.value,true);
+  assert.deepEqual(s.lines(),before);
+  assert.deepEqual(s.basket.getSnapshot(),beforeBasket);
+  assert.equal(s.flow.getState().status,'idle');
+  assert.equal(s.calls(),0);
+});
 test('a generic need retains twelve bottles without inventing fat, package volume, brand or SKU',async()=>{
   const s=session();const reply=await s.flow.run('хочу 12 бутылок кефира');
   assert.match(reply.presentation.headline,/Записано/u);

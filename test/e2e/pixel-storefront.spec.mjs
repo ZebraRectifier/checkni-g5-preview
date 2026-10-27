@@ -90,6 +90,55 @@ test('cold stores home and its local chain filter make no catalogue, global-sear
  await expectNoOverflow(page);
 });
 
+test('city search exposes only selectable exact addresses and opens their own catalogues',async({page})=>{
+ test.setTimeout(75_000);
+ const calls=await setup(page);
+ const search=page.locator('#pixel-store-search');
+ await search.fill('Пушкино');
+ await expect(page.locator('#retail-store-grid .retail-store-card:visible')).toHaveCount(2);
+ await expect(page.locator('#retail-store-card-magnit')).toBeVisible();
+ await expect(page.locator('#retail-store-card')).toBeVisible();
+ const magnitAddresses=page.locator('#pixel-store-address-results button[data-retailer-id="magnit"]');
+ const globusAddress=page.locator('#pixel-store-address-results button[data-retailer-id="globus"][data-store-id="5014"]');
+ const addressChoices=page.locator('#pixel-store-address-results button[data-store-id]');
+ await expect(addressChoices).toHaveCount(4);
+ expect(await magnitAddresses.count()).toBeGreaterThan(0);
+ await expect(globusAddress).toBeVisible();
+ await expect(globusAddress).toContainText('Глобус Пушкино');
+ await expect(globusAddress).not.toContainText('дата цен после выбора');
+ const showAll=page.locator('.pixel-store-address-toggle');
+ await showAll.click();
+ await expect(addressChoices).toHaveCount(11);
+ await showAll.click();
+ await expect(addressChoices).toHaveCount(4);
+ await expect(page.locator('#pixel-store-status')).toContainText('адресов:');
+ expect(calls).toEqual({categories:[],items:[],global:0,ai:0});
+
+ const magnitCode=await magnitAddresses.first().getAttribute('data-store-id');
+ await magnitAddresses.first().click();
+ await expect(page.locator('#pixel-storefront')).toBeVisible();
+ await expect(page.locator('#magnit-store-address')).toHaveValue(magnitCode);
+ await expect(page.locator('.pixel-store-address')).toContainText('Пушкино');
+ const magnitReads=[...calls.categories,...calls.items].filter(row=>row.retailer_id==='eq.magnit');
+ expect(magnitReads.length).toBeGreaterThan(0);
+ expect(magnitReads.every(row=>row.store_id===`eq.magnit-${magnitCode}`)).toBe(true);
+
+ await openStores(page);
+ await expect(globusAddress).toBeVisible();
+ const beforeGlobus=calls.categories.length;
+ await globusAddress.click();
+ await expect(page.locator('#pixel-storefront')).toBeVisible();
+ await expect(page.locator('#globus-store-address')).toHaveValue('5014');
+ await expect(page.locator('.pixel-store-address')).toContainText('Пушкино');
+ const globusReads=calls.categories.slice(beforeGlobus).filter(row=>row.retailer_id==='eq.globus');
+ expect(globusReads.length).toBeGreaterThan(0);
+ expect(globusReads.every(row=>row.store_id==='eq.globus-store-5014')).toBe(true);
+ await page.reload({waitUntil:'domcontentloaded'});
+ await expect(page.locator('#globus-store-address')).toHaveValue('5014');
+ await expect(page.locator('.pixel-store-address')).toContainText('Пушкино');
+ await expectNoOverflow(page);
+});
+
 test('the internal default becomes explicitly selected on entry and retains real category identities and search scope',async({page})=>{
  const calls=await setup(page,{expandedRoots:true});
  await expect(page.locator('#retail-store-card')).toHaveAttribute('aria-pressed','false');

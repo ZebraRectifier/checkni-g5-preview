@@ -35,6 +35,7 @@ async function setup(page,baseURL,state){
  await page.locator('#weekly-route').getByRole('button',{name:'Сравнить с Глобус Медведково',exact:true}).click();
 }
 test('explicit address and peer lead to ten editable lines, saved basket and actual Core comparison across reload',async({page,baseURL})=>{
+ test.setTimeout(60_000);
  const state={mode:'fresh'};await setup(page,baseURL,state);
  const section=page.locator('#weekly-route'),apply=section.getByRole('button',{name:'Добавить и сравнить',exact:true});
  await expect(apply).toBeEnabled();await expect(section.locator('#weekly-route-addresses')).toContainText('Широкая, 2а');

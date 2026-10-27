@@ -7,10 +7,19 @@ test('address clarification opens a local place picker without treating a househ
   assert.equal(nearbyShoppingIntent('на троих'),null);assert.equal(nearbyShoppingIntent('Текущий магазин',true),null);
   assert.equal(nearbyShoppingIntent('Магнит и О’КЕЙ',true),null);
   assert.equal(nearbyShoppingIntent('Без мяса',true),null);assert.equal(nearbyShoppingIntent('На троих',true),null);
+  assert.equal(nearbyShoppingIntent('Морковь не добавляй',true),null);
   assert.deepEqual(nearbyShoppingIntent('Москва, Тверская, 7',true),{query:'Москва, Тверская, 7',radiusKm:null});
   assert.deepEqual(nearbyShoppingIntent('Найти магазины рядом'),{query:'',radiusKm:null});
   assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, до 10 км'),{query:'в Пушкино',radiusKm:10});
   assert.deepEqual(nearbyShoppingIntent('Собери недорогую корзину на неделю для троих, я живу в Пушкино, до 10 км'),{query:'в Пушкино',radiusKm:10});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, Московская область, до 20 км. Морковь не добавляй.'),
+    {query:'в Пушкино, Московская область',radiusKm:20,preferenceText:'Морковь не добавляй.'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, ул. Ленина, д. 12. Морковь не добавляй.'),
+    {query:'в Пушкино, ул. Ленина, д. 12',radiusKm:null,preferenceText:'Морковь не добавляй.'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, до 20 км, морковь не добавляй'),
+    {query:'в Пушкино',radiusKm:20,preferenceText:'морковь не добавляй'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, ул. Морковная, д. 12'),
+    {query:'в Пушкино, ул. Морковная, д. 12',radiusKm:null});
 });
 test('geocoder accepts Moscow and oblast, preserving precision and rejecting other regions or malformed coordinates',()=>{
   const accepted=normalizedAddressCandidate(feature());assert.equal(accepted.precision,'house');assert.equal(accepted.lat,56.04);

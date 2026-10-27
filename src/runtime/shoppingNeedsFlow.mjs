@@ -220,6 +220,11 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
   function getState(){return ownsView?state:delegate.getState();}
   function edit(){epoch++;if(!ownsView)delegate.edit();return getState();}
   function invalidate(){epoch++;selectionActive=false;delegate.invalidate();ownsView=false;state=delegate.getState();return state;}
+  function rememberLocationConstraint(text){
+    const saved=delegate.rememberLocationConstraint(text);
+    if(saved){epoch++;selectionActive=false;ownsView=false;state=delegate.getState();}
+    return saved;
+  }
   function confirm(mode){
     if(ownsView)return state;
     const before=basket.getSnapshot(),next=delegate.confirm(mode);
@@ -254,7 +259,7 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
     });
     return result.ok?{ok:true,message:result.receipt.message}:{ok:false,message:'Соответствие не сохранено: список или корзина изменились, товар уже связан с другой потребностью либо запись недоступна. Проверь актуальные строки.'};
   }
-  return Object.freeze({...delegate,run,getState,edit,invalidate,confirm,
+  return Object.freeze({...delegate,run,getState,edit,invalidate,confirm,rememberLocationConstraint,
     getShoppingNeeds:()=>snapshot().lines,
     getUnresolvedNeeds:()=>snapshot().lines.filter(line=>line.resolution.status!=='selected'||!basket.getSnapshot().some(row=>JSON.stringify(row)===JSON.stringify(line.resolution.selectedRow))),
     removeNeed, linkNeed, needsStore:store });

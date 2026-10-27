@@ -247,6 +247,20 @@ body.pixel-workspace .catalog-search-submit {
   box-shadow: none;
 }
 body.pixel-workspace #pixel-store-status { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+body.pixel-workspace #pixel-store-address-results { margin: 20px 0 0; }
+body.pixel-workspace .pixel-store-address-title { margin: 0 0 10px; font-size: 17px; }
+body.pixel-workspace .pixel-store-address-list { display: grid; gap: 7px; grid-template-columns: repeat(auto-fit,minmax(min(100%,320px),1fr)); }
+body.pixel-workspace .pixel-store-address-choice {
+  min-height: 48px; padding: 9px 12px; border: 2px solid var(--line); border-radius: 2px;
+  background: var(--surface); color: var(--ink); text-align: left; font-size: 14px; line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+body.pixel-workspace .pixel-store-address-choice:is(:hover,:focus-visible) { border-color: var(--accent); background: var(--surface-soft); }
+body.pixel-workspace .pixel-store-address-toggle {
+  min-height: 44px; margin-top: 10px; padding: 8px 12px; border: 2px solid var(--accent);
+  border-radius: 2px; background: var(--accent-soft); color: var(--ink); font-size: 14px;
+}
+body.pixel-workspace .pixel-store-address-toggle:is(:hover,:focus-visible) { background: var(--surface-soft); }
 body.pixel-workspace .retail-store-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px 10px; margin: 0; }
 body.pixel-workspace #pixel-store-home .retail-store-card {
   --retailer-face: var(--surface-soft);

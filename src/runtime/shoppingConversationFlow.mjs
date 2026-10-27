@@ -108,6 +108,19 @@ export function createShoppingConversationFlow(options) {
     hybrid.invalidate(); state = { status: "idle" };
     return state;
   }
+  // The address picker handles this turn before run(). Save a separated food
+  // refusal without proposing products or touching the reviewed basket.
+  function rememberLocationConstraint(text) {
+    if (typeof text !== "string" || !text.trim() || text.length > 100) return false;
+    const delta = extractShoppingDelta(text);
+    if (!delta.reject.length || delta.unresolved.length || delta.reset || delta.newGoal
+      || delta.undo || delta.clearUnresolved || delta.dissatisfaction || delta.directions) return false;
+    const updated = updateShoppingConversation(memory, delta);
+    if (updated.overflow) return false;
+    invalidate();
+    setMemory(updated.state);
+    return true;
+  }
   function edit() {
     const receipt = lastAppliedReceipt;
     const draft = pending ? { pending, state } : suspendedDraft;
@@ -1078,7 +1091,7 @@ export function createShoppingConversationFlow(options) {
     state = messageState("Сравнение нужно обновить.", localShoppingComparisonExplanation("Почему этот магазин дешевле?", basket.getSnapshot()));
     return true;
   };
-  const delegate = Object.freeze({ run, confirm, invalidate, edit, preload: hybrid.preload, getState: () => state, checkCurrentComparisonExplanation,
+  const delegate = Object.freeze({ run, confirm, invalidate, edit, rememberLocationConstraint, preload: hybrid.preload, getState: () => state, checkCurrentComparisonExplanation,
     hasActiveShoppingSelection: () => Boolean(productSelection || pending || suspendedDraft || retailList || mealNeed || adviceFocus || referenceAction || guidedShopping?.active()),
     hasActiveGuidedShopping: () => Boolean(guidedShopping?.active()),
     setRetailer, getConversation: () => memory, getMartenPreferences: () => projectMartenConversation(memory) });

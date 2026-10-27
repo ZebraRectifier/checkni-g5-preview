@@ -3,19 +3,36 @@ import{resolveRegisteredMagnitStore}from'../data/registeredMagnitStores.mjs';
 import{resolveGlobusMoscowRegionStore}from'../data/globusMoscowRegionStores.mjs';
 import{GLOBUS_MAP_LOCATIONS}from'../data/storeMapLocations.mjs';
 import{exactMagnitAddressKey}from'./magnitAddressJoin.mjs';
+import{extractShoppingDelta}from'./shoppingConversation.mjs';
 export const NEARBY_RADIUS_KM=Object.freeze([1,3,5,10,20]);
+function separateLocationRestriction(tail){
+  const boundaries=[...tail.matchAll(/[.;!?\n,]\s+/gu)];
+  for(let i=boundaries.length-1;i>=0;i--){
+    const boundary=boundaries[i];
+    const preferenceText=tail.slice(boundary.index+boundary[0].length).trim();
+    if(!preferenceText||preferenceText.length>100)continue;
+    const delta=extractShoppingDelta(preferenceText);
+    if(delta.reject.length&&!delta.unresolved.length){
+      return{location:tail.slice(0,boundary.index).trim(),preferenceText};
+    }
+  }
+  return{location:tail,preferenceText:null};
+}
 export function nearbyShoppingIntent(text,expectLocation=false){
   const raw=String(text??'').trim(),v=raw.toLowerCase().replaceAll('ё','е');
   if(/^(?:текущий магазин|(?:магнит|о['’]?кей|пятерочка)(?: и (?:магнит|о['’]?кей|пятерочка))*|заветы ильича · до 20 км)$/u.test(v))return null;
   if(expectLocation&&/^(?:без\s|не\s|ограничений нет|на\s+(?:\d|одного|двоих|троих|неделю|две недели)|бюджет\s|подбери подешевле)/u.test(v))return null;
+  if(expectLocation&&!/(?:я\s+живу|мой адрес|^адрес[:\s]|^москва[,\s]|^московская область[,\s])/u.test(v)
+    &&extractShoppingDelta(raw).reject.length)return null;
   const radius=v.match(/(?:до|радиус(?:е|ом)?|в пределах)\s*(\d{1,3})\s*км/u);
   if(!expectLocation&&!/найти магазины рядом|магазины рядом|изменить (?:место|адрес)|моя геолокация|я живу|мой адрес|^адрес[:\s]|^москва[,\s]|^московская область[,\s]/u.test(v))return null;
   if(raw.length>240)return{query:'',radiusKm:null};
-  const tail=raw.match(/(?:я\s+живу|мой адрес)\s*[:—-]?\s*(.+)$/iu)?.[1]??raw;
-  const query=tail.replace(/^(?:я\s+)?(?:живу|мой адрес|адрес|магазины рядом с)\s*[:—-]?\s*/iu,'')
-    .replace(/[,;]?\s*(?:до|радиус(?:е|ом)?|в пределах)\s*\d{1,3}\s*км[.!]?/iu,'').trim();
+  const tail=raw.match(/(?:я\s+живу|мой адрес)\s*[:—-]?\s*(.+)$/ius)?.[1]??raw;
+  const {location,preferenceText}=separateLocationRestriction(tail);
+  const query=location.replace(/^(?:я\s+)?(?:живу|мой адрес|адрес|магазины рядом с)\s*[:—-]?\s*/iu,'')
+    .replace(/[,;]?\s*(?:до|радиус(?:е|ом)?|в пределах)\s*\d{1,3}\s*км[.!]?/iu,'').replace(/[,.!?;]+$/u,'').trim();
   return{query:/найти магазины рядом|изменить (?:место|адрес)|геолокация/u.test(v)?'':query,
-    radiusKm:radius?Number(radius[1]):null};
+    radiusKm:radius?Number(radius[1]):null,...(preferenceText?{preferenceText}:{})};
 }
 export function nearbyCatalogBinding(point){
   const b=point?.catalogBinding;if(!b)return null;
