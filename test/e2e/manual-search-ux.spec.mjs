@@ -43,7 +43,9 @@ async function setup(page, { demo = false, history = false, unavailable = false 
     const params = new URL(route.request().url()).searchParams;
     const query = (params.get('name') ?? '').replace(/^ilike\.\*|\*$/gu, '').replaceAll('*', ' ').toLocaleLowerCase('ru-RU');
     if (query) calls.retail.push({ query, retailer: params.get('retailer_id'), store: params.get('store_id') });
-    else {
+    else if (params.get('select')?.includes('source_product_id')) {
+      // The independent latest-observation probe reads only freshness fields.
+      // Count actual catalogue pages, not whichever probe happens to finish first.
       calls.browse++;
       const store = params.get('store_id');
       calls.browseByStore.set(store, (calls.browseByStore.get(store) ?? 0) + 1);
@@ -319,7 +321,7 @@ test('a retailer change discards the old search and keeps the next request in th
       && url.searchParams.get('retailer_id') === 'eq.metro'
       && !url.searchParams.has('name');
   });
-  await page.locator('#retail-store-card-metro').click();
+  await selectStore(page, 'metro');
   await (await metroBrowseDone).finished();
   await expect(page.locator('#pixel-storefront')).toContainText('METRO');
   await expect(search(page)).toHaveValue('');

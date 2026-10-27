@@ -35,6 +35,18 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   const addressResults = node('section', 'pixel-store-address-results');
   addressResults.id = 'pixel-store-address-results'; addressResults.hidden = true;
   addressResults.setAttribute('aria-label', 'Найденные адреса магазинов');
+  const addressChooser = node('section', 'pixel-address-chooser');
+  addressChooser.id = 'pixel-address-chooser'; addressChooser.hidden = true;
+  addressChooser.setAttribute('aria-labelledby', 'pixel-address-chooser-title');
+  const chooserTitle = node('h2'); chooserTitle.id = 'pixel-address-chooser-title';
+  const chooserHint = node('p', 'pixel-address-chooser-hint', 'Выберите конкретный магазин. Покажем его каталог и дату цен, если они доступны.');
+  const chooserControls = node('div', 'pixel-address-chooser-controls');
+  const chooserActions = node('div', 'pixel-address-chooser-actions');
+  const chooserBack = node('button', 'pixel-address-chooser-back', 'К сетям'); chooserBack.type = 'button';
+  const chooserConfirm = node('button', 'pixel-address-chooser-confirm', 'Открыть этот адрес');
+  chooserConfirm.type = 'button'; chooserConfirm.disabled = true;
+  chooserActions.append(chooserBack, chooserConfirm);
+  addressChooser.append(chooserTitle, chooserHint, chooserControls, chooserActions);
   const stores = document.getElementById('retail-store-grid');
   const publishedEntries = [
     { id: 'okey', name: 'О’КЕЙ', selector: '[data-okey-official="true"]', aliases: 'окей okey o\'key',
@@ -43,7 +55,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
       scope: 'Акции Москвы · цена в конкретном магазине не подтверждена' }
   ];
   const publishedButtons = new Map();
-  home.append(homeTitle, storeSearch, storeStatus); if (stores) home.append(stores);
+  home.append(homeTitle, storeSearch, storeStatus, addressChooser); if (stores) home.append(stores);
   home.append(addressResults);
 
   const storefront = node('section', 'pixel-storefront');
@@ -70,6 +82,113 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   pickers.append(scopeReference);
   detailsContent.append(pickers); details.append(summary, detailsContent);
   shop?.prepend(home, storefront); shop?.append(details);
+
+  const exactPickerIds = Object.freeze({
+    magnit: ['magnit-store-picker', 'magnit-store-address'],
+    globus: ['globus-store-picker', 'globus-store-address'],
+    metro: ['metro-store-picker', 'metro-store-address']
+  });
+  let pendingAddress = null;
+  const watchedPickerSearches = new WeakSet();
+  function clearPendingSelection() {
+    if (!pendingAddress) return;
+    const { select } = pendingAddress;
+    for (const option of [...select.options]) {
+      if (!option.value && option.dataset.pixelAddressPrompt !== 'true') option.remove();
+    }
+    let prompt = select.querySelector('[data-pixel-address-prompt]');
+    if (!prompt) {
+      prompt = node('option');
+      prompt.value = ''; prompt.disabled = true; prompt.dataset.pixelAddressPrompt = 'true';
+      select.prepend(prompt);
+    }
+    prompt.textContent = [...select.options].some(option => option.value && !option.disabled)
+      ? 'Выберите адрес магазина' : 'Адрес не найден';
+    select.value = '';
+    chooserConfirm.disabled = true;
+  }
+  function showPendingPicker() {
+    if (!pendingAddress) return;
+    for (const [id, [sectionId]] of Object.entries(exactPickerIds)) {
+      const section = document.getElementById(sectionId);
+      if (!section) continue;
+      const visible = id === pendingAddress.retailerId;
+      section.hidden = !visible;
+      section.style.display = visible ? 'grid' : 'none';
+    }
+    pickers.hidden = false;
+  }
+  function closeAddressChooser({ restoreFocus = false, preserveSelection = false } = {}) {
+    if (!pendingAddress) return;
+    const { select, search, originalValue, sourceButton } = pendingAddress;
+    pendingAddress = null;
+    search.value = '';
+    search.dispatchEvent(new view.Event('input', { bubbles: true }));
+    select.querySelector('[data-pixel-address-prompt]')?.remove();
+    delete select.dataset.pixelOriginalAddress;
+    if (!preserveSelection) select.value = originalValue;
+    detailsContent.prepend(pickers);
+    addressChooser.hidden = true;
+    storeSearch.hidden = false; storeStatus.hidden = false;
+    if (stores) stores.hidden = false;
+    pickers.hidden = state.stage !== 'store';
+    chooserConfirm.disabled = true;
+    if (restoreFocus && sourceButton.isConnected) sourceButton.focus({ preventScroll: true });
+  }
+  function openAddressChooser(retailerId, sourceButton) {
+    const pair = exactPickerIds[retailerId];
+    if (!pair) return;
+    const section = document.getElementById(pair[0]);
+    const select = document.getElementById(pair[1]);
+    const search = section?.querySelector('input[type="search"]');
+    if (!section || !select || !search) {
+      storeStatus.textContent = 'Выбор адреса временно недоступен. Попробуйте ещё раз.';
+      return;
+    }
+    closeAddressChooser();
+    pendingAddress = { retailerId, sourceButton, select, search, originalValue: select.value, confirming: false };
+    select.dataset.pixelOriginalAddress = select.value;
+    const name = sourceButton.querySelector('.retail-store-copy strong')?.textContent || retailerId;
+    chooserTitle.textContent = `Выберите адрес: ${name}`;
+    addressChooser.hidden = false;
+    storeSearch.hidden = true; storeStatus.hidden = true;
+    addressResults.hidden = true;
+    if (stores) stores.hidden = true;
+    chooserControls.append(pickers);
+    search.value = '';
+    search.dispatchEvent(new view.Event('input', { bubbles: true }));
+    showPendingPicker();
+    clearPendingSelection();
+    if (!watchedPickerSearches.has(search)) {
+      search.addEventListener('input', () => {
+        if (pendingAddress?.search === search) clearPendingSelection();
+      });
+      watchedPickerSearches.add(search);
+    }
+    addressChooser.scrollIntoView({ block: 'start', behavior: 'auto' });
+    search.focus({ preventScroll: true });
+  }
+  chooserControls.addEventListener('change', event => {
+    if (!pendingAddress || event.target !== pendingAddress.select || pendingAddress.confirming) return;
+    // The address picker normally navigates on change. In this first-visit
+    // chooser, the user confirms the highlighted exact address explicitly.
+    event.stopPropagation();
+    const option = pendingAddress.select.selectedOptions[0];
+    chooserConfirm.disabled = !option?.value || option.disabled;
+  }, true);
+  chooserBack.addEventListener('click', () => closeAddressChooser({ restoreFocus: true }));
+  chooserConfirm.addEventListener('click', () => {
+    if (!pendingAddress) return;
+    const option = pendingAddress.select.selectedOptions[0];
+    if (!option?.value || option.disabled) return;
+    pendingAddress.confirming = true;
+    pendingAddress.select.dispatchEvent(new view.Event('change', { bubbles: true }));
+    if (pendingAddress) pendingAddress.confirming = false;
+  });
+  document.addEventListener('checkni:shop-action', event => {
+    if (event.detail?.action !== 'choose-address') return;
+    openAddressChooser(event.detail.retailerId, event.detail.sourceButton);
+  });
 
   const location = node('button', 'hori-location pixel-location', '⌖ Москва и МО'); location.type = 'button';
   const selected = node('button', 'hori-selected-store pixel-selected-store');
@@ -193,6 +312,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     target.scrollIntoView({ block: 'start', behavior: 'auto' });
   }
   function openDetails({ focusNearby = false, emit = true } = {}) {
+    closeAddressChooser();
     mountExtras(); details.open = true; if (emit) action('address');
     view.requestAnimationFrame(() => {
       reveal(details);
@@ -282,7 +402,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
         addressResults.append(toggle);
       }
     }
-    addressResults.hidden = !shown.length;
+    addressResults.hidden = Boolean(pendingAddress) || !shown.length;
     storeStatus.textContent = query && !matches.length
       ? 'Магазин или адрес не найден. Уточните название или город.'
       : query ? `Сетей: ${matches.length}${addresses.length ? ` · адресов: ${addresses.length}` : ''}`
@@ -297,9 +417,11 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
       stage: detail.stage === 'store' ? 'store' : detail.stage === 'stores' ? 'stores' : state.stage,
       view: detail.view === 'basket' ? 'basket' : detail.view === 'shop' ? 'shop' : state.view };
     const inStore = state.stage === 'store';
+    if (inStore) closeAddressChooser({ preserveSelection: true });
     document.body.dataset.pixelStage = state.stage; document.body.dataset.pixelView = state.view;
     main.dataset.horiView = state.view === 'basket' ? 'basket' : state.stage;
-    home.hidden = inStore; storefront.hidden = !inStore; pickers.hidden = !inStore; selected.hidden = !inStore;
+    home.hidden = inStore; storefront.hidden = !inStore; details.hidden = !inStore;
+    pickers.hidden = !inStore; selected.hidden = !inStore;
     const displayName = typeof state.displayName === 'string' ? state.displayName : 'Магазин';
     selected.textContent = displayName; selected.setAttribute('aria-label', `Категории магазина ${displayName}`);
     title.textContent = displayName; address.textContent = state.storeAddress || 'Выбрать адрес';
@@ -317,6 +439,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     const dock = document.getElementById('basket-dock');
     if (dock) dock.hidden = state.view === 'basket' || !inStore || units === 0;
     syncNavigation(); mountExtras(); filterStores();
+    if (pendingAddress) showPendingPicker();
   }
   document.addEventListener('checkni:shop-state', event => applyState(event.detail));
   queueMicrotask(() => { mountExtras(); filterStores(); }); applyState();

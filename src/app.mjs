@@ -816,8 +816,12 @@ function renderRetailStoreButtons() {
       : "retail-store-card";
     button.dataset.retailerId = retailerId;
     button.setAttribute("aria-pressed", selected && retailSurfaceStage === 'store' ? "true" : "false");
-    button.setAttribute('aria-label', `${definition.displayName}: ${definition.scopeLabel}`);
-    button.title = definition.scopeLabel;
+    const awaitsAddress = retailSurfaceStage === 'stores'
+      && ['magnit', 'globus', 'metro'].includes(retailerId);
+    button.setAttribute('aria-label', awaitsAddress
+      ? `${definition.displayName}: выбрать адрес магазина`
+      : `${definition.displayName}: ${definition.scopeLabel}`);
+    button.title = awaitsAddress ? 'Выбрать конкретный адрес магазина' : definition.scopeLabel;
 
     const logo = document.createElement("span");
     logo.className = "retail-store-logo";
@@ -846,6 +850,15 @@ function renderRetailStoreButtons() {
     button.addEventListener("click", () => {
       if (selected && retailSurfaceStage === 'store') {
         void navigateRetailPath([]);
+        return;
+      }
+      // A network card has no user-confirmed address yet. Keep the stores
+      // surface and let the existing exact-address picker choose the store;
+      // the registered defaults are implementation state, not a location.
+      if (awaitsAddress) {
+        document.dispatchEvent(new CustomEvent('checkni:shop-action', {
+          detail: { action: 'choose-address', retailerId, sourceButton: button }
+        }));
         return;
       }
       void selectRetailer(retailerId);

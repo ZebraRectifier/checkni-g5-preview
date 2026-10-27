@@ -3,6 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { parseOfficialProduct, OFFICIAL_CATALOG_URL, OFFICIAL_SCOPE } from '../../src/observations/okeyOfficialPromotions.mjs';
 import { parsePublishedCatalogue, PUBLISHED_URL } from '../../src/observations/okeyPublishedPromotions.mjs';
 import { parsePyatCatalogue } from '../../src/observations/pyaterochkaPublishedPromotions.mjs';
+import { RETAIL_CATALOG_TIMEOUT_MS } from '../../src/ports/retailCatalogPort.mjs';
+import { selectStore } from './helpers/pixel-surface.mjs';
 
 // Synthetic transport only. No retailer, paid provider, stock or live price claim.
 const at = '2026-10-18T01:00:00.000Z';
@@ -87,7 +89,7 @@ test('cold stores include existing city catalogues and fold spelling without a d
 
 test('city catalogue entries preserve a confirmed basket, Hory draft and exact-store selection through rerenders', async ({ page }) => {
   const calls = await setup(page, { items: [milk] });
-  await page.locator('#retail-store-card-magnit').click();
+  await selectStore(page, 'magnit');
   await page.locator('[data-product-id$=":1899800733"]').getByRole('button', { name: /^Добавить /u }).click();
   const before = await basketValue(page);
   await page.locator('[data-pixel-action="hory"]').click(); await page.locator('#basket-proposal-input').fill('Что взять на ужин?');
@@ -98,7 +100,7 @@ test('city catalogue entries preserve a confirmed basket, Hory draft and exact-s
   await expect(page.locator('#magnit-store-address')).toHaveValue('777312'); expect(await basketValue(page)).toBe(before);
   await page.locator('[data-pixel-action="stores"]').click(); await page.locator('#retail-store-card-pyaterochka').click();
   await expect(page.locator('#pyaterochka-published')).toContainText('Цена в конкретном магазине');
-  await page.locator('[data-pixel-action="stores"]').click(); await page.locator('#retail-store-card-magnit').click();
+  await page.locator('[data-pixel-action="stores"]').click(); await selectStore(page, 'magnit');
   await page.locator('[data-pixel-action="stores"]').click();
   await expect(page.locator('#retail-store-card-okey')).toHaveCount(1); await expect(page.locator('#retail-store-card-pyaterochka')).toHaveCount(1);
   await page.locator('[data-pixel-action="hory"]').click(); await expect(page.locator('#basket-proposal-input')).toHaveValue('Что взять на ужин?');
@@ -240,14 +242,14 @@ for (const failure of ['503', 'timeout', 'empty']) {
       return route.fulfill({ json: failure === 'empty' ? [] : [milk] });
     });
     try {
-      await page.locator('#retail-store-card-magnit').click();
+      await selectStore(page, 'magnit');
       await page.locator('[data-product-id$=":1899800733"]').getByRole('button', { name: /^Добавить /u }).click();
       const before = await basketValue(page), input = page.locator('#product-search');
       const submit = page.locator('#search-form').getByRole('button', { name: 'Найти', exact: true });
       await input.fill('молоко'); await submit.click(); await expect.poll(() => requests.length).toBe(1);
       if (failure === 'timeout') {
         await expect(page.locator('#search-status')).toHaveText('Ищем товары в живом каталоге');
-        await page.clock.fastForward(2600);
+        await page.clock.fastForward(RETAIL_CATALOG_TIMEOUT_MS + 100);
       }
       await expect(page.locator('#empty-search')).toBeVisible();
       await expect(page.locator('#product-grid .product-card')).toHaveCount(0);
