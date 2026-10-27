@@ -1189,7 +1189,10 @@ h1 {
   padding: 1px 6px;
   white-space: nowrap;
   pointer-events: none;
+  visibility: hidden;
 }
+.stores-pin:is(:hover, :focus-visible, .stores-pin-selected) { z-index: 4; }
+.stores-pin:is(:hover, :focus-visible, .stores-pin-selected) .stores-pin-label { visibility: visible; }
 
 .stores-map-attribution {
   margin: 0;
@@ -1229,6 +1232,16 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+.stores-section .stores-map-network-label { align-self: center; color: var(--muted); }
+.stores-section .stores-map-network-filter {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface-soft);
+  font: inherit;
 }
 .stores-section button:not(.stores-pin),
 .stores-section .stores-location-directory summary {

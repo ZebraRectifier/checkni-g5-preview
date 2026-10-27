@@ -141,20 +141,34 @@ export function createStoresSection({
     + "Карта OpenStreetMap загружает изображения выбранного участка. Выбор адресов и расчёт корзины остаются за вами.");
 
   const mapControls = textEl("div", "stores-map-controls", "");
+  const networkLabel = textEl("label", "stores-map-network-label", "Сеть на карте");
+  networkLabel.htmlFor = "stores-map-network";
+  const networkFilter = document.createElement("select");
+  networkFilter.id = "stores-map-network";
+  networkFilter.className = "stores-map-network-filter";
+  for (const [value, label] of [["all", "Все сети"], ["globus", "Глобус"],
+    ["metro", "METRO"], ["magnit", "Магнит"]]) {
+    const option = document.createElement("option");
+    option.value = value; option.textContent = label; networkFilter.append(option);
+  }
+  networkFilter.addEventListener("change", () => renderMap());
   function redrawCenter(next) { if (next) { center = next; renderMap(); } }
   const zoomIn = button("Приблизить", () => { zoom = Math.min(16, zoom + 1); renderMap(); });
   const zoomOut = button("Отдалить", () => { zoom = Math.max(3, zoom - 1); renderMap(); });
   const ownCenter = button("К моему месту", () => {
     if (geoState.position) { center = normalizeMapCenter(geoState.position); zoom = 12; renderMap(); }
   });
-  mapControls.append(zoomIn, zoomOut,
+  const panButtons = [
     button("←", () => redrawCenter(shiftMapCenter(center, -180, 0, zoom))),
     button("↑", () => redrawCenter(shiftMapCenter(center, 0, -180, zoom))),
     button("↓", () => redrawCenter(shiftMapCenter(center, 0, 180, zoom))),
-    button("→", () => redrawCenter(shiftMapCenter(center, 180, 0, zoom))),
-    ownCenter, button("Показать магазины", () => { center = { ...DEFAULT_CENTER }; zoom = DEFAULT_ZOOM; renderMap(); }));
+    button("→", () => redrawCenter(shiftMapCenter(center, 180, 0, zoom)))
+  ];
+  mapControls.append(networkLabel, networkFilter, zoomIn, zoomOut,
+    ...panButtons, ownCenter,
+    button("Показать магазины", () => { center = { ...DEFAULT_CENTER }; zoom = DEFAULT_ZOOM; renderMap(); }));
   ["Запад", "Север", "Юг", "Восток"].forEach((label, i) =>
-    mapControls.children[i + 2].setAttribute("aria-label", "Карта: " + label));
+    panButtons[i].setAttribute("aria-label", "Карта: " + label));
   const map = textEl("div", "stores-map", "");
   map.style.aspectRatio = "1 / 1"; map.tabIndex = 0;
   map.setAttribute("aria-label", "Карта магазинов. Место можно указать после кнопки «Указать место на карте»");
@@ -207,7 +221,8 @@ export function createStoresSection({
   }
   function chooseStore(store) { if (canSelect(store)) onStoreSelect(store); }
   function renderMap() {
-    const pins = [...mapStores];
+    const pins = mapStores.filter(store => networkFilter.value === "all"
+      || store.retailerId === networkFilter.value);
     if (geoState.position) pins.push({ ...geoState.position, id: "user-location", name: "Ваше место" });
     const layout = staticMapLayout({ centerLat: center.lat, centerLon: center.lon, zoom,
       widthTiles: 2, heightTiles: 2, pins });
