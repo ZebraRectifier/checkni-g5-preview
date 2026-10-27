@@ -59,7 +59,10 @@ test('unknown address restrictions keep the original turn for clarification with
   await page.goto('/?comparison=observed&catalog=retail#shop');
   await selectStore(page); await openStoreDetails(page);
   await say(page, 'Хочу 12 бутылок кефира');
-  await expect(page.locator('#basket-proposal-status')).toContainText('12');
+  await expect.poll(async () => {
+    const raw = await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'));
+    return raw ? JSON.parse(raw).lines.map(line => ({ requestedName: line.requestedName, quantity: line.quantity })) : null;
+  }).toEqual([{ requestedName: 'кефира', quantity: { value: '12', unit: 'bottle', basis: 'container_count', explicit: true } }]);
   const needsBefore = await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'));
   const preferencesBefore = await page.evaluate(() => localStorage.getItem('checkni.shopping.preferences.v1'));
   const addressBefore = await page.locator('#nearby-address').inputValue();

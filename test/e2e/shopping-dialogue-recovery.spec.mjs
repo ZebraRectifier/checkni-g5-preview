@@ -205,6 +205,12 @@ test('retail needs delegate whole conversations to the existing advice route wit
   await expect(status(page)).toContainText('Не успел получить ответ сервиса');
   await expect(status(page).getByRole('button', { name: 'Повторить вопрос', exact: true })).toBeVisible();
   expect(requests).toHaveLength(3);
+  expect(requests.map(request => request.history?.length ?? 0)).toEqual([0, 2, 4]);
+  await status(page).getByRole('button', { name: 'Повторить вопрос', exact: true }).click();
+  await expect(status(page)).toContainText('Какие продукты хочется купить?');
+  await expect.poll(() => requests.length).toBe(4);
+  expect(requests[3].text).toBe(requests[2].text);
+  expect(requests[3].history).toEqual(requests[2].history);
   expect(requests.every(request => request.mode === 'advice')).toBe(true);
   expect(await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needsBefore);
   expect(await savedBasket(page)).toBe(before);

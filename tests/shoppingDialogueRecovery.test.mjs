@@ -290,6 +290,31 @@ for (const text of ['Пп', 'ПП.', 'Хочу разобраться, что м
   });
 }
 
+test('the actual needs wrapper retains accepted dialogue history and retries only the failed question on explicit request', async () => {
+  let attempts = 0;
+  const s = needsSession(async () => ++attempts === 3
+    ? { kind: 'unavailable', code: 'provider_timeout' }
+    : { kind: 'advice', message: 'Какие продукты хочется купить?' });
+  await s.send('2 бутылки кефира');
+  const before = s.needsStore.getSnapshot().lines;
+  await s.send('Пп');
+  await s.send('Хочу разобраться, что мне вообще покупать');
+  const failed = await s.send('Пп.');
+  assert.deepEqual(s.advice.map(input => input.history?.length ?? 0), [0, 2, 4]);
+  assert.equal(attempts, 3);
+  assert.match(failed.presentation.message, /Не успел получить ответ сервиса/u);
+  assert.deepEqual(failed.presentation.conversationChoices, [{ label: 'Повторить вопрос', text: 'Пп.' }]);
+  const retry = await s.send(failed.presentation.conversationChoices[0].text);
+  assert.equal(attempts, 4);
+  assert.equal(s.advice[3].text, s.advice[2].text);
+  assert.deepEqual(s.advice[3].history, s.advice[2].history);
+  assert.match(retry.presentation.message, /Какие продукты хочется купить/u);
+  assert.deepEqual(s.needsStore.getSnapshot().lines, before);
+  assert.deepEqual(s.basket.getSnapshot(), []);
+  assert.deepEqual(s.proposals, []);
+  assert.deepEqual(s.live, []);
+});
+
 for (const text of ['рис', 'чай', 'суп', '2 бутылки кефира', 'Три корочки', 'пп 2']) {
   test(`the conversation guard keeps a concrete need local: ${text}`, async () => {
     const s = needsSession();

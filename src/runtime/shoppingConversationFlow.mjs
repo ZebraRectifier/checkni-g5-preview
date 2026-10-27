@@ -633,10 +633,13 @@ export function createShoppingConversationFlow(options) {
       if (handled) { state = handled; return state; }
       if (parseLocalBasketText(text, localCatalog).kind === "local") guidedShopping = null;
     } else if (planning) guidedShopping = null;
+    const openAdviceFocus = shoppingAdviceFocus(text);
+    const openAdvice = /^пп[.!?]*$/iu.test(text) || shoppingAdviceTopic(text) === "advice"
+      && !openAdviceFocus.targets.length && !openAdviceFocus.subject && !isShoppingProductFactsQuestion(text);
     const dialogueContinuation = adviceFocus?.topic === "dialogue" && canContinueShoppingDialogue(text)
       && !shoppingAdviceTopic(text) && !isShoppingProductFactsQuestion(text)
       && parseLocalBasketText(text, localCatalog).kind !== "local";
-    if (typeof options.requestShoppingAdvice === "function" && (planning || dialogueContinuation)) {
+    if (typeof options.requestShoppingAdvice === "function" && (planning || openAdvice || dialogueContinuation)) {
       hybrid.invalidate();
       await askShoppingDialogue(text, token, planning);
       return state;
