@@ -10,6 +10,7 @@ const OUTCOME_BY_RESULT = Object.freeze({
 });
 
 const SAFE_REASON = new Set([
+  "approximate_match",
   "semantic_intent",
   "commercial_constraint",
   "ambiguous_segment",

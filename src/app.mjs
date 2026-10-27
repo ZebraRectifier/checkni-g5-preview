@@ -67,6 +67,8 @@ import {
   HYBRID_BASKET_FLOW_STATUS,
 } from "./runtime/hybridBasketFlow.mjs";
 import { createShoppingConversationFlow } from "./runtime/shoppingConversationFlow.mjs";
+import { createShoppingNeedsStore, SHOPPING_NEEDS_KEY } from './state/shoppingNeedsStore.mjs';
+import { renderShoppingNeeds } from './components/ShoppingNeedsView.mjs';
 import {createWeeklyRetailCatalogPort,OKEY_WEEKLY_SCOPE,PYAT_WEEKLY_SCOPE} from './ports/weeklyRetailCatalogPort.mjs';
 import { createShoppingDialogue } from "./components/ShoppingDialogue.mjs";
 import {
@@ -261,6 +263,7 @@ let nearbyBuildGoal='Собери недорогую корзину';
 const shoppingLocationController=createStoreGeolocation();
 const basketProposalFlow = createShoppingConversationFlow({
   basket,
+  ...(publicRetailCatalogMode ? { needsStore: createShoppingNeedsStore() } : {}),
   getCurrentComparison: () => comparisonFlow.getCurrentComparison(basket.getSnapshot()),
   loader: hybridInterpreterLoader,
   localCatalog: SHOP_CATALOG,
@@ -1054,7 +1057,8 @@ function publishPixelShopState() {
     path: retailBrowserState.path,
     categories: retailBrowserState.categories,
     view: currentView,
-    basketUnits: countBasketUnits(basket.getSnapshot())
+    basketUnits: countBasketUnits(basket.getSnapshot()),
+    unresolvedNeeds: basketProposalFlow.getUnresolvedNeeds?.().length ?? 0
   } }));
 }
 
@@ -2365,7 +2369,7 @@ function renderBasketProposalOutput() {
         view?.primaryAction || "Уточнить товар",
         focusProposalInput
       );
-    } else if (triggerReason === "smalltalk") {
+    } else if (triggerReason === "smalltalk" || triggerReason === 'needs_list') {
       appendProposalAction(
         view?.primaryAction || "Написать покупки",
         focusProposalInput
@@ -2471,7 +2475,7 @@ async function handleBasketProposal() {
     showToast("Корзина обновлена");
   } else if (state.status === HYBRID_BASKET_FLOW_STATUS.PARTIAL) {
     showToast("Добавили только подтверждённые позиции");
-  } else if (state.result?.triggerReason === "smalltalk"
+  } else if (["smalltalk", 'needs_list'].includes(state.result?.triggerReason)
     && proposalInputRevision === submittedRevision) {
     elements.proposalInput.value = "";
   }
@@ -2619,11 +2623,12 @@ function renderComparisonState({ focusResult = false } = {}) {
   setMascotState(mascotStateForComparison(state));
   const isLoading = state.status === COMPARISON_STATUS.LOADING;
 
-  compareButton.disabled = isLoading;
+  const needsSelection = (basketProposalFlow.getUnresolvedNeeds?.().length ?? 0) > 0;
+  compareButton.disabled = isLoading || needsSelection;
   compareButton.setAttribute("aria-busy", isLoading ? "true" : "false");
   compareButton.textContent = isLoading
     ? "Сравниваем…"
-    : BASKET_COMPARE_LABEL;
+    : needsSelection ? "Сначала выбери оставшиеся товары" : BASKET_COMPARE_LABEL;
   output.replaceChildren();
 
   let resultNode = null;
@@ -2722,6 +2727,11 @@ function renderComparisonState({ focusResult = false } = {}) {
 }
 
 async function handleCompare() {
+  if (basketProposalFlow.getUnresolvedNeeds?.().length) {
+    renderBasket();
+    showToast('Для сравнения всей покупки сначала выбери оставшиеся товары.');
+    return;
+  }
   const pending = comparisonFlow.run(basket.getSnapshot());
   renderComparisonState();
 
@@ -2806,6 +2816,17 @@ function renderBasket() {
       void handleCompare();
     }
   });
+  renderShoppingNeeds(elements.basketContent, basketProposalFlow.getShoppingNeeds?.() ?? [], basketProposalFlow.getUnresolvedNeeds?.() ?? [], {
+    onSelect: index => {
+      document.getElementById('pixel-hory-dialog')?.showModal();
+      elements.proposalInput.value = `подбери позицию ${index + 1}`;
+      elements.proposalInput.dispatchEvent(new Event('input', { bubbles: true }));
+      elements.proposalForm.requestSubmit();
+    },
+    onRemove: lineId => { void basketProposalFlow.removeNeed(lineId); },
+    products: basket.getSnapshot(),
+    onLink: (lineId,product) => basketProposalFlow.linkNeed(lineId,product)
+  });
   if (items.length > 0 && comparisonMode === COMPARISON_MODE.OBSERVED
       && (publicRetailCatalogMode || comparisonAddressMode === "live-example")) {
     const addresses = createSelectedComparisonStores(currentComparisonStoreScope(), {
@@ -2831,6 +2852,8 @@ function renderDock() {
   elements.basketDockCopy.textContent = units === 0
     ? "Пока пусто"
     : `${basketHasWeightAmounts(items) ? '' : `${units} шт. · `}${items.length} поз.${priceSuffix}`;
+  const unresolvedNeeds = basketProposalFlow.getUnresolvedNeeds?.().length ?? 0;
+  if (unresolvedNeeds) elements.basketDockCopy.textContent += ` · выбрать ещё ${unresolvedNeeds} поз.`;
   const persistence = basket.getPersistenceStatus();
   const persistenceMessage = persistence.reason === "conflict"
     ? "В другой вкладке корзина изменилась. Несохранённые изменения остались здесь."
@@ -3293,6 +3316,20 @@ basket.subscribe((_, change) => {
   renderDock();
   renderBetaLiveSection();
 });
+if (basketProposalFlow.needsStore) {
+  basketProposalFlow.needsStore.subscribe(() => {
+    comparisonFlow.invalidate();
+    renderBasket();
+    renderDock();
+  });
+  window.addEventListener('storage', event => {
+    if (event.key === SHOPPING_NEEDS_KEY) {
+      basketProposalFlow.needsStore.refresh();
+      basketProposalFlow.invalidate();
+      renderBasketProposalState();
+    }
+  });
+}
 
 const restoredRetailPath = publicRetailCatalogMode
   ? normalizeRetailHistoryPath(history.state?.checkniRetailPath)

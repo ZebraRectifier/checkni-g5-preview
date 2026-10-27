@@ -188,11 +188,17 @@ export function createHybridBasketFlow(options = {}) {
     }
 
     const mergeResult = normalizedMergeResult(commit.value);
+    const rejectedIds = new Set(mergeResult.rejectedRows.map(row => row.productId));
+    const view = presentHybridBasketResult(result);
+    const appliedItems = view.items.filter(row => !rejectedIds.has(row.productId));
+    const summary = appliedItems.map(row => `${row.name} ×${row.quantity}`).join(" · ");
     state = freezeState(
       mergeStatus(validation, mergeResult.rejectedRows),
       {
         result,
-        presentation: presentHybridBasketResult(result),
+        presentation: { ...view, items: appliedItems,
+          headline: appliedItems.length ? `Добавлено в список: ${summary}` : "Добавить товары не удалось.",
+          message: mergeResult.rejectedRows.length ? "Часть позиций не добавлена. Проверь количество и изменения списка." : "" },
         validation,
         mergeRejectedRows: mergeResult.rejectedRows
       }

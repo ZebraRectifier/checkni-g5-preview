@@ -251,6 +251,17 @@ export function presentHybridBasketResult(result) {
   if (result.kind === HYBRID_BASKET_RESULT.CLARIFICATION) {
     const items = identityItems(result.validation);
 
+    if (result.triggerReason === "approximate_match") {
+      return freezeView(HYBRID_PRESENTATION_STATE.CLARIFY, {
+        headline: "Нужно уточнить товар.",
+        message: `Для ${listTerms(result.approximateTerms)} нашёл только похожее название. Проверь предложенные товары и упаковки: это именно то, что нужно? До подтверждения список не меняю.`,
+        items,
+        primaryAction: "Да, выбрать предложенное",
+        secondaryAction: "Исправить",
+        focusClarification: true
+      });
+    }
+
     if (
       result.triggerReason === "smalltalk"
       && result.assistantReply
