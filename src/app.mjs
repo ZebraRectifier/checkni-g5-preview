@@ -2452,7 +2452,15 @@ async function handleBasketProposal() {
   if(isGuidedEntryRequest(localGoal))nearbyBuildGoal=localGoal;
   const nearbyIntent=nearbyShopping&&nearbyShoppingIntent(submittedText,basketProposalFlow.getState().presentation?.locationRequested===true);
   if(nearbyIntent){
-    if(isGuidedEntryRequest(localGoal)&&localGoal!==submittedText){await basketProposalFlow.run(localGoal);renderBasketProposalState();}
+    if(nearbyIntent.preferenceText){
+      if(!basketProposalFlow.rememberLocationConstraint(nearbyIntent.preferenceText)){
+        showToast('Не удалось сохранить ограничение. Уточни его перед сборкой корзины.');return;
+      }
+      martenMindState=updateMartenMindState(martenMindState,{preferences:basketProposalFlow.getMartenPreferences()});
+      renderBasketProposalState();
+    }else if(isGuidedEntryRequest(localGoal)&&localGoal!==submittedText){
+      await basketProposalFlow.run(localGoal);renderBasketProposalState();
+    }
     nearbyShopping.open(nearbyIntent.query,nearbyIntent.radiusKm);
     document.dispatchEvent(new CustomEvent('checkni:shop-action', { detail: { action: 'address', target: 'nearby' } }));
     elements.proposalInput.value='';return;
