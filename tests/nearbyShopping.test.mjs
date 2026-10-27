@@ -7,10 +7,53 @@ test('address clarification opens a local place picker without treating a househ
   assert.equal(nearbyShoppingIntent('на троих'),null);assert.equal(nearbyShoppingIntent('Текущий магазин',true),null);
   assert.equal(nearbyShoppingIntent('Магнит и О’КЕЙ',true),null);
   assert.equal(nearbyShoppingIntent('Без мяса',true),null);assert.equal(nearbyShoppingIntent('На троих',true),null);
+  assert.equal(nearbyShoppingIntent('Морковь не добавляй',true),null);
   assert.deepEqual(nearbyShoppingIntent('Москва, Тверская, 7',true),{query:'Москва, Тверская, 7',radiusKm:null});
   assert.deepEqual(nearbyShoppingIntent('Найти магазины рядом'),{query:'',radiusKm:null});
   assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, до 10 км'),{query:'в Пушкино',radiusKm:10});
   assert.deepEqual(nearbyShoppingIntent('Собери недорогую корзину на неделю для троих, я живу в Пушкино, до 10 км'),{query:'в Пушкино',radiusKm:10});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, Московская область, до 20 км. Морковь не добавляй.'),
+    {query:'в Пушкино, Московская область',radiusKm:20,preferenceText:'Морковь не добавляй.'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, ул. Ленина, д. 12. Морковь не добавляй.'),
+    {query:'в Пушкино, ул. Ленина, д. 12',radiusKm:null,preferenceText:'Морковь не добавляй.'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, до 20 км, морковь не добавляй'),
+    {query:'в Пушкино',radiusKm:20,preferenceText:'морковь не добавляй'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, ул. Морковная, д. 12'),
+    {query:'в Пушкино, ул. Морковная, д. 12',radiusKm:null});
+});
+test('unresolved food restrictions remain outside the address query for explicit clarification',()=>{
+  for(const restriction of ['Глютен исключи.','Без яиц и глютена.']){
+    const text=`Я живу в Пушкино. ${restriction}`;
+    assert.deepEqual(nearbyShoppingIntent(text),
+      {query:'в Пушкино',radiusKm:null,preferenceText:restriction});
+  }
+});
+test('the first food restriction owns the whole tail without consuming street abbreviations',()=>{
+  const restrictions='Морковь не добавляй. Яйца не клади.';
+  assert.deepEqual(nearbyShoppingIntent(`Я живу в Пушкино, ул. Морковная, д. 12. ${restrictions}`),
+    {query:'в Пушкино, ул. Морковная, д. 12',radiusKm:null,preferenceText:restrictions});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино. Морковь, яйца не добавляй.'),
+    {query:'в Пушкино',radiusKm:null,preferenceText:'Морковь, яйца не добавляй.'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, ул. Морковь, яйца не добавляй.'),
+    {query:'в Пушкино, ул. Морковь',radiusKm:null,preferenceText:'яйца не добавляй.'});
+  const repeated='Морковь не добавляй. '.repeat(8).trim();
+  assert.ok(repeated.length>100);
+  assert.deepEqual(nearbyShoppingIntent(`Я живу в Пушкино. ${repeated}`),
+    {query:'в Пушкино',radiusKm:null,preferenceText:repeated});
+});
+test('an oversized address turn carries its rejected input instead of opening a blank picker',()=>{
+  const text=`Я живу в Пушкино. ${'Морковь не добавляй. '.repeat(16)}`;
+  assert.ok(text.trim().length>240);
+  const intent=nearbyShoppingIntent(text);
+  assert.equal(intent.query,'');
+  assert.equal(intent.preferenceText,text.trim());
+  assert.ok(intent.preferenceText.length>100);
+});
+test('unknown standalone refusals while awaiting a place use conversation clarification',()=>{
+  for(const text of ['Глютен исключи.','Без яиц и глютена.','Морковь не добавляй'])
+    assert.equal(nearbyShoppingIntent(text,true),null);
+  assert.deepEqual(nearbyShoppingIntent('Москва, Тверская, 7',true),
+    {query:'Москва, Тверская, 7',radiusKm:null});
 });
 test('geocoder accepts Moscow and oblast, preserving precision and rejecting other regions or malformed coordinates',()=>{
   const accepted=normalizedAddressCandidate(feature());assert.equal(accepted.precision,'house');assert.equal(accepted.lat,56.04);

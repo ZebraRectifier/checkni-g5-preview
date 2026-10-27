@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { SHOP_CATALOG } from '../src/data/shopCatalog.mjs';
 import { createBasketStore } from '../src/state/basketStore.mjs';
+import { createShoppingNeedsStore } from '../src/state/shoppingNeedsStore.mjs';
 import { createShoppingConversationFlow } from '../src/runtime/shoppingConversationFlow.mjs';
 import { normalizeShoppingAdviceRequest } from '../src/intelligence/shoppingAdviceContract.mjs';
 import { extractShoppingNeedContext } from '../src/intelligence/shoppingNeedContext.mjs';
@@ -265,4 +266,157 @@ test('diminutive week phrases retain an explicit bounded period', () => {
   assert.equal(extractShoppingNeedContext('на две недельки').facts.shoppingDays.value, 14);
   assert.equal(extractShoppingNeedContext('на одну недельку').facts.shoppingDays.value, 7);
   assert.ok(extractShoppingNeedContext('на шесть неделек').clarification);
+});
+
+
+function needsSession(provider, extra = {}) {
+  const { needsStorage = null, ...options } = extra;
+  const needsStore = createShoppingNeedsStore({ storage: needsStorage, allowUnlockedForTests: true });
+  return { ...session(provider, { needsStore, ...options }), needsStore };
+}
+
+for (const text of ['Пп', 'ПП.', 'Хочу разобраться, что мне вообще покупать', 'Составь меню на неделю']) {
+  test(`the app needs wrapper delegates a whole conversational turn once: ${text}`, async () => {
+    const s = needsSession(async () => ({ kind: 'advice', message: 'Какие продукты хочется купить?' }));
+    const result = await s.send(text);
+    assert.equal(s.advice.length, 1);
+    assert.deepEqual(s.proposals, []);
+    assert.deepEqual(s.live, []);
+    assert.deepEqual(s.needsStore.getSnapshot().lines, []);
+    assert.deepEqual(s.basket.getSnapshot(), []);
+    assert.match(result.presentation.message, /Какие продукты/u);
+    s.flow.confirm('confirm_all');
+    assert.deepEqual(s.basket.getSnapshot(), []);
+  });
+}
+
+for (const text of ['рис', 'чай', 'суп', '2 бутылки кефира', 'Три корочки', 'пп 2']) {
+  test(`the conversation guard keeps a concrete need local: ${text}`, async () => {
+    const s = needsSession();
+    await s.send(text);
+    assert.equal(s.advice.length, 0);
+    assert.deepEqual(s.proposals, []);
+    assert.deepEqual(s.live, []);
+    assert.equal(s.needsStore.getSnapshot().lines.length, 1);
+    assert.equal(s.needsStore.getSnapshot().lines[0].rawText, text);
+    assert.equal(s.needsStore.getSnapshot().lines[0].resolution.status, 'unresolved');
+    assert.deepEqual(s.basket.getSnapshot(), []);
+  });
+}
+
+test('advice through the needs wrapper preserves saved refusal, quantity focus and repeated acknowledgement', async () => {
+  const s = needsSession(async () => ({ kind: 'advice', message: 'Какие продукты хочется купить?' }));
+  await s.send('2 бутылки кефира');
+  await s.send('Морковь не добавляй');
+  const before = s.needsStore.getSnapshot().lines;
+  const reply = await s.send('Пп');
+  assert.equal(s.advice.length, 1);
+  assert.ok(s.advice[0].context.excluded.includes('carrots'));
+  assert.deepEqual(s.needsStore.getSnapshot().lines, before);
+  assert.match(reply.presentation.message, /Какие продукты/u);
+  await s.send('ещё 2');
+  await s.send('да');
+  assert.equal(s.needsStore.getSnapshot().lines.length, 1);
+  assert.equal(s.needsStore.getSnapshot().lines[0].quantity.value, '4');
+  assert.equal(s.advice.length, 1);
+  assert.deepEqual(s.basket.getSnapshot(), []);
+});
+
+test('rejected and unavailable advice through the needs wrapper never becomes a product or a second attempt', async () => {
+  for (const provider of [async () => ({ kind: 'advice', message: 'В Магните фарш стоит 100 рублей.' }),
+    async () => ({ kind: 'unavailable', code: 'rate_limited' }),
+    async () => ({ kind: 'unavailable', code: 'provider_timeout' })]) {
+    const s = needsSession(provider, { dialogueTimeoutMs: 15 });
+    const result = await s.send('Хочу разобраться, что мне вообще покупать');
+    assert.equal(s.advice.length, 1);
+    assert.deepEqual(s.proposals, []);
+    assert.deepEqual(s.needsStore.getSnapshot().lines, []);
+    assert.deepEqual(s.basket.getSnapshot(), []);
+    assert.notEqual(result.status, 'loading');
+    assert.doesNotMatch(result.presentation.message, /Магнит|100/u);
+  }
+});
+
+test('a late advice reply cannot replace a newer needs-list operation', async () => {
+  let release;
+  const s = needsSession(() => new Promise(resolve => { release = resolve; }));
+  const pending = s.send('Пп');
+  for (let i = 0; i < 50 && !release; i++) await Promise.resolve();
+  assert.equal(typeof release, 'function');
+  const duplicate = s.flow.run('Пп');
+  const current = await s.send('2 бутылки кефира');
+  release({ kind: 'advice', message: 'Какие продукты хочется купить?' });
+  await Promise.all([pending, duplicate]);
+  assert.deepEqual(s.flow.getState(), current);
+  assert.equal(s.needsStore.getSnapshot().lines.length, 1);
+  assert.equal(s.needsStore.getSnapshot().lines[0].quantity.value, '2');
+  assert.equal(s.advice.length, 1);
+  assert.deepEqual(s.basket.getSnapshot(), []);
+});
+
+
+for (const text of ['Глютен исключи', 'Морковь не добавляй, глютен исключи', '2 молока, глютен исключи']) {
+  test(`an unresolved food constraint reaches clarification before any needs mutation: ${text}`, async () => {
+    const data = new Map();
+    const storage = { getItem: key => data.get(key) ?? null,
+      setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
+    const s = needsSession(undefined, { needsStorage: storage, preferenceStorage: storage });
+    await s.send('2 бутылки кефира');
+    const before = s.needsStore.getSnapshot().lines;
+    const result = await s.send(text);
+    assert.deepEqual(s.needsStore.getSnapshot().lines, before);
+    assert.equal(s.advice.length, 0);
+    assert.deepEqual(s.proposals, []);
+    assert.deepEqual(s.live, []);
+    assert.deepEqual(s.basket.getSnapshot(), []);
+    assert.ok(s.flow.getConversation().facts.unresolvedConstraints.value.includes('глютен исключи'));
+    if (text.startsWith('Морковь')) assert.ok(s.flow.getConversation().rejected.carrots);
+    assert.match(result.presentation.message, /Не распознала:.*глютен/u);
+    await s.send('Пп');
+    assert.equal(s.advice.length, 0);
+    assert.deepEqual(s.needsStore.getSnapshot().lines, before);
+    const restored = needsSession(undefined, { needsStorage: storage, preferenceStorage: storage });
+    await restored.send('Пп');
+    assert.equal(restored.advice.length, 0);
+    assert.deepEqual(restored.needsStore.getSnapshot().lines, before);
+    assert.ok(restored.flow.getConversation().facts.unresolvedConstraints.value.includes('глютен исключи'));
+  });
+}
+
+test('a specific food question keeps the delegates reviewed identity path without inventing a need', async () => {
+  const s = needsSession();
+  await s.send('Хочу понять, какое молоко взять');
+  assert.equal(s.advice.length + s.proposals.length, 1);
+  assert.deepEqual(s.needsStore.getSnapshot().lines, []);
+  assert.deepEqual(s.basket.getSnapshot(), []);
+});
+
+test('the conversation route leaves the twelve, acknowledgement, six and plus-two sequence local', async () => {
+  const s = needsSession();
+  await s.send('12 бутылок кефира');
+  await s.send('да');
+  assert.equal(s.needsStore.getSnapshot().lines[0].quantity.value, '12');
+  await s.send('кефира оставь 6');
+  await s.send('ещё 2');
+  await s.send('да');
+  assert.equal(s.needsStore.getSnapshot().lines.length, 1);
+  assert.equal(s.needsStore.getSnapshot().lines[0].quantity.value, '8');
+  assert.equal(s.advice.length, 0);
+  assert.deepEqual(s.proposals, []);
+  assert.deepEqual(s.basket.getSnapshot(), []);
+});
+
+test('a conversational turn preserves the persistent needs record across reload', async () => {
+  const data = new Map();
+  const storage = { getItem: key => data.get(key) ?? null,
+    setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
+  const s = needsSession(async () => ({ kind: 'advice', message: 'Какие продукты хочется купить?' }), { needsStorage: storage });
+  await s.send('2 бутылки кефира');
+  const before = s.needsStore.getSnapshot().lines;
+  await s.send('Хочу разобраться, что мне вообще покупать');
+  const restored = needsSession(undefined, { needsStorage: storage });
+  assert.deepEqual(restored.needsStore.getSnapshot().lines, before);
+  assert.equal(s.advice.length, 1);
+  assert.deepEqual(s.basket.getSnapshot(), []);
+  assert.deepEqual(restored.basket.getSnapshot(), []);
 });
