@@ -1188,6 +1188,7 @@ h1 {
   border-radius: 6px;
   padding: 1px 6px;
   white-space: nowrap;
+  pointer-events: none;
 }
 
 .stores-map-attribution {

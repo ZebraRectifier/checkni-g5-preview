@@ -50,6 +50,36 @@ export function nearbyCatalogBinding(point){
   }
   return null;
 }
+// The large OSM directory is geography only. Expose a small map subset only
+// when its exact address join resolves to the existing registered Magnit store.
+// It carries no price or availability conclusion.
+export function boundMagnitMapLocations(directory){
+  if(directory?.schemaVersion!==1||directory.region!=='moscow-and-oblast'
+    ||directory.exhaustive!==false||directory.priceEvidence!==false
+    ||!Array.isArray(directory.stores)||directory.stores.length>25000
+    ||!Number.isFinite(Date.parse(directory.observedAt)))return Object.freeze([]);
+  const byCode=new Map();
+  for(const point of directory.stores){
+    if(point?.retailerId!=='magnit'||!point.catalogBinding)continue;
+    const binding=nearbyCatalogBinding(point),store=binding?.store;
+    if(!store||typeof store.shopCode!=='string'||!/^\d{6}$/u.test(store.shopCode)
+      ||!Number.isFinite(point.lat)||!Number.isFinite(point.lon)
+      ||Math.abs(point.lat)>90||Math.abs(point.lon)>180
+      ||typeof point.address!=='string'||point.address.length>180
+      ||typeof point.id!=='string'||!/^osm:(?:node|way|relation):\d+$/u.test(point.id)
+      ||point.sourceUrl!==`https://www.openstreetmap.org/${point.id.split(':')[1]}/${point.id.split(':')[2]}`)continue;
+    const code=store.shopCode;
+    // Two geography points for one shop are ambiguous: select neither.
+    if(byCode.has(code)){byCode.set(code,null);continue;}
+    byCode.set(code,Object.freeze({...point,id:`magnit-bound-${code}`,name:'Магнит',shopCode:code,
+      storeIds:Object.freeze([`magnit-shop-${code}`,`magnit-${code}`]),
+      coordinateKind:'osm-exact-address-join',selectionKind:'registered-store',
+      evidenceKind:'dated-osm-exact-address-join',evidenceUrl:point.sourceUrl,
+      observedAt:directory.observedAt}));
+  }
+  if(byCode.size>200)return Object.freeze([]);
+  return Object.freeze([...byCode.values()].filter(Boolean));
+}
 export function nearbyGroceryMatches(stores,position,radiusKm,{connectedOnly=false}={}){
   if(!Array.isArray(stores)||!Number.isFinite(radiusKm)||radiusKm<1||radiusKm>20)return[];
   const seen=new Set();return stores.flatMap(point=>{

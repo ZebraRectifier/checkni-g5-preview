@@ -33,8 +33,9 @@ import { createMagnitStorePicker } from "./components/MagnitStorePicker.mjs";
 import { createMetroStorePicker } from "./components/MetroStorePicker.mjs";
 import { resolveRegisteredMagnitStore as resolveMagnitMoscowStore } from "./data/registeredMagnitStores.mjs";
 import { createNearbyShopping } from './components/NearbyShopping.mjs';
+import { createNearbyShoppingPort } from './ports/nearbyShoppingPort.mjs';
 import {createPyaterochkaPublishedCatalog} from './components/PyaterochkaPublishedCatalog.mjs';
-import { nearbyShoppingIntent } from './intelligence/nearbyShopping.mjs';
+import { nearbyShoppingIntent, nearbyCatalogBinding, boundMagnitMapLocations } from './intelligence/nearbyShopping.mjs';
 import { isGuidedEntryRequest } from './intelligence/guidedShoppingPlan.mjs';
 import { createStoreGeolocation } from './runtime/storeGeolocation.mjs';
 import { resolveMetroMoscowRegionStore } from "./data/metroMoscowRegionStores.mjs";
@@ -259,6 +260,7 @@ let martenMindState = createMartenMindState();
 const budgetPlannerHints = buildSnapshotPriceHints();
 const weeklyRetailCatalog=createWeeklyRetailCatalogPort();
 let nearbyShopping=null,agreedNearbyStoreKey=null;
+const nearbyShoppingPort = publicRetailCatalogMode ? createNearbyShoppingPort() : null;
 let nearbyBuildGoal='Собери недорогую корзину';
 const shoppingLocationController=createStoreGeolocation();
 const basketProposalFlow = createShoppingConversationFlow({
@@ -2211,6 +2213,7 @@ const shoppingDialogue = createShoppingDialogue({
 });
 if(publicRetailCatalogMode){
   nearbyShopping=createNearbyShopping({
+    port: nearbyShoppingPort,
     locationController:shoppingLocationController,
     onInvalidate:()=>{agreedNearbyStoreKey=null;basketProposalFlow.invalidate();renderBasketProposalState();},
     onManualMap:()=>{document.getElementById('stores-manual-location')?.click();document.getElementById('stores-section')?.scrollIntoView({block:'start'});},
@@ -3374,6 +3377,8 @@ try {
     selectedScope: comparisonMode === COMPARISON_MODE.OBSERVED
       && (publicRetailCatalogMode || comparisonAddressMode === "live-example")
       ? currentComparisonStoreScope() : null,
+    loadBoundMagnitLocations: nearbyShoppingPort
+      ? async () => boundMagnitMapLocations(await nearbyShoppingPort.directory()) : undefined,
     onStoreSelect: publicRetailCatalogMode ? point => {
       let retailerId;
       if (point.retailerId === "globus") {
@@ -3388,6 +3393,15 @@ try {
         selectedMetroStore = store;
         comparedGlobusStore = null;
         retailerId = "metro";
+      } else if (point.retailerId === "magnit") {
+        if (point.selectionKind !== "registered-store" || point.coordinateKind !== "osm-exact-address-join") return;
+        const binding = nearbyCatalogBinding(point);
+        if (binding?.retailerId !== "magnit" || point.shopCode !== binding.store.shopCode) return;
+        const store = resolveMagnitMoscowStore({ shopCode: binding.store.shopCode, address: binding.store.address });
+        if (!store) return;
+        selectedMagnitStore = store;
+        comparedGlobusStore = null;
+        retailerId = "magnit";
       } else return;
       comparisonAddressChanged();
       void selectRetailer(retailerId);

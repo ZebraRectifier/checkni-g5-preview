@@ -1,5 +1,5 @@
 import test from'node:test';import assert from'node:assert/strict';import{readFile}from'node:fs/promises';
-import{nearbyShoppingIntent,nearbyGroceryMatches,nearbyCatalogBinding}from'../src/intelligence/nearbyShopping.mjs';
+import{nearbyShoppingIntent,nearbyGroceryMatches,nearbyCatalogBinding,boundMagnitMapLocations}from'../src/intelligence/nearbyShopping.mjs';
 import{normalizedAddressCandidate}from'../src/intelligence/nearbyAddressContract.mjs';
 import{createNearbyShoppingPort}from'../src/ports/nearbyShoppingPort.mjs';
 const feature=(props={},coords=[37.854,56.04])=>({type:'Feature',geometry:{type:'Point',coordinates:coords},properties:{countrycode:'RU',state:'Московская область',city:'Пушкино',street:'Пушкинская улица',housenumber:'1',...props}});
@@ -38,6 +38,24 @@ test('regional snapshot is explicitly incomplete geography; every linked catalog
   const linked=d.stores.filter(s=>s.catalogBinding);assert.ok(linked.length>=40);
   for(const s of linked){assert.ok(nearbyCatalogBinding(s),s.id);assert.equal(nearbyCatalogBinding({...s,address:s.address+' x'}),null);}
   assert.ok(linked.some(s=>s.retailerId==='globus'&&s.catalogBinding.officialStoreId==='5014'));
+});
+test('Magnit map points require a unique exact address binding and carry no price claim',async()=>{
+  const d=JSON.parse(await readFile(new URL('../src/data/nearbyGroceryStores.json',import.meta.url),'utf8'));
+  const pins=boundMagnitMapLocations(d);
+  assert.ok(pins.length>=46);
+  assert.equal(new Set(pins.map(p=>p.shopCode)).size,pins.length);
+  assert.ok(pins.every(p=>p.selectionKind==='registered-store'&&p.coordinateKind==='osm-exact-address-join'
+    &&p.priceMinor===undefined&&p.availability===undefined&&nearbyCatalogBinding(p)?.store?.shopCode===p.shopCode));
+  const original=d.stores.find(p=>p.retailerId==='magnit'&&p.catalogBinding);
+  assert.ok(original);
+  for(const invalid of [
+    {...original,address:original.address+' x'},
+    {...original,sourceUrl:'https://example.org/elsewhere'},
+    {...original,lat:NaN},
+    {...original,catalogBinding:undefined}
+  ])assert.deepEqual(boundMagnitMapLocations({...d,stores:[invalid]}),[]);
+  assert.deepEqual(boundMagnitMapLocations({...d,stores:[original,original]}),[]);
+  assert.deepEqual(boundMagnitMapLocations({...d,priceEvidence:true}),[]);
 });
 test('distance filtering has no station dependency, never changes a price, and cannot make a directory-only point selectable',async()=>{
   const d=JSON.parse(await readFile(new URL('../src/data/nearbyGroceryStores.json',import.meta.url),'utf8'));
