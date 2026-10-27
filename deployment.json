@@ -2783,7 +2783,7 @@
   "browserComposition": {
     "manifest": "release/hory-shopping-needs-20261025.json",
     "parentManifest": "release/retail-category-search-ownership-20261026.json",
-    "sourceCommit": null,
+    "sourceCommit": "08add8435ae7eba45cb2f91c0d8c93cfbca9f325",
     "testedSourceHead": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
     "publicBase": "fc7ad04d94b3811bb63add5c3693a2c1b2a08403",
     "privateSourceParity": false,

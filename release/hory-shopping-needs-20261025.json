@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "kind": "hory-shopping-needs-runtime-composition",
   "date": "2026-10-26",
-  "status": "CANDIDATE_SOURCE_INTEGRATION_PENDING",
+  "status": "PREPARED_FROM_INTEGRATED_SOURCE_PUBLIC_GATES_REQUIRED",
   "sourceRepository": "ZebraRectifier/Checkni",
   "sourcePr": 596,
-  "sourceCommit": null,
+  "sourceCommit": "08add8435ae7eba45cb2f91c0d8c93cfbca9f325",
   "testedSourceHead": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
   "sourceBase": "2399d5d4cee752f3444cd918d02df3c9b557eeea",
   "sourceTree": "0fc2c77ddc293937819cbcbdbafc9adc3d26292d",
@@ -1494,8 +1494,39 @@
       "cancelled": 0,
       "skipped": 0
     },
-    "sourceExactHeadBrowser": "pending",
-    "sourceActualMain": "required before public merge; evidence will be recorded in source PR 596",
+    "sourceExactHeadBrowser": {
+      "checkedAt": "2026-10-27T00:36:21Z",
+      "repository": "ZebraRectifier/Checkni",
+      "head": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
+      "run": 40416482037,
+      "job": 121901438124,
+      "conclusion": "success",
+      "passed": 534,
+      "durationMinutes": 23.1,
+      "logEvidence": [
+        "2026-10-27T00:12:11.6785011Z Expected exact SHA: 7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
+        "2026-10-27T00:12:11.6786033Z Checked out SHA: 7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
+        "2026-10-27T00:35:21.8156175Z   534 passed (23.1m)"
+      ],
+      "integratedCommit": "08add8435ae7eba45cb2f91c0d8c93cfbca9f325",
+      "testedAndIntegratedTree": "0fc2c77ddc293937819cbcbdbafc9adc3d26292d",
+      "actualMainCi": {
+        "run": 40427510611,
+        "status": "queued"
+      },
+      "actualMainPackage": {
+        "run": 40427510723,
+        "status": "queued"
+      }
+    },
+    "sourceActualMain": {
+      "head": "08add8435ae7eba45cb2f91c0d8c93cfbca9f325",
+      "run": 40427510611,
+      "status": "pending",
+      "tree": "0fc2c77ddc293937819cbcbdbafc9adc3d26292d",
+      "testedTreeIdentical": true,
+      "requiredBeforePublicMerge": true
+    },
     "publicExactHead": "pending",
     "publicActualMain": "pending",
     "liveBrowser": "pending",
@@ -1548,6 +1579,16 @@
       "passed": 204,
       "durationMinutes": 8,
       "result": "passed"
+    },
+    "sourceLocalFullBrowser": {
+      "head": "7dd886d59a9d6b3d7c1dbc578869689c09fbe8c7",
+      "passed": 534,
+      "failed": 0,
+      "retries": 0,
+      "durationMinutes": 13.3,
+      "platform": "Windows",
+      "port": 49317,
+      "log": "hory-source-7dd-full-browser.log"
     }
   },
   "aiProviderChanged": false,
