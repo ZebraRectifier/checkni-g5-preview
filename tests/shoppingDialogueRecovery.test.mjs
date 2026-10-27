@@ -315,6 +315,28 @@ test('the actual needs wrapper retains accepted dialogue history and retries onl
   assert.deepEqual(s.live, []);
 });
 
+test('a reference question without a product clarifies locally before advice, including after dialogue reset', async () => {
+  for (const cleared of [false, true]) {
+    const s = needsSession();
+    await s.send('2 бутылки кефира');
+    if (cleared) {
+      await s.send('Пп');
+      s.flow.invalidate();
+    }
+    const attempts = s.advice.length;
+    const before = s.needsStore.getSnapshot().lines;
+    for (const text of ['а как хранить?', 'а сколько хранить?', 'после открытия?']) {
+      const reply = await s.send(text);
+      assert.match(reply.presentation.message, /О каком продукте или блюде речь/u);
+      assert.equal(s.advice.length, attempts);
+      assert.deepEqual(s.needsStore.getSnapshot().lines, before);
+      assert.deepEqual(s.proposals, []);
+      assert.deepEqual(s.live, []);
+      assert.deepEqual(s.basket.getSnapshot(), []);
+    }
+  }
+});
+
 for (const text of ['рис', 'чай', 'суп', '2 бутылки кефира', 'Три корочки', 'пп 2']) {
   test(`the conversation guard keeps a concrete need local: ${text}`, async () => {
     const s = needsSession();

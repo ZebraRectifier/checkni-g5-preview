@@ -634,8 +634,10 @@ export function createShoppingConversationFlow(options) {
       if (parseLocalBasketText(text, localCatalog).kind === "local") guidedShopping = null;
     } else if (planning) guidedShopping = null;
     const openAdviceFocus = shoppingAdviceFocus(text);
+    const unanchoredFollowup = !adviceFocus && resolveShoppingAdviceFollowup(text, null)?.kind === "clarification";
     const openAdvice = /^пп[.!?]*$/iu.test(text) || shoppingAdviceTopic(text) === "advice"
-      && !openAdviceFocus.targets.length && !openAdviceFocus.subject && !isShoppingProductFactsQuestion(text);
+      && openAdviceFocus.topic === "general" && (!adviceFocus || adviceFocus.topic === "dialogue")
+      && !openAdviceFocus.targets.length && !openAdviceFocus.subject && !isShoppingProductFactsQuestion(text) && !unanchoredFollowup;
     const dialogueContinuation = adviceFocus?.topic === "dialogue" && canContinueShoppingDialogue(text)
       && !shoppingAdviceTopic(text) && !isShoppingProductFactsQuestion(text)
       && parseLocalBasketText(text, localCatalog).kind !== "local";
