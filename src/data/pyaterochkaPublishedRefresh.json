@@ -1,10 +1,10 @@
 {
   "status": "collected",
-  "lastAttemptAt": "2026-10-26T06:21:41.992Z",
+  "lastAttemptAt": "2026-10-27T06:24:29.143Z",
   "sourceUrl": "https://mos.proshoper.ru/actions/pyaterochka/moskva/",
   "scope": "third-party-moscow-city-promotion-not-exact-store",
   "collectionMode": "automated",
   "sourceRequests": 1,
-  "uniqueProducts": 152,
-  "observedAt": "2026-10-26T06:21:44.033Z"
+  "uniqueProducts": 189,
+  "observedAt": "2026-10-27T06:24:31.860Z"
 }
