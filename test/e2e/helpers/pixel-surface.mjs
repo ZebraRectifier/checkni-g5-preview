@@ -13,7 +13,19 @@ export async function openStores(page) {
 
 export async function selectStore(page, retailerId = 'globus') {
   await openStores(page);
-  await page.locator(retailerId === 'globus' ? '#retail-store-card' : `#retail-store-card-${retailerId}`).click();
+  await page.locator(retailerId === 'globus' ? '#retail-store-card' : `#retail-store-card-${retailerId}`).click({ noWaitAfter: true });
+  if (['magnit', 'globus', 'metro'].includes(retailerId)) {
+    const chooser = page.locator('#pixel-address-chooser');
+    await expect(chooser).toBeVisible();
+    const select = page.locator(`#${retailerId}-store-address`);
+    const previous = await select.getAttribute('data-pixel-original-address');
+    const option = await select.locator('option').evaluateAll((options, preferred) =>
+      options.find(item => item.value === preferred && !item.disabled)?.value
+      ?? options.find(item => item.value && !item.disabled)?.value, previous);
+    if (!option) throw new Error(`No selectable address for ${retailerId}`);
+    await select.selectOption(option);
+    await chooser.getByRole('button', { name: 'Открыть этот адрес' }).click({ noWaitAfter: true });
+  }
   await expect(page.locator('#pixel-storefront')).toBeVisible();
   await expect(page.locator('#pixel-store-home')).toBeHidden();
 }

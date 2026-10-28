@@ -35,6 +35,37 @@ test('exact newly connected Moscow and regional addresses select their own Magni
   }
   expect(ai).toBe(0);
 });
+test('a bound Magnit map pin selects its exact address, while the legacy point stays nonselectable',async({page})=>{
+  await isolate(page);
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  await selectStore(page);
+  await openStoreDetails(page);
+  await page.locator('#stores-section').scrollIntoViewIfNeeded();
+  await expect.poll(async()=>Number((await page.locator('.stores-location-directory > summary').textContent())?.match(/\d+/u)?.[0]))
+    .toBeGreaterThanOrEqual(64);
+  const legacy=page.locator('.stores-pin[data-store-location-id="magnit-1812"]');
+  await expect(legacy).toHaveJSProperty('tagName','A');
+  await page.locator('.stores-map').scrollIntoViewIfNeeded();
+  const target=await page.locator('.stores-pin[data-store-location-id^="magnit-bound-"]').evaluateAll(nodes=>{
+    for(const node of nodes){
+      const rect=node.getBoundingClientRect(),x=rect.left+rect.width/2,y=rect.top+rect.height/2;
+      if(x<0||x>=innerWidth||y<0||y>=innerHeight)continue;
+      if(document.elementFromPoint(x,y)?.closest('.stores-pin')===node)return node.dataset.storeLocationId;
+    }
+    return null;
+  });
+  expect(target).not.toBeNull();
+  const pin=page.locator(`.stores-pin[data-store-location-id="${target}"]`);
+  await expect(pin).toHaveJSProperty('tagName','BUTTON');
+  await expect(pin).toHaveAttribute('aria-label',/Выбрать для корзины: Магнит,/u);
+  await pin.click();
+  await openStoreDetails(page);
+  await expect(page.locator('#magnit-store-address')).toHaveValue(target.slice(-6));
+  await expect(page.locator('#stores-selected-addresses'))
+    .toContainText(await page.locator('#magnit-store-address option:checked').textContent());
+  await expect(pin).toHaveClass(/stores-pin-selected/u);
+  await expect(page.locator('#stores-selected-addresses')).toContainText('цена и наличие не подтверждены');
+});
 test('address consent → candidate → radius → agreed store → household intake preserves basket and forgets location on reload',async({page})=>{
   await isolate(page);let addressCalls=0,ai=0;
   await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});

@@ -20,9 +20,9 @@ const TERMS = Object.freeze({
 const VEGETABLES = new Set(["potatoes", "onions", "carrots", "cabbage", "tomatoes"]);
 const FRUITS = new Set(["apples", "bananas"]);
 const MEAT_TARGETS = new Set(["chicken", "chicken_mince", "beef_mince", "nuggets", "chebureki", "pelmeni"]);
-const NEGATIVE_REQUEST = /(?:^|[^а-я])(?:не\s+(?:хочу|нуж(?:ен|н[аоы]?)|ем|люблю|нрав[ия]\S*|подход\S*|переношу)|не надо|убери|надоел\S*|терпеть не могу)/u;
-const REFUSAL = /(?:^|[^а-я])(?:не\s+(?:хочу|нуж(?:ен|н[аоы]?)|ем|люблю|нрав[ия]\S*|подход\S*|переношу)|не надо|убери|надоел\S*|терпеть не могу|без\s+)/u;
-const CLAUSE_PREDICATE = /хочу|нуж(?:ен|н[аоы])|можно|верни|добавь|не надо|не люблю|не нрав[ия]\S*|не подход\S*|не ем|убери|надоел\S*|(?:^|\s)(?:оставь|оставить|сохрани)(?=$|[\s,])/u;
+const NEGATIVE_REQUEST = /(?:^|[^а-я])(?:не\s+(?:хочу|нуж(?:ен|н[аоы]?)|ем|люблю|нрав[ия]\S*|подход\S*|переношу|добавляй|клади|включай)|не надо|убери|исключи|надоел\S*|терпеть не могу)/u;
+const REFUSAL = /(?:^|[^а-я])(?:не\s+(?:хочу|нуж(?:ен|н[аоы]?)|ем|люблю|нрав[ия]\S*|подход\S*|переношу|добавляй|клади|включай)|не надо|убери|исключи|надоел\S*|терпеть не могу|без\s+)/u;
+const CLAUSE_PREDICATE = /хочу|нуж(?:ен|н[аоы])|можно|верни|возьми|добавь|не добавляй|не клади|не включай|не надо|не люблю|не нрав[ия]\S*|не подход\S*|не ем|убери|исключи|надоел\S*|(?:^|\s)(?:оставь|оставить|сохрани)(?=$|[\s,])/u;
 const PERMISSION_QUESTION = /(?:^|[\s,])(?:что|как(?:ой|ая|ое|ие|ую|ого|их)?|где|когда|сколько|почему|зачем|чем)\s+(?:\S+\s+){0,3}можно(?=$|[\s,])|(?:^|\s)можно\s+ли(?=$|\s)/u;
 const EXPLICIT_COUNT = /(?:^|\s)(?:\d{1,3}|один|одна|одну|два|две|три|четыре|пять|пару)(?=$|\s)/u;
 export function shoppingClauses(value) {
@@ -146,6 +146,14 @@ export function extractShoppingDelta(text) {
       if (targets.includes("meat") && /красн\S*\s+мяс|жирн\S*\s+мяс|переработан\S*\s+мяс|не\s+без\s+мяса/u.test(clause)) {
         targets = targets.filter(key => key !== "meat");
         delta.unresolved.push(clause.trim().slice(0, 80));
+      }
+      // A final refusal applies to every member of a list. A known member
+      // must not silently hide an unsupported neighbour.
+      const sharedRefusal = !without && clause.match(/^(.+?)\s+(?:не\s+(?:добавляй|клади|включай)|убери|исключи|не надо)(?:\s+пожалуйста)?$/u);
+      const listed = sharedRefusal ? sharedRefusal[1].split(/\s*,\s*|\s+и\s+/u).map(part => part.trim()).filter(Boolean) : [];
+      if (listed.length > 1) for (const part of listed) {
+        const nonFoodContext = /^(?:на|для|в|по|до|радиус|бюджет|город|адрес|магазин|слушай|пожалуйста)(?=$|[\s.,])/u.test(part);
+        if (!shoppingTargets(part).length && !nonFoodContext) delta.unresolved.push(part.slice(0, 80));
       }
       delta.reject.push(...targets);
       for (const target of targets) delta.rejectScopes[target] = /никогда|вообще не ем|всегда без/u.test(clause) ? "conversation" : "goal";

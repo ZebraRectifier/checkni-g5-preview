@@ -1,16 +1,18 @@
 import {defineConfig,devices} from '@playwright/test';
 
+const port=process.env.CHECKNI_WEEKLY_PORT||'4195';
+
 export default defineConfig({
   testDir:'./test/e2e',
-  testMatch:['weekly-route.spec.mjs','da-published-catalog.spec.mjs','metro-catalog-freshness.spec.mjs','pixel-storefront.spec.mjs','manual-search-ux.spec.mjs','hori-panel-contrast.spec.mjs','hori-cubes.spec.mjs','hori-v13.spec.mjs','hori-reference.spec.mjs','hori-workspace.spec.mjs','magnit-current-catalog.spec.mjs','magnit-legacy-aliases.spec.mjs','catalog-access-recovery.spec.mjs','pyaterochka-published.spec.mjs','nearby-shopping.spec.mjs','nearby-selection-race.spec.mjs','guided-shopping.spec.mjs','shopping-dialogue-recovery.spec.mjs','shopping-intent-integrity.spec.mjs','shopping-needs.spec.mjs','retail-product-selection.spec.mjs','shopping-need-context.spec.mjs','weekly-retail-basket.spec.mjs'],
+  testMatch:['store-map-density.spec.mjs','weekly-route.spec.mjs','da-published-catalog.spec.mjs','metro-catalog-freshness.spec.mjs','pixel-storefront.spec.mjs','pixel-explicit-address.spec.mjs','globus-price-freshness-label.spec.mjs','hory-location-exclusion.spec.mjs','manual-search-ux.spec.mjs','hori-panel-contrast.spec.mjs','hori-cubes.spec.mjs','hori-v13.spec.mjs','hori-reference.spec.mjs','hori-workspace.spec.mjs','magnit-current-catalog.spec.mjs','magnit-legacy-aliases.spec.mjs','catalog-access-recovery.spec.mjs','pyaterochka-published.spec.mjs','nearby-shopping.spec.mjs','nearby-selection-race.spec.mjs','guided-shopping.spec.mjs','shopping-dialogue-recovery.spec.mjs','shopping-intent-integrity.spec.mjs','shopping-needs.spec.mjs','retail-product-selection.spec.mjs','shopping-need-context.spec.mjs','weekly-retail-basket.spec.mjs'],
   fullyParallel:false,
   expect:{toHaveScreenshot:{pathTemplate:'{testDir}/reference-v13/{platform}/{arg}{ext}'}},
   forbidOnly:Boolean(process.env.CI),
   workers:2,
   retries:process.env.CI?1:0,
   reporter:process.env.CI?[['line'],['html',{open:'never'}]]:'line',
-  use:{baseURL:'http://127.0.0.1:4195',reducedMotion:'reduce',trace:'on-first-retry',screenshot:'only-on-failure',video:'on-first-retry',
+  use:{baseURL:`http://127.0.0.1:${port}`,reducedMotion:'reduce',trace:'on-first-retry',screenshot:'only-on-failure',video:'on-first-retry',
     ...(process.env.CHECKNI_BROWSER_CHANNEL?{channel:process.env.CHECKNI_BROWSER_CHANNEL}:{})},
-  webServer:{command:'node test/support/static-server.mjs',url:'http://127.0.0.1:4195',env:{PORT:'4195'},reuseExistingServer:false,timeout:30000},
+  webServer:{command:'node test/support/static-server.mjs',url:`http://127.0.0.1:${port}`,env:{PORT:port},reuseExistingServer:false,timeout:30000},
   projects:[{name:'chromium-desktop',use:{...devices['Desktop Chrome']}},{name:'chromium-mobile',use:{...devices['Pixel 7']}}]
 });

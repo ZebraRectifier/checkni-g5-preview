@@ -1,16 +1,34 @@
 import test from'node:test';import assert from'node:assert/strict';import{readFile}from'node:fs/promises';
-import{nearbyShoppingIntent,nearbyGroceryMatches,nearbyCatalogBinding}from'../src/intelligence/nearbyShopping.mjs';
+import{nearbyShoppingIntent,nearbyGroceryMatches,nearbyCatalogBinding,boundMagnitMapLocations}from'../src/intelligence/nearbyShopping.mjs';
 import{normalizedAddressCandidate}from'../src/intelligence/nearbyAddressContract.mjs';
+import{extractShoppingDelta}from'../src/intelligence/shoppingConversation.mjs';
 import{createNearbyShoppingPort}from'../src/ports/nearbyShoppingPort.mjs';
 const feature=(props={},coords=[37.854,56.04])=>({type:'Feature',geometry:{type:'Point',coordinates:coords},properties:{countrycode:'RU',state:'Московская область',city:'Пушкино',street:'Пушкинская улица',housenumber:'1',...props}});
 test('address clarification opens a local place picker without treating a household answer as an address',()=>{
   assert.equal(nearbyShoppingIntent('на троих'),null);assert.equal(nearbyShoppingIntent('Текущий магазин',true),null);
   assert.equal(nearbyShoppingIntent('Магнит и О’КЕЙ',true),null);
   assert.equal(nearbyShoppingIntent('Без мяса',true),null);assert.equal(nearbyShoppingIntent('На троих',true),null);
+  assert.equal(nearbyShoppingIntent('Морковь не добавляй',true),null);
   assert.deepEqual(nearbyShoppingIntent('Москва, Тверская, 7',true),{query:'Москва, Тверская, 7',radiusKm:null});
   assert.deepEqual(nearbyShoppingIntent('Найти магазины рядом'),{query:'',radiusKm:null});
   assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, до 10 км'),{query:'в Пушкино',radiusKm:10});
   assert.deepEqual(nearbyShoppingIntent('Собери недорогую корзину на неделю для троих, я живу в Пушкино, до 10 км'),{query:'в Пушкино',radiusKm:10});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, Московская область, до 20 км. Морковь не добавляй.'),
+    {query:'в Пушкино, Московская область',radiusKm:20,preferenceText:'Морковь не добавляй.'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, ул. Ленина, д. 12. Морковь не добавляй.'),
+    {query:'в Пушкино, ул. Ленина, д. 12',radiusKm:null,preferenceText:'Морковь не добавляй.'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, до 20 км, морковь не добавляй'),
+    {query:'в Пушкино',radiusKm:20,preferenceText:'морковь не добавляй'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, ул. Морковная, д. 12'),
+    {query:'в Пушкино, ул. Морковная, д. 12',radiusKm:null});
+});
+test('unknown food in a shared refusal is clarified without contaminating the address',()=>{
+  const delta=extractShoppingDelta('Глютен, яйца не добавляй');
+  assert.deepEqual(delta.reject,['eggs']);assert.deepEqual(delta.unresolved,['глютен']);
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино. Глютен, яйца не добавляй.'),
+    {query:'в Пушкино',radiusKm:null,preferenceText:'Глютен, яйца не добавляй.'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, ул. Глютен, яйца не добавляй.'),
+    {query:'в Пушкино, ул. Глютен',radiusKm:null,preferenceText:'яйца не добавляй.'});
 });
 test('geocoder accepts Moscow and oblast, preserving precision and rejecting other regions or malformed coordinates',()=>{
   const accepted=normalizedAddressCandidate(feature());assert.equal(accepted.precision,'house');assert.equal(accepted.lat,56.04);
@@ -29,6 +47,24 @@ test('regional snapshot is explicitly incomplete geography; every linked catalog
   const linked=d.stores.filter(s=>s.catalogBinding);assert.ok(linked.length>=40);
   for(const s of linked){assert.ok(nearbyCatalogBinding(s),s.id);assert.equal(nearbyCatalogBinding({...s,address:s.address+' x'}),null);}
   assert.ok(linked.some(s=>s.retailerId==='globus'&&s.catalogBinding.officialStoreId==='5014'));
+});
+test('Magnit map points require a unique exact address binding and carry no price claim',async()=>{
+  const d=JSON.parse(await readFile(new URL('../src/data/nearbyGroceryStores.json',import.meta.url),'utf8'));
+  const pins=boundMagnitMapLocations(d);
+  assert.ok(pins.length>=46);
+  assert.equal(new Set(pins.map(p=>p.shopCode)).size,pins.length);
+  assert.ok(pins.every(p=>p.selectionKind==='registered-store'&&p.coordinateKind==='osm-exact-address-join'
+    &&p.priceMinor===undefined&&p.availability===undefined&&nearbyCatalogBinding(p)?.store?.shopCode===p.shopCode));
+  const original=d.stores.find(p=>p.retailerId==='magnit'&&p.catalogBinding);
+  assert.ok(original);
+  for(const invalid of [
+    {...original,address:original.address+' x'},
+    {...original,sourceUrl:'https://example.org/elsewhere'},
+    {...original,lat:NaN},
+    {...original,catalogBinding:undefined}
+  ])assert.deepEqual(boundMagnitMapLocations({...d,stores:[invalid]}),[]);
+  assert.deepEqual(boundMagnitMapLocations({...d,stores:[original,original]}),[]);
+  assert.deepEqual(boundMagnitMapLocations({...d,priceEvidence:true}),[]);
 });
 test('distance filtering has no station dependency, never changes a price, and cannot make a directory-only point selectable',async()=>{
   const d=JSON.parse(await readFile(new URL('../src/data/nearbyGroceryStores.json',import.meta.url),'utf8'));

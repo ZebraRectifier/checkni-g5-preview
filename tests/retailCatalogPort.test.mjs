@@ -868,23 +868,45 @@ test('explicit and default GLOBUS clients abort stalled reads at fifteen seconds
   }
 });
 
-test('other retailer catalog reads keep the 2.5-second abort', async t => {
+test('other retailer category and product reads tolerate a bounded cold connection', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
-  let calls = 0, aborted = false;
-  const client = createRetailCatalogClient({ retailerId: 'magnit', fetchImpl: (_url, { signal }) => {
-    calls += 1;
-    return new Promise((_resolve, reject) => signal.addEventListener('abort', () => {
-      aborted = true;
-      reject(Error('aborted'));
-    }, { once: true }));
-  } });
-  const pending = client.rootCategories();
-  t.mock.timers.tick(2499);
-  assert.equal(aborted, false);
-  t.mock.timers.tick(1);
-  assert.equal((await pending).kind, 'unavailable');
-  assert.equal(aborted, true);
-  assert.equal(calls, 1);
+  for (const retailerId of RETAIL_CATALOG_IDS.filter(id => !['globus', 'perekrestok'].includes(id))) {
+    for (const type of ['categories', 'products']) {
+      let calls = 0;
+      const client = createRetailCatalogClient({ retailerId, fetchImpl: (_url, { signal }) => {
+        calls += 1;
+        return new Promise((resolve, reject) => {
+          signal.addEventListener('abort', () => reject(Error('aborted')), { once: true });
+          setTimeout(() => resolve(Response.json([])), 8700);
+        });
+      } });
+      const pending = type === 'categories' ? client.rootCategories() : client.browse();
+      t.mock.timers.tick(8700);
+      assert.equal((await pending).kind, type === 'categories' ? 'categories' : 'catalog', retailerId);
+      assert.equal(calls, 1, retailerId);
+    }
+  }
+});
+
+test('other retailer catalogue still aborts stalled reads at fifteen seconds', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  for (const type of ['categories', 'products']) {
+    let calls = 0, aborted = false;
+    const client = createRetailCatalogClient({ retailerId: 'magnit', fetchImpl: (_url, { signal }) => {
+      calls += 1;
+      return new Promise((_resolve, reject) => signal.addEventListener('abort', () => {
+        aborted = true;
+        reject(Error('aborted'));
+      }, { once: true }));
+    } });
+    const pending = type === 'categories' ? client.rootCategories() : client.browse();
+    t.mock.timers.tick(14999);
+    assert.equal(aborted, false);
+    t.mock.timers.tick(1);
+    assert.equal((await pending).kind, 'unavailable');
+    assert.equal(aborted, true);
+    assert.equal(calls, 1);
+  }
 });
 
 function perekrestokCategoryRow(overrides = {}) {

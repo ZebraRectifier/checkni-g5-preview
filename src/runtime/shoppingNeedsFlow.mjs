@@ -3,6 +3,7 @@ import { resolveLocalAssistantDialogue, stripAssistantGreetingPrefix } from '../
 import { shoppingAdviceTopic } from '../intelligence/shoppingAdvice.mjs';
 import { extractShoppingDelta } from '../intelligence/shoppingConversation.mjs';
 import { extractShoppingNeedContext } from '../intelligence/shoppingNeedContext.mjs';
+import { isShoppingPlanningRequest } from '../intelligence/shoppingDialogueRecovery.mjs';
 
 const clone = value => JSON.parse(JSON.stringify(value));
 const uid = () => globalThis.crypto?.randomUUID?.() ?? `need-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -130,7 +131,27 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
       ownsView=false;await delegate.run(text);state=delegate.getState();
       selectionActive=delegate.hasActiveShoppingSelection?.()===true;return state;
     }
-    const compound=splitNeedClauses(text);
+    const delta=extractShoppingDelta(text),compound=splitNeedClauses(text);
+    const constraintKey=value=>normalizeNeedText(value).replace(/[.!?]+$/u,'');
+    const unresolved=new Set(delta.unresolved.map(constraintKey));
+    const unresolvedRefusal=compound.some(part=>{
+      if(!unresolved.has(constraintKey(part)))return false;
+      // A full unknown refusal is not an item. A matching existing need (or
+      // a focused pronoun) still belongs to the explicit removal workflow.
+      const deletion=part.match(/^(?:удали|убери|исключи)\s+(.+)$/iu)
+        ??part.match(/^(.+?)\s+(?:убери|удали|не\s+(?:надо|нужно))[.!]*$/iu);
+      return !deletion||!targets(deletion[1]).length;
+    });
+    // Whole advice/planning turns must reach the existing guarded provider
+    // before commas can turn their verbs into independent shopping needs.
+    // Keep the exact conversational shorthand separate from real short names.
+    // An unresolved refusal asks locally through the same delegate, not AI.
+    if(unresolvedRefusal||shoppingAdviceTopic(text)==='advice'||isShoppingPlanningRequest(text)||/^пп[.!?]*$/iu.test(text)) {
+      ownsView=false;selectionActive=false;
+      await delegate.run(text);
+      if(token!==epoch)return getState();
+      state=delegate.getState();selectionActive=delegate.hasActiveShoppingSelection?.()===true;return state;
+    }
     const compoundOperation=compound.some(part=>/^(?:удали|убери|исключи)\s|\s(?:оставь|сделай|всего|ещ[её])\s|\s(?:убери|удали|не\s+(?:надо|нужно))$/iu.test(part)
       ||readOnly.test(part)||unsupportedAction.test(part)||attributeReply.test(part)
       ||(parseNeedLine(part)&&snapshot().lines.some(row=>needKey(row)===needKey(parseNeedLine(part)))));
@@ -194,7 +215,6 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
       const line=snapshot().lines.find(row=>row.lineId===snapshot().focus[0]);
       if(line&&line.resolution.status!=='selected')return display('Нужна конкретная карточка.',`Для «${line.requestedName}» ещё не выбраны товар и упаковка. Потребность сохранена; выбери магазин и товар, затем CHECKNI проверит доступные цены.`);
     }
-    const delta=extractShoppingDelta(text);
     if(resolveLocalAssistantDialogue(text)||shoppingAdviceTopic(text)||readOnly.test(text)||Object.keys(delta.facts??{}).length||delta.reset||delta.undo||delta.reject?.length) {
       ownsView=false;await delegate.run(text);state=delegate.getState();selectionActive=delegate.hasActiveShoppingSelection?.()===true;return state;
     }
@@ -220,6 +240,11 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
   function getState(){return ownsView?state:delegate.getState();}
   function edit(){epoch++;if(!ownsView)delegate.edit();return getState();}
   function invalidate(){epoch++;selectionActive=false;delegate.invalidate();ownsView=false;state=delegate.getState();return state;}
+  function rememberLocationConstraint(text){
+    const saved=delegate.rememberLocationConstraint(text);
+    if(saved){epoch++;selectionActive=false;ownsView=false;state=delegate.getState();}
+    return saved;
+  }
   function confirm(mode){
     if(ownsView)return state;
     const before=basket.getSnapshot(),next=delegate.confirm(mode);
@@ -254,7 +279,7 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
     });
     return result.ok?{ok:true,message:result.receipt.message}:{ok:false,message:'Соответствие не сохранено: список или корзина изменились, товар уже связан с другой потребностью либо запись недоступна. Проверь актуальные строки.'};
   }
-  return Object.freeze({...delegate,run,getState,edit,invalidate,confirm,
+  return Object.freeze({...delegate,run,getState,edit,invalidate,confirm,rememberLocationConstraint,
     getShoppingNeeds:()=>snapshot().lines,
     getUnresolvedNeeds:()=>snapshot().lines.filter(line=>line.resolution.status!=='selected'||!basket.getSnapshot().some(row=>JSON.stringify(row)===JSON.stringify(line.resolution.selectedRow))),
     removeNeed, linkNeed, needsStore:store });

@@ -3,19 +3,51 @@ import{resolveRegisteredMagnitStore}from'../data/registeredMagnitStores.mjs';
 import{resolveGlobusMoscowRegionStore}from'../data/globusMoscowRegionStores.mjs';
 import{GLOBUS_MAP_LOCATIONS}from'../data/storeMapLocations.mjs';
 import{exactMagnitAddressKey}from'./magnitAddressJoin.mjs';
+import{extractShoppingDelta,normalizeShoppingText,shoppingTargets,shoppingTargetLabel}from'./shoppingConversation.mjs';
 export const NEARBY_RADIUS_KM=Object.freeze([1,3,5,10,20]);
+function separateLocationRestriction(tail){
+  const boundaries=[...tail.matchAll(/[.;!?\n,]\s+/gu)];
+  for(const boundary of boundaries){
+    const preferenceText=tail.slice(boundary.index+boundary[0].length).trim();
+    if(!preferenceText)continue;
+    // Inspect only the immediate clause: a later refusal must not turn an
+    // earlier street abbreviation into a preference. Keep the entire tail so
+    // the existing memory guard can reject unknown or oversized constraints.
+    const firstClause=preferenceText.split(/[.;!?\n,]/u,1)[0].trim();
+    const delta=extractShoppingDelta(firstClause);
+    const canonicalFood=shoppingTargets(firstClause).some(target=>normalizeShoppingText(firstClause)===shoppingTargetLabel(target));
+    const afterStreetMarker=/(?:^|[\s,])(?:ул|улица|пер|переулок|пр-т|проспект|ш|шоссе|д|дом|к|корпус|стр|строение)$/iu.test(tail.slice(0,boundary.index).trim());
+    const listDelta=extractShoppingDelta(preferenceText.split(/[.;!?\n]/u,1)[0]);
+    const startsAddress=/^(?:ул(?:ица)?|пер(?:еулок)?|проспект|пр-т|ш(?:оссе)?|д(?:ом)?|к(?:орпус)?|стр(?:оение)?|кв(?:артира)?)(?=$|[\s.,])/iu.test(firstClause);
+    // Unknown food in a shared-refusal list is safe to separate after a
+    // sentence boundary. A comma alone may still be part of the address.
+    const unknownListAfterSentence=boundary[0][0]!==','&&!afterStreetMarker&&!startsAddress
+      &&listDelta.unresolved.length>0&&listDelta.reject.length>0;
+    if(delta.reject.length||delta.unresolved.length||canonicalFood&&!afterStreetMarker&&(listDelta.reject.length||listDelta.unresolved.length)||unknownListAfterSentence){
+      return{location:tail.slice(0,boundary.index).trim(),preferenceText};
+    }
+  }
+  return{location:tail,preferenceText:null};
+}
 export function nearbyShoppingIntent(text,expectLocation=false){
   const raw=String(text??'').trim(),v=raw.toLowerCase().replaceAll('ё','е');
   if(/^(?:текущий магазин|(?:магнит|о['’]?кей|пятерочка)(?: и (?:магнит|о['’]?кей|пятерочка))*|заветы ильича · до 20 км)$/u.test(v))return null;
   if(expectLocation&&/^(?:без\s|не\s|ограничений нет|на\s+(?:\d|одного|двоих|троих|неделю|две недели)|бюджет\s|подбери подешевле)/u.test(v))return null;
+  if(expectLocation&&!/(?:я\s+живу|мой адрес|^адрес[:\s]|^москва[,\s]|^московская область[,\s])/u.test(v)){
+    const delta=extractShoppingDelta(raw);
+    if(delta.reject.length||delta.unresolved.length)return null;
+  }
   const radius=v.match(/(?:до|радиус(?:е|ом)?|в пределах)\s*(\d{1,3})\s*км/u);
   if(!expectLocation&&!/найти магазины рядом|магазины рядом|изменить (?:место|адрес)|моя геолокация|я живу|мой адрес|^адрес[:\s]|^москва[,\s]|^московская область[,\s]/u.test(v))return null;
-  if(raw.length>240)return{query:'',radiusKm:null};
-  const tail=raw.match(/(?:я\s+живу|мой адрес)\s*[:—-]?\s*(.+)$/iu)?.[1]??raw;
-  const query=tail.replace(/^(?:я\s+)?(?:живу|мой адрес|адрес|магазины рядом с)\s*[:—-]?\s*/iu,'')
-    .replace(/[,;]?\s*(?:до|радиус(?:е|ом)?|в пределах)\s*\d{1,3}\s*км[.!]?/iu,'').trim();
+  // An oversized turn must reach the existing failed-save clarification
+  // before the app opens a picker or clears the user's original input.
+  if(raw.length>240)return{query:'',radiusKm:null,preferenceText:raw};
+  const tail=raw.match(/(?:я\s+живу|мой адрес)\s*[:—-]?\s*(.+)$/ius)?.[1]??raw;
+  const {location,preferenceText}=separateLocationRestriction(tail);
+  const query=location.replace(/^(?:я\s+)?(?:живу|мой адрес|адрес|магазины рядом с)\s*[:—-]?\s*/iu,'')
+    .replace(/[,;]?\s*(?:до|радиус(?:е|ом)?|в пределах)\s*\d{1,3}\s*км[.!]?/iu,'').replace(/[,.!?;]+$/u,'').trim();
   return{query:/найти магазины рядом|изменить (?:место|адрес)|геолокация/u.test(v)?'':query,
-    radiusKm:radius?Number(radius[1]):null};
+    radiusKm:radius?Number(radius[1]):null,...(preferenceText?{preferenceText}:{})};
 }
 export function nearbyCatalogBinding(point){
   const b=point?.catalogBinding;if(!b)return null;
@@ -32,6 +64,36 @@ export function nearbyCatalogBinding(point){
       ?{retailerId:'globus',store}:null;
   }
   return null;
+}
+// The large OSM directory is geography only. Expose a small map subset only
+// when its exact address join resolves to the existing registered Magnit store.
+// It carries no price or availability conclusion.
+export function boundMagnitMapLocations(directory){
+  if(directory?.schemaVersion!==1||directory.region!=='moscow-and-oblast'
+    ||directory.exhaustive!==false||directory.priceEvidence!==false
+    ||!Array.isArray(directory.stores)||directory.stores.length>25000
+    ||!Number.isFinite(Date.parse(directory.observedAt)))return Object.freeze([]);
+  const byCode=new Map();
+  for(const point of directory.stores){
+    if(point?.retailerId!=='magnit'||!point.catalogBinding)continue;
+    const binding=nearbyCatalogBinding(point),store=binding?.store;
+    if(!store||typeof store.shopCode!=='string'||!/^\d{6}$/u.test(store.shopCode)
+      ||!Number.isFinite(point.lat)||!Number.isFinite(point.lon)
+      ||Math.abs(point.lat)>90||Math.abs(point.lon)>180
+      ||typeof point.address!=='string'||point.address.length>180
+      ||typeof point.id!=='string'||!/^osm:(?:node|way|relation):\d+$/u.test(point.id)
+      ||point.sourceUrl!==`https://www.openstreetmap.org/${point.id.split(':')[1]}/${point.id.split(':')[2]}`)continue;
+    const code=store.shopCode;
+    // Two geography points for one shop are ambiguous: select neither.
+    if(byCode.has(code)){byCode.set(code,null);continue;}
+    byCode.set(code,Object.freeze({...point,id:`magnit-bound-${code}`,name:'Магнит',shopCode:code,
+      storeIds:Object.freeze([`magnit-shop-${code}`,`magnit-${code}`]),
+      coordinateKind:'osm-exact-address-join',selectionKind:'registered-store',
+      evidenceKind:'dated-osm-exact-address-join',evidenceUrl:point.sourceUrl,
+      observedAt:directory.observedAt}));
+  }
+  if(byCode.size>200)return Object.freeze([]);
+  return Object.freeze([...byCode.values()].filter(Boolean));
 }
 export function nearbyGroceryMatches(stores,position,radiusKm,{connectedOnly=false}={}){
   if(!Array.isArray(stores)||!Number.isFinite(radiusKm)||radiusKm<1||radiusKm>20)return[];

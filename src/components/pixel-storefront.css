@@ -247,6 +247,44 @@ body.pixel-workspace .catalog-search-submit {
   box-shadow: none;
 }
 body.pixel-workspace #pixel-store-status { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+body.pixel-workspace #pixel-address-chooser {
+  max-width: 760px; margin: 0 0 24px; padding: 16px;
+  border: 2px solid var(--accent); background: var(--surface);
+  clip-path: var(--pixel-cut);
+}
+body.pixel-workspace #pixel-address-chooser h2 { margin: 0 0 6px; font-size: 24px; }
+body.pixel-workspace .pixel-address-chooser-hint { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+body.pixel-workspace .pixel-address-chooser-controls :is(input,select) {
+  width: 100%; min-height: 44px; min-width: 0; padding: 8px;
+  border: 1px solid var(--line); border-radius: 2px;
+  background: var(--surface-soft); color: var(--ink);
+}
+body.pixel-workspace .pixel-address-chooser-controls :is(label,p) { color: var(--ink); font-size: 14px; }
+body.pixel-workspace #pixel-address-chooser :is(#magnit-store-note,#metro-store-note,#globus-store-note,#globus-compare-address,label[for='globus-compare-address']) { display: none; }
+body.pixel-workspace #pixel-address-chooser #globus-store-picker > p:last-child { display: none; }
+body.pixel-workspace .pixel-address-chooser-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+body.pixel-workspace .pixel-address-chooser-actions button {
+  min-height: 44px; padding: 8px 12px; border: 1px solid var(--line);
+  border-radius: 2px; background: var(--surface-soft); color: var(--ink);
+}
+body.pixel-workspace .pixel-address-chooser-actions .pixel-address-chooser-confirm {
+  border-color: var(--accent); background: var(--accent-strong); color: #fff;
+}
+body.pixel-workspace .pixel-address-chooser-actions button:disabled { opacity: .55; }
+body.pixel-workspace #pixel-store-address-results { margin: 20px 0 0; }
+body.pixel-workspace .pixel-store-address-title { margin: 0 0 10px; font-size: 17px; }
+body.pixel-workspace .pixel-store-address-list { display: grid; gap: 7px; grid-template-columns: repeat(auto-fit,minmax(min(100%,320px),1fr)); }
+body.pixel-workspace .pixel-store-address-choice {
+  min-height: 48px; padding: 9px 12px; border: 2px solid var(--line); border-radius: 2px;
+  background: var(--surface); color: var(--ink); text-align: left; font-size: 14px; line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+body.pixel-workspace .pixel-store-address-choice:is(:hover,:focus-visible) { border-color: var(--accent); background: var(--surface-soft); }
+body.pixel-workspace .pixel-store-address-toggle {
+  min-height: 44px; margin-top: 10px; padding: 8px 12px; border: 2px solid var(--accent);
+  border-radius: 2px; background: var(--accent-soft); color: var(--ink); font-size: 14px;
+}
+body.pixel-workspace .pixel-store-address-toggle:is(:hover,:focus-visible) { background: var(--surface-soft); }
 body.pixel-workspace .retail-store-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px 10px; margin: 0; }
 body.pixel-workspace #pixel-store-home .retail-store-card {
   --retailer-face: var(--surface-soft);
@@ -370,6 +408,8 @@ body.pixel-workspace .retail-category-button :is(img,.pixel-category-art) { disp
 body.pixel-workspace .retail-category-button .pixel-category-icon { display: block; width: 32px; height: 32px; color: var(--accent); image-rendering: pixelated; }
 body.pixel-workspace .retail-category-arrow { display: none; }
 body.pixel-workspace :is(.retail-category-back,.retail-breadcrumbs button,.retail-category-retry,.retail-category-exit,.retail-load-more) { min-height: 44px; max-width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 2px; background: var(--surface); color: var(--ink); font-size: 14px; }
+body.pixel-workspace .retail-category-grid > .retail-category-retry { grid-column: span 2; min-height: 60px; justify-content: center; }
+body.pixel-workspace .retail-category-retry strong { overflow-wrap: normal; }
 body.pixel-workspace .retail-breadcrumbs { flex-wrap: wrap; margin: 12px 0; font-size: 14px; }
 body.pixel-workspace .retail-breadcrumbs .is-current { background: var(--accent-soft); color: var(--accent); font-size: 14px; border-radius: 2px; }
 

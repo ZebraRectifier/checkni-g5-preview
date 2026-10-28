@@ -4,7 +4,7 @@ import { createRetailCatalogClient } from '../ports/retailCatalogPort.mjs';
 import { quoteWeeklyRoute } from '../core/weeklyRoute.mjs';
 const money=n=>Number.isSafeInteger(n)?new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:2}).format(n/100):'Нет цены';
 const el=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
-const PRICE_READ_TIMEOUT_MS=5000;
+const PRICE_READ_TIMEOUT_MS=15000;
 
 export function createWeeklyRoute({onChoosePeer,onApply,getBasket,createClient=createRetailCatalogClient,now=Date.now}={}){
  const root=el('section');root.id='weekly-route';root.hidden=true;
@@ -40,9 +40,20 @@ export function createWeeklyRoute({onChoosePeer,onApply,getBasket,createClient=c
   const a=quoteWeeklyRoute(cards,quantities,now()),b=quoteWeeklyRoute(peerCards,quantities,now());
   const ready=Boolean(peer)&&a.ready&&b.ready&&!loading;
   apply.disabled=!ready;
+  const missingProductCount=new Set([...a.missingProductIds,...b.missingProductIds]).size;
+  const missing=[];
+  if(peer&&loaded&&!ready){
+   for(const [quote,address] of [[a,store],[b,peer]]){
+    for(const id of quote.missingProductIds){
+     const product=WEEKLY_BASKET_RECIPE.find(p=>p.id===id);
+     if(product)missing.push(`${product.name} — ${address.name}`);
+    }
+   }
+  }
+  const missingSummary=missing.length?` Например: ${missing.slice(0,2).join('; ')}${missing.length>2?'; и ещё…':'.'}`:'';
   status.textContent=!peer?'Выбери второй магазин — сравним одинаковые упаковки.':loading?'Проверяем цены двух выбранных магазинов…':ready
    ?`${count} из ${count} цен свежее часа в обоих магазинах. Наличие не подтверждено.`
-   :!loaded?'Нажми «Проверить цены ещё раз».':'Для полной корзины пока не хватает свежих цен: '+Math.max(a.missingProductIds.length,b.missingProductIds.length)+` из ${count}. Старые цены не участвуют в сравнении.`;
+   :!loaded?'Нажми «Проверить цены ещё раз».':'Для полной корзины пока не хватает свежих цен: '+missingProductCount+` из ${count}.${missingSummary} Старые цены не участвуют в сравнении.`;
   total.textContent=ready?`${store.name}: ${money(a.knownSubtotalMinor)} · ${peer.name}: ${money(b.knownSubtotalMinor)}`:'';
   for(const [i,p] of WEEKLY_BASKET_RECIPE.entries()){
    if(rowNodes[i]){

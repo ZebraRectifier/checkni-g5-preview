@@ -84,6 +84,8 @@ function button(label, action, className) {
 function coordinateNote(store) {
   return store.coordinateKind === "official-directory"
     ? "точка официального справочника от 10.10.2026"
+    : store.coordinateKind === "osm-exact-address-join"
+      ? `точка OpenStreetMap на ${new Date(store.observedAt).toLocaleDateString("ru-RU")} · адрес сопоставлен со справочником Магнита; цена и наличие не подтверждены`
     : "≈ приблизительная точка для ориентира";
 }
 function distanceNote(position, store) {
@@ -97,6 +99,7 @@ export function createStoresSection({
   selectedScope = null,
   onStoreSelect,
   onEditStore,
+  loadBoundMagnitLocations,
   locationController,
   geolocationOptions = {}
 } = {}) {
@@ -111,6 +114,7 @@ export function createStoresSection({
   let center = { ...DEFAULT_CENTER }, zoom = DEFAULT_ZOOM, manualPicking = false;
   let geoState = { status: "idle", position: null };
   let currentScope = selectedScope;
+  let mapStores = [...observedStores];
   const controls = textEl("div", "stores-controls", "");
   const geoButton = button("Определить моё место", () => geo.request());
   geoButton.id = "stores-locate";
@@ -137,20 +141,34 @@ export function createStoresSection({
     + "Карта OpenStreetMap загружает изображения выбранного участка. Выбор адресов и расчёт корзины остаются за вами.");
 
   const mapControls = textEl("div", "stores-map-controls", "");
+  const networkLabel = textEl("label", "stores-map-network-label", "Сеть на карте");
+  networkLabel.htmlFor = "stores-map-network";
+  const networkFilter = document.createElement("select");
+  networkFilter.id = "stores-map-network";
+  networkFilter.className = "stores-map-network-filter";
+  for (const [value, label] of [["all", "Все сети"], ["globus", "Глобус"],
+    ["metro", "METRO"], ["magnit", "Магнит"]]) {
+    const option = document.createElement("option");
+    option.value = value; option.textContent = label; networkFilter.append(option);
+  }
+  networkFilter.addEventListener("change", () => renderMap());
   function redrawCenter(next) { if (next) { center = next; renderMap(); } }
   const zoomIn = button("Приблизить", () => { zoom = Math.min(16, zoom + 1); renderMap(); });
   const zoomOut = button("Отдалить", () => { zoom = Math.max(3, zoom - 1); renderMap(); });
   const ownCenter = button("К моему месту", () => {
     if (geoState.position) { center = normalizeMapCenter(geoState.position); zoom = 12; renderMap(); }
   });
-  mapControls.append(zoomIn, zoomOut,
+  const panButtons = [
     button("←", () => redrawCenter(shiftMapCenter(center, -180, 0, zoom))),
     button("↑", () => redrawCenter(shiftMapCenter(center, 0, -180, zoom))),
     button("↓", () => redrawCenter(shiftMapCenter(center, 0, 180, zoom))),
-    button("→", () => redrawCenter(shiftMapCenter(center, 180, 0, zoom))),
-    ownCenter, button("Показать магазины", () => { center = { ...DEFAULT_CENTER }; zoom = DEFAULT_ZOOM; renderMap(); }));
+    button("→", () => redrawCenter(shiftMapCenter(center, 180, 0, zoom)))
+  ];
+  mapControls.append(networkLabel, networkFilter, zoomIn, zoomOut,
+    ...panButtons, ownCenter,
+    button("Показать магазины", () => { center = { ...DEFAULT_CENTER }; zoom = DEFAULT_ZOOM; renderMap(); }));
   ["Запад", "Север", "Юг", "Восток"].forEach((label, i) =>
-    mapControls.children[i + 2].setAttribute("aria-label", "Карта: " + label));
+    panButtons[i].setAttribute("aria-label", "Карта: " + label));
   const map = textEl("div", "stores-map", "");
   map.style.aspectRatio = "1 / 1"; map.tabIndex = 0;
   map.setAttribute("aria-label", "Карта магазинов. Место можно указать после кнопки «Указать место на карте»");
@@ -189,16 +207,22 @@ export function createStoresSection({
   const summary = textEl("summary", null, `Все точки с координатами: ${observedStores.length}`);
   directory.append(summary, listNote, list);
 
+  function matchesScopeRow(row, store) {
+    return store.selectionKind === "registered-store" && row.retailerId === "magnit"
+      ? row.shopCode === store.shopCode && row.address === store.catalogBinding?.address
+        && row.storeIds.every(id => store.storeIds.includes(id))
+      : resolveStoreMapLocation(row, { mode: currentScope.mode })?.id === store.id;
+  }
   function isSelected(store) {
-    return currentScope?.valid && currentScope.stores.some(row =>
-      resolveStoreMapLocation(row, { mode: currentScope.mode })?.id === store.id);
+    return currentScope?.valid && currentScope.stores.some(row => matchesScopeRow(row, store));
   }
   function canSelect(store) {
     return typeof onStoreSelect === "function" && store.selectionKind !== "live-example-only";
   }
   function chooseStore(store) { if (canSelect(store)) onStoreSelect(store); }
   function renderMap() {
-    const pins = [...observedStores];
+    const pins = mapStores.filter(store => networkFilter.value === "all"
+      || store.retailerId === networkFilter.value);
     if (geoState.position) pins.push({ ...geoState.position, id: "user-location", name: "Ваше место" });
     const layout = staticMapLayout({ centerLat: center.lat, centerLon: center.lon, zoom,
       widthTiles: 2, heightTiles: 2, pins });
@@ -253,7 +277,8 @@ export function createStoresSection({
     selected.append(textEl("h3", null, "Адреса для сравнения корзины"));
     const rows = textEl("ul", "stores-list", "");
     for (const store of currentScope.stores) {
-      const point = resolveStoreMapLocation(store, { mode: currentScope.mode });
+      const point = mapStores.find(pin => matchesScopeRow(store, pin))
+        ?? resolveStoreMapLocation(store, { mode: currentScope.mode });
       const row = textEl("li", null, "");
       row.append(textEl("strong", null, store.name), textEl("span", "stores-list-note", store.address),
         externalLink("Найти этот адрес на карте", storeAddressMapUrl(store)),
@@ -267,7 +292,7 @@ export function createStoresSection({
   }
   function renderList() {
     list.replaceChildren();
-    const stores = [...observedStores];
+    const stores = [...mapStores];
     if (geoState.position) stores.sort((a, b) =>
       (distanceMeters(geoState.position, a) ?? Infinity) - (distanceMeters(geoState.position, b) ?? Infinity));
     for (const store of stores) {
@@ -320,6 +345,28 @@ export function createStoresSection({
   section.append(controls, geoStatus, privacy, mapControls, map, attribution, tileStatus, selected,
     directory, createMagnitStoreDirectory());
   renderGeoStatus(); renderMap(); renderSelected(); renderList();
+  if (typeof loadBoundMagnitLocations === "function") {
+    let started = false;
+    const load = () => {
+      if (started) return;
+      started = true;
+      Promise.resolve().then(loadBoundMagnitLocations).then(locations => {
+        if (!Array.isArray(locations) || !locations.length) return;
+        mapStores = [...observedStores, ...locations];
+        summary.textContent = `Все точки с координатами: ${mapStores.length}`;
+        renderMap(); renderSelected(); renderList();
+      }).catch(() => { /* Keep the existing points and address picker usable. */ });
+    };
+    if (typeof IntersectionObserver === "function") {
+      const observer = new IntersectionObserver(entries => {
+        if (entries.some(entry => entry.isIntersecting)) { observer.disconnect(); load(); }
+      });
+      observer.observe(section);
+    } else load();
+    directory.addEventListener("toggle", () => { if (directory.open) load(); });
+    map.addEventListener("pointerenter", load, { once: true });
+    map.addEventListener("focusin", load, { once: true });
+  }
   return section;
 }
 
