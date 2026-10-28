@@ -38,7 +38,7 @@ jobs:
       - name: Verify shopping need persistence and identity integrity
         run: node --test tests/shoppingNeeds.test.mjs tests/shoppingIntentIntegrity.test.mjs tests/retailProductSelection.test.mjs tests/shoppingNeedContext.test.mjs
       - name: Verify saved METRO lifetime and dynamic DA catalogue policy without network
-        run: node --test tests/retailCatalogFreshnessPolicy.test.mjs tests/selectedRetailCatalogOffersPort.test.mjs tests/observedComparisonExpiry.test.mjs tests/currentComparisonExplanation.test.mjs tests/comparisonResult.test.mjs tests/retailCatalogPort.test.mjs
+        run: node --test tests/retailCatalogFreshnessPolicy.test.mjs tests/selectedRetailCatalogOffersPort.test.mjs tests/observedComparisonExpiry.test.mjs tests/currentComparisonExplanation.test.mjs tests/comparisonResult.test.mjs tests/retailCatalogPort.test.mjs tests/globusStoreLatestObservationPort.test.mjs
       - name: Scan complete browser artifact and release metadata
         run: node tools/security/scan-public-secrets.mjs src index.html prices.html deployment.json release
       - name: Install pinned browser test dependencies

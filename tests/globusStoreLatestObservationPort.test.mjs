@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { globusObservationCopy } from '../src/components/GlobusStorePicker.mjs';
+import { createGlobusStorePicker, globusObservationCopy } from '../src/components/GlobusStorePicker.mjs';
+import { resolveGlobusMoscowRegionStore } from '../src/data/globusMoscowRegionStores.mjs';
 import {
   classifyGlobusLatestObservation, GLOBUS_RECENT_PRICE_MAX_AGE_MS,
   readGlobusStoreLatestObservation
@@ -9,6 +10,52 @@ import { GLOBUS_CATALOG_PRICE_MAX_AGE_MS } from '../src/ports/selectedGlobusCata
 
 const now = Date.parse('2026-10-26T21:30:00.000Z');
 const found = observedAt => ({ kind: 'found', observedAt });
+
+function mountPicker(t, options = {}, stage = 'home') {
+  const previous = globalThis.document;
+  class Element {
+    constructor() { this.children = []; this.style = {}; this.value = ''; this.textContent = ''; }
+    append(...children) { this.children.push(...children); }
+    replaceChildren(...children) { this.children = children; }
+    setAttribute(name, value) { this[name] = String(value); }
+    addEventListener() {}
+  }
+  globalThis.document = { createElement: () => new Element(), addEventListener() {},
+    body: { dataset: { pixelStage: stage } } };
+  t.after(() => { if (previous === undefined) delete globalThis.document; else globalThis.document = previous; });
+  const picker = createGlobusStorePicker(options);
+  const note = picker.element.children.find(child => child.id === 'globus-store-note');
+  return { picker, note, store: resolveGlobusMoscowRegionStore('5011') };
+}
+
+test('picker keeps catalogue availability separate from observation freshness across updates', t => {
+  const { picker, note, store } = mountPicker(t);
+  const update = (status, hasCategories) => picker.update({ visible: true, store, status, hasCategories });
+  update('loading', false);
+  assert.equal(note.textContent, 'Загружаем каталог выбранного адреса…');
+  update('ready', false);
+  assert.match(note.textContent, /каталог временно не загрузился/u);
+  update('ready', true);
+  assert.doesNotMatch(note.textContent, /каталог временно не загрузился/u);
+  assert.match(note.textContent, /Дата последнего наблюдения пока не проверена/u);
+  update('ready', false);
+  assert.match(note.textContent, /каталог временно не загрузился/u);
+});
+
+test('a late old-price observation preserves the loaded catalogue without claiming fresh prices', async t => {
+  const calls = [];
+  const { picker, note, store } = mountPicker(t, { readLatestObservation: async id => {
+    calls.push(id);
+    return found('2020-01-01T00:00:00Z');
+  } }, 'store');
+  picker.update({ visible: true, store, status: 'ready', hasCategories: true });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(calls, ['5011']);
+  assert.doesNotMatch(note.textContent, /каталог временно не загрузился/u);
+  assert.match(note.textContent, /Свежих цен по адресу нет/u);
+  assert.match(note.textContent, /01\.01\.2020/u);
+  assert.match(note.textContent, /Наличие неизвестно/u);
+});
 
 test('picker distinguishes stale Pushkino evidence from recent exact-address observations', () => {
   assert.equal(GLOBUS_RECENT_PRICE_MAX_AGE_MS, GLOBUS_CATALOG_PRICE_MAX_AGE_MS);
