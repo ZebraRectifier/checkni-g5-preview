@@ -38,6 +38,7 @@ test('exact newly connected Moscow and regional addresses select their own Magni
 test('a bound Magnit map pin selects its exact address, while the legacy point stays nonselectable',async({page})=>{
   await isolate(page);
   await page.goto('/?comparison=observed&catalog=retail#shop');
+  await selectStore(page);
   await openStoreDetails(page);
   await page.locator('#stores-section').scrollIntoViewIfNeeded();
   await expect.poll(async()=>Number((await page.locator('.stores-location-directory > summary').textContent())?.match(/\d+/u)?.[0]))
