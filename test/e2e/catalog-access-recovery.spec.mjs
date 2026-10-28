@@ -167,7 +167,7 @@ test('address-service 503 keeps the same consented query ready for an explicit s
     return requests.length === 1 ? route.fulfill({ status: 503, json: { version: 1, error: 'source_unavailable' } })
       : route.fulfill({ json: { version: 1, candidates: [{ lat: 55.759, lon: 37.61, label: query, precision: 'house' }] } });
   });
-  await page.locator('#pixel-store-details > summary').click();
+  await page.locator('.pixel-location').click();
   await page.locator('#nearby-shopping').getByRole('button', { name: '📍 Найти магазины рядом', exact: true }).click();
   await page.locator('#nearby-address').fill(query); expect(requests).toEqual([]);
   await page.locator('#nearby-address-search').click();
@@ -189,7 +189,7 @@ test('a successful empty address lookup keeps the search guidance instead of rep
   await page.route('**/functions/v1/nearby-address', route => {
     requests.push(route.request().postDataJSON()); return route.fulfill({ json: { version: 1, candidates: [] } });
   });
-  await page.locator('#pixel-store-details > summary').click();
+  await page.locator('.pixel-location').click();
   await page.locator('#nearby-shopping').getByRole('button', { name: '📍 Найти магазины рядом', exact: true }).click();
   await page.locator('#nearby-address').fill(query); await page.locator('#nearby-address-search').click();
   await expect(page.locator('#nearby-status')).toHaveText('Адрес не удалось найти. Добавь город и номер дома или укажи место на карте.');
@@ -208,7 +208,7 @@ test('Moscow midnight hides expired promotions while the other source retains it
 });
 
 test('the Okey address disclosure stays readable in both pixel themes and fits the viewport', async ({ page }) => {
-  await setup(page); await page.locator('#pixel-store-details > summary').click();
+  await setup(page); await page.locator('.pixel-location').click();
   const directory = page.locator('.okey-directory'); await directory.scrollIntoViewIfNeeded();
   for (const theme of ['dark', 'light']) {
     if (await page.locator('body').getAttribute('data-hori-theme') !== theme) await page.locator('#hori-theme').click();

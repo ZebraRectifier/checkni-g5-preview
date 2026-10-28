@@ -75,6 +75,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   // Shared references are reachable without implicitly selecting the default
   // retailer. Chain-specific pickers appear only in an explicit storefront.
   const details = node('details', 'pixel-store-details'); details.id = 'pixel-store-details';
+  let sharedDetailsOpen = false;
   const summary = node('summary', '', 'Адрес и источники');
   const detailsContent = node('div', 'pixel-store-details-content');
   const pickers = node('div', 'pixel-store-pickers'); pickers.hidden = true;
@@ -291,7 +292,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
         copy.append(node('span', 'retail-store-kicker', 'Акции Москвы'), node('strong', '', entry.name), node('span', '', entry.scope));
         button.append(logo, copy, node('span', 'retail-store-total', 'Посмотреть акции'));
         button.addEventListener('click', () => {
-          action('address'); mountExtras(); details.open = true; target.open = true;
+          openDetails(); target.open = true;
           view.requestAnimationFrame(() => {
             if (!target.isConnected) return;
             reveal(target); target.querySelector(':scope > summary')?.focus({ preventScroll: true });
@@ -313,7 +314,8 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   }
   function openDetails({ focusNearby = false, emit = true } = {}) {
     closeAddressChooser();
-    mountExtras(); details.open = true; if (emit) action('address');
+    sharedDetailsOpen = true;
+    mountExtras(); details.hidden = false; details.open = true; if (emit) action('address');
     view.requestAnimationFrame(() => {
       reveal(details);
       const target = focusNearby ? detailsContent.querySelector('#nearby-address') : state.stage === 'store'
@@ -323,6 +325,12 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     });
   }
   address.addEventListener('click', () => openDetails()); location.addEventListener('click', () => openDetails());
+  document.addEventListener('checkni:shop-action', event => {
+    if (event.detail?.action !== 'stores') return;
+    sharedDetailsOpen = false;
+    details.open = false;
+    details.hidden = state.stage !== 'store';
+  });
   document.addEventListener('checkni:shop-action', event => {
     if (event.detail?.action !== 'address' || event.detail?.target !== 'nearby') return;
     onOpenAddress?.();
@@ -420,7 +428,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     if (inStore) closeAddressChooser({ preserveSelection: true });
     document.body.dataset.pixelStage = state.stage; document.body.dataset.pixelView = state.view;
     main.dataset.horiView = state.view === 'basket' ? 'basket' : state.stage;
-    home.hidden = inStore; storefront.hidden = !inStore; details.hidden = !inStore;
+    home.hidden = inStore; storefront.hidden = !inStore; details.hidden = !inStore && !sharedDetailsOpen;
     pickers.hidden = !inStore; selected.hidden = !inStore;
     const displayName = typeof state.displayName === 'string' ? state.displayName : 'Магазин';
     selected.textContent = displayName; selected.setAttribute('aria-label', `Категории магазина ${displayName}`);

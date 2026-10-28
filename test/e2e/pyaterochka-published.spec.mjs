@@ -13,8 +13,8 @@ test('food catalogue stays compact, searches actual pack facts and hides expired
   await isolate(page);let expired=false;
   await page.route('**/src/data/pyaterochkaPublishedPromotions.json',r=>r.fulfill({json:parsePyatCatalogue({...raw,
     ...(expired?{observedAt:'2026-10-17T00:00:00Z'}:{})})}));
-  await page.goto('/?comparison=observed&catalog=retail#shop');await openStoreDetails(page);const root=page.locator('#pyaterochka-published');
-  await root.locator('summary').click();await expect(root).toContainText('160 продуктов');
+  await page.goto('/?comparison=observed&catalog=retail#shop');await page.locator('#retail-store-card-pyaterochka').click();await openStoreDetails(page);const root=page.locator('#pyaterochka-published');
+  await expect(root).toContainText('160 продуктов');
   await expect(root.locator('article')).toHaveCount(8);await expect(root).toContainText('Цена в конкретном магазине');
   // Literal catalogue search also finds the two confectionery names containing
   // «молоко». The separate shopping path admits only the reviewed adult milk.
@@ -22,7 +22,7 @@ test('food catalogue stays compact, searches actual pack facts and hides expired
   await expect(root).toContainText('925мл');await expect(root).toContainText('94,99');
   await expect(root.locator('a[href^="https://mos.proshoper.ru/actions/pyaterochka/moskva/#id_product_"]')).toHaveCount(6);
   await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
-  expired=true;await page.reload();await openStoreDetails(page);await root.locator('summary').click();
+  expired=true;await page.reload();await page.locator('#retail-store-card-pyaterochka').click();await openStoreDetails(page);
   await expect(root).toContainText('Свежего каталога сейчас нет');await expect(root.locator('article')).toHaveCount(0);
   await expect(root.getByRole('button',{name:'Подобрать часть корзины по акциям',exact:true})).toHaveCount(0);
   expired=false;await root.getByRole('button',{name:'Обновить каталог',exact:true}).click();await expect(root).toContainText('160 продуктов');
@@ -30,7 +30,7 @@ test('food catalogue stays compact, searches actual pack facts and hides expired
 test('city catalogue → household → partial real-pack table → explicit basket → reload stays out of physical-store and paid-provider claims',async({page})=>{
   await isolate(page);let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
   await page.route('**/src/data/pyaterochkaPublishedPromotions.json',r=>r.fulfill({json:parsePyatCatalogue(raw)}));
-  await page.goto('/?comparison=observed&catalog=retail#shop');await openStoreDetails(page);const root=page.locator('#pyaterochka-published');await root.locator('summary').click();
+  await page.goto('/?comparison=observed&catalog=retail#shop');await page.locator('#retail-store-card-pyaterochka').click();await openStoreDetails(page);const root=page.locator('#pyaterochka-published');
   await root.getByRole('button',{name:'Подобрать часть корзины по акциям',exact:true}).click();
   await openHory(page);
   const output=page.locator('#basket-proposal-status');await expect(output).toContainText('На сколько человек');
