@@ -138,13 +138,13 @@ export function createGlobusStorePicker({ officialStoreId = '5011', onSelect, on
     if (event.detail?.stage === 'store' && event.detail?.retailerId === 'globus') checkSelectedObservation();
   });
   renderOptions(); renderComparisonOptions();
-  return { element: section, update({ visible, store, comparisonStore = null, status, hasCategories }) {
+  return { element: section, update({ visible, store, comparisonStore = null, status, hasCategories: categoriesPresent }) {
     section.hidden = !visible; section.style.display = visible ? 'grid' : 'none';
     if (store && selected !== store.officialStoreId) {
       if (ageingTimer) clearTimeout(ageingTimer);
       ageingTimer = null; selected = store.officialStoreId; search.value = ''; renderOptions();
     }
-    selectedStore = store; catalogStatus = status; hasCategories = Boolean(hasCategories);
+    selectedStore = store; catalogStatus = status; hasCategories = Boolean(categoriesPresent);
     comparisonId = comparisonStore?.officialStoreId ?? ''; renderComparisonOptions();
     if (!visible || !store) return;
     renderNote();
