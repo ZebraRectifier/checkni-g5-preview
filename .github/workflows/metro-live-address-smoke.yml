@@ -102,6 +102,16 @@ jobs:
             if (!await page.locator("#pixel-store-home").isVisible())
               await page.locator('[data-pixel-action="stores"]').click();
             await page.locator(selector).click();
+            const chooser = page.locator("#pixel-address-chooser");
+            await chooser.waitFor({state:"visible"});
+            const select = page.locator("#metro-store-address");
+            const previous = await select.getAttribute("data-pixel-original-address");
+            const option = await select.locator("option").evaluateAll((options, preferred) =>
+              options.find(item => item.value === preferred && !item.disabled)?.value
+              ?? options.find(item => item.value && !item.disabled)?.value, previous);
+            assert(option, "No selectable METRO address");
+            await select.selectOption(option);
+            await chooser.getByRole("button", {name:"Открыть этот адрес"}).click();
             await page.locator("#pixel-storefront").waitFor({state:"visible"});
             await allCategories(page);
           }
@@ -135,10 +145,11 @@ jobs:
                 timeout: 30000
               });
               await page.waitForTimeout(1200);
-              const text = await storeFacts(page.locator("#retail-store-card-metro")).catch(() => "");
-              if (text.includes("METRO · Ленинградское ш. 71Г")
+              const text = await page.locator("#retail-store-card-metro").innerText().catch(() => "");
+              if (text.includes("METRO") && text.includes("Ленинградское ш. 71Г")
                   && /\d+ категор/u.test(text)
-                  && /\d+ товар/u.test(text)) {
+                  && /\d+ товар/u.test(text)
+                  && await page.locator('#metro-store-address option[value="49"]').count()) {
                 ready = true;
                 break;
               }

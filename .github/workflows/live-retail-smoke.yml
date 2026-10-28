@@ -111,6 +111,23 @@ jobs:
             if (!await page.locator("#pixel-store-home").isVisible())
               await page.locator('[data-pixel-action="stores"]').click();
             await page.locator(selector).click();
+            const exactRetailer = {
+              "#retail-store-card": "globus",
+              "#retail-store-card-magnit": "magnit",
+              "#retail-store-card-metro": "metro"
+            }[selector];
+            if (exactRetailer) {
+              const chooser = page.locator("#pixel-address-chooser");
+              await chooser.waitFor({state:"visible"});
+              const select = page.locator(`#${exactRetailer}-store-address`);
+              const previous = await select.getAttribute("data-pixel-original-address");
+              const option = await select.locator("option").evaluateAll((options, preferred) =>
+                options.find(item => item.value === preferred && !item.disabled)?.value
+                ?? options.find(item => item.value && !item.disabled)?.value, previous);
+              assert(option, `No selectable address for ${exactRetailer}`);
+              await select.selectOption(option);
+              await chooser.getByRole("button", {name:"Открыть этот адрес"}).click();
+            }
             await page.locator("#pixel-storefront").waitFor({state:"visible"});
             await allCategories(page);
           }
@@ -220,6 +237,14 @@ jobs:
               bounds:document.querySelector("#retail-store-card")?.getBoundingClientRect().toJSON()
             })));
             await racePage.locator("#retail-store-card").click({noWaitAfter:true});
+            const raceChooser = racePage.locator("#pixel-address-chooser");
+            await raceChooser.waitFor({state:"visible"});
+            const raceSelect = racePage.locator("#globus-store-address");
+            const raceAddress = await raceSelect.locator("option").evaluateAll(options =>
+              options.find(item => item.value && !item.disabled)?.value);
+            assert(raceAddress, "No selectable GLOBUS address for the race gate");
+            await raceSelect.selectOption(raceAddress);
+            await raceChooser.getByRole("button", {name:"Открыть этот адрес"}).click({noWaitAfter:true});
             for (let attempt = 0; attempt < 40 && !globusRootHeld; attempt += 1) {
               await racePage.waitForTimeout(100);
             }
