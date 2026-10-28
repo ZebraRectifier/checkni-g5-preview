@@ -50,4 +50,77 @@ test('a separate food refusal while awaiting location is not treated as an addre
   await expect(page.locator('#nearby-address')).not.toHaveValue('Морковь не добавляй');
   await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
   expect(ai).toBe(0);
+  await say(page, 'Глютен, яйца не добавляй');
+  await expect(page.locator('#basket-proposal-status')).toContainText('Есть непонятое ограничение.');
+  const mixed = await page.evaluate(() => localStorage.getItem('checkni.shopping.preferences.v1'));
+  expect(mixed).toContain('глютен');
+  expect(mixed).toContain('eggs');
+  await expect(page.locator('#nearby-address')).not.toHaveValue('Глютен, яйца не добавляй');
+  await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
+  expect(ai).toBe(0);
+});
+
+test('unknown address restrictions keep the original turn for clarification without lookup or memory writes', async ({ page }) => {
+  await isolate(page); let ai = 0, addressCalls = 0;
+  await page.route('**/functions/v1/ai-basket-proposal', route => { ai++; return route.abort(); });
+  await page.route('**/functions/v1/nearby-address', route => { addressCalls++; return route.abort(); });
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  await selectStore(page); await openStoreDetails(page);
+  await say(page, 'Хочу 12 бутылок кефира');
+  await expect.poll(async () => {
+    const raw = await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'));
+    return raw ? JSON.parse(raw).lines.map(line => ({ requestedName: line.requestedName, quantity: line.quantity })) : null;
+  }).toEqual([{ requestedName: 'кефира', quantity: { value: '12', unit: 'bottle', basis: 'container_count', explicit: true } }]);
+  const needsBefore = await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'));
+  const preferencesBefore = await page.evaluate(() => localStorage.getItem('checkni.shopping.preferences.v1'));
+  const addressBefore = await page.locator('#nearby-address').inputValue();
+  for (const restriction of ['Глютен исключи.', 'Без яиц и глютена.', 'Глютен, яйца не добавляй.']) {
+    const text = `Я живу в Пушкино. ${restriction}`;
+    await say(page, text);
+    await expect(page.locator('#basket-proposal-input')).toHaveValue(text);
+    await expect(page.getByText('Не удалось сохранить ограничение. Уточни его перед сборкой корзины.', { exact: true })).toBeVisible();
+    await expect(page.locator('#nearby-address')).toHaveValue(addressBefore);
+    expect(await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needsBefore);
+    expect(await page.evaluate(() => localStorage.getItem('checkni.shopping.preferences.v1'))).toBe(preferencesBefore);
+    await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
+    expect(ai).toBe(0); expect(addressCalls).toBe(0);
+  }
+  await say(page, 'Глютен исключи');
+  await expect(page.locator('#basket-proposal-status')).toContainText('Не всё условие удалось понять.');
+  await expect(page.locator('#basket-proposal-status')).toContainText('глютен исключи');
+  expect(await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needsBefore);
+  const unresolvedPreferences = await page.evaluate(() => localStorage.getItem('checkni.shopping.preferences.v1'));
+  expect(unresolvedPreferences).not.toMatch(/пушкино/iu);
+  const after = JSON.parse(unresolvedPreferences);
+  const before = preferencesBefore ? JSON.parse(preferencesBefore) : { facts: {}, rejected: {}, exceptions: {}, wishes: {} };
+  expect(after.facts.unresolvedConstraints.value).toContain('глютен исключи');
+  expect(after.facts.unresolvedConstraints.value).toEqual(expect.arrayContaining(before.facts.unresolvedConstraints?.value ?? []));
+  const afterFacts = { ...after.facts }, beforeFacts = { ...before.facts };
+  delete afterFacts.unresolvedConstraints; delete beforeFacts.unresolvedConstraints;
+  expect(afterFacts).toEqual(beforeFacts);
+  for (const field of ['rejected', 'exceptions', 'wishes']) expect(after[field]).toEqual(before[field]);
+  await expect(page.locator('#nearby-address')).toHaveValue(addressBefore);
+  await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
+  expect(ai).toBe(0); expect(addressCalls).toBe(0);
+});
+
+test('long repeated address restrictions are clarified without clearing the input or submitting a blank address', async ({ page }) => {
+  await isolate(page); let ai = 0, addressCalls = 0;
+  await page.route('**/functions/v1/ai-basket-proposal', route => { ai++; return route.abort(); });
+  await page.route('**/functions/v1/nearby-address', route => { addressCalls++; return route.abort(); });
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  await selectStore(page); await openStoreDetails(page);
+  const addressBefore = await page.locator('#nearby-address').inputValue();
+  const preferencesBefore = await page.evaluate(() => localStorage.getItem('checkni.shopping.preferences.v1'));
+  for (const count of [8, 12]) {
+    const text = `Я живу в Пушкино. ${'Морковь не добавляй. '.repeat(count)}`;
+    expect(text.length).toBeLessThanOrEqual(300);
+    await say(page, text);
+    await expect(page.locator('#basket-proposal-input')).toHaveValue(text);
+    await expect(page.getByText('Не удалось сохранить ограничение. Уточни его перед сборкой корзины.', { exact: true })).toBeVisible();
+    await expect(page.locator('#nearby-address')).toHaveValue(addressBefore);
+    expect(await page.evaluate(() => localStorage.getItem('checkni.shopping.preferences.v1'))).toBe(preferencesBefore);
+    await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
+    expect(ai).toBe(0); expect(addressCalls).toBe(0);
+  }
 });

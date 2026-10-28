@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { openHory } from './helpers/pixel-surface.mjs';
 
 const submit = async (page, text) => {
   await page.locator('#basket-proposal-input').fill(text);
@@ -175,5 +176,72 @@ test('short suitability and same-product questions retain both previous answers'
   for(let i=0;i<turns.length;i++){await submit(page,turns[i]);await expect(status(page)).toContainText(replies[i]);}
   expect(requests).toHaveLength(3);expect(requests.map(r=>r.history?.length??0)).toEqual([0,2,4]);
   expect(requests[2].history[1].text).toBe(replies[0]);expect(requests[2].history[3].text).toBe(replies[1]);
+  expect(await savedBasket(page)).toBe(before);
+});
+
+
+test('retail needs delegate whole conversations to the existing advice route without fake shopping lines', async ({ page }) => {
+  const requests = [];
+  await page.route('**/rest/v1/**', route => route.fulfill({ json: [] }));
+  await page.route('**/functions/v1/ai-basket-proposal', route => {
+    requests.push(route.request().postDataJSON());
+    return requests.length === 3
+      ? route.fulfill({ status: 503, json: { kind: 'unavailable', code: 'provider_timeout' } })
+      : route.fulfill({ json: { kind: 'advice', message: 'Какие продукты хочется купить?' } });
+  });
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  await openHory(page);
+  const before = await savedBasket(page);
+  const needsBefore = await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'));
+  for (const [index, text] of ['Пп', 'Хочу разобраться, что мне вообще покупать'].entries()) {
+    await submit(page, text);
+    await expect(status(page)).toContainText('Какие продукты хочется купить?');
+    await expect.poll(() => requests.length).toBe(index + 1);
+    expect(requests[index].mode).toBe('advice');
+    expect(await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needsBefore);
+    expect(await savedBasket(page)).toBe(before);
+  }
+  await submit(page, 'Пп.');
+  await expect(status(page)).toContainText('Не успел получить ответ сервиса');
+  await expect(status(page).getByRole('button', { name: 'Повторить вопрос', exact: true })).toBeVisible();
+  expect(requests).toHaveLength(3);
+  expect(requests.map(request => request.history?.length ?? 0)).toEqual([0, 2, 4]);
+  await status(page).getByRole('button', { name: 'Повторить вопрос', exact: true }).click();
+  await expect(status(page)).toContainText('Какие продукты хочется купить?');
+  await expect.poll(() => requests.length).toBe(4);
+  expect(requests[3].text).toBe(requests[2].text);
+  expect(requests[3].history).toEqual(requests[2].history);
+  expect(requests.every(request => request.mode === 'advice')).toBe(true);
+  expect(await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needsBefore);
+  expect(await savedBasket(page)).toBe(before);
+});
+
+test('retail unresolved food refusals clarify locally and preserve the saved need without any AI or address request', async ({ page }) => {
+  let ai = 0, addresses = 0;
+  await page.route('**/rest/v1/**', route => route.fulfill({ json: [] }));
+  await page.route('**/functions/v1/ai-basket-proposal', route => { ai++; return route.abort(); });
+  await page.route('**/functions/v1/nearby-address', route => { addresses++; return route.abort(); });
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  await openHory(page);
+  await submit(page, '2 бутылки кефира');
+  await expect(status(page)).toContainText('2');
+  await expect(status(page)).toContainText('кефира');
+  const before = await savedBasket(page);
+  const needsBefore = await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'));
+  for (const text of ['Глютен исключи', 'Морковь не добавляй, глютен исключи', '2 молока, глютен исключи']) {
+    await submit(page, text);
+    await expect(status(page)).toContainText('Не распознала:');
+    await expect(status(page)).toContainText('глютен');
+    expect(await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needsBefore);
+    expect(await savedBasket(page)).toBe(before);
+    expect(ai).toBe(0); expect(addresses).toBe(0);
+  }
+  await submit(page, 'Пп');
+  await expect(status(page)).toContainText('Уточни пищевое ограничение');
+  expect(ai).toBe(0); expect(addresses).toBe(0);
+  expect(await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needsBefore);
+  expect(await savedBasket(page)).toBe(before);
+  await page.reload();
+  expect(await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needsBefore);
   expect(await savedBasket(page)).toBe(before);
 });

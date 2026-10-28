@@ -147,6 +147,14 @@ export function extractShoppingDelta(text) {
         targets = targets.filter(key => key !== "meat");
         delta.unresolved.push(clause.trim().slice(0, 80));
       }
+      // A final refusal applies to every member of a list. A known member
+      // must not silently hide an unsupported neighbour.
+      const sharedRefusal = !without && clause.match(/^(.+?)\s+(?:не\s+(?:добавляй|клади|включай)|убери|исключи|не надо)(?:\s+пожалуйста)?$/u);
+      const listed = sharedRefusal ? sharedRefusal[1].split(/\s*,\s*|\s+и\s+/u).map(part => part.trim()).filter(Boolean) : [];
+      if (listed.length > 1) for (const part of listed) {
+        const nonFoodContext = /^(?:на|для|в|по|до|радиус|бюджет|город|адрес|магазин|слушай|пожалуйста)(?=$|[\s.,])/u.test(part);
+        if (!shoppingTargets(part).length && !nonFoodContext) delta.unresolved.push(part.slice(0, 80));
+      }
       delta.reject.push(...targets);
       for (const target of targets) delta.rejectScopes[target] = /никогда|вообще не ем|всегда без/u.test(clause) ? "conversation" : "goal";
       if (without && !otherRefusal && targets.length) {

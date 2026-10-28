@@ -633,10 +633,15 @@ export function createShoppingConversationFlow(options) {
       if (handled) { state = handled; return state; }
       if (parseLocalBasketText(text, localCatalog).kind === "local") guidedShopping = null;
     } else if (planning) guidedShopping = null;
+    const openAdviceFocus = shoppingAdviceFocus(text);
+    const unanchoredFollowup = !adviceFocus && resolveShoppingAdviceFollowup(text, null)?.kind === "clarification";
+    const openAdvice = /^пп[.!?]*$/iu.test(text) || shoppingAdviceTopic(text) === "advice"
+      && openAdviceFocus.topic === "general" && (!adviceFocus || adviceFocus.topic === "dialogue")
+      && !openAdviceFocus.targets.length && !openAdviceFocus.subject && !isShoppingProductFactsQuestion(text) && !unanchoredFollowup;
     const dialogueContinuation = adviceFocus?.topic === "dialogue" && canContinueShoppingDialogue(text)
       && !shoppingAdviceTopic(text) && !isShoppingProductFactsQuestion(text)
       && parseLocalBasketText(text, localCatalog).kind !== "local";
-    if (typeof options.requestShoppingAdvice === "function" && (planning || dialogueContinuation)) {
+    if (typeof options.requestShoppingAdvice === "function" && (planning || openAdvice || dialogueContinuation)) {
       hybrid.invalidate();
       await askShoppingDialogue(text, token, planning);
       return state;

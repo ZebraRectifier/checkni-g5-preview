@@ -1,6 +1,7 @@
 import test from'node:test';import assert from'node:assert/strict';import{readFile}from'node:fs/promises';
 import{nearbyShoppingIntent,nearbyGroceryMatches,nearbyCatalogBinding,boundMagnitMapLocations}from'../src/intelligence/nearbyShopping.mjs';
 import{normalizedAddressCandidate}from'../src/intelligence/nearbyAddressContract.mjs';
+import{extractShoppingDelta}from'../src/intelligence/shoppingConversation.mjs';
 import{createNearbyShoppingPort}from'../src/ports/nearbyShoppingPort.mjs';
 const feature=(props={},coords=[37.854,56.04])=>({type:'Feature',geometry:{type:'Point',coordinates:coords},properties:{countrycode:'RU',state:'Московская область',city:'Пушкино',street:'Пушкинская улица',housenumber:'1',...props}});
 test('address clarification opens a local place picker without treating a household answer as an address',()=>{
@@ -20,6 +21,14 @@ test('address clarification opens a local place picker without treating a househ
     {query:'в Пушкино',radiusKm:20,preferenceText:'морковь не добавляй'});
   assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, ул. Морковная, д. 12'),
     {query:'в Пушкино, ул. Морковная, д. 12',radiusKm:null});
+});
+test('unknown food in a shared refusal is clarified without contaminating the address',()=>{
+  const delta=extractShoppingDelta('Глютен, яйца не добавляй');
+  assert.deepEqual(delta.reject,['eggs']);assert.deepEqual(delta.unresolved,['глютен']);
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино. Глютен, яйца не добавляй.'),
+    {query:'в Пушкино',radiusKm:null,preferenceText:'Глютен, яйца не добавляй.'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, ул. Глютен, яйца не добавляй.'),
+    {query:'в Пушкино, ул. Глютен',radiusKm:null,preferenceText:'яйца не добавляй.'});
 });
 test('geocoder accepts Moscow and oblast, preserving precision and rejecting other regions or malformed coordinates',()=>{
   const accepted=normalizedAddressCandidate(feature());assert.equal(accepted.precision,'house');assert.equal(accepted.lat,56.04);
