@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "kind": "weekly-breakfast-choice-runtime-composition",
+  "date": "2026-10-30",
+  "sourceRepository": "ZebraRectifier/Checkni",
+  "sourceCommit": "5113777b4c1ef7319faaae8a5e7114c9e57879d5",
+  "publicBase": "0b8a7753906f54a9c56d9291d2688a37277513ea",
+  "privateSourceParity": false,
+  "changedRuntimePaths": [
+    "src/components/WeeklyRoute.mjs",
+    "src/core/weeklyRoute.mjs"
+  ],
+  "files": [
+    {
+      "path": "src/components/WeeklyRoute.mjs",
+      "bytes": 16094,
+      "sha256": "5dfe3b2d415e6dd599e9cf7d268c465fba3696268f355c27d3ca65086b5d3dc2"
+    },
+    {
+      "path": "src/core/weeklyRoute.mjs",
+      "bytes": 3421,
+      "sha256": "b08ad36ad610f4b0d5bfe6a71ef179c10146b882c27a9353f6b30cb775ebb064"
+    }
+  ],
+  "preserved": [
+    "public search and existing overrides",
+    "GPTunnel route and quotas",
+    "exact address and package identity",
+    "one-hour weekly price admission",
+    "manual basket and explicit replacement",
+    "v15 stores-first layout and optional Hory"
+  ],
+  "boundary": "Explicit alternative meal using existing rice identity; no new source/import scope, nutritional equivalence or stock claim",
+  "validation": {
+    "nodeFocused": 27,
+    "sourceBrowserFocused": 22,
+    "composedPublicBrowser": 243,
+    "composedPublicDesktopMobileOnlySkip": 1,
+    "liveCandidateViewports": [
+      1365,
+      390
+    ],
+    "liveCandidateObservationWindowUtc": "2026-10-30T04:28:00Z/2026-10-30T04:30:00Z",
+    "liveCandidateTotalsMinor": [
+      673000,
+      682500
+    ],
+    "publicationAcceptance": "Required separately before merge and in the served runtime",
+    "composedPublicFocusedFinal": 22
+  }
+}

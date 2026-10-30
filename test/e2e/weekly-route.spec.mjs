@@ -24,6 +24,7 @@ async function setup(page,baseURL,state){
   if(state.mode==='replacement-bread-missing'&&id==='5020')rows=rows.filter(x=>x.source_product_id!=='000000000093100502_ST');
   if(state.mode==='missing'&&id==='5020')rows=rows.slice(1);
   if((state.mode==='oats-missing'&&id==='5011')||state.mode==='oats-missing-both')rows=rows.filter(x=>x.source_product_id!=='000000000000031053_ST');
+  if(state.mode==='oats-rice-missing')rows=rows.filter(x=>!['000000000000031053_ST',...(id==='5020'?['000000000000754268_ST']:[])].includes(x.source_product_id));
   const ids=q.get('source_product_id');if(ids)rows=rows.filter(x=>ids.includes(x.source_product_id));
   const response=r.fulfill({json:rows.slice(0,Number(q.get('limit')??40))});
   return slow?response.catch(()=>{}):response;
@@ -36,6 +37,37 @@ async function setup(page,baseURL,state){
  await expect(page.locator('#weekly-route-status')).toContainText('Выбери второй магазин');
  await page.locator('#weekly-route').getByRole('button',{name:'Сравнить с Глобус Медведково',exact:true}).click();
 }
+test('explicit rice breakfast alternative reaches Core comparison and survives reload',async({page,baseURL})=>{
+ const state={mode:'oats-missing'};await setup(page,baseURL,state);
+ const section=page.locator('#weekly-route'),action=section.locator('#weekly-route-breakfast-action');
+ await expect(action).toBeEnabled();
+ await expect(section.locator('#weekly-route-breakfast')).toContainText('всего риса будет 5 уп.');
+ const oats=section.locator('#weekly-route-include-globus-weekly-oats-31053');
+ await expect(oats).toBeChecked();
+ await action.click();await expect(oats).not.toBeChecked();
+ await expect(section.locator('[data-weekly-product="globus-rice-uvelka-round-800g"] input[type="number"]')).toHaveValue('5');
+ await expect(section.locator('#weekly-route-status')).toContainText('9 из 9 выбранных');
+ await expectNoOverflow(page);
+ await section.getByRole('button',{name:'Добавить и сравнить',exact:true}).click();
+ await expect(page.getByLabel('Результат по наблюдаемым ценам')).toContainText('9 из 9 позиций');
+ const basket=await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')));
+ expect(basket.find(p=>p.id==='globus-rice-uvelka-round-800g').quantity).toBe(5);
+ expect(basket.some(p=>p.id==='globus-weekly-oats-31053')).toBe(false);
+ await page.reload();await page.locator('#back-to-shop').click();
+ await section.getByRole('button',{name:'🥘 Корзина на неделю для троих',exact:true}).click();
+ await expect(oats).not.toBeChecked();
+ await expect(section.locator('[data-weekly-product="globus-rice-uvelka-round-800g"] input[type="number"]')).toHaveValue('5');
+ await expectNoOverflow(page);
+});
+
+test('rice alternative stays unavailable when the second exact address lacks its price',async({page,baseURL})=>{
+ await setup(page,baseURL,{mode:'oats-rice-missing'});
+ const section=page.locator('#weekly-route');
+ await expect(section.locator('#weekly-route-breakfast')).toBeVisible();
+ await expect(section.locator('#weekly-route-breakfast-action')).toBeDisabled();
+ await expect(section.getByRole('button',{name:'Добавить и сравнить',exact:true})).toBeDisabled();
+ await expect(section.locator('#weekly-route-include-globus-weekly-oats-31053')).toBeChecked();
+});
 test('explicit address and peer lead to ten editable lines, saved basket and actual Core comparison across reload',async({page,baseURL})=>{
  test.setTimeout(60_000);
  const state={mode:'fresh'};await setup(page,baseURL,state);
