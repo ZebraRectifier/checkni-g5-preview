@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "kind": "reviewed-magnit-staple-pack-identities",
+  "preparedAt": "2026-10-30T23:54:09.904Z",
+  "sourceRepository": "ZebraRectifier/Checkni",
+  "sourcePr": 620,
+  "sourceCommit": "9bef93059458267a863e31e989f89f2d41002b13",
+  "testedSourceHead": "4c18c7d3dc3e8093426f323bda31125431155ded",
+  "publicBase": "55b6cf543e481caad95cf37b3118c20a98d433f1",
+  "sourceVerification": {
+    "exactCI": 41136891161,
+    "actualMainCI": 41143904743,
+    "nodeChecks": 2767,
+    "browserCases": 580,
+    "sourcePackage": 41143904730,
+    "failed": 0,
+    "skipped": 0,
+    "retries": 0
+  },
+  "files": [
+    {
+      "path": "src/catalog/weeklyMagnitIdentities.mjs",
+      "sourceGitBlob": "cc230bfcb77cff32fe599682e00f3d06d46f1bcc",
+      "publicGitBlob": "cc230bfcb77cff32fe599682e00f3d06d46f1bcc"
+    },
+    {
+      "path": "tests/weeklyRetailBasket.test.mjs",
+      "sourceGitBlob": "8db2df5eb689bb8f15bddbf84b3d07eb87a0d4fa",
+      "publicGitBlob": "8db2df5eb689bb8f15bddbf84b3d07eb87a0d4fa"
+    }
+  ],
+  "identityCount": 52,
+  "addedSourceProductIds": [
+    "1000255540",
+    "1000560652",
+    "1000572541",
+    "1000526136",
+    "1000526137"
+  ],
+  "scope": "Exact reviewed pack recognition for source-verified cards. The400g pasta IDs are distinct from450g, not aliases. Bread is not a group in the current guided weekly template.",
+  "publicRuntimeClosure": {
+    "files": 223,
+    "changedPaths": [
+      "src/catalog/weeklyMagnitIdentities.mjs"
+    ],
+    "otherRuntimeBlobsRetained": 222,
+    "digestFormat": "SHA256 of sorted path + NUL + Git blob SHA1 + LF",
+    "baseSha256": "1c6c3f24df74b31fc298ca2c1334a94fb05a06c17764060e78a4a39ab765b895",
+    "candidateSha256": "d2494c80393e21e3d30d3d63ef252529faaad4d2841cb60e2cea1f3c16650305"
+  },
+  "localVerification": {
+    "nodePassed": 422,
+    "nodeFailed": 0,
+    "nodeSkipped": 0,
+    "browserPassed": 243,
+    "browserInheritedSkipped": 1,
+    "browserRetries": 0
+  },
+  "unpricedIdentityDataOnly": true,
+  "requiresFreshExactAddressObservation": true,
+  "unknownStockPreserved": true,
+  "priceConditionsAndCoreUnchanged": true,
+  "aiProviderUnchanged": true,
+  "physicalAndroidVerified": false,
+  "publicReleaseVerificationRequired": true,
+  "releaseEvidence": "This immutable preparation record cannot certify its own future public commit, deployment or source refresh; see implementing PR receipts."
+}
