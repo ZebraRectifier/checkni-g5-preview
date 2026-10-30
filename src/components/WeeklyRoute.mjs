@@ -1,11 +1,12 @@
 import { WEEKLY_ROUTE_STORE_IDS } from '../catalog/weeklyRouteProducts.mjs';
 import { WEEKLY_BASKET_RECIPE } from '../catalog/weeklyBasketRecipe.mjs';
 import { createRetailCatalogClient } from '../ports/retailCatalogPort.mjs';
-import { quoteWeeklyRoute } from '../core/weeklyRoute.mjs';
+import { quoteWeeklyRoute, proposeWeeklyRiceBreakfast } from '../core/weeklyRoute.mjs';
 const money=n=>Number.isSafeInteger(n)?new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:2}).format(n/100):'Нет цены';
 const el=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
 const PRICE_READ_TIMEOUT_MS=15000;
 const SELECTION_KEY='checkni.weekly-route.selection.v1';
+const DRAFT_KEY='checkni.weekly-route.draft.v2';
 
 export function createWeeklyRoute({onChoosePeer,onApply,getBasket,createClient=createRetailCatalogClient,now=Date.now}={}){
  const root=el('section');root.id='weekly-route';root.hidden=true;
@@ -25,12 +26,17 @@ export function createWeeklyRoute({onChoosePeer,onApply,getBasket,createClient=c
  details.open=globalThis.matchMedia?.('(min-width:760px)').matches??true;details.append(summary,list);
  const total=el('p');total.id='weekly-route-total';
  const apply=el('button','Добавить и сравнить');apply.type='button';apply.className='primary-button';apply.disabled=true;
- const replaceLabel=el('label');const replace=el('input');replace.type='checkbox';replaceLabel.append(replace,document.createTextNode(' Заменить текущий список этой корзиной'));
+ const replaceLabel=el('label');const replace=el('input');replace.id='weekly-route-replace';replace.type='checkbox';replaceLabel.append(replace,document.createTextNode(' Заменить текущий список этой корзиной'));
  const refresh=el('button','Проверить цены ещё раз');refresh.type='button';refresh.className='text-button';refresh.style.minHeight='44px';
- panel.append(heading,addressDetails,intro,peerAction,status,total,replaceLabel,apply,details,refresh);root.append(open,panel);
+ const breakfast=el('div');breakfast.id='weekly-route-breakfast';breakfast.hidden=true;
+ const breakfastText=el('p'),breakfastAction=el('button');breakfastAction.id='weekly-route-breakfast-action';
+ breakfastAction.type='button';breakfastAction.className='primary-button';breakfastAction.style.minHeight='44px';
+ breakfast.append(breakfastText,breakfastAction);
+ const draftWarning=el('p','Не удалось сохранить состав и количества шаблона. До перезагрузки можно продолжить.');
+ draftWarning.id='weekly-route-draft-warning';draftWarning.hidden=true;draftWarning.setAttribute('role','status');
+ panel.append(heading,addressDetails,intro,peerAction,status,breakfast,total,replaceLabel,apply,details,draftWarning,refresh);root.append(open,panel);
  let store=null,peer=null,key='',version=0,opened=false,loading=false,cards=[],peerCards=[],loaded=false,expected=[],applyRejected=false;
  const quantities={},rowNodes=[];let storage;try{storage=globalThis.localStorage;const raw=JSON.parse(storage?.getItem('checkni.weekly-route.quantities.v1')??'{}');for(const p of WEEKLY_BASKET_RECIPE){const q=raw[p.id];if(Number.isInteger(q)&&q>=1&&q<=99)quantities[p.id]=q;}}catch{/* Optional draft storage. */}
- const save=()=>{try{storage?.setItem('checkni.weekly-route.quantities.v1',JSON.stringify(quantities));}catch{/* Basket persistence remains independent. */}};
  const allIds=WEEKLY_BASKET_RECIPE.map(p=>p.id),selected=new Set(allIds);
  try{
   const saved=storage?.getItem(SELECTION_KEY);
@@ -43,8 +49,26 @@ export function createWeeklyRoute({onChoosePeer,onApply,getBasket,createClient=c
    }
   }
  }catch{/* An invalid draft retains the visible full preset, not an implicit empty choice. */}
+ // One user action can change both selection and quantity. Restore or write
+ // them as one record; retain the two legacy records for safe rollback.
+ try{
+  const raw=storage?.getItem(DRAFT_KEY),value=typeof raw==='string'&&raw.length<=8192?JSON.parse(raw):null;
+  if(value?.version===1&&Object.keys(value).sort().join(',')==='productIds,quantities,version'
+   &&Array.isArray(value.productIds)&&value.productIds.length<=count
+   &&new Set(value.productIds).size===value.productIds.length&&value.productIds.every(id=>allIds.includes(id))
+   &&value.quantities&&typeof value.quantities==='object'&&!Array.isArray(value.quantities)
+   &&Object.entries(value.quantities).every(([id,q])=>allIds.includes(id)&&Number.isInteger(q)&&q>=1&&q<=99)){
+   for(const id of Object.keys(quantities))delete quantities[id];Object.assign(quantities,value.quantities);
+   selected.clear();for(const id of value.productIds)selected.add(id);
+  }
+ }catch{/* Invalid unified drafts fall back to the retained legacy choice. */}
  const selectedIds=()=>allIds.filter(id=>selected.has(id));
- const saveSelection=()=>{try{storage?.setItem(SELECTION_KEY,JSON.stringify({version:1,productIds:selectedIds()}));}catch{/* Optional draft storage. */}};
+ const save=()=>{try{
+  const encoded=JSON.stringify({version:1,productIds:selectedIds(),quantities});
+  if(!storage)throw Error('Draft storage unavailable');
+  storage.setItem(DRAFT_KEY,encoded);draftWarning.hidden=storage.getItem(DRAFT_KEY)===encoded;
+ }catch{draftWarning.hidden=false;}};
+ const saveSelection=save;
  function render(){
   if(!opened)return;
   addresses.textContent=`Собираем: ${store?.name??''} · ${store?.address??''}`+(peer?` Сравним: ${peer.name} · ${peer.address}`:'');
@@ -57,6 +81,16 @@ export function createWeeklyRoute({onChoosePeer,onApply,getBasket,createClient=c
   summary.textContent=`Состав и количество · выбрано ${selectedCount} из ${count}`;
   const a=quoteWeeklyRoute(cards,quantities,now(),selection),b=quoteWeeklyRoute(peerCards,quantities,now(),selection);
   const ready=Boolean(peer)&&a.ready&&b.ready&&!loading;
+  const alternative=proposeWeeklyRiceBreakfast(quantities,selection);
+  breakfast.hidden=!(peer&&loaded&&alternative&&(a.missingProductIds.includes(alternative.oatsId)||b.missingProductIds.includes(alternative.oatsId)));
+  if(!breakfast.hidden){
+   const riceA=quoteWeeklyRoute(cards,{[alternative.riceId]:1},now(),[alternative.riceId]);
+   const riceB=quoteWeeklyRoute(peerCards,{[alternative.riceId]:1},now(),[alternative.riceId]);
+   breakfastAction.disabled=loading||!riceA.ready||!riceB.ready;
+   breakfastText.textContent=`Рисовая каша вместо овсяной: добавим ${alternative.addedPacks} уп. по 800 г; всего риса будет ${alternative.totalPacks} уп.`
+    +(breakfastAction.disabled?' Свежие цены риса в обоих адресах пока не подтверждены.':` Цена за упаковку: ${store.name} — ${money(riceA.lines[0].unitPriceMinor)}; ${peer.name} — ${money(riceB.lines[0].unitPriceMinor)}.`);
+   breakfastAction.textContent=`Выбрать рисовую кашу · +${alternative.addedPacks} уп.`;
+  }
   apply.disabled=!ready||applyRejected;
   const missingProductCount=new Set([...a.missingProductIds,...b.missingProductIds]).size;
   const missing=[];
@@ -98,6 +132,15 @@ export function createWeeklyRoute({onChoosePeer,onApply,getBasket,createClient=c
    row.append(label,input);list.append(row);rowNodes[i]={price,input,include};
   }
  }
+ breakfastAction.addEventListener('click',()=>{
+  const alternative=proposeWeeklyRiceBreakfast(quantities,selectedIds());
+  if(!alternative||!peer||loading||!loaded)return;
+  const fresh=cards=>quoteWeeklyRoute(cards,{[alternative.riceId]:1},now(),[alternative.riceId]).ready;
+  if(!fresh(cards)||!fresh(peerCards)){render();return;}
+  quantities[alternative.riceId]=alternative.totalPacks;
+  selected.clear();for(const id of alternative.selectedProductIds)selected.add(id);
+  save();render();
+ });
  async function load(){
   if(!store||!peer||loading)return;const request=++version,context=key,primary=store,secondary=peer;
   loading=true;render();

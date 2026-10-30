@@ -1,6 +1,27 @@
 import { WEEKLY_BASKET_RECIPE } from '../catalog/weeklyBasketRecipe.mjs';
 import { quoteCatalogDraft } from './catalogDraft.mjs';
 
+// An explicit alternative meal, not an identity match or nutritional equivalence.
+// Preserve the user's rice amount and replace only the selected oats dry mass.
+export function proposeWeeklyRiceBreakfast(quantities={},selectedProductIds=[]){
+ const oats=WEEKLY_BASKET_RECIPE.find(p=>p.id==='globus-weekly-oats-31053');
+ const rice=WEEKLY_BASKET_RECIPE.find(p=>p.id==='globus-rice-uvelka-round-800g');
+ const known=new Set(WEEKLY_BASKET_RECIPE.map(p=>p.id));
+ if(!quantities||typeof quantities!=='object'||Array.isArray(quantities)
+  ||!Array.isArray(selectedProductIds)||selectedProductIds.length>known.size||new Set(selectedProductIds).size!==selectedProductIds.length
+  ||Array.from(selectedProductIds).some(id=>!known.has(id))||!selectedProductIds.includes(oats.id))return null;
+ const oatsQuantity=quantities[oats.id]??oats.quantity;
+ const riceQuantity=selectedProductIds.includes(rice.id)?quantities[rice.id]??rice.quantity:0;
+ if(!Number.isInteger(oatsQuantity)||oatsQuantity<1||oatsQuantity>99
+  ||!Number.isInteger(riceQuantity)||riceQuantity<(selectedProductIds.includes(rice.id)?1:0)||riceQuantity>99)return null;
+ const addedPacks=Math.ceil(oatsQuantity*500/800),totalPacks=riceQuantity+addedPacks;
+ if(totalPacks>99)return null;
+ const selected=new Set(selectedProductIds);selected.delete(oats.id);selected.add(rice.id);
+ return {oatsId:oats.id,riceId:rice.id,addedPacks,totalPacks,
+  selectedProductIds:WEEKLY_BASKET_RECIPE.filter(p=>selected.has(p.id)).map(p=>p.id),
+  quantities:{...quantities,[rice.id]:totalPacks}};
+}
+
 // Price arithmetic stays in Core. Missing/expired observations cannot become a
 // complete weekly basket; the UI only presents these results.
 export function quoteWeeklyRoute(cards,quantities={},nowMs=Date.now(),selectedProductIds=WEEKLY_BASKET_RECIPE.map(p=>p.id)){
