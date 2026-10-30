@@ -13,17 +13,18 @@ export function createOkeyStoreDirectory() {
   section.setAttribute("aria-label", "Адреса О’КЕЙ в Москве и Московской области");
 
   const details = document.createElement("details");
-  details.open = true;
+  details.open = false;
   const summary = document.createElement("summary");
   summary.append(
     element("strong", null, "О’КЕЙ · адреса магазинов"),
-    element("span", null, "8 в Москве · 3 в области")
+    element("span", null, "8 в Москве · 3 в области из справочника")
   );
   details.append(summary);
   details.append(element(
     "p", "okey-directory-note",
     "Цена с О’КАРТОЙ и без карты для каждой точки пока неизвестна. " +
-      "Городские акции не подтверждают цену в выбранном магазине."
+      "Городские акции не подтверждают цену в выбранном магазине. " +
+      "Показаны адреса из выбора «Москва» на сайте сети; перечень области может быть неполным."
   ));
 
   for (const region of ["Москва", "Московская область"]) {
