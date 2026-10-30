@@ -13,13 +13,13 @@
   "files": [
     {
       "path": "src/components/WeeklyRoute.mjs",
-      "bytes": 16094,
-      "sha256": "5dfe3b2d415e6dd599e9cf7d268c465fba3696268f355c27d3ca65086b5d3dc2"
+      "bytes": 15919,
+      "sha256": "b23a60f0fc19f603335285f4e13c2de2c4dd42e6c29886da0d80955fb04170b0"
     },
     {
       "path": "src/core/weeklyRoute.mjs",
-      "bytes": 3421,
-      "sha256": "b08ad36ad610f4b0d5bfe6a71ef179c10146b882c27a9353f6b30cb775ebb064"
+      "bytes": 3371,
+      "sha256": "5585e479576173424e4d5e82554208a1a9ead72100d0fc380dc9fc41033d6d31"
     }
   ],
   "preserved": [
@@ -47,5 +47,6 @@
     ],
     "publicationAcceptance": "Required separately before merge and in the served runtime",
     "composedPublicFocusedFinal": 22
-  }
+  },
+  "fileHashBasis": "Git blob bytes, matching GitHub Pages; independent of local working-tree line endings"
 }
