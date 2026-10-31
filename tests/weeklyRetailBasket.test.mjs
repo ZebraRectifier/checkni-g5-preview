@@ -9,7 +9,7 @@ import {resolveMagnitMoscowStore} from '../src/data/magnitMoscowStores.mjs';
 import {createGuidedShoppingFlow} from '../src/runtime/guidedShoppingFlow.mjs';
 import {createShoppingConversation,updateShoppingConversation} from '../src/intelligence/shoppingConversation.mjs';
 import {createBasketStore} from '../src/state/basketStore.mjs';
-import {quoteCatalogDraft,suggestedCatalogQuantity} from '../src/core/catalogDraft.mjs';
+import {quoteCatalogDraft,catalogPurchaseUnit,suggestedCatalogQuantity} from '../src/core/catalogDraft.mjs';
 const now=Date.parse('2026-10-17T22:00:00Z');
 const source=JSON.parse(await readFile(new URL('./fixtures/weekly-retail/magnit.json',import.meta.url),'utf8'));
 const store=resolveMagnitMoscowStore({shopCode:'773608'});
@@ -22,8 +22,8 @@ const snapshot=()=>parsePublishedCatalogue({sourceUrl:PUBLISHED_URL,title:'Ка�
     {id:'51922403',name:'БЗМЖ Сыр Ламбер мдж в сух в-е 50% сычужный Россия кг',rubles:'999',cents:'00',endText:'до 28 октября'},
     {id:'51922572',name:'Мицелярная вода д/лица Mixit 500мл',rubles:'356',cents:'85',endText:'до 25 октября'}]});
 const port=()=>createWeeklyRetailCatalogPort({now:()=>now,createMagnitClient:magnitClient,fetchImpl:async()=>new Response(JSON.stringify(snapshot()))});
-test('47 reviewed Magnit identities preserve observed prices and source address; edited packs cannot inherit them',async()=>{
-  assert.equal(WEEKLY_MAGNIT_IDENTITIES.length,47);
+test('52 reviewed Magnit identities preserve observed prices and source address; edited packs cannot inherit them',async()=>{
+  assert.equal(WEEKLY_MAGNIT_IDENTITIES.length,52);
   const result=await port().search('фарш',{scope});assert.equal(result.kind,'catalog');assert.equal(result.products.length,3);
   const card=result.products.find(p=>p.sourceProductId==='1000289065');assert.equal(card.unit,'400 г');assert.equal(card.priceMinor,12999);
   assert.match(card.productUrl,/shopCode=773608/u);assert.equal(card.observedAt,'2026-10-17T19:47:32.304Z');
@@ -35,6 +35,33 @@ test('47 reviewed Magnit identities preserve observed prices and source address;
   const weight=weeklyMagnitCard({...raw,name:'Сыр Российский весовой 350г',unit:'350 г',catalogPurchaseBasis:'piece'});
   assert.equal(quoteCatalogDraft([{card:weight,quantity:2,product:{id:weight.id,name:weight.name,unit:weight.unit}}],{nowMs:now}).basket.length,0);
 });
+test('reviewed bread and pasta repair only exact 400g identities and cannot refresh historical money or stock',()=>{
+  const products=[
+    ['1000526136','Макароны Gusto Di Roma Fusilli Спирали 400г','1000526136-gusto_di_roma_fusilli_makarony_spirali_iz_tv_sort_400g_k_up'],
+    ['1000526137','Макароны Gusto Di Roma Penne Rigate Перья 400г','1000526137-gusto_di_roma_penne_rigate_makarony_perya_tv_sort_400g_k_up'],
+    ['1000255540','Батон нарезной Магнит 400г','1000255540-magnit_baton_nareznoy_v_nar_400g_p_up_kolomenskiy_bkk'],
+    ['1000560652','Батон нарезной Магнит 400г','1000560652-magnit_baton_nareznoy_v_s_400g_p_up_cheremushki'],
+    ['1000572541','Батон Нарезной нарезанный Магнит 400г','1000572541-magnit_baton_nareznoy_narezka_v_s_0_4kg_p_up']
+  ];
+  for(const [sourceProductId,name,path] of products){
+    // Synthetic amount checks invariance; this is not a fresh retailer price.
+    const raw={id:`retail:magnit:magnit-773505:${sourceProductId}`,retailerId:'magnit',sourceProductId,name,
+      unit:'упаковка',priceMinor:12345,currency:'RUB',availability:'unknown',observedAt:'2026-10-17T19:00:00Z',
+      priceConditionLabel:'Публичная онлайн-цена',productUrl:`https://magnit.ru/product/${path}?shopCode=773505&shopType=1`};
+    const card=weeklyMagnitCard(raw);assert.equal(card.unit,'400 г');assert.equal(catalogPurchaseUnit(card).amount,400);
+    if(name.startsWith('Макароны'))assert.equal(suggestedCatalogQuantity({dimension:'g',dailyAmount:40},card,3,7),3);
+    for(const key of ['name','id','sourceProductId','priceMinor','observedAt','productUrl','availability'])assert.equal(card[key],raw[key]);
+    const quote=quoteCatalogDraft([{card,quantity:2,product:{id:card.id,name:card.name,unit:card.unit}}],{nowMs:now});
+    assert.equal(quote.basket.length,1);assert.equal(quote.lines[0].freshness,'dated');assert.equal(quote.allRecent,false);
+    assert.equal(quote.winner,null);assert.equal(quote.availability,'unknown');
+    for(const change of [{name:name.replace('400г','350г')},{name:name.replace('400г','450г')},{sourceProductId:'99999999'},
+      {productUrl:raw.productUrl.replace('773505','773608')},{productUrl:raw.productUrl.replace(path,path+'-other')},
+      {productUrl:raw.productUrl.replace('magnit.ru','example.org')},{unit:'350 г'}]){
+      const altered={...raw,...change};assert.equal(weeklyMagnitCard(altered).unit,altered.unit);
+    }
+  }
+});
+
 test('OKEY only admits reviewed food identities, typed city scope and current promotions',()=>{
   const cards=weeklyOkeyCards(snapshot(),now);assert.equal(cards.length,2);assert.equal(cards[0].unit,'1 кг');
   assert.equal(cards[0].physicalStoreId,null);assert.equal(cards[0].priceCondition,'promotion-conditions-unconfirmed');

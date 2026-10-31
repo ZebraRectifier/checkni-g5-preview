@@ -1,5 +1,38 @@
 // Reviewed public SKU identities and quoted portions; no prices, stock or cross-store equivalence.
 export const WEEKLY_MAGNIT_IDENTITIES = Object.freeze([
+  // Separate 400g pasta SKUs, never aliases for the older 450g products.
+  {
+    "sourceProductId": "1000526136",
+    "name": "Макароны Gusto Di Roma Fusilli Спирали 400г",
+    "unit": "400 г",
+    "productPath": "/product/1000526136-gusto_di_roma_fusilli_makarony_spirali_iz_tv_sort_400g_k_up"
+  },
+  {
+    "sourceProductId": "1000526137",
+    "name": "Макароны Gusto Di Roma Penne Rigate Перья 400г",
+    "unit": "400 г",
+    "productPath": "/product/1000526137-gusto_di_roma_penne_rigate_makarony_perya_tv_sort_400g_k_up"
+  },
+  // Exact historical public names/paths also retained in address discovery.
+  // Reviewed October 31, 2026: pack identity only, never a fresh price or stock.
+  {
+    "sourceProductId": "1000255540",
+    "name": "Батон нарезной Магнит 400г",
+    "unit": "400 г",
+    "productPath": "/product/1000255540-magnit_baton_nareznoy_v_nar_400g_p_up_kolomenskiy_bkk"
+  },
+  {
+    "sourceProductId": "1000560652",
+    "name": "Батон нарезной Магнит 400г",
+    "unit": "400 г",
+    "productPath": "/product/1000560652-magnit_baton_nareznoy_v_s_400g_p_up_cheremushki"
+  },
+  {
+    "sourceProductId": "1000572541",
+    "name": "Батон Нарезной нарезанный Магнит 400г",
+    "unit": "400 г",
+    "productPath": "/product/1000572541-magnit_baton_nareznoy_narezka_v_s_0_4kg_p_up"
+  },
   {
     "sourceProductId": "1349400001",
     "name": "Хлопья Ясно солнышко Овсяные №2 500г",

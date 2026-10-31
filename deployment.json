@@ -2997,5 +2997,18 @@
     "priceRefreshPerformed": false,
     "sourceFreshnessVerified": false,
     "aiProviderChanged": false
+  },
+  "magnitReviewedStaplePacks": {
+    "manifest": "release/magnit-reviewed-staple-packs-20261031.json",
+    "sourcePr": 620,
+    "sourceCommit": "9bef93059458267a863e31e989f89f2d41002b13",
+    "testedSourceHead": "4c18c7d3dc3e8093426f323bda31125431155ded",
+    "identityCount": 52,
+    "addedIdentities": 5,
+    "unpricedIdentityDataOnly": true,
+    "requiresFreshExactAddressObservation": true,
+    "priceConditionsAndCoreUnchanged": true,
+    "unknownStockPreserved": true,
+    "publicReleaseVerificationRequired": true
   }
 }
