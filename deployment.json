@@ -3010,5 +3010,13 @@
     "priceConditionsAndCoreUnchanged": true,
     "unknownStockPreserved": true,
     "publicReleaseVerificationRequired": true
+  },
+  "cataloguePriceAdmission": {
+    "manifest": "release/catalogue-price-admission-20261031.json",
+    "sourcePr": 626,
+    "sourceCommit": "a029093aa46b706a1fcc42cf4d48fee2d5b2c2a9",
+    "testedSourceHead": "81f98303092729e988146198684db1af75cfa2c3",
+    "priceRefreshPerformed": false,
+    "aiProviderChanged": false
   }
 }

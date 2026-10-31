@@ -1,0 +1,27 @@
+name: Catalogue price admission verification
+
+on:
+  pull_request:
+    paths: ['src/core/catalogDraft.mjs', 'tests/catalogDraftPriceAdmission.test.mjs', '.github/workflows/catalog-draft-price-verification.yml']
+  push:
+    branches: [main]
+    paths: ['src/core/catalogDraft.mjs', 'tests/catalogDraftPriceAdmission.test.mjs', '.github/workflows/catalog-draft-price-verification.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify candidate and price admission
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          node --test tests/catalogDraftPriceAdmission.test.mjs

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "kind": "catalogue-price-admission",
+  "sourceRepository": "ZebraRectifier/Checkni",
+  "sourcePr": 626,
+  "sourceCommit": "a029093aa46b706a1fcc42cf4d48fee2d5b2c2a9",
+  "testedSourceHead": "81f98303092729e988146198684db1af75cfa2c3",
+  "sourceTree": "5a4de055a1ab179c4f44ad0a13c9424fb00e45a5",
+  "publicBase": "c09e92e03a30f677775f5199af97cd6890ef6de4",
+  "sourceVerification": {
+    "exactCI": 41229664837,
+    "actualMainCI": 41232064584,
+    "publicationRequiresBothSuccessful": true
+  },
+  "files": [
+    {
+      "path": "src/core/catalogDraft.mjs",
+      "gitBlob": "6f516e0accf33c02915fbb1eeba5fa0ff73cf890"
+    },
+    {
+      "path": "tests/catalogDraftPriceAdmission.test.mjs",
+      "gitBlob": "95e8ab00ca4a42196b567fdae8bcbc22aad53aa5"
+    }
+  ],
+  "scope": "Share existing quote observation admission with economical candidate ranking, excluding expired or invalid observations before the four-choice limit.",
+  "localVerification": {
+    "focusedNode": 34,
+    "sourceBrowser": 30,
+    "publicNode": 422,
+    "newPublicFocused": 4,
+    "publicBrowser": 243,
+    "inheritedPublicBrowserSkips": 1
+  },
+  "priceRefreshPerformed": false,
+  "sourceFreshnessClaim": false,
+  "aiProviderChanged": false,
+  "retailerConditionsChanged": false,
+  "quantityPolicyChanged": false,
+  "retainedDatedFallback": true
+}
