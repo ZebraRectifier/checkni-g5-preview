@@ -4,6 +4,8 @@ import {
   BETA_REAL_PRODUCTS
 } from "../data/betaRealBasket.mjs";
 import { WEEKLY_ROUTE_PRODUCTS } from './weeklyRouteProducts.mjs';
+import { getReviewedPerekrestokListIdentity, matchesReviewedPerekrestokListIdentity,
+  getReviewedPerekrestokListProduct } from './perekrestokReviewedList.mjs';
 
 // Identity only. These are the reviewed SKUs from the existing live proof,
 // not a name search, a price observation or a retailer stock assertion.
@@ -73,6 +75,8 @@ function normalizedUnit(value) {
 // Fixed live profiles price these exact packs. A historical family ID alone
 // cannot turn a generic 900ml/1l basket row into the reviewed 930ml/930g SKU.
 export function getReviewedRetailBasketIdentity(productId) {
+  const deliveryList = getReviewedPerekrestokListIdentity(productId);
+  if (deliveryList) return deliveryList;
   const physical = GLOBUS_PRODUCTS.find(row => row.id === productId);
   if (physical) return physical;
   const display = BETA_EVERYDAY_BINDINGS.find(row => row.canonicalProductId === productId)?.displayName;
@@ -85,6 +89,7 @@ export function getReviewedRetailBasketIdentity(productId) {
 
 export function matchesReviewedRetailBasketIdentity(product) {
   if (!product || typeof product !== "object") return false;
+  if (getReviewedPerekrestokListIdentity(product.id)) return matchesReviewedPerekrestokListIdentity(product);
   const physical = GLOBUS_PRODUCTS.find(row => row.id === product.id);
   if (physical) return normalizedName(physical.name) === normalizedName(product.name)
     && normalizedUnit(physical.unit) === normalizedUnit(product.unit);
@@ -107,6 +112,7 @@ export function getReviewedRetailSourceProductIds(retailerId, products) {
 
 export function getReviewedRetailBasketProduct(product) {
   if (!product || typeof product !== "object") return null;
+  if (product.retailerId === 'perekrestok') return getReviewedPerekrestokListProduct(product);
   const binding = BINDINGS.find(candidate => (
     candidate.retailerId === product.retailerId
     && candidate.sourceProductId === product.sourceProductId

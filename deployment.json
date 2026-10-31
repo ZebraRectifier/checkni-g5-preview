@@ -3018,5 +3018,15 @@
     "testedSourceHead": "81f98303092729e988146198684db1af75cfa2c3",
     "priceRefreshPerformed": false,
     "aiProviderChanged": false
+  },
+  "perekrestokReviewedList": {
+    "manifest": "release/perekrestok-reviewed-list-20261031.json",
+    "sourcePr": 627,
+    "sourceCommit": "d9cab289104bda198d0dd2d81f68de2c7130dd25",
+    "testedSourceHead": "af7c89ba497b21320f657ec4d276660b4f161cb3",
+    "reviewedPackCount": 4,
+    "manualListOnly": true,
+    "comparisonSourceAdmissionAdded": false,
+    "aiProviderChanged": false
   }
 }

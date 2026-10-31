@@ -35,6 +35,25 @@ jobs:
           set -euo pipefail
           node <<'NODE'
           const { chromium } = require("playwright-core");
+          const fs = require("node:fs");
+          const { createHash } = require("node:crypto");
+          const reviewedRuntime = ["reviewedRetailBasket.mjs", "perekrestokReviewedList.mjs"]
+            .map(name => ({ name, digest: createHash("sha256")
+              .update(fs.readFileSync("./src/catalog/" + name)).digest("hex") }));
+          async function publishedRuntimeMatches(attempt) {
+            for (const file of reviewedRuntime) {
+              const url = new URL("./src/catalog/" + file.name,
+                "https://zebrarectifier.github.io/checkni-g5-preview/");
+              url.searchParams.set("perekListRuntimeProbe", String(attempt));
+              try {
+                const response = await fetch(url, { cache:"no-store", signal:AbortSignal.timeout(5000) });
+                if (!response.ok) return false;
+                const body = Buffer.from(await response.arrayBuffer());
+                if (body.length > 32768 || createHash("sha256").update(body).digest("hex") !== file.digest) return false;
+              } catch { return false; }
+            }
+            return true;
+          }
 
           const base =
             "https://zebrarectifier.github.io/checkni-g5-preview/?comparison=observed&catalog=retail";
@@ -107,6 +126,7 @@ jobs:
                 text.includes("Перекрёсток · Москва · цены доставки Яндекс Еды")
                 && text.includes("Каталог выбранного адреса")
                 && text.includes("наличие неизвестно")
+                && await publishedRuntimeMatches(attempt)
               ) {
                 published = true;
                 break;
@@ -177,10 +197,20 @@ jobs:
               cardText.includes("Перекрёсток · Москва, Большой Овчинниковский пер. 16 · Яндекс Еда · источник"),
               "Perekrestok store/source provenance is missing"
             );
-            assert(
-              await card.getByRole("button").isDisabled(),
-              "Perekrestok delivery observation must remain display-only"
-            );
+            // Exact manually reviewed packs can enter a price-free list.
+            // Reuse the registry guard; every other observation stays disabled.
+            const { getReviewedRetailBasketProduct } = await import("./src/catalog/reviewedRetailBasket.mjs");
+            const prefix = "retail:perekrestok:perekrestok-yandex-3186917:";
+            const cardId = await card.getAttribute("data-product-id");
+            assert(cardId?.startsWith(prefix), "Unexpected delivery context");
+            const sourceId = cardId.slice(prefix.length);
+            const lookup = await createRetailCatalogClient({ retailerId:"perekrestok" }).bySourceProductIds([sourceId]);
+            const item = lookup.kind === "catalog" ? lookup.products.find(row => row.id === cardId) : null;
+            assert(item, "Exact saved catalogue card unavailable for manual-list verification");
+            const identity = getReviewedRetailBasketProduct(item);
+            const allowed = Boolean(identity && item.basketProductId === identity.id);
+            assert(await card.getByRole("button").isDisabled() === !allowed,
+              "Only exact reviewed delivery packs may enter the manual list");
             assert(pageErrors.length === 0, "Page errors: " + pageErrors.join(" | "));
 
             console.log("PEREKRESTOK_MASS_LIVE", JSON.stringify({

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "kind": "perekrestok-reviewed-manual-list",
+  "sourceRepository": "ZebraRectifier/Checkni",
+  "sourcePr": 627,
+  "sourceCommit": "d9cab289104bda198d0dd2d81f68de2c7130dd25",
+  "testedSourceHead": "af7c89ba497b21320f657ec4d276660b4f161cb3",
+  "sourceTree": "280942d2a5e6b420bad7d9581768bc3a23dfc086",
+  "publicBase": "dfcacd4660b2a6ba6de08ae1beba3d79a0f45dac",
+  "sourceVerification": {
+    "exactCI": 41237736000,
+    "actualMainCI": 41240019400,
+    "publicationRequiresBothSuccessful": true
+  },
+  "runtimeFiles": [
+    {"path":"src/catalog/reviewedRetailBasket.mjs","gitBlob":"5db5a6994ef6e1e502d6c6bcca943c1e6f7312cb"},
+    {"path":"src/catalog/perekrestokReviewedList.mjs","gitBlob":"f7e053b6d8ae07e794ee30abb3f9ab37de7908b1"}
+  ],
+  "reviewedPackCount": 4,
+  "bindingId": "yandex-eda:perekryostok_h5q7w:3186917",
+  "salesChannel": "yandex-eda-delivery",
+  "scope": "Exact reviewed packs can enter the existing manual shopping list, change quantities and survive reload. Prices and source times remain catalogue observations; the stored list contains no quote.",
+  "localVerification": {
+    "sourceFocusedNode": 95,
+    "sourceFixtureBrowser": 2,
+    "publicNode": 430,
+    "publicExistingBrowser": 243,
+    "publicNewBrowser": 2,
+    "inheritedPublicBrowserSkips": 1
+  },
+  "pricesEmbedded": false,
+  "priceRefreshPerformed": false,
+  "comparisonSourceAdmissionAdded": false,
+  "completeBasketOrWinnerClaim": false,
+  "physicalStoreCoverageClaim": false,
+  "aiProviderChanged": false,
+  "sourceLimitsOrAuthenticationChanged": false,
+  "unknownStockAndDeliveryFeePreserved": true
+}

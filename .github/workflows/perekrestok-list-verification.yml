@@ -1,0 +1,37 @@
+name: Perekrestok reviewed manual list verification
+
+on:
+  pull_request:
+    paths: ['src/catalog/reviewedRetailBasket.mjs', 'src/catalog/perekrestokReviewedList.mjs', 'tests/perekrestokReviewedList.test.mjs', 'test/e2e/perekrestok-reviewed-list.spec.mjs', 'playwright.perekrestok-list.config.mjs', '.github/workflows/perekrestok-list-verification.yml']
+  push:
+    branches: [main]
+    paths: ['src/catalog/reviewedRetailBasket.mjs', 'src/catalog/perekrestokReviewedList.mjs', 'tests/perekrestokReviewedList.test.mjs', 'test/e2e/perekrestok-reviewed-list.spec.mjs', 'playwright.perekrestok-list.config.mjs', '.github/workflows/perekrestok-list-verification.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact candidate SHA
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Verify exact packs and existing catalogue admission
+        run: node --test tests/perekrestokReviewedList.test.mjs tests/retailCatalogPort.test.mjs tests/selectedRetailCatalogOffersPort.test.mjs tests/retailCatalogFreshnessPolicy.test.mjs
+      - name: Install locked browser test dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install pinned Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Replay manual list on desktop and mobile using fixtures
+        run: npx playwright test --config=playwright.perekrestok-list.config.mjs
