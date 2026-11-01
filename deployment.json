@@ -3036,13 +3036,13 @@
     "scope": "Magnit exact-address and Perekrestok retained delivery alternative weekly drafts; fresh complete Core comparison only; fees excluded",
     "files": {
       "src/catalog/weeklyPerekrestokIdentities.mjs": "d8d9227642483888ea91c22d8ed1056eff13eb32460239bd57bf00a4472d164d",
-      "src/components/GuidedShoppingTable.mjs": "2419571a61e8f2556c46af79f212a7a009ef24f513b06e74a1d9fb3762010a6b",
-      "src/core/catalogDraft.mjs": "d5fab2a39f26f5222898d1b5560cd1a6909644fd3ca477412aadc1b32e70b828",
-      "src/intelligence/guidedShoppingPlan.mjs": "d1b01eecf3b3fa5bdb2ac1e3eb18ebf0d561d90692a5b4c6578c2987f8325f1e",
-      "src/ports/weeklyRetailCatalogPort.mjs": "e82feeace55915c61d8112d7d23ca79774f41acb3baaa9c2ee83075bb01fc8c5",
-      "src/runtime/guidedShoppingFlow.mjs": "82cc445934a093e0838908e17d4698fd04882157be78b0e5602c84b0e593b403",
+      "src/components/GuidedShoppingTable.mjs": "253c0c3c56d98c61254441f4cf015845e0ebc258fa748ed0a63d059cc9c83702",
+      "src/core/catalogDraft.mjs": "67a6a614c1295d7c526b3e2102709de517f06c43681f747281949c544a0bb5bf",
+      "src/intelligence/guidedShoppingPlan.mjs": "644968bfa4b11d0182b075623fd0a20dd73c18e01501f1d77a3dae9bad2ca5fb",
+      "src/ports/weeklyRetailCatalogPort.mjs": "0665924b0168d2fa11a5cc7ede31af62ca9d5f1a860f601335a490b4200134d9",
+      "src/runtime/guidedShoppingFlow.mjs": "a144eeb95a4186d225ee2553cce1e5e7c70134126dc5f27ba8abb2989db7200b",
       "tests/weeklyCrossRetailer.test.mjs": "08e99f050cc059dc9d272d901804c1db7c749cad17006d4a0be8d75f46d428a8",
-      "tests/fixtures/weekly-retail/cross-retailer-20261101.json": "d1b7f8d7064a07f3f07e522b21e81f91323474681f2c044ba53687e0a0e1506d"
+      "tests/fixtures/weekly-retail/cross-retailer-20261101.json": "2d4bbee6e82082a22fb32f49b946b7ff3a54666caad5735816f0ba4c30960b42"
     },
     "browserTest": "Public address-search adaptation; historical fixture clock is synthetic, not live freshness evidence",
     "liveFreshnessAcceptance": "pending new source snapshots"
