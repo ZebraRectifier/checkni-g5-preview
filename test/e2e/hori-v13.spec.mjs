@@ -40,7 +40,7 @@ test('approved PixelCharacter has stable stores-first and storefront visual base
  await expectNoOverflow(page);
  // A missing first baseline still fails this test, while allowing CI to
  // capture the independent storefront image for the same human review.
- await expect.soft(page).toHaveScreenshot('pixel-character-home-'+(mobile?'mobile':'desktop')+'.png',{
+ await expect.soft(page).toHaveScreenshot('pixel-address-first-home-'+(mobile?'mobile':'desktop')+'.png',{
   scale:'css',animations:'disabled',maxDiffPixelRatio:.01,threshold:.2
  });
  await selectStore(page);
@@ -122,6 +122,6 @@ test('small and keyboard-height viewports keep optional input and store/address 
  await openStoreDetails(page);
  await expect(page.locator('#globus-store-address')).toBeVisible();
  await page.locator('.pixel-location').click();
- await expect(page.locator('#pixel-store-details')).toHaveJSProperty('open',true);
+  await expect(page.locator('#nearby-address')).toBeVisible();
  await expectNoOverflow(page);
 });

@@ -168,13 +168,13 @@ test('address-service 503 keeps the same consented query ready for an explicit s
       : route.fulfill({ json: { version: 1, candidates: [{ lat: 55.759, lon: 37.61, label: query, precision: 'house' }] } });
   });
   await page.locator('.pixel-location').click();
-  await page.locator('#nearby-shopping').getByRole('button', { name: '📍 Найти магазины рядом', exact: true }).click();
   await page.locator('#nearby-address').fill(query); expect(requests).toEqual([]);
   await page.locator('#nearby-address-search').click();
   await expect(page.locator('#nearby-status')).toHaveText('Сервис поиска адресов временно недоступен. Попробуй ещё раз или выбери точку на карте.');
   await expect(page.locator('#nearby-status')).not.toContainText('Адрес не удалось найти');
   await expect(page.locator('#nearby-address')).toHaveValue(query);
   await expect(page.locator('#nearby-address-search')).toBeEnabled();
+  await page.locator('.nearby-extra > summary').click();
   await expect(page.locator('#nearby-shopping').getByRole('button', { name: 'Выбрать точку на карте', exact: true })).toBeVisible();
   await page.locator('#nearby-address-search').click();
   await expect(page.locator('#nearby-status')).toHaveText('Это нужное место? Выбери один из адресов.');
@@ -190,7 +190,6 @@ test('a successful empty address lookup keeps the search guidance instead of rep
     requests.push(route.request().postDataJSON()); return route.fulfill({ json: { version: 1, candidates: [] } });
   });
   await page.locator('.pixel-location').click();
-  await page.locator('#nearby-shopping').getByRole('button', { name: '📍 Найти магазины рядом', exact: true }).click();
   await page.locator('#nearby-address').fill(query); await page.locator('#nearby-address-search').click();
   await expect(page.locator('#nearby-status')).toHaveText('Адрес не удалось найти. Добавь город и номер дома или укажи место на карте.');
   await expect(page.locator('#nearby-status')).not.toContainText(/сервис|недоступен|сохранён/iu);
@@ -208,7 +207,8 @@ test('Moscow midnight hides expired promotions while the other source retains it
 });
 
 test('the Okey address disclosure stays readable in both pixel themes and fits the viewport', async ({ page }) => {
-  await setup(page); await page.locator('.pixel-location').click();
+  await setup(page);
+  await page.locator('[data-retailer-id="okey"]').click();
   const directory = page.locator('.okey-directory'); await directory.scrollIntoViewIfNeeded();
   for (const theme of ['dark', 'light']) {
     if (await page.locator('body').getAttribute('data-hori-theme') !== theme) await page.locator('#hori-theme').click();

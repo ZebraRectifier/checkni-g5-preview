@@ -23,8 +23,9 @@ export async function selectStore(page, retailerId = 'globus') {
       options.find(item => item.value === preferred && !item.disabled)?.value
       ?? options.find(item => item.value && !item.disabled)?.value, previous);
     if (!option) throw new Error(`No selectable address for ${retailerId}`);
-    await select.selectOption(option);
-    await chooser.getByRole('button', { name: 'Открыть этот адрес' }).click({ noWaitAfter: true });
+    const label = await select.locator('option').evaluateAll((options, value) => options.find(o => o.value === value).textContent, option);
+    await page.locator(`#${retailerId}-store-picker input[type=search]`).fill(label.replace(/^(?:Москва|МО) · /u, '').replace(/ — [^—]+$/u, ''));
+    await chooser.locator(`[data-store-id="${option}"]`).click({ noWaitAfter: true });
   }
   await expect(page.locator('#pixel-storefront')).toBeVisible();
   await expect(page.locator('#pixel-store-home')).toBeHidden();

@@ -19,12 +19,9 @@ for (const store of exactStores) {
     await expect(chooser).toBeVisible();
     await expect(page.locator('#pixel-store-details')).toBeHidden();
     await expect(page.locator('#pixel-storefront')).toBeHidden();
-    await expect(chooser.getByRole('button', { name: 'Открыть этот адрес' })).toBeDisabled();
+    await expect(chooser.locator('select:visible')).toHaveCount(0);
     await page.locator(`#${store.retailer}-store-picker input[type="search"]`).fill(store.search);
-    await page.locator(`#${store.retailer}-store-address`).selectOption(store.id);
-    await expect(chooser.getByRole('button', { name: 'Открыть этот адрес' })).toBeEnabled();
-    await expect(page.locator('#pixel-storefront')).toBeHidden();
-    await chooser.getByRole('button', { name: 'Открыть этот адрес' }).click({ noWaitAfter: true });
+    await chooser.locator(`[data-store-id="${store.id}"]`).click({ noWaitAfter: true });
     await expect(page.locator('#pixel-storefront')).toBeVisible();
     await expect(page.locator('#pixel-store-details')).toBeVisible();
     await expect(page.locator('.pixel-store-address')).toContainText(store.address);
@@ -50,8 +47,9 @@ test('backing out of an unconfirmed address returns to the networks without sele
 test('mobile retry action stays readable when a selected exact catalogue is unavailable', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'mobile layout only');
   await page.locator('.retail-store-card[data-retailer-id="magnit"]').click({ noWaitAfter: true });
-  await page.locator('#magnit-store-address').selectOption('777312');
-  await page.locator('#pixel-address-chooser').getByRole('button', { name: 'Открыть этот адрес' }).click({ noWaitAfter: true });
+  const label = await page.locator('#magnit-store-address option[value="777312"]').textContent();
+  await page.locator('#magnit-store-picker input').fill(label);
+  await page.locator('#pixel-address-chooser [data-store-id="777312"]').click({ noWaitAfter: true });
   const retry = page.locator('.retail-category-retry');
   await expect(retry).toBeVisible();
   expect(await retry.evaluate(node => node.getBoundingClientRect().width)).toBeGreaterThan(150);

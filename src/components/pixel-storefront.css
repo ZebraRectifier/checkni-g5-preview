@@ -626,3 +626,31 @@ body.pixel-workspace #basket-proposal-help { margin: 0; color: var(--muted); fon
   body.pixel-workspace :is(.retail-store-card,.retail-category-button,.product-card) { clip-path: none; border: 2px solid ButtonText; }
   body.pixel-workspace :is(button,a,input,select,summary):focus-visible { outline: 3px solid Highlight; }
 }
+
+/* Address-first shopping: reuse exact catalogue controllers and geography. */
+body.pixel-workspace[data-pixel-stage=stores] .pixel-header { margin-bottom: 20px; min-height: 0; }
+body.pixel-workspace #pixel-store-home-title { margin-bottom: 12px; font-size: clamp(24px,3vw,36px); }
+body.pixel-workspace #pixel-address-chooser { max-width: none; }
+body.pixel-workspace #pixel-address-chooser select { display: none; }
+body.pixel-workspace .pixel-exact-address-cards { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 10px; }
+body.pixel-workspace .pixel-exact-address-cards button { display: grid; gap: 8px; padding: 14px; text-align: left; min-height: 88px; }
+body.pixel-workspace .pixel-exact-address-cards small { color: var(--muted); }
+body.pixel-workspace .nearby-home > button { display: none; }
+body.pixel-workspace .nearby-home { margin: 0 0 24px; }
+body.pixel-workspace #nearby-shopping-panel { border-radius: 2px; background: var(--surface); border-color: var(--line); padding: 18px; }
+body.pixel-workspace #nearby-shopping :is(button,input,select,.nearby-store) { border-radius: 2px; color: var(--ink); background: var(--surface-soft); border-color: var(--line); }
+body.pixel-workspace #nearby-shopping button { min-height: 44px; }
+body.pixel-workspace #nearby-address-search,body.pixel-workspace #nearby-shopping .nearby-open-catalog { background: var(--accent-strong); color: white; font-weight: 650; }
+body.pixel-workspace .nearby-network-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+body.pixel-workspace .nearby-network-filters [aria-pressed=true] { outline: 2px solid var(--accent); outline-offset: -2px; }
+body.pixel-workspace .nearby-store { border: 1px solid var(--line); border-left: 4px solid var(--accent); }
+body.pixel-workspace .nearby-home #nearby-shopping-panel > h3 { display: none; }
+body.pixel-workspace .nearby-home #nearby-selected-store { display: none; }
+@media(min-width:1000px) { body.pixel-workspace #nearby-results { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+
+body.pixel-workspace .nearby-address-row { display: flex; gap: 8px; min-width: 0; }
+body.pixel-workspace .nearby-address-row input { flex: 1; min-width: 0; }
+body.pixel-workspace .nearby-address-row button { flex: none; }
+body.pixel-workspace #nearby-locate { justify-self: start; }
+body.pixel-workspace .nearby-extra > summary { min-height: 44px; cursor: pointer; color: var(--muted); padding-block: 10px; }
+body.pixel-workspace .nearby-home #nearby-shopping-panel { gap: 8px; }
