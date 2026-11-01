@@ -98,6 +98,15 @@ jobs:
             const all = page.locator("#retail-category-grid .pixel-all-categories");
             if (await all.isVisible()) await all.click();
           }
+          async function chooseAddressCard(page, retailer, value) {
+            const select = page.locator(`#${retailer}-store-address`);
+            const label = await select.locator("option").evaluateAll((options, id) =>
+              options.find(option => option.value === id)?.textContent, value);
+            assert(label, `No address label for ${retailer}/${value}`);
+            await page.locator(`#${retailer}-store-picker input[type=search]`).fill(
+              label.replace(/^(?:Москва|МО) · /u, "").replace(/ — [^—]+$/u, "").replaceAll(" · ", " "));
+            await page.locator(`#pixel-address-chooser [data-store-id="${value}"]`).click({noWaitAfter:true});
+          }
           async function chooseStore(page, selector) {
             if (!await page.locator("#pixel-store-home").isVisible())
               await page.locator('[data-pixel-action="stores"]').click();
@@ -110,8 +119,7 @@ jobs:
               options.find(item => item.value === preferred && !item.disabled)?.value
               ?? options.find(item => item.value && !item.disabled)?.value, previous);
             assert(option, "No selectable METRO address");
-            await select.selectOption(option);
-            await chooser.getByRole("button", {name:"Открыть этот адрес"}).click();
+            await chooseAddressCard(page, "metro", option);
             await page.locator("#pixel-storefront").waitFor({state:"visible"});
             await allCategories(page);
           }
