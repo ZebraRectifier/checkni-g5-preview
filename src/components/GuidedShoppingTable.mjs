@@ -24,9 +24,21 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
       const line = document.createElement('p');
       line.textContent = `${store.selected ? '📍 ' : '🏪 '}${store.storeName} · ${store.address}${Number.isFinite(store.distanceKm)?` · ≈${store.distanceKm.toLocaleString('ru-RU',{maximumFractionDigits:1})} км`:''} · ${store.found}/${store.requested} позиций · ${store.knownSubtotalMinor == null ? 'сумма неизвестна' : `${store.complete ? '' : 'найденная часть: '}${formatRubMinor(store.knownSubtotalMinor)}`} · ${store.allRecent ? 'наблюдаемые цены' : 'есть старые или неизвестные цены'}${store.priceScope==='city-promotion'?' · акции города, условия карты неизвестны':''}`;
       coverage.append(line);
-      if(!model.confirmed&&['magnit','okey','pyaterochka'].includes(store.retailerId)){
-        const choose=document.createElement('button');choose.type='button';choose.textContent=`Показать ${{magnit:'Магнит',okey:'О’КЕЙ',pyaterochka:'Пятёрочку'}[store.retailerId]}`;
+      if(!model.confirmed&&['magnit','okey','pyaterochka','perekrestok'].includes(store.retailerId)){
+        const choose=document.createElement('button');choose.type='button';choose.textContent=`Показать ${{magnit:'Магнит',okey:'О’КЕЙ',pyaterochka:'Пятёрочку',perekrestok:'Перекрёсток'}[store.retailerId]}`;
         choose.addEventListener('click',()=>send('Показать вариант '+store.retailerId));coverage.append(choose);
+      }
+    }
+    if(model.alternatives.some(store=>store.priceScope==='delivery-catalog')){
+      const delivery=document.createElement('p');delivery.textContent='Перекрёсток: цены доставки Яндекс Еды для указанного адреса. Доставка и сборы не включены; цены в физическом магазине могут отличаться.';coverage.append(delivery);
+      if(!model.alternatives.every(store=>store.complete&&store.allRecent)){
+        const missing=document.createElement('p');missing.setAttribute('role','status');missing.textContent='Сравнение свежих сумм пока недоступно: есть недостающие позиции или цены старше часа. Старую цену не считаем сегодняшней.';coverage.append(missing);
+      }
+      if(model.draftComparison?.kind==='fresh'){
+        const comparison=document.createElement('p');comparison.setAttribute('role','status');
+        comparison.textContent=model.draftComparison.differenceMinor===0?'Суммы товаров в этих вариантах совпали.':
+          `${model.draftComparison.estimated?'Ориентировочно меньше':'Меньше'} сумма товаров у ${model.draftComparison.lowerStoreName}: разница ${formatRubMinor(model.draftComparison.differenceMinor)}. Это разные марки и фасовки; доставка и сборы не учтены.`;
+        coverage.append(comparison);
       }
     }
     const note = document.createElement('p'); note.textContent = 'В магазинах могут быть разные марки и упаковки. Приоритет полному списку и свежим наблюдениям, затем меньшей сумме среди полученных карточек. Это не сравнение одинаковых SKU и не доказательство самого дешёвого магазина района.'; coverage.append(note); root.append(coverage);

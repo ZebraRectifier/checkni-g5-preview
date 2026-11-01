@@ -3028,5 +3028,23 @@
     "manualListOnly": true,
     "comparisonSourceAdmissionAdded": false,
     "aiProviderChanged": false
+  },
+  "weeklyCrossRetailerDraft": {
+    "sourcePr": 634,
+    "sourceCommit": "56dec9b904375e0d773994848531982b3b93cb0b",
+    "featureHead": "ee024d3fbc146a174e52acb75d2a32461ddf89a3",
+    "scope": "Magnit exact-address and Perekrestok retained delivery alternative weekly drafts; fresh complete Core comparison only; fees excluded",
+    "files": {
+      "src/catalog/weeklyPerekrestokIdentities.mjs": "d8d9227642483888ea91c22d8ed1056eff13eb32460239bd57bf00a4472d164d",
+      "src/components/GuidedShoppingTable.mjs": "2419571a61e8f2556c46af79f212a7a009ef24f513b06e74a1d9fb3762010a6b",
+      "src/core/catalogDraft.mjs": "d5fab2a39f26f5222898d1b5560cd1a6909644fd3ca477412aadc1b32e70b828",
+      "src/intelligence/guidedShoppingPlan.mjs": "d1b01eecf3b3fa5bdb2ac1e3eb18ebf0d561d90692a5b4c6578c2987f8325f1e",
+      "src/ports/weeklyRetailCatalogPort.mjs": "e82feeace55915c61d8112d7d23ca79774f41acb3baaa9c2ee83075bb01fc8c5",
+      "src/runtime/guidedShoppingFlow.mjs": "82cc445934a093e0838908e17d4698fd04882157be78b0e5602c84b0e593b403",
+      "tests/weeklyCrossRetailer.test.mjs": "08e99f050cc059dc9d272d901804c1db7c749cad17006d4a0be8d75f46d428a8",
+      "tests/fixtures/weekly-retail/cross-retailer-20261101.json": "d1b7f8d7064a07f3f07e522b21e81f91323474681f2c044ba53687e0a0e1506d"
+    },
+    "browserTest": "Public address-search adaptation; historical fixture clock is synthetic, not live freshness evidence",
+    "liveFreshnessAcceptance": "pending new source snapshots"
   }
 }
