@@ -36,8 +36,6 @@ test('stores-first reference keeps optional Hory draft, theme, address access an
   await expect(page.locator('#basket-proposal-input')).toHaveValue('Молоко и яблоки');
   await closeHory(page);
   await page.locator('.pixel-location').click();
-  await expect(page.locator('#pixel-store-details')).toHaveJSProperty('open', true);
-  await page.locator('#nearby-shopping').getByRole('button', { name:'📍 Найти магазины рядом', exact:true }).click();
   await expect(page.locator('#nearby-address')).toBeVisible();
   await openHory(page);
   await expect(page.locator('#basket-proposal-input')).toHaveValue('Молоко и яблоки');

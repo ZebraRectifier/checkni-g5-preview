@@ -3,6 +3,35 @@ import{test,expect}from'@playwright/test';
 import fs from 'node:fs';
 const joinedDirectory = JSON.parse(fs.readFileSync(new URL('../../src/data/nearbyGroceryStores.json',import.meta.url),'utf8'));
 test.setTimeout(60000);
+test('home address → nearest exact card → own catalogue; location remains voluntary and recoverable', async ({page}) => {
+  await isolate(page); let addressCalls = 0;
+  const point = joinedDirectory.stores.find(p => p.catalogBinding?.shopCode === '699415');
+  await page.route('**/functions/v1/nearby-address', route => {
+    addressCalls++;
+    return route.fulfill({json:{version:1,candidates:[{lat:point.lat,lon:point.lon,label:point.address,precision:'house'}]}});
+  });
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  await expect(page.locator('#nearby-address')).toBeVisible();
+  await expect(page.locator('#pixel-storefront')).toBeHidden();
+  expect(addressCalls).toBe(0);
+  await page.locator('#nearby-address').fill(point.address);
+  await page.locator('#nearby-address').press('Enter');
+  await page.locator('#nearby-address-candidates button').click();
+  await page.locator('#nearby-radius').selectOption('1');
+  await page.locator('.nearby-network-filters').getByRole('button',{name:'Магнит',exact:true}).click();
+  const card = page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
+  await expect(card).toContainText('Каталог этого адреса подключён');
+  await card.getByRole('button',{name:'Выбрать магазин'}).click();
+  await expect(page.locator('#pixel-storefront')).toBeVisible();
+  await expect(page.locator('#magnit-store-address')).toHaveValue('699415');
+  await page.reload();
+  await expect(page.locator('#magnit-store-address')).toHaveValue('699415');
+  await page.locator('.pixel-location').click();
+  await expect(page.locator('#nearby-address')).toBeVisible();
+  await expect(page.locator('#pixel-hory-dialog')).toBeHidden();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect(addressCalls).toBe(1);
+});
 const say=async(page,text)=>{await openHory(page);await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};
 async function isolate(page){
   await page.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
