@@ -160,11 +160,11 @@ test('an unavailable catalogue recovers explicitly without pretending missing pr
   expect(calls.ai).toBe(0); expect(calls.external).toEqual([]);
 });
 
-test('address-service 503 keeps the same consented query ready for an explicit successful retry', async ({ page }) => {
+test('persistent address-service 503 keeps the same consented query ready for an explicit successful retry', async ({ page }) => {
   const calls = await setup(page), requests = [], query = 'Москва, Тверская, 7';
   await page.route('**/functions/v1/nearby-address', route => {
     requests.push(route.request().postDataJSON());
-    return requests.length === 1 ? route.fulfill({ status: 503, json: { version: 1, error: 'source_unavailable' } })
+    return requests.length <= 2 ? route.fulfill({ status: 503, json: { version: 1, error: 'source_unavailable' } })
       : route.fulfill({ json: { version: 1, candidates: [{ lat: 55.759, lon: 37.61, label: query, precision: 'house' }] } });
   });
   await page.locator('.pixel-location').click();
@@ -179,7 +179,7 @@ test('address-service 503 keeps the same consented query ready for an explicit s
   await page.locator('#nearby-address-search').click();
   await expect(page.locator('#nearby-status')).toHaveText('Это нужное место? Выбери один из адресов.');
   await expect(page.locator('#nearby-address-candidates').getByRole('button', { name: query, exact: true })).toBeVisible();
-  expect(requests).toEqual([{ query, consent: true }, { query, consent: true }]);
+  expect(requests).toEqual([{ query, consent: true }, { query, consent: true }, { query, consent: true }]);
   await expect(page.locator('#nearby-status')).not.toContainText('сохранён');
   expect(calls.ai).toBe(0); expect(calls.external).toEqual([]);
 });
