@@ -16,7 +16,7 @@ export function isShoppingPlanningRequest(text) {
 export function canContinueShoppingDialogue(text) {
   const value = clean(text);
   return !/^(?:добавь|добавить|положи|убери|удали|замени|возьми|купи|закажи|подтверждаю|применяй|применить|сбрось|отмени|забудь|перестрой|пересобери|обнови корзину|новая корзина|новая задача|другая корзина)(?=$|\s)/u.test(value)
-    && !/цен[ауы]|стоим|сто[ия]т|почем|дешев|налич|доставк|заказ|сравни (?:магазины|корзину)/u.test(value);
+    && !/цен[ауы]|стоим|сто[ия]т|(?:^|[^\p{L}\p{N}_])почем(?=$|[^\p{L}\p{N}_])|дешев|налич|доставк|заказ|сравни (?:магазины|корзину)/u.test(value);
 }
 
 export function shoppingDialogueNeed(text, history = []) {
