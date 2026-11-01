@@ -1,5 +1,29 @@
 import { test, expect } from '@playwright/test';
 
+for(const failure of ['transient','persistent'])test(`address ${failure} failure recovers without retyping or guessing a home`,async({page})=>{
+ let requests=0;
+ await page.route('**/*',route=>['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
+ await page.route('**/rest/v1/**',route=>route.fulfill({json:[]}));
+ await page.route('**/functions/v1/nearby-address',route=>{
+  requests++;
+  return failure==='persistent'||requests===1?route.fulfill({status:503,json:{error:'source_unavailable'}})
+   :route.fulfill({json:{version:1,candidates:[{lat:55.802136,lon:37.299144,label:'Глобус Красногорск',precision:'street'}]}});
+ });
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ await page.locator('#nearby-address').fill('Глобус Красногорск');
+ await page.locator('#nearby-address').press('Enter');
+ await expect(page.locator('#nearby-address-candidates button').first()).toBeVisible();
+ expect(requests).toBe(2);
+ await expect(page.locator('#nearby-address')).toHaveValue('Глобус Красногорск');
+ if(failure==='persistent')await expect(page.locator('#nearby-status')).toContainText('Это адрес магазина, не твоя геолокация');
+ await page.locator('#nearby-address-candidates button').first().click();
+ const card=page.locator('#nearby-results article').filter({hasText:'Глобус Красногорск'});
+ await card.getByRole('button',{name:'Выбрать магазин'}).click();
+ await expect(page.locator('#globus-store-address')).toHaveValue('5011');
+ await expect(page.locator('#pixel-storefront')).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
 test('latest nearby store choice owns the visible action and basket target', async ({ page }) => {
   await page.route('**/audit-nearby-selection', route => route.fulfill({
     status: 200,

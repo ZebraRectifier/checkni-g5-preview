@@ -19,7 +19,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   const locate=button('Определить моё место',()=>{version++;clearSelection();position=null;pointName='';candidates.replaceChildren();results.replaceChildren();geo.request();});locate.id='nearby-locate';
   const manual=button('Выбрать точку на карте',()=>{document.dispatchEvent(new document.defaultView.CustomEvent('checkni:shop-action',{detail:{action:'address',target:'map'}}));onManualMap?.();});
   const clear=button('Убрать моё место',()=>{version++;geo.clear();position=null;pointName='';candidates.replaceChildren();results.replaceChildren();clearSelection();
-    input.value='';
+    input.value='';port.clearAddressMemory?.();
     status.textContent='Место удалено. Можно указать другое.';});
   const radius=el('select');radius.id='nearby-radius';radius.setAttribute('aria-label','Радиус поиска магазинов');
   for(const n of NEARBY_RADIUS_KM){const o=el('option',n+' км');o.value=String(n);radius.append(o);}radius.value='5';
@@ -91,15 +91,18 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     if(selection.getClientRects().length)selection.scrollIntoView({block:'center'});
   }
   async function searchAddress(){
+    if(addressButton.disabled)return;
     const query=input.value.trim();if(query.length<3){status.textContent='Напиши город и улицу, адрес дома или название станции.';return;}
     geo.clear();const token=++version;clearSelection();position=null;candidates.replaceChildren();results.replaceChildren();addressButton.disabled=true;
     status.textContent='Ищу адрес…';
-    const response=await port.address(query);if(token!==version){addressButton.disabled=false;return;}addressButton.disabled=false;
+    let response;try{response=await port.address(query);}catch{response={kind:'unavailable',candidates:[]};}
+    if(token!==version){addressButton.disabled=false;return;}addressButton.disabled=false;
+    if(input.value.trim()!==query){status.textContent='Адрес изменён. Нажми «Найти адрес», чтобы проверить новый.';return;}
     if(response.kind==='unavailable'){status.textContent='Сервис поиска адресов временно недоступен. Попробуй ещё раз или выбери точку на карте.';return;}
-    if(response.kind!=='results'||!response.candidates.length){status.textContent=response.kind==='limited'?'Слишком частые запросы. Подожди немного или выбери место на карте.':'Адрес не удалось найти. Добавь город и номер дома или укажи место на карте.';return;}
-    status.textContent='Это нужное место? Выбери один из адресов.';
+    if(!['results','directory'].includes(response.kind)||!response.candidates.length){status.textContent=response.kind==='limited'?'Слишком частые запросы. Подожди немного или выбери место на карте.':'Адрес не удалось найти. Добавь город и номер дома или укажи место на карте.';return;}
+    status.textContent=response.kind==='directory'?'Поиск адресов сейчас недоступен. Нашёл магазины в справочнике — выбери один как ориентир. Это адрес магазина, не твоя геолокация.':'Это нужное место? Выбери один из адресов.';
     for(const p of response.candidates){if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon)||typeof p.label!=='string'||p.label.length>500)continue;
-      candidates.append(button(p.label+(p.precision==='house'?'':' · приблизительный ориентир'),()=>{pendingPlaceLabel=p.label;geo.setManual({lat:p.lat,lon:p.lon});candidates.replaceChildren();}));}
+      candidates.append(button(p.label+(p.precision==='store'?' · магазин-ориентир':p.precision==='house'?'':' · приблизительный ориентир'),()=>{pendingPlaceLabel=p.label;geo.setManual({lat:p.lat,lon:p.lon});candidates.replaceChildren();}));}
     candidates.scrollIntoView({block:'center'});
   }
   const locationChanged=s=>{
