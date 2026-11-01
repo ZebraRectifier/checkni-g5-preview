@@ -34,6 +34,7 @@ const ECONOMY_GROUPS = ['mince', 'chicken', 'buckwheat', 'pasta', 'potatoes', 'c
 export function weeklyRetailerRequest(text) {
   const value=clean(text),ids=[];
   if(/магнит/u.test(value)&&!/(?:без|не)\s+магнит/u.test(value))ids.push('magnit');
+  if(/перекрест(?:ок|к[аеу])/u.test(value)&&!/(?:без|не)\s+перекрест(?:ок|к[аеу])/u.test(value))ids.push('perekrestok');
   if(/(?:в|из|и)\s+о['’]?кей|^о['’]?кей$/u.test(value)&&!/(?:без|не)\s+о['’]?кей/u.test(value))ids.push('okey');
   if(/пятерочк/u.test(value)&&!/(?:без|не)\s+пятерочк/u.test(value))ids.push('pyaterochka');
   return ids;
@@ -59,7 +60,7 @@ export function createGuidedShoppingPlan(goal, history, memory) {
   if (/фарш/u.test(user) && !groups.some(row => row.key === 'mince')) groups.unshift(GROUPS[0]);
   if (/фрукт/u.test(user) && !groups.some(row => ['apples', 'bananas'].includes(row.key))) groups.push(GROUPS.find(row => row.key === 'apples'));
   const retailers=weeklyRetailerRequest(goal);
-  if(retailers.length)for(const key of ['rice','pork','cheese'])if(!groups.some(g=>g.key===key))groups.push(GROUPS.find(g=>g.key===key));
+  if(retailers.length)for(const key of retailers.includes('perekrestok')?['rice','cheese']:['rice','pork','cheese'])if(!groups.some(g=>g.key===key))groups.push(GROUPS.find(g=>g.key===key));
   return { goal: String(goal).slice(0, 300), groups: groups.slice(0, 16).map(row => ({ ...row,
     ...(economy&&row.key==='chicken'&&!/филе/u.test(clean(user))?{label:'Курица',query:'цыпл',allowPoultryCuts:true}:{}) })), retailers, stage: 'intake', mode: economy ? 'economy' : 'balanced',
     location: shoppingLocationRequest(goal), freezer: /морозилк/u.test(clean(goal)) ? true : null,
@@ -74,8 +75,8 @@ export function advanceGuidedIntake(plan, text, memory) {
   const location = shoppingLocationRequest(text);
   const retailers=weeklyRetailerRequest(text);
   if(retailers.length){plan.retailers=retailers;plan.useCurrentStore=true;
-    if(/^(?:магнит|о['’]?кей|пятерочка)(?: и (?:магнит|о['’]?кей|пятерочка))*$/u.test(value))plan.location=null;
-    for(const key of ['rice','pork','cheese'])if(!plan.groups.some(g=>g.key===key))plan.groups.push({...GROUPS.find(g=>g.key===key)});
+    if(/^(?:магнит|перекресток|о['’]?кей|пятерочка)(?: и (?:магнит|перекресток|о['’]?кей|пятерочка))*$/u.test(value))plan.location=null;
+    for(const key of retailers.includes('perekrestok')?['rice','cheese']:['rice','pork','cheese'])if(!plan.groups.some(g=>g.key===key))plan.groups.push({...GROUPS.find(g=>g.key===key)});
     plan.groups=plan.groups.slice(0,16);plan.rows=[];plan.alternatives=[];
   }
   if (location) { plan.location = location; plan.rows = []; plan.alternatives = []; }
@@ -152,7 +153,7 @@ export function guidedGroupMatches(group, card) {
     chicken: group.allowPoultryCuts?/^(?:(?:филе|голень|бедро)\s+(?:(?:бедра|грудки)\s+)?(?:курин|цыплен)|курин\S*\s+филе)/u
       :/^(?:филе\s+(?:(?:бедра|грудки)\s+)?(?:курин|цыплен)|курин\S*\s+филе)/u,
     buckwheat: /^(?:крупа\s+)?гречнев\S*|^гречка(?=$|[\s,])/u,
-    pasta: /^(?:макароны|макаронные изделия)(?=$|[\s,])/u,
+    pasta: /^(?:макароны|макаронные изделия|изделие макаронное)(?=$|[\s,])/u,
     milk: /^молоко(?=$|[\s,])/u,
     eggs: /^(?:куриное\s+)?яйц[ао](?=$|[\s,])/u,
     tomatoes: /^(?:томаты|помидоры)(?=$|[\s,])/u,
@@ -167,13 +168,13 @@ export function guidedGroupMatches(group, card) {
     oats: /^(?:хлопья\s+(?:.*\s)?овсяные(?=$|[\s,.])|овсяные\s+хлопья)/u,
     oil: /^(?:масло\s+подсолнечн|подсолнечное\s+масло)/u,
     flakes: /^(?:хлопья\s+(?:.*\s)?(?:овсяные|гречневые)(?=$|[\s,.])|(?:овсяные|гречневые)\s+хлопья)/u,
-    rice: /^рис(?=$|[\s,])/u,
+    rice: /^(?:рис(?=$|[\s,])|крупа\s+рисов)/u,
     pork: /^(?:свинина(?=$|[\s,])|лопатка\s+свиная(?=$|[\s,]))/u,
     yogurt:/^йогурт(?=$|[\s,])/u
   };
   if (group.key === 'milk' && /детск|ступень|месяц|\d\+/u.test(title)) return false;
   if (group.key === 'chicken' && /запечен|жарен|копчен|гриль|готов|отварн|в сыре|нежность|соус|маринад|паниров/u.test(title)) return false;
-  if (group.key === 'pork' && /копчен|варен|жарен|готов|соус|маринад|паниров/u.test(title)) return false;
+  if (group.key === 'pork' && /копчен|варен|жарен|тушен|консерв|готов|соус|маринад|паниров/u.test(title)) return false;
   if (['tomatoes', 'apples', 'bananas', 'potatoes', 'carrots', 'onions', 'cabbage'].includes(group.key)
       && /в собственном соку|маринован|сушен|вялен|консерв|пюре|чипс|карамел|квашен|жарен|фри(?=$|\s)/u.test(title)) return false;
   if (['oats', 'flakes'].includes(group.key) && /сахар|клубник|яблок|изюм|шоколад/u.test(title)) return false;

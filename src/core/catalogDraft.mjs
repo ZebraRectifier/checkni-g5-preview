@@ -59,6 +59,22 @@ export function rankCatalogDrafts(drafts, options) {
       || (a.quote.knownSubtotalMinor ?? Infinity) - (b.quote.knownSubtotalMinor ?? Infinity));
 }
 
+// Different reviewed products for the same grocery needs, not exact-SKU
+// offers or a purchase-plan winner. Delivery fees and stock remain unknown.
+export function compareCatalogDraftAlternatives(drafts, options) {
+  if(!Array.isArray(drafts)||drafts.length!==2)return {kind:'incomplete'};
+  const signature=draft=>JSON.stringify(draft.rows.map(r=>[r.group?.key,r.group?.dimension,r.group?.dailyAmount]));
+  if(!drafts[0].rows.length||signature(drafts[0])!==signature(drafts[1]))return {kind:'incompatible'};
+  if(!drafts.every(d=>typeof d.scope?.storeId==='string')||drafts[0].scope.storeId===drafts[1].scope.storeId)return {kind:'incompatible'};
+  const quotes=drafts.map(d=>({...d,quote:quoteCatalogDraft(d.rows,options)}));
+  if(quotes.some(d=>!d.quote.complete))return {kind:'incomplete'};
+  if(quotes.some(d=>!d.quote.allRecent))return {kind:'needs_refresh'};
+  quotes.sort((a,b)=>a.quote.knownSubtotalMinor-b.quote.knownSubtotalMinor);
+  return {kind:'fresh',lowerStoreName:quotes[0].scope.storeName,
+    lowerStoreId:quotes[0].scope.storeId,differenceMinor:quotes[1].quote.knownSubtotalMinor-quotes[0].quote.knownSubtotalMinor,
+    estimated:quotes.some(d=>d.quote.hasEstimates),sameProducts:false,includesFees:false,availability:'unknown'};
+}
+
 export function quoteCatalogDraft(rows, { nowMs = Date.now(), maxAgeMs = 60 * 60 * 1000 } = {}) {
   const lines = rows.map(row => {
     const card = row.card;

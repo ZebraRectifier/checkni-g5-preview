@@ -1,9 +1,9 @@
 import { createGuidedShoppingPlan, advanceGuidedIntake, guidedIntakeView, guidedEditGroups, guidedGroupMatches, guidedGroupAllowed,weeklyRetailerRequest } from '../intelligence/guidedShoppingPlan.mjs';
-import { validWeeklyCardSource } from '../ports/weeklyRetailCatalogPort.mjs';
+import { validWeeklyCardSource,createWeeklyRetailCatalogPort,PEREKRESTOK_WEEKLY_SCOPE } from '../ports/weeklyRetailCatalogPort.mjs';
 import { extractShoppingDelta, isShoppingProductRejected } from '../intelligence/shoppingConversation.mjs';
 import { retailSelectionUrl } from '../intelligence/retailProductSelection.mjs';
 import { getReviewedRetailBasketProduct } from '../catalog/reviewedRetailBasket.mjs';
-import { quoteCatalogDraft, suggestedCatalogQuantity, catalogPurchaseUnit, economicalCatalogCards, rankCatalogDrafts } from '../core/catalogDraft.mjs';
+import { quoteCatalogDraft, suggestedCatalogQuantity, catalogPurchaseUnit, economicalCatalogCards, rankCatalogDrafts, compareCatalogDraftAlternatives } from '../core/catalogDraft.mjs';
 import { extractShoppingNeedContext } from '../intelligence/shoppingNeedContext.mjs';
 
 const clean = value => String(value ?? '').toLowerCase().replaceAll('ё', 'е').replace(/\s+/gu, ' ').trim().replace(/[.!?]+$/u, '');
@@ -13,6 +13,7 @@ const view = (headline, message, extra = {}) => ({ status: 'clarification', resu
 
 export function createGuidedShoppingFlow(options) {
   let plan = null, state = null, version = 0;
+  const deliveryCatalog=options.deliveryCatalog??createWeeklyRetailCatalogPort();
   const contextKey = () => { try { const scope = options.getContext?.();
     return JSON.stringify([scope?.retailerId ?? null, scope?.storeId ?? null, options.getRetailContextKey?.() ?? null]);
   } catch { return null; } };
@@ -24,18 +25,27 @@ export function createGuidedShoppingFlow(options) {
   };
   const table = (message = '', comparison = null) => {
     plan.requiresReview = false;
+    if(plan.alternatives?.length)plan.alternatives=plan.alternatives.map(alternative=>{
+      const draft=plan.drafts?.find(d=>d.scope.storeId===alternative.storeId);
+      const currentQuote=draft?quoteCatalogDraft(draft.rows,{nowMs:options.now?.()??Date.now()}):null;
+      return currentQuote?{...alternative,knownSubtotalMinor:currentQuote.knownSubtotalMinor,
+        complete:currentQuote.complete,allRecent:currentQuote.allRecent,hasEstimates:currentQuote.hasEstimates,
+        found:currentQuote.basket.length}:alternative;
+    });
     const quote = quoteCatalogDraft(plan.rows, { nowMs: options.now?.() ?? Date.now() });
     const missing = quote.lines.filter(row => !row.addable).map(row => row.group.label);
     const budget = plan.budgetMinor != null && quote.knownSubtotalMinor != null
       ? quote.knownSubtotalMinor > plan.budgetMinor ? ' По найденной части сумма выше бюджета. Можно уменьшить количества или заменить товары.'
         : quote.complete ? ' По указанным наблюдениям список укладывается в бюджет.' : ' Весь список по бюджету ещё не проверен.' : '';
     const messageText = message || `Вот конкретные варианты из каталога ${plan.storeName}. Количества — мой предварительный вариант; меняй их в таблице.`;
+    const deliveryAlternatives=plan.alternatives?.some(a=>a.retailerId==='perekrestok');
     state = view(plan.stage === 'confirmed' ? 'Корзина собрана. Посмотрим магазины?' : 'Посмотри, что получилось.',
       `${messageText}${budget}${missing.length ? ` Ещё нужно подобрать ${missing.length} поз. — список под таблицей.` : ''} Цены показаны на дату наблюдения; наличие неизвестно.`, {
         guidedShopping: { quote, comparison, storeName: plan.storeName, confirmed: plan.stage === 'confirmed',
+          draftComparison:deliveryAlternatives?compareCatalogDraftAlternatives(plan.drafts,{nowMs:options.now?.()??Date.now()}):null,
           mode: plan.mode, location: plan.location, alternatives: plan.alternatives ?? [],
           people: plan.people, days: plan.days },
-        conversationChoices: choices(plan.stage === 'confirmed' ? ['Сравнить магазины', 'Изменить список']
+        conversationChoices: choices(plan.stage === 'confirmed' ? [deliveryAlternatives?'Сравнить варианты':'Сравнить магазины', 'Изменить список']
           : [quote.basket.length ? missing.length ? 'Добавить найденное' : 'Добавить показанное' : null, 'Сравнить этот список', 'Изменить список'].filter(Boolean))
       });
     if (plan.stage === 'confirmed') state.status = 'success';
@@ -56,12 +66,20 @@ export function createGuidedShoppingFlow(options) {
     let scope = options.getContext?.();
     const key = contextKey();
     if(plan.retailers?.length>2)return state=view('Выберем два каталога.', 'Сейчас можно сопоставить два каталога за один подбор. Напиши, например, «Магнит и Пятёрочка» или «Магнит и О’КЕЙ». Список продуктов сохраняю.');
-    const retailScopes=plan.retailers?.length?options.getRetailContexts?.(plan.retailers)??[]:[];
+    const retailScopes=plan.retailers?.length?[
+      ...(options.getRetailContexts?.(plan.retailers)??[]).filter(s=>s.retailerId!=='perekrestok'),
+      ...(plan.retailers.includes('perekrestok')?[PEREKRESTOK_WEEKLY_SCOPE]:[])
+    ]:[];
+    if(plan.retailers?.includes('perekrestok')&&plan.retailers.includes('magnit')
+      &&(scope?.retailerId!=='magnit'||!retailScopes.some(s=>s.retailerId==='magnit'&&s.storeId===scope.storeId)))
+      return state=view('Сначала выберем адрес Магнита.', 'Открой нужный Магнит и повтори подбор. Перекрёсток подключён как каталог доставки Яндекс Еды с Большого Овчинниковского переулка, 16; доступность доставки нужно проверить отдельно.',
+        {conversationChoices:choices(['Подобрать товары и цены'])});
     if (!key || (!retailScopes.length && (!scope?.retailerId || !scope?.storeId)) || typeof options.searchCatalog !== 'function') {
       state = view('Список готов, выберем магазин.', 'Открой каталог нужного магазина, затем нажми «Подобрать товары и цены». Условия и список сохраняю.',
         { conversationChoices: choices(['Подобрать товары и цены', 'Изменить список']) }); return state;
     }
     if(plan.retailers?.length&&plan.location) return state=view('Уточним охват магазинов.',
+      plan.retailers.includes('perekrestok')?'Перекрёсток здесь — один каталог доставки с Большого Овчинниковского переулка, 16. Он не подтверждает магазин или доставку в твоём радиусе. Для сравнения этих каталогов укажи «Магнит и Перекрёсток» без радиуса; адрес Магнита сначала выбери на сайте.':
       plan.retailers.includes('pyaterochka')?'Для Пятёрочки есть акции Москвы, расстояние до конкретного магазина неизвестно. Выбери «Пятёрочка» без радиуса или «текущий магазин».':
       'Для О’КЕЙ есть городской каталог Москвы, расстояние до конкретного магазина неизвестно. Выбери «Магнит и О’КЕЙ» без радиуса или «текущий магазин».');
     const nearby = plan.location?.landmark ? options.getNearbyContexts?.(plan.location) ?? [] : [];
@@ -85,7 +103,9 @@ export function createGuidedShoppingFlow(options) {
       if (!current(token, isCurrent)) return state;
       if (Date.now() >= deadline) { rows[index] = makeRow(group, [], null); continue; }
       let response = null, timer;
-      try { response = await Promise.race([Promise.resolve().then(() => options.searchCatalog(group.query, { limit: 40, scope: candidateScope })),
+      try { response = await Promise.race([Promise.resolve().then(() => candidateScope.retailerId==='perekrestok'
+        ? deliveryCatalog.search(group.query,{limit:40,scope:candidateScope})
+        : options.searchCatalog(group.query, { limit: 40, scope: candidateScope })),
         new Promise(resolve => { timer = setTimeout(() => resolve(null), Math.min(3500, Math.max(1, deadline - Date.now()))); })]); }
       catch { /* Keep this group visibly unresolved. */ }
       finally { clearTimeout(timer); }
@@ -159,6 +179,7 @@ export function createGuidedShoppingFlow(options) {
     const applied = options.basket.replaceReviewedBasket(base, [...byId.values()]);
     if (!applied.applied) { plan.base = options.basket.getSnapshot(); return table('Пока мы обсуждали список, корзина изменилась. Проверь таблицу и подтверди добавление ещё раз.'); }
     plan.stage = 'confirmed';
+    plan.confirmedBasket=JSON.stringify(options.basket.getSnapshot());
     return table('Добавлены только показанные товары и количества. Можно открыть корзину или сравнить выбранные адреса.');
   }
   async function handle(text, isCurrent = () => true) {
@@ -194,7 +215,7 @@ export function createGuidedShoppingFlow(options) {
       return presentIntake();
     }
     if (/^(?:подобрать товары и цены|подбери товары и цены|обновить подбор)$/u.test(value)) return load(isCurrent);
-    const storeChoice=value.match(/^показать вариант (magnit|okey|pyaterochka)$/u);
+    const storeChoice=value.match(/^показать вариант (magnit|okey|pyaterochka|perekrestok)$/u);
     if(storeChoice&&plan.stage==='review'){
       const draft=plan.drafts?.find(d=>d.scope.retailerId===storeChoice[1]);
       if(!draft)return table('Такой вариант ещё не проверен.');
@@ -224,9 +245,15 @@ export function createGuidedShoppingFlow(options) {
       plan.alternatives = [];
       return table('Изменение учтено в черновике. Корзина изменится после подтверждения.');
     }
-    if (/^(?:сравнить этот список|сравнить магазины|сравни магазины|где дешевле)$/u.test(value)) {
+    if (/^(?:сравнить этот список|сравнить магазины|сравни магазины|сравнить варианты|где дешевле)$/u.test(value)) {
       if (!plan.rows.length) return load(isCurrent);
       if (plan.scope !== contextKey()) return load(isCurrent);
+      if(plan.stage==='confirmed'&&plan.alternatives?.some(a=>a.retailerId==='perekrestok')
+        &&plan.confirmedBasket!==JSON.stringify(options.basket.getSnapshot())){
+        plan.alternatives=[];return table('Корзина изменилась после подбора. Старые варианты больше не описывают её состав; обнови подбор перед сравнением.');
+      }
+      if(plan.alternatives?.some(a=>a.retailerId==='perekrestok'))
+        return table('Сопоставляю варианты по одним продуктовым группам. Марки и фасовки могут отличаться — открой каждый вариант перед добавлением. Доставку и сборы в сумму не включаю.');
       const quote = quoteCatalogDraft(plan.rows, { nowMs: options.now?.() ?? Date.now() });
       if (!quote.basket.length) return table('Для сравнения пока нет точно выбранных товаров.');
       const token = version, scope = contextKey(), base = JSON.stringify(options.basket.getSnapshot());

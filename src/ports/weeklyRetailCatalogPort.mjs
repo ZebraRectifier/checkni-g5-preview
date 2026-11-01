@@ -1,9 +1,13 @@
 import { createRetailCatalogClient,readBoundedJsonResponse } from './retailCatalogPort.mjs';
+import {WEEKLY_PEREKRESTOK_IDENTITIES} from '../catalog/weeklyPerekrestokIdentities.mjs';
 import { WEEKLY_MAGNIT_IDENTITIES } from '../catalog/weeklyMagnitIdentities.mjs';
 import { validPublishedSnapshot,currentPublishedProducts,PUBLISHED_URL } from '../observations/okeyPublishedPromotions.mjs';
 import {validPyatSnapshot,pyatWeeklyCards,validPyatWeeklySource,PYAT_WEEKLY_SCOPE} from '../observations/pyaterochkaPublishedPromotions.mjs';
 import {resolveRegisteredMagnitStore} from '../data/registeredMagnitStores.mjs';
+import {PEREKRESTOK_REVIEWED_LIST_CONTEXT} from '../catalog/perekrestokReviewedList.mjs';
 export {PYAT_WEEKLY_SCOPE};
+export const PEREKRESTOK_WEEKLY_SCOPE=Object.freeze({...PEREKRESTOK_REVIEWED_LIST_CONTEXT,
+  storeAddress:PEREKRESTOK_REVIEWED_LIST_CONTEXT.locationLabel,priceScope:'delivery-catalog'});
 
 export const OKEY_WEEKLY_SCOPE=Object.freeze({retailerId:'okey',storeId:'okey-moscow-proshoper',storeName:'О’КЕЙ · акции Москвы (Прошопер)',
   storeAddress:'Городской каталог, физический магазин не подтверждён',priceScope:'city-promotion',physicalStoreId:null});
@@ -53,6 +57,21 @@ export function validWeeklyCardSource(card,scope) {
     &&normalize(card.name)===normalize(unit.name.replace(/^БЗМЖ\s+/u,''));
 }
 export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,createMagnitClient=createRetailCatalogClient,now=Date.now}={}) {
+  let deliveryPending=null,deliveryChecked=-Infinity;
+  function deliveryRows(){
+    if(deliveryPending&&now()-deliveryChecked<30000)return deliveryPending;
+    deliveryChecked=now();
+    const client=createMagnitClient({retailerId:'perekrestok',fetchImpl});
+    const ids=WEEKLY_PEREKRESTOK_IDENTITIES.map(p=>p.sourceProductId);
+    // Two finite ID reads replace fifteen concurrent wildcard searches.
+    // Coalesce both success and failure for 30s; do not hammer an outage.
+    deliveryPending=Promise.all([ids.slice(0,40),ids.slice(40)].filter(chunk=>chunk.length)
+      .map(chunk=>client.bySourceProductIds(chunk))).then(results=>{
+        if(results.some(r=>r?.kind!=='catalog'))return {kind:'unavailable'};
+        return {kind:'catalog',products:results.flatMap(r=>r.products)};
+      }).catch(()=>({kind:'unavailable'}));
+    return deliveryPending;
+  }
   let cached=null,inFlight=null,checkedAt=0;
   let pyatCached=null,pyatPending=null,pyatChecked=0;
   async function pyat(){
@@ -76,6 +95,20 @@ export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,create
     })();return inFlight;
   }
   return {async search(query,{scope,limit=40}={}) {
+    if(scope?.retailerId==='perekrestok'){
+      if(scope.storeId!==PEREKRESTOK_WEEKLY_SCOPE.storeId)return {kind:'unavailable'};
+      const identities=WEEKLY_PEREKRESTOK_IDENTITIES.filter(p=>p.query===normalize(query));
+      if(!identities.length)return {kind:'catalog',products:[]};
+      const response=await deliveryRows();
+      if(response?.kind!=='catalog')return response;
+      return {...response,products:response.products.flatMap(card=>{
+        const identity=identities.find(p=>p.sourceProductId===card.sourceProductId);
+        if(!identity||normalize(card.name)!==normalize(identity.name)||normalize(card.unit)!==normalize(identity.sourceUnit)
+          ||card.id!==`retail:perekrestok:${PEREKRESTOK_WEEKLY_SCOPE.storeId}:${identity.sourceProductId}`
+          ||card.productUrl!==PEREKRESTOK_WEEKLY_SCOPE.sourceUrl)return [];
+        return [{...card,unit:identity.unit,...(identity.weighed?{catalogPurchaseBasis:'weighed-portion'}:{})}];
+      }).slice(0,Math.min(40,limit))};
+    }
     if(scope?.retailerId==='pyaterochka'&&scope.storeId===PYAT_WEEKLY_SCOPE.storeId){
       const q=normalize(query);return{kind:'catalog',products:(await pyat()).filter(p=>normalize(p.name).includes(q)).slice(0,Math.min(40,limit))};
     }
