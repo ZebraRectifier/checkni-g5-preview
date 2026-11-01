@@ -65,6 +65,27 @@ jobs:
     steps:
       - name: Checkout published artifact
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Wait for the reviewed address runtime on Pages
+        shell: bash
+        run: |
+          node --input-type=module - <<'NODE'
+          import {readFile} from 'node:fs/promises';
+          const paths=['src/components/HoriCommerce.mjs','src/components/NearbyShopping.mjs','src/ports/nearbyShoppingPort.mjs','src/ports/addressRecovery.mjs'];
+          const expected=await Promise.all(paths.map(path=>readFile(path)));
+          for(let attempt=0;attempt<12;attempt++){
+            const matched=await Promise.all(paths.map(async(path,i)=>{
+              try{const response=await fetch('https://zebrarectifier.github.io/checkni-g5-preview/'+path+'?verify='+process.env.GITHUB_SHA,{signal:AbortSignal.timeout(8000)});
+                return response.ok&&Buffer.from(await response.arrayBuffer()).equals(expected[i]);
+              }catch{return false;}
+            }));
+            if(matched.every(Boolean)){console.log('PUBLISHED_ADDRESS_RUNTIME_MATCH',process.env.GITHUB_SHA);process.exit(0);}
+            await new Promise(resolve=>setTimeout(resolve,5000));
+          }
+          throw Error('Pages does not yet serve the reviewed address runtime');
+          NODE
 
       - name: Install browser driver
         shell: bash
@@ -107,6 +128,15 @@ jobs:
             const all = page.locator("#retail-category-grid .pixel-all-categories");
             if (await all.isVisible()) await all.click();
           }
+          async function chooseAddressCard(page, retailer, value) {
+            const select = page.locator(`#${retailer}-store-address`);
+            const label = await select.locator("option").evaluateAll((options, id) =>
+              options.find(option => option.value === id)?.textContent, value);
+            assert(label, `No address label for ${retailer}/${value}`);
+            await page.locator(`#${retailer}-store-picker input[type=search]`).fill(
+              label.replace(/^(?:Москва|МО) · /u, "").replace(/ — [^—]+$/u, "").replaceAll(" · ", " "));
+            await page.locator(`#pixel-address-chooser [data-store-id="${value}"]`).click({noWaitAfter:true});
+          }
           async function chooseStore(page, selector) {
             if (!await page.locator("#pixel-store-home").isVisible())
               await page.locator('[data-pixel-action="stores"]').click();
@@ -125,8 +155,7 @@ jobs:
                 options.find(item => item.value === preferred && !item.disabled)?.value
                 ?? options.find(item => item.value && !item.disabled)?.value, previous);
               assert(option, `No selectable address for ${exactRetailer}`);
-              await select.selectOption(option);
-              await chooser.getByRole("button", {name:"Открыть этот адрес"}).click();
+              await chooseAddressCard(page, exactRetailer, option);
             }
             await page.locator("#pixel-storefront").waitFor({state:"visible"});
             await allCategories(page);
@@ -243,8 +272,7 @@ jobs:
             const raceAddress = await raceSelect.locator("option").evaluateAll(options =>
               options.find(item => item.value && !item.disabled)?.value);
             assert(raceAddress, "No selectable GLOBUS address for the race gate");
-            await raceSelect.selectOption(raceAddress);
-            await raceChooser.getByRole("button", {name:"Открыть этот адрес"}).click({noWaitAfter:true});
+            await chooseAddressCard(racePage, "globus", raceAddress);
             for (let attempt = 0; attempt < 40 && !globusRootHeld; attempt += 1) {
               await racePage.waitForTimeout(100);
             }
