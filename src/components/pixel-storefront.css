@@ -628,7 +628,7 @@ body.pixel-workspace #basket-proposal-help { margin: 0; color: var(--muted); fon
 }
 
 /* Address-first shopping: reuse exact catalogue controllers and geography. */
-body.pixel-workspace .pixel-header { margin-bottom: 20px; min-height: 0; }
+body.pixel-workspace[data-pixel-stage=stores] .pixel-header { margin-bottom: 20px; min-height: 0; }
 body.pixel-workspace #pixel-store-home-title { margin-bottom: 12px; font-size: clamp(24px,3vw,36px); }
 body.pixel-workspace #pixel-address-chooser { max-width: none; }
 body.pixel-workspace #pixel-address-chooser select { display: none; }

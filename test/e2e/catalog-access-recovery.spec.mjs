@@ -207,7 +207,8 @@ test('Moscow midnight hides expired promotions while the other source retains it
 });
 
 test('the Okey address disclosure stays readable in both pixel themes and fits the viewport', async ({ page }) => {
-  await setup(page); await page.locator('.pixel-location').click();
+  await setup(page);
+  await page.locator('[data-retailer-id="okey"]').click();
   const directory = page.locator('.okey-directory'); await directory.scrollIntoViewIfNeeded();
   for (const theme of ['dark', 'light']) {
     if (await page.locator('body').getAttribute('data-hori-theme') !== theme) await page.locator('#hori-theme').click();
