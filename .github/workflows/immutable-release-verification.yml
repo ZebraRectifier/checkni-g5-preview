@@ -1,0 +1,39 @@
+name: Immutable release verification
+on:
+  pull_request:
+    paths: ['releases/**','index.html','prices.html','tools/browser-release/**','tests/immutableReleaseManifest.test.mjs','test/e2e/immutable-release-preview.spec.mjs','playwright.immutable-release.config.mjs','.github/workflows/immutable-release-verification.yml']
+  push:
+    branches: [main]
+    paths: ['releases/**','index.html','prices.html','tools/browser-release/**','tests/immutableReleaseManifest.test.mjs','test/e2e/immutable-release-preview.spec.mjs','playwright.immutable-release.config.mjs','.github/workflows/immutable-release-verification.yml']
+  workflow_dispatch:
+    inputs:
+      release_id:
+        description: Exact 64-character release ID (empty checks available releases)
+        required: false
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RELEASE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+      RELEASE_ID: ${{ inputs.release_id || '' }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - run: node --test tests/immutableReleaseManifest.test.mjs
+        env:
+          RELEASE_BASE_SHA: ''
+          RELEASE_ID: ''
+      - run: node tools/browser-release/verify.mjs
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --config playwright.immutable-release.config.mjs
