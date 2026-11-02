@@ -92,7 +92,7 @@ export function advanceGuidedIntake(plan, text, memory) {
   if (delta.unset.includes('budgetMinor')) delta.unresolved = delta.unresolved.filter(row => clean(row) !== 'без лимита');
   if (need.clarification) return { issue: need.clarification, delta };
   Object.assign(delta.facts, need.facts);
-  const words = { один: 1, одна: 1, двое: 2, двоих: 2, два: 2, трое: 3, троих: 3, три: 3, четверо: 4, четыре: 4 };
+  const words = { один: 1, одна: 1, двое: 2, двоих: 2, два: 2, трое: 3, троих: 3, три: 3, четверо: 4, четыре: 4, пятеро: 5, пять: 5, шестеро: 6, шесть: 6, семеро: 7, семь: 7, восьмеро: 8, восемь: 8, девятеро: 9, девять: 9, десятеро: 10, десять: 10, одиннадцать: 11, двенадцать: 12 };
   const bare = value.replace(/^на\s+/u, '');
   if (plan.question === 'people' && (/^\d{1,2}$/u.test(bare) || words[bare])) {
     const count = words[bare] ?? Number(bare);
