@@ -142,18 +142,21 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
         ??part.match(/^(.+?)\s+(?:убери|удали|не\s+(?:надо|нужно))[.!]*$/iu);
       return !deletion||!targets(deletion[1]).length;
     });
+    const compoundMutation=compound.some(part=>/^(?:удали|убери|исключи)\s|\s(?:оставь|сделай|всего|ещ[её])\s|\s(?:убери|удали|не\s+(?:надо|нужно))$/iu.test(part));
     // Whole advice/planning turns must reach the existing guarded provider
     // before commas can turn their verbs into independent shopping needs.
     // Keep the exact conversational shorthand separate from real short names.
     // An unresolved refusal asks locally through the same delegate, not AI.
-    if(unresolvedRefusal||shoppingAdviceTopic(text)==='advice'||isShoppingPlanningRequest(text)||/^пп[.!?]*$/iu.test(text)) {
+    // A recognized refusal belongs to conversation memory before commas can
+    // turn its product names into purchases. Explicit needs edits keep their
+    // existing atomic removal/quantity workflow.
+    if(unresolvedRefusal||(delta.reject.length>0&&!compoundMutation)||shoppingAdviceTopic(text)==='advice'||isShoppingPlanningRequest(text)||/^пп[.!?]*$/iu.test(text)) {
       ownsView=false;selectionActive=false;
       await delegate.run(text);
       if(token!==epoch)return getState();
       state=delegate.getState();selectionActive=delegate.hasActiveShoppingSelection?.()===true;return state;
     }
-    const compoundOperation=compound.some(part=>/^(?:удали|убери|исключи)\s|\s(?:оставь|сделай|всего|ещ[её])\s|\s(?:убери|удали|не\s+(?:надо|нужно))$/iu.test(part)
-      ||readOnly.test(part)||unsupportedAction.test(part)||attributeReply.test(part)
+    const compoundOperation=compoundMutation||compound.some(part=>readOnly.test(part)||unsupportedAction.test(part)||attributeReply.test(part)
       ||(parseNeedLine(part)&&snapshot().lines.some(row=>needKey(row)===needKey(parseNeedLine(part)))));
     if(compound.length>1&&compoundOperation&&!/^не\s+.+?,?\s+а\s+/iu.test(text)&&!readOnly.test(compound[0])) {
       const trial=clone(snapshot()),before=clone(trial.lines),notices=[];let failed=null;
