@@ -30,6 +30,40 @@ test('unknown food in a shared refusal is clarified without contaminating the ad
   assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, ул. Глютен, яйца не добавляй.'),
     {query:'в Пушкино, ул. Глютен',radiusKm:null,preferenceText:'яйца не добавляй.'});
 });
+test('unresolved food restrictions remain outside the address query for explicit clarification',()=>{
+  for(const restriction of ['Глютен исключи.','Без яиц и глютена.']){
+    const text=`Я живу в Пушкино. ${restriction}`;
+    assert.deepEqual(nearbyShoppingIntent(text),
+      {query:'в Пушкино',radiusKm:null,preferenceText:restriction});
+  }
+});
+test('the first food restriction owns the whole tail without consuming street abbreviations',()=>{
+  const restrictions='Морковь не добавляй. Яйца не клади.';
+  assert.deepEqual(nearbyShoppingIntent(`Я живу в Пушкино, ул. Морковная, д. 12. ${restrictions}`),
+    {query:'в Пушкино, ул. Морковная, д. 12',radiusKm:null,preferenceText:restrictions});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино. Морковь, яйца не добавляй.'),
+    {query:'в Пушкино',radiusKm:null,preferenceText:'Морковь, яйца не добавляй.'});
+  assert.deepEqual(nearbyShoppingIntent('Я живу в Пушкино, ул. Морковь, яйца не добавляй.'),
+    {query:'в Пушкино, ул. Морковь',radiusKm:null,preferenceText:'яйца не добавляй.'});
+  const repeated='Морковь не добавляй. '.repeat(8).trim();
+  assert.ok(repeated.length>100);
+  assert.deepEqual(nearbyShoppingIntent(`Я живу в Пушкино. ${repeated}`),
+    {query:'в Пушкино',radiusKm:null,preferenceText:repeated});
+});
+test('an oversized address turn carries its rejected input instead of opening a blank picker',()=>{
+  const text=`Я живу в Пушкино. ${'Морковь не добавляй. '.repeat(16)}`;
+  assert.ok(text.trim().length>240);
+  const intent=nearbyShoppingIntent(text);
+  assert.equal(intent.query,'');
+  assert.equal(intent.preferenceText,text.trim());
+  assert.ok(intent.preferenceText.length>100);
+});
+test('unknown standalone refusals while awaiting a place use conversation clarification',()=>{
+  for(const text of ['Глютен исключи.','Без яиц и глютена.','Морковь не добавляй'])
+    assert.equal(nearbyShoppingIntent(text,true),null);
+  assert.deepEqual(nearbyShoppingIntent('Москва, Тверская, 7',true),
+    {query:'Москва, Тверская, 7',radiusKm:null});
+});
 test('geocoder accepts Moscow and oblast, preserving precision and rejecting other regions or malformed coordinates',()=>{
   const accepted=normalizedAddressCandidate(feature());assert.equal(accepted.precision,'house');assert.equal(accepted.lat,56.04);
   assert.equal(normalizedAddressCandidate(feature({state:'Москва'})).precision,'house');
