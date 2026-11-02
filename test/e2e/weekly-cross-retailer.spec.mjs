@@ -28,7 +28,21 @@ test('weekly alternatives keep delivery separate, require confirmation, persist,
   await expect(variants).toContainText('Доставка и сборы не включены');
   await expect(variants).toContainText('разница');
   expect(deliveryReads).toBe(2);
-  await variants.getByRole('button',{name:'Показать Перекрёсток',exact:true}).click();
+  await variants.getByRole('button',{name:'Показать Магнит',exact:true}).click();
+  const buckwheat=page.locator('.guided-shopping-table tbody tr').filter({hasText:/греч/iu});
+  await buckwheat.locator('summary').click();
+  await buckwheat.locator('input[type="number"]').fill('9');
+  await buckwheat.getByRole('button',{name:/Изменить количество/u}).click();
+  await expect(buckwheat).toContainText('9 × 800');
+  await say('а в Перекрёстке?');
+  // Same requested 7.2 kg, not the original two packs or nine smaller packs.
+  await expect(buckwheat).toContainText('18 × 400');
+  await say('сравни с другим магазином');
+  await expect(variants).toContainText('разница');
+  await say('а в Магните?');
+  await expect(buckwheat).toContainText('9 × 800');
+  await say('а в Перекрёстке?');
+  await expect(buckwheat).toContainText('18 × 400');
   await expect(page.locator('.guided-shopping-table')).toContainText('10 шт.');
   await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
   await say('Добавить показанное');await expect(page.locator('#basket-dock-copy')).toContainText('15 поз.');

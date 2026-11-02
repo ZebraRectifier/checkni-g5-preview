@@ -3,7 +3,7 @@ import { validWeeklyCardSource,createWeeklyRetailCatalogPort,PEREKRESTOK_WEEKLY_
 import { extractShoppingDelta, isShoppingProductRejected } from '../intelligence/shoppingConversation.mjs';
 import { retailSelectionUrl } from '../intelligence/retailProductSelection.mjs';
 import { getReviewedRetailBasketProduct } from '../catalog/reviewedRetailBasket.mjs';
-import { quoteCatalogDraft, suggestedCatalogQuantity, catalogPurchaseUnit, economicalCatalogCards, rankCatalogDrafts, compareCatalogDraftAlternatives } from '../core/catalogDraft.mjs';
+import { quoteCatalogDraft, suggestedCatalogQuantity, suggestedCatalogQuantityForIntent, catalogPurchaseUnit, economicalCatalogCards, rankCatalogDrafts, compareCatalogDraftAlternatives } from '../core/catalogDraft.mjs';
 import { extractShoppingNeedContext } from '../intelligence/shoppingNeedContext.mjs';
 
 const clean = value => String(value ?? '').toLowerCase().replaceAll('ё', 'е').replace(/\s+/gu, ' ').trim().replace(/[.!?]+$/u, '');
@@ -13,6 +13,9 @@ const view = (headline, message, extra = {}) => ({ status: 'clarification', resu
 
 export function createGuidedShoppingFlow(options) {
   let plan = null, state = null, version = 0;
+  let quantityEdits = new Map();
+  const editedQuantity = (edit,card) => edit.intent ? suggestedCatalogQuantityForIntent(card,edit.intent)
+    : card?.id===edit.cardId ? {quantity:edit.quantity,quantityReview:false} : {quantity:null,quantityReview:true};
   const deliveryCatalog=options.deliveryCatalog??createWeeklyRetailCatalogPort();
   const contextKey = () => { try { const scope = options.getContext?.();
     return JSON.stringify([scope?.retailerId ?? null, scope?.storeId ?? null, options.getRetailContextKey?.() ?? null]);
@@ -53,6 +56,7 @@ export function createGuidedShoppingFlow(options) {
   };
   function start(goal, history) {
     version++;
+    quantityEdits = new Map();
     plan = createGuidedShoppingPlan(goal, history, options.getMemory());
     if(options.hasAgreedStore?.()===true&&!plan.location&&!plan.retailers.length)plan.useCurrentStore=true;
     const intake = advanceGuidedIntake(plan, goal, options.getMemory());
@@ -61,7 +65,7 @@ export function createGuidedShoppingFlow(options) {
     return presentIntake();
   }
   const current = (token, isCurrent) => token === version && isCurrent();
-  async function load(isCurrent) {
+  async function load(isCurrent, retainedDrafts = []) {
     if (options.getMemory().facts.unresolvedConstraints) return view('Сначала уточним ограничение.', 'В условиях есть непонятая часть. Уточни её или явно отмени перед подбором товаров.');
     let scope = options.getContext?.();
     const key = contextKey();
@@ -95,6 +99,13 @@ export function createGuidedShoppingFlow(options) {
     // at a time. Existing client deadlines remain; no retailer crawl or retry.
     const drafts = [], deadline = Date.now() + 15000;
     for (const candidateScope of scopes) {
+    // Adding a catalogue must not re-fetch and overwrite an already reviewed
+    // draft. Its original cards and observation times remain visible; Core
+    // independently re-evaluates freshness when quoting/comparing them.
+    const retained = retainedDrafts.find(draft => draft.scope.retailerId === candidateScope.retailerId
+      && draft.scope.storeId === candidateScope.storeId && draft.rows.length === groups.length
+      && draft.rows.every((row,index) => row.group.key === groups[index].key));
+    if (retained) { drafts.push(retained); continue; }
     const rows = new Array(groups.length);
     let nextGroup = 0;
     const worker = async () => {
@@ -152,11 +163,26 @@ export function createGuidedShoppingFlow(options) {
   }
   function makeRow(group, cards, card) {
     const reviewed = getReviewedRetailBasketProduct(card);
-    return { group, cards, card, quantity: card ? suggestedCatalogQuantity(group, card, plan.people, plan.days) : 1,
+    const edit = quantityEdits.get(group.key);
+    const edited = edit ? editedQuantity(edit,card) : null;
+    return { group, cards, card, quantity: edited?.quantity ?? (card ? suggestedCatalogQuantity(group, card, plan.people, plan.days) : 1),
+      ...(edit?.intent ? {quantityIntent:edit.intent} : {}),
+      quantityReview: Boolean(edit && card && edited.quantityReview),
       product: card ? reviewed ?? { id: card.id, name: card.name, unit: catalogPurchaseUnit(card)?.approximate?catalogPurchaseUnit(card).label:card.unit } : null };
+  }
+  function showRetailer(retailerId) {
+    if(plan.scope!==contextKey())return table('Адрес на сайте изменился. Обнови подбор для выбранного адреса; старые количества сохранились.');
+    const draft = plan.drafts?.find(row => row.scope.retailerId === retailerId);
+    if (!draft || !draft.rows.some(row => row.card)) return table('В этом каталоге пока нет подходящих карточек. Предыдущий список и количества сохранились.');
+    plan.rows = draft.rows; plan.storeName = draft.scope.storeName;
+    plan.alternatives = (plan.alternatives ?? []).map(row => ({ ...row, selected: row.storeId === draft.scope.storeId }));
+    return table(plan.rows.some(row=>row.quantityReview)
+      ? 'В другом магазине фасовки отличаются. Твои количества сохранены в прежнем варианте; здесь проверь и задай количество для отличающихся упаковок. Суммы разных количеств не сравниваю.'
+      : 'Показываю выбранный каталог. Условия и нужное количество сохранены; число упаковок зависит от фасовки. Наличие неизвестно.');
   }
   function confirm() {
     if (!plan || plan.stage !== 'review') return state;
+    if (plan.rows.some(row=>row.quantityReview)) return table('Фасовка изменилась. Задай количество для отличающейся упаковки перед добавлением; прежний вариант сохранился.');
     if (plan.requiresReview) return table('Вернёмся к списку. Проверь показанные товары и подтверди добавление ещё раз.');
     if (options.getMemory().facts.unresolvedConstraints || plan.rows.some(row => !guidedGroupAllowed(row.group, options.getMemory())
         || row.card && isShoppingProductRejected(row.card, options.getMemory()))) {
@@ -194,6 +220,26 @@ export function createGuidedShoppingFlow(options) {
       const next = presentIntake();
       return plan.mode === 'economy' && !plan.question ? load(isCurrent) : next;
     }
+    const retailerFollowup = /^(?:а\s+)?(?:в\s+)?(?:магните?|перекрест(?:ок|ке)|о['’]?кей|пятерочке?)$/u.test(value)
+      ? weeklyRetailerRequest(value)[0] : null;
+    if (retailerFollowup && plan.stage === 'review') {
+      if (plan.scope !== contextKey()) return table('Адрес на сайте изменился. Обнови подбор для выбранного адреса; старые количества сохранились.');
+      if (plan.drafts?.some(draft=>draft.scope.retailerId===retailerFollowup)) return showRetailer(retailerFollowup);
+      const prior = { rows:plan.rows, drafts:plan.drafts, alternatives:plan.alternatives, scope:plan.scope,
+        storeName:plan.storeName, base:plan.base, stage:plan.stage, retailers:plan.retailers };
+      const retailers = [...new Set([...(plan.drafts??[]).map(draft=>draft.scope.retailerId),retailerFollowup])];
+      if (retailers.length>2) return table('За один раз сравниваем два каталога. Текущие варианты сохранились; уточни нужную пару.');
+      plan.retailers = retailers;
+      const token = version;
+      await load(isCurrent,prior.drafts??[]);
+      if (!current(token,isCurrent)) return state;
+      const next = plan.drafts?.find(draft=>draft.scope.retailerId===retailerFollowup);
+      if (!next?.rows.some(row=>row.card)) {
+        Object.assign(plan,prior);
+        return table('Не удалось подобрать товары второго магазина. Первый черновик и твои количества сохранились; можно повторить позже.');
+      }
+      return showRetailer(retailerFollowup);
+    }
     if (/завет(?:ы|ах|ов)\s+ильича|^текущий магазин$/u.test(value)||weeklyRetailerRequest(value).length) {
       const result = advanceGuidedIntake(plan, text, options.getMemory());
       if (!options.updateMemory(result.delta)) return view('Уточним условия.', 'Напиши условия короче.');
@@ -217,11 +263,7 @@ export function createGuidedShoppingFlow(options) {
     if (/^(?:подобрать товары и цены|подбери товары и цены|обновить подбор)$/u.test(value)) return load(isCurrent);
     const storeChoice=value.match(/^показать вариант (magnit|okey|pyaterochka|perekrestok)$/u);
     if(storeChoice&&plan.stage==='review'){
-      const draft=plan.drafts?.find(d=>d.scope.retailerId===storeChoice[1]);
-      if(!draft)return table('Такой вариант ещё не проверен.');
-      plan.rows=draft.rows;plan.storeName=draft.scope.storeName;
-      plan.alternatives=plan.alternatives.map(a=>({...a,selected:a.storeId===draft.scope.storeId}));
-      return table('Показываю выбранный каталог. Отсутствующие в срезе позиции остаются неизвестными.');
+      return showRetailer(storeChoice[1]);
     }
     if (/^(?:добавить показанное|добавить найденное|подтверждаю|применить изменения)$/u.test(value)) return confirm();
     const count = value.match(/^количество\s+(\d{1,2})\s*:\s*(\d{1,3})$/u);
@@ -234,6 +276,20 @@ export function createGuidedShoppingFlow(options) {
         const quantity = Number(count[2]);
         if (quantity < 1 || quantity > 99) return table('Можно указать от 1 до 99 единиц выбранной упаковки или весовой меры.');
         row.quantity = quantity;
+        row.quantityReview = false;
+        const unit=catalogPurchaseUnit(row.card);
+        const intent=unit&&!unit.approximate&&['g','ml','piece'].includes(unit.dimension)
+          ?{dimension:unit.dimension,amount:unit.amount*quantity}:null;
+        const edit = {quantity,cardId:row.card?.id,intent};
+        quantityEdits.set(row.group.key,edit);
+        if(intent) row.quantityIntent=intent; else delete row.quantityIntent;
+        for (const draft of plan.drafts??[]) for (const other of draft.rows) {
+          if (other===row || other.group.key!==row.group.key || !other.card) continue;
+          if(intent) other.quantityIntent=intent; else delete other.quantityIntent;
+          const resolved=editedQuantity(edit,other.card);
+          if(resolved.quantity!==null)other.quantity=resolved.quantity;
+          other.quantityReview=resolved.quantityReview;
+        }
       } else {
         const card = row.cards[Number(choice[2]) - 1];
         if (!card) return table('Такого варианта нет среди полученных карточек.');
@@ -242,10 +298,9 @@ export function createGuidedShoppingFlow(options) {
         if (before && after && before.dimension === after.dimension && before.amount === after.amount) replacement.quantity = row.quantity;
         plan.rows[index] = replacement;
       }
-      plan.alternatives = [];
       return table('Изменение учтено в черновике. Корзина изменится после подтверждения.');
     }
-    if (/^(?:сравнить этот список|сравнить магазины|сравни магазины|сравнить варианты|где дешевле)$/u.test(value)) {
+    if (/^(?:сравнить этот список|сравнить магазины|сравни магазины|сравнить варианты|сравни(?:ть)? с другим магазином|где дешевле)$/u.test(value)) {
       if (!plan.rows.length) return load(isCurrent);
       if (plan.scope !== contextKey()) return load(isCurrent);
       if(plan.stage==='confirmed'&&plan.alternatives?.some(a=>a.retailerId==='perekrestok')
