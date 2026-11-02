@@ -22,8 +22,8 @@ const snapshot=()=>parsePublishedCatalogue({sourceUrl:PUBLISHED_URL,title:'Ка�
     {id:'51922403',name:'БЗМЖ Сыр Ламбер мдж в сух в-е 50% сычужный Россия кг',rubles:'999',cents:'00',endText:'до 28 октября'},
     {id:'51922572',name:'Мицелярная вода д/лица Mixit 500мл',rubles:'356',cents:'85',endText:'до 25 октября'}]});
 const port=()=>createWeeklyRetailCatalogPort({now:()=>now,createMagnitClient:magnitClient,fetchImpl:async()=>new Response(JSON.stringify(snapshot()))});
-test('52 reviewed Magnit identities preserve observed prices and source address; edited packs cannot inherit them',async()=>{
-  assert.equal(WEEKLY_MAGNIT_IDENTITIES.length,52);
+test('60 reviewed Magnit identities preserve observed prices and source address; edited packs cannot inherit them',async()=>{
+  assert.equal(WEEKLY_MAGNIT_IDENTITIES.length,60);
   const result=await port().search('фарш',{scope});assert.equal(result.kind,'catalog');assert.equal(result.products.length,3);
   const card=result.products.find(p=>p.sourceProductId==='1000289065');assert.equal(card.unit,'400 г');assert.equal(card.priceMinor,12999);
   assert.match(card.productUrl,/shopCode=773608/u);assert.equal(card.observedAt,'2026-10-17T19:47:32.304Z');

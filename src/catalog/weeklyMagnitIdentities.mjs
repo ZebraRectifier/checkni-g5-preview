@@ -322,5 +322,56 @@ export const WEEKLY_MAGNIT_IDENTITIES = Object.freeze([
     "unit": "950 г",
     "productPath": "/product/1000233457-golen_tsb_okhl_lotok_1_kg_v_lotok_ooo_soyuzptitseprom_5",
     "purchaseBasis": "weighed-portion"
+  },
+  // Reviewed Nov 2 from the exact 777885 public-page snapshot.
+  // Descriptive pack identities only; source observation times/prices stay untouched.
+  // Full dated provenance is retained in the focused regression fixture.
+  {
+    "sourceProductId": "1000143306",
+    "name": "Молоко пастеризованное Домик в деревне 2.5% 1.4л",
+    "unit": "1.4 л",
+    "productPath": "/product/1000143306-domik_v_derevne_moloko_past_2_5_1_4l_pl_but_vbd_6"
+  },
+  {
+    "sourceProductId": "1000165145",
+    "name": "Макароны Шебекинские No111 Вермишелька легкая 450г",
+    "unit": "450 г",
+    "productPath": "/product/1000165145-makarony_shebekinskie_vermishelka_legkaya_450g"
+  },
+  {
+    "sourceProductId": "1000175566",
+    "name": "Макароны Barilla спирали Джирандоле 450г",
+    "unit": "450 г",
+    "productPath": "/product/1000175566-makarony_barilla_spirali_girandole_450g"
+  },
+  {
+    "sourceProductId": "1000175642",
+    "name": "Рис Увелка Круглозерный шлифованный 5пак*80г",
+    "unit": "400 г",
+    "productPath": "/product/1000175642-ris_kruglozernyy_uvelka_shlifovannyy_5pak_kh80g"
+  },
+  {
+    "sourceProductId": "1000176577",
+    "name": "Масло подсолнечное Благо рафинированное дезодорированное 1л",
+    "unit": "1 л",
+    "productPath": "/product/1000176577-blago_maslo_podsoln_raf_dez_1l_pl_but_blago_15"
+  },
+  {
+    "sourceProductId": "1000209456",
+    "name": "Масло подсолнечное Золотая семечка рафинированное дезодорированное 500мл",
+    "unit": "500 мл",
+    "productPath": "/product/1000209456-maslo_podsolnechnoe_zolotaya_semechka_1_sort_rafinirovannoe_dezodorirovannoe_500ml"
+  },
+  {
+    "sourceProductId": "1000303412",
+    "name": "Рис Семейные секреты/Магнит шлифованный круглозерный 800г",
+    "unit": "800 г",
+    "productPath": "/product/1000303412-magnit_ris_shlifovanyy_kruglozernyy_1sort_900g_p_up_6"
+  },
+  {
+    "sourceProductId": "1000316962",
+    "name": "Сыр Брест-Литовск Российский 50% 200г",
+    "unit": "200 г",
+    "productPath": "/product/1000316962-brest_litovsk_syr_rossiyskiy_50_200g_p_up_savushkin"
   }
 ]);
