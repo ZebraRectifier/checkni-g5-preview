@@ -239,3 +239,9 @@ export function guidedEditGroups(plan, text) {
   plan.groups = plan.groups.slice(0, 16); plan.rows = []; plan.alternatives = []; plan.stage = 'outline';
   return true;
 }
+
+// Restore only known grocery groups; persisted requests never supply executable patterns.
+export function guidedGroupByKey(key) {
+  const group = GROUPS.find(row => row.key === key);
+  return group ? { ...group } : null;
+}

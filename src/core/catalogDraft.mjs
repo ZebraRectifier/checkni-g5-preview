@@ -134,3 +134,13 @@ export function quoteCatalogDraft(rows, { nowMs = Date.now(), maxAgeMs = 60 * 60
     basket: lines.filter(row => row.addable).map(row => ({ ...row.product, quantity: row.quantity })),
     winner: null, availability: 'unknown' };
 }
+
+// Convert a user's existing pack count into a request using a newly read source unit.
+// This carries no observed price or availability into persistence.
+export function catalogRequestForQuantity(card, quantity) {
+  const unit = catalogPurchaseUnit(card);
+  if (!unit || !['g','ml','piece'].includes(unit.dimension) || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 99) return null;
+  const amount = unit.amount * quantity;
+  return Number.isFinite(amount) && amount > 0 && amount <= Number.MAX_SAFE_INTEGER
+    ? { amount, dimension:unit.dimension, approximate:unit.approximate === true } : null;
+}

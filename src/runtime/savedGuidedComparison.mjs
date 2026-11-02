@@ -1,0 +1,120 @@
+import { guidedComparisonForBasket } from '../state/guidedBasketComparison.mjs';
+import { guidedGroupByKey, guidedGroupAllowed, guidedGroupMatches } from '../intelligence/guidedShoppingPlan.mjs';
+import { isShoppingProductRejected } from '../intelligence/shoppingConversation.mjs';
+import { retailSelectionUrl } from '../intelligence/retailProductSelection.mjs';
+import { resolveRegisteredMagnitStore } from '../data/registeredMagnitStores.mjs';
+import { createRetailCatalogClient } from '../ports/retailCatalogPort.mjs';
+import { createWeeklyRetailCatalogPort, PEREKRESTOK_WEEKLY_SCOPE } from '../ports/weeklyRetailCatalogPort.mjs';
+import { getReviewedRetailBasketProduct } from '../catalog/reviewedRetailBasket.mjs';
+import { catalogPurchaseUnit, catalogRequestForQuantity, economicalCatalogCards,
+  suggestedCatalogQuantity, suggestedCatalogQuantityForIntent, quoteCatalogDraft,
+  compareCatalogDraftAlternatives } from '../core/catalogDraft.mjs';
+
+export function savedComparisonScopes(request) {
+  const reference=request.scopes.find(scope=>scope.retailerId==='magnit');
+  const code=/^magnit-(\d{4,12})$/u.exec(reference?.storeId??'')?.[1];
+  const store=code&&resolveRegisteredMagnitStore({shopCode:code});
+  if(!store)return null;
+  return [{...createRetailCatalogClient({retailerId:'magnit',store}).definition,store,priceScope:'address-public-price'},
+    PEREKRESTOK_WEEKLY_SCOPE];
+}
+function product(card) {
+  return getReviewedRetailBasketProduct(card)??{id:card.id,name:card.name,
+    unit:catalogPurchaseUnit(card)?.approximate?catalogPurchaseUnit(card).label:card.unit};
+}
+function admitted(card,scope,group,memory,now) {
+  if(!card||typeof card.sourceProductId!=='string'||card.retailerId!==scope.retailerId
+    ||card.id!=='retail:'+scope.retailerId+':'+scope.storeId+':'+card.sourceProductId
+    ||typeof card.name!=='string'||card.name.length>300||!card.name.trim()
+    ||!Number.isSafeInteger(card.priceMinor)||card.priceMinor<=0||card.currency!=='RUB'
+    ||card.availability!=='unknown'||!Number.isFinite(Date.parse(card.observedAt))||Date.parse(card.observedAt)>now
+    ||!retailSelectionUrl(card.sourceUrl,card.retailerId)||!retailSelectionUrl(card.productUrl,card.retailerId,'productUrlRules')
+    ||!guidedGroupMatches(group,card)||isShoppingProductRejected(card,memory))return false;
+  if(scope.retailerId==='perekrestok')return card.sourceUrl===scope.sourceUrl&&card.productUrl===scope.sourceUrl;
+  try{
+    return [card.sourceUrl,card.productUrl].every(raw=>{
+      const url=new URL(raw);
+      return ['magnit.ru','www.magnit.ru'].includes(url.host)
+        &&(url.pathname==='/product/'+card.sourceProductId||url.pathname.startsWith('/product/'+card.sourceProductId+'-'))
+        &&!url.hash&&[...url.searchParams.keys()].every(key=>['shopCode','shopType'].includes(key))
+        &&url.searchParams.getAll('shopCode').length===1
+        &&url.searchParams.get('shopCode')===scope.store.shopCode
+        &&url.searchParams.getAll('shopType').length===1
+        &&url.searchParams.get('shopType')===String(scope.store.shopType??'1');
+    });
+  }catch{return false;}
+}
+const EMPTY_MEMORY={facts:{},rejected:[],wishes:[],exceptions:[]};
+function requestGroup(binding) {
+ const group=guidedGroupByKey(binding.groupKey);
+ return binding.allowPoultryCuts?{...group,label:'Курица',query:'цыпл',allowPoultryCuts:true}:group;
+}
+
+
+// Only request references are persisted. Every comparison reads source cards
+// again; a stored timestamp, price or prior result is never admitted here.
+export async function loadSavedGuidedComparison(request,basket,{
+  catalog=createWeeklyRetailCatalogPort(),memory=EMPTY_MEMORY,now=Date.now,timeoutMs=15000
+}={}) {
+  const state=guidedComparisonForBasket(request,basket);
+  if(state.kind!=='ready')return {...state,basketPreserved:true};
+  const scopes=savedComparisonScopes(state.request);
+  if(!scopes)return {kind:'unavailable',basketPreserved:true};
+  const started=Date.now(),deadline=started+Math.min(15000,Math.max(1,timeoutMs)),data=new Map();
+  const tasks=scopes.flatMap(scope=>state.bindings.map(binding=>({scope,binding})));
+  let next=0;
+  const worker=async()=>{
+    while(next<tasks.length){
+      const {scope,binding}=tasks[next++],group=requestGroup(binding);
+      const key=scope.retailerId+':'+group.key;
+      if(Date.now()>=deadline||!guidedGroupAllowed(group,memory)){data.set(key,[]);continue;}
+      let response,timer;
+      try{response=await Promise.race([
+        Promise.resolve().then(()=>catalog.search(group.query,{scope,limit:40})),
+        new Promise(resolve=>{timer=setTimeout(()=>resolve(null),Math.min(3500,Math.max(1,deadline-Date.now())));})
+      ]);}catch{/* Other source results remain available. */}finally{clearTimeout(timer);}
+      const seen=new Set();
+      data.set(key,(response?.kind==='catalog'&&Array.isArray(response.products)?response.products:[])
+        .filter(card=>{
+          if(!admitted(card,scope,group,memory,now())||seen.has(card.id))return false;
+          seen.add(card.id);return true;
+        }).slice(0,40));
+    }
+  };
+  await Promise.all([worker(),worker()]);
+  const drafts=scopes.map(scope=>({scope,rows:[]}));
+  for(const binding of state.bindings){
+    const item=basket.find(row=>row.id===binding.productId),baseGroup=requestGroup(binding);
+    const anchor=(data.get(binding.retailerId+':'+binding.groupKey)??[]).find(card=>{
+      const identity=product(card);
+      return card.sourceProductId===binding.sourceProductId&&identity.id===item.id
+        &&identity.name===item.name&&identity.unit===item.unit;
+    });
+    const target=anchor&&catalogRequestForQuantity(anchor,item.quantity);
+    const group={...baseGroup,...(target?{dailyAmount:target.amount,dimension:target.dimension}:{})};
+    for(const draft of drafts){
+      const sourceCards=data.get(draft.scope.retailerId+':'+binding.groupKey)??[];
+      let card=null,quantity=1,quantityReview=!target,intent=null;
+      if(target){
+        if(draft.scope.retailerId===binding.retailerId){card=anchor;quantity=item.quantity;}
+        else{
+          const exactCards=target.approximate?sourceCards:sourceCards.filter(row=>!catalogPurchaseUnit(row)?.approximate);
+          card=economicalCatalogCards(group,exactCards,1,1,{nowMs:now()})[0]
+            ??economicalCatalogCards(group,sourceCards,1,1,{nowMs:now()})[0]??null;
+          if(card)quantity=suggestedCatalogQuantity(group,card,1,1);
+        }
+        if(!target.approximate){
+          intent={amount:target.amount,dimension:target.dimension};
+          const converted=card?suggestedCatalogQuantityForIntent(card,intent):null;
+          quantityReview=!converted||converted.quantityReview;
+          if(converted?.quantity!=null)quantity=converted.quantity;
+        }
+      }
+      draft.rows.push({group,card,quantity,quantityReview,...(intent?{quantityIntent:intent}:{}),product:card?product(card):null});
+    }
+  }
+  return {kind:'catalog_comparison',request:state.request,drafts,
+    comparison:compareCatalogDraftAlternatives(drafts,{nowMs:now()}),
+    quotes:drafts.map(draft=>quoteCatalogDraft(draft.rows,{nowMs:now()})),
+    basketSignature:JSON.stringify(basket),basketPreserved:true,loadedAt:now()};
+}

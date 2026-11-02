@@ -222,7 +222,7 @@ export function renderBasketView(container, items, actions) {
 
   const heading = document.createElement("h2");
   heading.id = "compare-title";
-  heading.textContent = "Где корзина дешевле?";
+  heading.textContent = actions?.guidedComparison ? "Сравнить выбранные магазины" : "Где корзина дешевле?";
 
   const help = document.createElement("p");
   help.id = "compare-help";
@@ -260,7 +260,18 @@ export function renderBasketView(container, items, actions) {
     "Подтвердить свежие реальные цены для этой корзины"
   );
 
-  compareStep.append(eyebrow, heading, help, captureLink, compareButton);
+  if (actions?.guidedComparison) {
+    help.textContent = 'Магазины сохранённого подбора. При сравнении заново проверим источники и учтём текущее количество.';
+    const stores = document.createElement('p');
+    stores.textContent = actions.guidedComparison.names.join(' / ');
+    if(actions.guidedComparison.pending)help.textContent+=' В исходном подборе ещё '+actions.guidedComparison.pending+' поз. без подтверждённых товаров.';
+    const reset = document.createElement('button');reset.type='button';reset.className='text-button';
+    reset.textContent='Убрать сохранённый выбор магазинов';reset.addEventListener('click',actions.onClearGuidedComparison);
+    compareStep.append(eyebrow,heading,help,stores,compareButton,reset);
+    if (!actions.guidedComparison.saved) {
+      const notice=document.createElement('p');notice.textContent='Выбор магазинов пока хранится только в этой вкладке: запись недоступна.';compareStep.append(notice);
+    }
+  } else compareStep.append(eyebrow, heading, help, captureLink, compareButton);
 
   const comparisonOutput = document.createElement("div");
   comparisonOutput.id = "comparison-output";

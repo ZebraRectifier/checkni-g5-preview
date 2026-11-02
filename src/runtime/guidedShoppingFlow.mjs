@@ -206,6 +206,8 @@ export function createGuidedShoppingFlow(options) {
     if (!applied.applied) { plan.base = options.basket.getSnapshot(); return table('Пока мы обсуждали список, корзина изменилась. Проверь таблицу и подтверди добавление ещё раз.'); }
     plan.stage = 'confirmed';
     plan.confirmedBasket=JSON.stringify(options.basket.getSnapshot());
+    try { options.onGuidedBasketConfirmed?.({rows:quote.lines,drafts:plan.drafts}); }
+    catch { return table('Корзина сохранена. Выбор магазинов не удалось сохранить; перепроверь его перед сравнением.'); }
     return table('Добавлены только показанные товары и количества. Можно открыть корзину или сравнить выбранные адреса.');
   }
   async function handle(text, isCurrent = () => true) {

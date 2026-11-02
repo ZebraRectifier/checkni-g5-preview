@@ -1,3 +1,6 @@
+import {createGuidedComparisonStore,createGuidedComparisonRequest,GUIDED_BASKET_COMPARISON_KEY} from './state/guidedBasketComparison.mjs';
+import {loadSavedGuidedComparison,savedComparisonScopes} from './runtime/savedGuidedComparison.mjs';
+import {renderSavedGuidedComparison,savedComparisonStoreLabel} from './components/SavedGuidedComparison.mjs';
 import { searchMockCatalog } from "./data/mockCatalog.mjs";
 import { comparisonFeedback } from "./runtime/comparisonFeedback.mjs";
 import { SHOP_CATALOG } from "./data/shopCatalog.mjs";
@@ -259,6 +262,42 @@ let martenMindState = createMartenMindState();
 // this map stays mode-independent, unlike the catalogue card hints below.
 const budgetPlannerHints = buildSnapshotPriceHints();
 const weeklyRetailCatalog=createWeeklyRetailCatalogPort();
+const savedGuidedComparisonStore=createGuidedComparisonStore();
+let savedCatalogComparison=null,savedCatalogComparisonVersion=0,savedCatalogComparisonTimer=null;
+function invalidateSavedCatalogComparison() {
+  savedCatalogComparison=null;savedCatalogComparisonVersion++;clearTimeout(savedCatalogComparisonTimer);
+}
+function rememberGuidedBasketComparison(record) {
+  const request=createGuidedComparisonRequest(record);
+  if(request)savedGuidedComparisonStore.write(request);else savedGuidedComparisonStore.clear();
+  invalidateSavedCatalogComparison();comparisonFlow.invalidate();renderBasket();
+}
+function savedGuidedComparisonDescription() {
+  const request=publicRetailCatalogMode?savedGuidedComparisonStore.read():null;
+  if(!request)return null;
+  const scopes=savedComparisonScopes(request);if(!scopes)return null;
+  return {names:scopes.map(scope=>savedComparisonStoreLabel(scope)+' · '+scope.storeAddress),saved:savedGuidedComparisonStore.status().saved,pending:request.unresolvedGroupKeys.length};
+}
+async function compareSavedGuidedBasket() {
+  const items=basket.getSnapshot(),request=savedGuidedComparisonStore.read();
+  if(!request)return;
+  const signature=JSON.stringify(items),requestKey=JSON.stringify(request),token=++savedCatalogComparisonVersion;
+  if((basketProposalFlow.getUnresolvedNeeds?.().length??0)>0){renderComparisonState();return;}
+  savedCatalogComparison={status:'loading',signature,requestKey};renderComparisonState();
+  let result;
+  try {result=await loadSavedGuidedComparison(request,items,{catalog:weeklyRetailCatalog,memory:basketProposalFlow.getConversation()});}
+  catch {result={kind:'unavailable'};}
+  if(token!==savedCatalogComparisonVersion||signature!==JSON.stringify(basket.getSnapshot())
+    ||requestKey!==JSON.stringify(savedGuidedComparisonStore.read()))return;
+  savedCatalogComparison={status:'ready',signature,requestKey,result};renderComparisonState({focusResult:true});
+  const expirations=(result.drafts??[]).flatMap(d=>d.rows).filter(row=>row.card)
+    .map(row=>Date.parse(row.card.observedAt)+3600001-Date.now()).filter(delay=>Number.isFinite(delay)&&delay>0);
+  clearTimeout(savedCatalogComparisonTimer);
+  if(expirations.length)savedCatalogComparisonTimer=setTimeout(()=>renderComparisonState(),Math.min(...expirations));
+}
+window.addEventListener('storage',event=>{
+  if(event.key===GUIDED_BASKET_COMPARISON_KEY){invalidateSavedCatalogComparison();renderBasket();}
+});
 let nearbyShopping=null,agreedNearbyStoreKey=null;
 const nearbyShoppingPort = publicRetailCatalogMode ? createNearbyShoppingPort() : null;
 let nearbyBuildGoal='Собери недорогую корзину';
@@ -310,6 +349,7 @@ const basketProposalFlow = createShoppingConversationFlow({
       ? createRetailCatalogClient({ retailerId: 'globus', store: resolveGlobusMoscowRegionStore(options.scope.officialStoreId) })
       : currentRetailClient())?.search(query, options)
       ?? Promise.resolve({ kind: "unavailable" }),
+    onGuidedBasketConfirmed: rememberGuidedBasketComparison,
     compareGuidedBasket: rows => compareSurfaceBasket(rows)
   } : {}),
   resolveCommercialRequest: (text, catalog, context = {}) => shoppingAssistant.resolveCommercialRequest(text, catalog, {
@@ -415,6 +455,7 @@ function compareSurfaceBasket(surfaceBasket) {
   return comparisonPort.compare(surfaceBasket);
 }
 function comparisonAddressChanged({ guidedStoreId = null } = {}) {
+  invalidateSavedCatalogComparison();
   guidedComparisonStoreId = guidedStoreId === selectedGlobusStore.officialStoreId ? guidedStoreId : null;
   comparisonAddressMode = "selected";
   comparisonFlow.invalidate();
@@ -2643,6 +2684,20 @@ function renderComparisonState({ focusResult = false } = {}) {
   const output = document.querySelector("#comparison-output");
   if (!compareButton || !output) return;
 
+  if (publicRetailCatalogMode && savedGuidedComparisonStore.read()) {
+    output.classList.add('saved-catalog-comparison');
+    const loading=savedCatalogComparison?.status==='loading';
+    const needsSelection=(basketProposalFlow.getUnresolvedNeeds?.().length??0)>0;
+    compareButton.disabled=loading||needsSelection;
+    compareButton.setAttribute('aria-busy',String(loading));
+    compareButton.textContent=loading?'Проверяем выбранные магазины…':needsSelection?'Сначала выбери оставшиеся товары':'Сравнить выбранные магазины';
+    output.replaceChildren();
+    if(loading){const p=document.createElement('p');p.textContent='Заново читаем цены выбранных магазинов…';output.append(p);}
+    else if(savedCatalogComparison?.result)renderSavedGuidedComparison(output,savedCatalogComparison.result);
+    if(focusResult&&output.firstElementChild){output.tabIndex=-1;output.focus({preventScroll:true});output.scrollIntoView({block:'start'});}
+    return;
+  }
+  output.classList.remove('saved-catalog-comparison');
   const state = comparisonFlow.getState();
   setMascotState(mascotStateForComparison(state));
   const isLoading = state.status === COMPARISON_STATUS.LOADING;
@@ -2820,6 +2875,8 @@ async function handleBetaLiveExample() {
 function renderBasket() {
   renderStoreMapSelection();
   const items = basket.getSnapshot();
+  if(savedCatalogComparison&&(savedCatalogComparison.signature!==JSON.stringify(items)
+    ||savedCatalogComparison.requestKey!==JSON.stringify(savedGuidedComparisonStore.read())))invalidateSavedCatalogComparison();
   renderBasketView(elements.basketContent, items, {
     onIncrement: (id) => {
       invalidateHybridForManualTakeover();
@@ -2835,9 +2892,11 @@ function renderBasket() {
     },
     onBackToShop: returnToShop,
     comparisonMode,
+    guidedComparison: savedGuidedComparisonDescription(),
+    onClearGuidedComparison:()=>{const result=savedGuidedComparisonStore.clear();invalidateSavedCatalogComparison();comparisonFlow.invalidate();renderBasket();if(!result.saved)showToast('Не удалось убрать сохранённый выбор: запись недоступна. После перезагрузки он может вернуться.');},
     onCompare: () => {
       invalidateHybridForManualTakeover();
-      void handleCompare();
+      if(publicRetailCatalogMode&&savedGuidedComparisonStore.read())void compareSavedGuidedBasket();else void handleCompare();
     }
   });
   renderShoppingNeeds(elements.basketContent, basketProposalFlow.getShoppingNeeds?.() ?? [], basketProposalFlow.getUnresolvedNeeds?.() ?? [], {
@@ -2852,6 +2911,7 @@ function renderBasket() {
     onLink: (lineId,product) => basketProposalFlow.linkNeed(lineId,product)
   });
   if (items.length > 0 && comparisonMode === COMPARISON_MODE.OBSERVED
+      && !(publicRetailCatalogMode&&savedGuidedComparisonStore.read())
       && (publicRetailCatalogMode || comparisonAddressMode === "live-example")) {
     const addresses = createSelectedComparisonStores(currentComparisonStoreScope(), {
       onEdit: publicRetailCatalogMode ? retailerId => {
