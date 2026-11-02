@@ -27,6 +27,8 @@ const GROUPS = [
   ['flakes', 'Хлопья для каши', 'хлопья', /хлопья\s+(?:гречнев|овсян)|(?:гречнев|овсян)\S*\s+хлопья/u, 40, 'g'],
   ['rice', 'Рис', 'рис', /(?:^|\s)рис(?=$|[\s,.])/u, 40, 'g'],
   ['pork', 'Свинина', 'свин', /свинин/u, 70, 'g'],
+  ['bread','Хлеб','хлеб',/хлеб/u,100,'g'],
+  ['kefir','Кефир','кефир',/кефир/u,200,'ml'],
   ['yogurt','Йогурт','йогурт',/йогурт/u,80,'g']
 ].map(([key, label, query, pattern, dailyAmount, dimension]) => ({ key, label, query, pattern, dailyAmount, dimension }));
 
@@ -59,8 +61,12 @@ export function createGuidedShoppingPlan(goal, history, memory) {
   if (!groups.length) groups = GROUPS.filter(group => ['mince', 'buckwheat', 'milk', 'eggs', 'tomatoes', 'apples'].includes(group.key));
   if (/фарш/u.test(user) && !groups.some(row => row.key === 'mince')) groups.unshift(GROUPS[0]);
   if (/фрукт/u.test(user) && !groups.some(row => ['apples', 'bananas'].includes(row.key))) groups.push(GROUPS.find(row => row.key === 'apples'));
+  if (memory.facts.cookingEffort?.origin === 'explicit' && memory.facts.cookingEffort.value === 'minimal')
+    for (const key of ['bread','kefir','curd','cheese']) if (!groups.some(g=>g.key===key)) groups.push(GROUPS.find(g=>g.key===key));
   const retailers=weeklyRetailerRequest(goal);
   if(retailers.length)for(const key of retailers.includes('perekrestok')?['rice','cheese']:['rice','pork','cheese'])if(!groups.some(g=>g.key===key))groups.push(GROUPS.find(g=>g.key===key));
+  if (memory.facts.cookingEffort?.origin === 'explicit' && memory.facts.cookingEffort.value === 'minimal')
+    groups.sort((a,b)=>Number(guidedGroupAllowed(b,memory))-Number(guidedGroupAllowed(a,memory)));
   return { goal: String(goal).slice(0, 300), groups: groups.slice(0, 16).map(row => ({ ...row,
     ...(economy&&row.key==='chicken'&&!/филе/u.test(clean(user))?{label:'Курица',query:'цыпл',allowPoultryCuts:true}:{}) })), retailers, stage: 'intake', mode: economy ? 'economy' : 'balanced',
     location: shoppingLocationRequest(goal), freezer: /морозилк/u.test(clean(goal)) ? true : null,
@@ -92,6 +98,8 @@ export function advanceGuidedIntake(plan, text, memory) {
   if (delta.unset.includes('budgetMinor')) delta.unresolved = delta.unresolved.filter(row => clean(row) !== 'без лимита');
   if (need.clarification) return { issue: need.clarification, delta };
   Object.assign(delta.facts, need.facts);
+  if (delta.facts.cookingEffort?.value === 'minimal')
+    for (const key of ['bread','kefir','curd','cheese']) if (!plan.groups.some(g=>g.key===key)) plan.groups.push({...GROUPS.find(g=>g.key===key)});
   const words = { один: 1, одна: 1, двое: 2, двоих: 2, два: 2, трое: 3, троих: 3, три: 3, четверо: 4, четыре: 4, пятеро: 5, пять: 5, шестеро: 6, шесть: 6, семеро: 7, семь: 7, восьмеро: 8, восемь: 8, девятеро: 9, девять: 9, десятеро: 10, десять: 10, одиннадцать: 11, двенадцать: 12 };
   const bare = value.replace(/^на\s+/u, '');
   if (plan.question === 'people' && (/^\d{1,2}$/u.test(bare) || words[bare])) {
@@ -99,10 +107,35 @@ export function advanceGuidedIntake(plan, text, memory) {
     if (count < 1 || count > 12) return { issue: 'На сколько человек собираем? Здесь можно указать от 1 до 12.', delta };
     delta.facts.peopleCount = { value: count, scope: 'goal' };
   }
-  if (plan.question === 'days' && /^\d{1,2}$/u.test(bare)) {
-    const count = Number(bare);
+  const dayWords = { один:1, два:2, три:3, четыре:4, пять:5, шесть:6, семь:7, восемь:8, девять:9,
+    десять:10, одиннадцать:11, двенадцать:12, тринадцать:13, четырнадцать:14, пятнадцать:15,
+    шестнадцать:16, семнадцать:17, восемнадцать:18, девятнадцать:19, двадцать:20, тридцать:30 };
+  const dayAnswer = bare.replace(/\s+(?:день|дня|дней)$/u, '');
+  const compoundDays = /^(двадцать|тридцать) (один|два|три|четыре|пять|шесть|семь|восемь|девять)$/u.exec(dayAnswer);
+  const spokenDays = compoundDays ? dayWords[compoundDays[1]] + dayWords[compoundDays[2]] : dayWords[dayAnswer];
+  if (plan.question === 'days' && (/^\d{1,2}$/u.test(dayAnswer) || spokenDays !== undefined)) {
+    const count = spokenDays ?? Number(dayAnswer);
     if (count < 1 || count > 31) return { issue: 'На сколько дней нужны покупки? Укажи от 1 до 31.', delta };
     delta.facts.shoppingDays = { value: count, scope: 'goal' };
+  }
+  // Interpret abbreviated amounts only in the pending budget question, never
+  // as household size, quantities or a price supplied by the model.
+  if (plan.question === 'budget') {
+    const amountText = value.replace(/^(?:до|примерно|около)\s+/u, '').replace(/\s*(?:рублей|рубля|рубль|руб\.?|₽)$/u, '');
+    const thousands = /^(.*?)\s*тыс(?:яча|ячи|яч|\.)?$/u.exec(amountText)
+      ?? /^тыс(?:яча|ячи|яч|\.)?\s+(.+)$/u.exec(amountText);
+    if (thousands) {
+      const wordsForAmount = { ...dayWords, одна:1, две:2, одной:1, двух:2, трех:3, четырех:4,
+        пяти:5, шести:6, семи:7, восьми:8, девяти:9, десяти:10 };
+      const raw = thousands[1].trim();
+      const factor = wordsForAmount[raw] ?? (/^\d{1,3}(?:[.,]\d{1,2})?$/u.test(raw) ? Number(raw.replace(',', '.')) : null);
+      if (factor !== null) {
+        const amount = Math.round(factor * 100000);
+        if (!Number.isSafeInteger(amount) || amount < 1000 || amount > 99999900)
+          return { issue: 'Укажи общий бюджет в рублях или выбери «Без лимита».', delta };
+        delta.facts.budgetMinor = { value: amount, scope: 'goal' };
+      }
+    }
   }
   if (plan.question === 'budget' && /^(?:до\s+)?\d{1,6}$/u.test(value)) {
     const amount = Number(value.replace(/^до\s+/u, '')) * 100;
@@ -141,6 +174,9 @@ export function guidedIntakeView(plan, memory) {
 }
 
 export function guidedGroupAllowed(group, memory) {
+  const cooking = memory.facts.cookingEffort;
+  if (cooking?.origin === 'explicit' && cooking.value === 'minimal'
+    && ['mince','chicken','pork','buckwheat','pasta','rice','eggs','potatoes','oats','flakes'].includes(group.key)) return false;
   return !isShoppingProductRejected({ name: group.label, category: ['mince', 'chicken','pork'].includes(group.key) ? 'Мясо' : '' }, memory);
 }
 
@@ -170,6 +206,8 @@ export function guidedGroupMatches(group, card) {
     flakes: /^(?:хлопья\s+(?:.*\s)?(?:овсяные|гречневые)(?=$|[\s,.])|(?:овсяные|гречневые)\s+хлопья)/u,
     rice: /^(?:рис(?=$|[\s,])|крупа\s+рисов)/u,
     pork: /^(?:свинина(?=$|[\s,])|лопатка\s+свиная(?=$|[\s,]))/u,
+    bread:/^хлеб(?=$|[\s,])/u,
+    kefir:/^кефир(?=$|[\s,])/u,
     yogurt:/^йогурт(?=$|[\s,])/u
   };
   if (group.key === 'milk' && /детск|ступень|месяц|\d\+/u.test(title)) return false;

@@ -386,6 +386,38 @@ export const WEEKLY_PEREKRESTOK_IDENTITIES=Object.freeze([
     "sourceUnit": "750 г",
     "unit": "750 г",
     "weighed": false
-  }
+  },
+{
+  "query": "хлеб",
+  "sourceProductId": "99945ce2-1cb5-4ac9-a054-c7650f983986",
+  "name": "Хлеб бездрожжевой Рижский Хлеб Знатный заварной 220 г",
+  "sourceUnit": "220 г",
+  "unit": "220 г",
+  "weighed": false
+},
+{
+  "query": "кефир",
+  "sourceProductId": "b2ea67fe-09fd-4264-9474-e09bafb4e240",
+  "name": "Кефир Асеньевская Ферма 1% 330 мл",
+  "sourceUnit": "330 мл",
+  "unit": "330 мл",
+  "weighed": false
+},
+{
+  "query": "хлеб",
+  "sourceProductId": "90569e2d-9c99-4c8f-b46c-e1bd074e0731",
+  "name": "Хлеб бездрожжевой Хлебное местечко Сибуле гречневый с луком 300 г",
+  "sourceUnit": "300 г",
+  "unit": "300 г",
+  "weighed": false
+},
+{
+  "query": "кефир",
+  "sourceProductId": "5f0d295c-79b0-427b-81b8-7fd4d6eac406",
+  "name": "Кефир Асеньевская Ферма 3.2% 900 мл",
+  "sourceUnit": "900 мл",
+  "unit": "900 мл",
+  "weighed": false
+}
 ].map(row=>Object.freeze(row)));
 

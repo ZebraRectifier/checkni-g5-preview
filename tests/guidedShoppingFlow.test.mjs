@@ -10,6 +10,19 @@ import * as interpreter from '../src/runtime/hybridBasketInterpreter.mjs';
 import { guidedGroupMatches } from '../src/intelligence/guidedShoppingPlan.mjs';
 import { catalogPurchaseUnit } from '../src/core/catalogDraft.mjs';
 const now = Date.now();
+
+test('changing cooking preference after review rebuilds the draft before confirmation',async()=>{
+ const {flow,basket}=setup();
+ await flow.run('Нужна еда на 3 дня для троих');await flow.run('Ну собери');
+ await flow.run('Без лимита');await flow.run('Ограничений нет');await flow.run('Подобрать товары и цены');
+ assert.ok(flow.getState().presentation.guidedShopping.quote.lines.some(row=>row.group.key==='mince'));
+ await flow.run('Не хочу готовить');
+ await flow.run('Подобрать товары и цены');
+ const lines=flow.getState().presentation.guidedShopping.quote.lines;
+ assert.ok(lines.length>0);
+ assert.ok(lines.every(row=>!['mince','chicken','buckwheat','pasta','eggs'].includes(row.group.key)));
+ assert.deepEqual(basket.getSnapshot(),[]);
+});
 const advice = 'Для еды на три дня можно взять фарш, куриное филе, гречку и макароны, молоко и яйца. Добавь томаты и яблоки.';
 const scope = { retailerId: 'globus', storeId: 'globus-store-5011', storeName: 'Глобус Красногорск' };
 const fixtures = [

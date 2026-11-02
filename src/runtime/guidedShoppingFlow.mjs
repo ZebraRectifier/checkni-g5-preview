@@ -245,7 +245,8 @@ export function createGuidedShoppingFlow(options) {
       if (!options.updateMemory(result.delta)) return view('Уточним условия.', 'Напиши условия короче.');
       plan.rows = []; plan.stage = 'intake'; return presentIntake();
     }
-    if (extractShoppingNeedContext(text).recognized || Object.hasOwn(delta.facts, 'budgetMinor') || delta.unset.includes('budgetMinor')) {
+    if (extractShoppingNeedContext(text).recognized || Object.hasOwn(delta.facts, 'budgetMinor') || delta.unset.includes('budgetMinor')
+      || Object.hasOwn(delta.facts, 'cookingEffort') || delta.unset.includes('cookingEffort')) {
       const result = advanceGuidedIntake(plan, text, options.getMemory());
       if (result.issue || !options.updateMemory(result.delta)) return view('Уточним условия.', result.issue ?? 'Предыдущие условия сохранились. Напиши уточнение короче.');
       plan.rows = []; plan.alternatives = []; plan.stage = 'outline'; return presentIntake();
