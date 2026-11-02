@@ -6,6 +6,8 @@ const exact = (value, keys) => record(value) && Object.keys(value).length === ke
 const scope = value => ["goal", "conversation"].includes(value);
 const allowedFact = (key, value) => ({
   budgetMinor: Number.isSafeInteger(value) && value >= 1000 && value <= 99999900,
+  peopleCount: Number.isSafeInteger(value) && value >= 1 && value <= 12,
+  shoppingDays: Number.isSafeInteger(value) && value >= 1 && value <= 31,
   cookingEffort: ["minimal", "normal"].includes(value),
   brandStyle: ["specific", "any"].includes(value),
   budgetStyle: ["better", "cheaper"].includes(value),

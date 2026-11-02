@@ -207,17 +207,20 @@ test("a simple meat refusal with a product searches that product instead of buil
   assert.deepEqual(calls, ["Кефир"]); assert.deepEqual(basket.getSnapshot(), []);
 });
 
-test("new household/period facts stay session-only; explicit meat refusal restores without an unseen draft", async () => {
+test("explicit household/period facts and meat refusal restore without an unseen draft", async () => {
   const values = new Map();
   const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };
   const { say } = session({ preferenceStorage: storage });
   await say("Ужин на двоих на неделю без мяса до 700 ₽");
   const raw = JSON.parse(values.get(SHOPPING_PREFERENCE_STORAGE_KEY));
-  assert.equal(raw.facts.peopleCount, undefined); assert.equal(raw.facts.shoppingDays, undefined);
+  assert.deepEqual(raw.facts.peopleCount,{value:2,scope:'goal'});
+  assert.deepEqual(raw.facts.shoppingDays,{value:7,scope:'goal'});
   assert.equal(raw.rejected.meat.value, true);
   const restored = createShoppingPreferenceStore({ storage }).read();
   assert.equal(restored.rejected.meat.value, true);
   assert.equal(restored.facts.unresolvedConstraints, undefined);
+  assert.equal(restored.facts.peopleCount.value,2);
+  assert.equal(restored.facts.shoppingDays.value,7);
   const reloaded = session({ preferenceStorage: storage });
   await reloaded.say("го"); assert.deepEqual(reloaded.basket.getSnapshot(), []);
 });

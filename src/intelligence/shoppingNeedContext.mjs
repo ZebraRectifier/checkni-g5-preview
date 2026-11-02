@@ -1,5 +1,6 @@
 // Explicit shopping context, never a portion calculation or pack multiplier.
-// These goal facts stay in this conversation; preference storage omits them.
+// Bounded explicit goal facts may survive reload through preference storage;
+// a new shopping goal clears them before another basket is planned.
 const words = { одного: 1, одну: 1, один: 1, одной: 1, двоих: 2, двух: 2, два: 2, две: 2,
   троих: 3, трех: 3, три: 3, четверых: 4, четырех: 4, четыре: 4, пятерых: 5, пяти: 5, пять: 5,
   шестерых: 6, шести: 6, шесть: 6, семерых: 7, семи: 7, семь: 7, восьми: 8, восемь: 8,
