@@ -25,6 +25,28 @@ export function suggestedCatalogQuantity(group, card, people, days) {
   return Math.min(99, Math.max(1, Math.ceil(group.dailyAmount * people * days / unit.amount)));
 }
 
+function validQuantityIntent(intent) {
+  return Boolean(intent && ['g', 'ml', 'piece'].includes(intent.dimension)
+    && Number.isFinite(intent.amount) && intent.amount > 0 && intent.amount <= Number.MAX_SAFE_INTEGER);
+}
+
+// Preserve the requested amount, not the number of packages from another store.
+// Unknown packs and estimated weights require review rather than an invented conversion.
+export function suggestedCatalogQuantityForIntent(card, intent) {
+  const unit = catalogPurchaseUnit(card);
+  if (!validQuantityIntent(intent) || !unit || unit.approximate
+    || unit.dimension !== intent.dimension || !Number.isFinite(unit.amount) || unit.amount <= 0)
+    return { quantity: null, quantityReview: true };
+  const ratio = intent.amount / unit.amount;
+  const nearest = Math.round(ratio);
+  // A manual 3 × 100.4 g is represented as 301.20000000000005 in JS.
+  // Correct only floating-point noise near a whole pack, never a real shortfall.
+  const quantity = nearest >= 1 && Math.abs(ratio - nearest) <= Number.EPSILON * Math.max(1, Math.abs(ratio)) * 4
+    ? nearest : Math.ceil(ratio);
+  return Number.isSafeInteger(quantity) && quantity >= 1 && quantity <= 99
+    ? { quantity, quantityReview: false } : { quantity: null, quantityReview: true };
+}
+
 // Selection and quoting must admit the same observations. In particular, an
 // expired promotion must not displace a usable card before the quote rejects it.
 function catalogObservation(card, nowMs, maxAgeMs) {
@@ -66,6 +88,21 @@ export function compareCatalogDraftAlternatives(drafts, options) {
   const signature=draft=>JSON.stringify(draft.rows.map(r=>[r.group?.key,r.group?.dimension,r.group?.dailyAmount]));
   if(!drafts[0].rows.length||signature(drafts[0])!==signature(drafts[1]))return {kind:'incompatible'};
   if(!drafts.every(d=>typeof d.scope?.storeId==='string')||drafts[0].scope.storeId===drafts[1].scope.storeId)return {kind:'incompatible'};
+  for (let i = 0; i < drafts[0].rows.length; i++) {
+    const pair = drafts.map(draft => draft.rows[i]);
+    if (pair.some(row => row.quantityReview === true)) return { kind: 'incompatible' };
+    if (!pair.some(row => row.quantityIntent != null)) continue;
+    const intent = pair[0].quantityIntent;
+    if (!validQuantityIntent(intent) || pair.some(row => !validQuantityIntent(row.quantityIntent)
+      || row.quantityIntent.dimension !== intent.dimension || row.quantityIntent.amount !== intent.amount))
+      return { kind: 'incompatible' };
+    for (const row of pair) {
+      const suggested = suggestedCatalogQuantityForIntent(row.card, intent);
+      // Both offers cover the same request with the smallest whole-pack quantity.
+      // An unrelated extra package is not a saving or an equivalent basket.
+      if (suggested.quantityReview || row.quantity !== suggested.quantity) return { kind: 'incompatible' };
+    }
+  }
   const quotes=drafts.map(d=>({...d,quote:quoteCatalogDraft(d.rows,options)}));
   if(quotes.some(d=>!d.quote.complete))return {kind:'incomplete'};
   if(quotes.some(d=>!d.quote.allRecent))return {kind:'needs_refresh'};

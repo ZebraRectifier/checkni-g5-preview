@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
-      - run: node --test tests/weeklyCrossRetailer.test.mjs
+      - run: node --test tests/weeklyCrossRetailer.test.mjs tests/catalogQuantityIntent.test.mjs tests/guidedRetailerContext.test.mjs
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --config playwright.cross-retailer.config.mjs
