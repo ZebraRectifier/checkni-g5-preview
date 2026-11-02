@@ -1,3 +1,4 @@
+import {sourceScopedRetailListSelection} from './sourceScopedRetailList.mjs';
 import {
   BETA_EVERYDAY_BINDINGS,
   BETA_EVERYDAY_PROOF_PRODUCTS,
@@ -110,7 +111,7 @@ export function getReviewedRetailSourceProductIds(retailerId, products) {
     .map(binding => binding.sourceProductId);
 }
 
-export function getReviewedRetailBasketProduct(product) {
+function canonicalReviewedRetailBasketProduct(product) {
   if (!product || typeof product !== "object") return null;
   if (product.retailerId === 'perekrestok') return getReviewedPerekrestokListProduct(product);
   const binding = BINDINGS.find(candidate => (
@@ -146,4 +147,9 @@ export function getReviewedRetailBasketProduct(product) {
     unit: canonical.unit,
     category: canonical.category
   });
+}
+
+// Source-scoped list selections remain distinct from all legacy canonical IDs.
+export function getReviewedRetailBasketProduct(product) {
+  return canonicalReviewedRetailBasketProduct(product) ?? sourceScopedRetailListSelection(product)?.product ?? null;
 }

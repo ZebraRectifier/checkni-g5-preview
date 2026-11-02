@@ -206,7 +206,7 @@ export function guidedGroupMatches(group, card) {
     flakes: /^(?:хлопья\s+(?:.*\s)?(?:овсяные|гречневые)(?=$|[\s,.])|(?:овсяные|гречневые)\s+хлопья)/u,
     rice: /^(?:рис(?=$|[\s,])|крупа\s+рисов)/u,
     pork: /^(?:свинина(?=$|[\s,])|лопатка\s+свиная(?=$|[\s,]))/u,
-    bread:/^хлеб(?=$|[\s,])/u,
+    bread:/^(?:хлеб|батон)(?=$|[\s,])/u,
     kefir:/^кефир(?=$|[\s,])/u,
     yogurt:/^йогурт(?=$|[\s,])/u
   };
@@ -244,4 +244,11 @@ export function guidedEditGroups(plan, text) {
 export function guidedGroupByKey(key) {
   const group = GROUPS.find(row => row.key === key);
   return group ? { ...group } : null;
+}
+
+// Candidate grocery families only; the source anchor is revalidated on every comparison.
+export function guidedGroupsForCard(card) {
+  return GROUPS.flatMap(group=>guidedGroupMatches(group,card)?[{...group}]
+    :group.key==='chicken'&&guidedGroupMatches({...group,allowPoultryCuts:true},card)?[{...group,allowPoultryCuts:true}]:[])
+    .filter(group=>group.key!=='oats');
 }

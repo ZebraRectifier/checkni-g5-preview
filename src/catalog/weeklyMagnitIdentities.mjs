@@ -373,5 +373,18 @@ export const WEEKLY_MAGNIT_IDENTITIES = Object.freeze([
     "name": "Сыр Брест-Литовск Российский 50% 200г",
     "unit": "200 г",
     "productPath": "/product/1000316962-brest_litovsk_syr_rossiyskiy_50_200g_p_up_savushkin"
+  },
+  // Exact counts printed in the retained Nov 2 titles; source prices/time stay independent.
+  {
+    "sourceProductId": "1000219622",
+    "name": "Яйца С1 коричневые Лето 20шт",
+    "unit": "20 шт",
+    "productPath": "/product/1000219622-yaytso_kurinoe_leto_s1_korichnevye_20sht"
+  },
+  {
+    "sourceProductId": "2047000033",
+    "name": "Яйцо Окское С1 белые 10шт",
+    "unit": "10 шт",
+    "productPath": "/product/2047000033-yaytso_kurinoe_okskoe_s1_belye_10sht"
   }
 ]);

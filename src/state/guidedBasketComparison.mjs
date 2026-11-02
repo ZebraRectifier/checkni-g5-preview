@@ -12,9 +12,9 @@ const id = value => typeof value === 'string' && value.length > 0 && value.lengt
 // This is a user's comparison request, never a cached quote. Unknown fields
 // (including prices, dates, stock, free-form source URLs) fail closed.
 export function normalizeGuidedComparisonRequest(value) {
-  if (!keys(value,['version','scopes','bindings','unresolvedGroupKeys']) || value.version !== 1
+  if (!keys(value,['version','scopes','bindings','unresolvedGroupKeys']) || ![1,2].includes(value.version)
     || !Array.isArray(value.scopes) || value.scopes.length !== 2
-    || !Array.isArray(value.bindings) || !value.bindings.length || value.bindings.length > 16
+    || !Array.isArray(value.bindings) || !value.bindings.length || value.bindings.length > (value.version===2?64:16)
     || !Array.isArray(value.unresolvedGroupKeys) || value.unresolvedGroupKeys.length > 16) return null;
   const scopes = [];
   for (const scope of value.scopes) {
@@ -34,14 +34,15 @@ export function normalizeGuidedComparisonRequest(value) {
       || !guidedGroupByKey(binding.groupKey)
       || typeof binding.allowPoultryCuts!=='boolean' || binding.allowPoultryCuts && binding.groupKey!=='chicken'
       || !scopes.some(scope=>scope.retailerId === binding.retailerId)
-      || products.has(binding.productId) || groups.has(binding.groupKey)) return null;
+      || products.has(binding.productId) || value.version===1 && groups.has(binding.groupKey)) return null;
     products.add(binding.productId); groups.add(binding.groupKey);
     bindings.push({...binding});
   }
   const unresolvedGroupKeys=[...new Set(value.unresolvedGroupKeys)];
   if(unresolvedGroupKeys.length!==value.unresolvedGroupKeys.length
     ||unresolvedGroupKeys.some(key=>!guidedGroupByKey(key)||groups.has(key)))return null;
-  return {version:1,scopes,bindings,unresolvedGroupKeys};
+  const normalized={version:value.version,scopes,bindings,unresolvedGroupKeys};
+  return JSON.stringify(normalized).length<=MAX_BYTES?normalized:null;
 }
 
 export function guidedComparisonForBasket(request, basket) {

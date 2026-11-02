@@ -3,13 +3,16 @@ import {quoteCatalogDraft,compareCatalogDraftAlternatives} from '../core/catalog
 
 export const savedComparisonStoreLabel = scope => scope.retailerId==='magnit'?'Магнит':'Перекрёсток · доставка';
 
-export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now()}={}) {
+export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onChooseProducts}={}) {
   const doc=parent.ownerDocument,el=(tag,text)=>{const e=doc.createElement(tag);if(text)e.textContent=text;return e;};
   parent.replaceChildren();
   if(result?.kind!=='catalog_comparison'){
     parent.append(el('p',result?.kind==='needs_review'
-      ?'В списке есть товары вне сохранённого подбора. Уточни их в Хоре перед сравнением; корзина сохранена.'
+      ?'Для части позиций нужно выбрать соответствия. Вернись к товарам и проверь список; корзина сохранена.'
       :'Не удалось перепроверить выбранные магазины. Корзина и выбор магазинов сохранены; попробуй позже.'));
+    if(result?.kind==='needs_review'&&typeof onChooseProducts==='function'){
+      const choose=el('button','К товарам');choose.type='button';choose.className='secondary-button';choose.addEventListener('click',onChooseProducts);parent.append(choose);
+    }
     return;
   }
   const quotes=result.drafts.map(draft=>quoteCatalogDraft(draft.rows,{nowMs}));

@@ -1,0 +1,26 @@
+{
+  "purpose": "Retained dated source/database evidence for exact egg-count identity review; not a live freshness assertion",
+  "sourceRun": 41531848982,
+  "sourceCommit": "49c3f947670dbe4d522507a651c9e82625eb80b5",
+  "storeId": "magnit-777885",
+  "rows": [
+    {
+      "source_product_id": "1000219622",
+      "price_minor": 25999,
+      "observed_at": "2026-11-02 21:52:22.72+00",
+      "name": "Яйца С1 коричневые Лето 20шт",
+      "weight_text": null,
+      "product_url": "https://magnit.ru/product/1000219622-yaytso_kurinoe_leto_s1_korichnevye_20sht?shopCode=777885&shopType=1",
+      "image_url": "https://images-foodtech.magnit.ru/wgOK1EjLC0pBo5ATp_9e4r447MSaBvlDJCY-ABnloSY/rs:fit:416:416/plain/s3://img-dostavka/catalog/uf/1a2/1a257778e59d7fa20fe8a95ba3396923/4b7945ebbf3721b1f0d28c1f5ca802ce.jpeg@webp"
+    },
+    {
+      "source_product_id": "2047000033",
+      "price_minor": 11999,
+      "observed_at": "2026-11-02 21:57:00.062+00",
+      "name": "Яйцо Окское С1 белые 10шт",
+      "weight_text": null,
+      "product_url": "https://magnit.ru/product/2047000033-yaytso_kurinoe_okskoe_s1_belye_10sht?shopCode=777885&shopType=1",
+      "image_url": "https://images-foodtech.magnit.ru/tYkfCG3ufuJl8rXvkfBJzrBsVznNjucLQ2EL8NBIOzU/rs:fit:416:416/plain/s3://img-dostavka/catalog/pim/goods/2047000033/image/26d952a02c33dbda13967d2bdfb323e8.jpeg@webp"
+    }
+  ]
+}

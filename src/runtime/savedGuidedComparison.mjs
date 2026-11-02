@@ -61,12 +61,34 @@ export async function loadSavedGuidedComparison(request,basket,{
   const scopes=savedComparisonScopes(state.request);
   if(!scopes)return {kind:'unavailable',basketPreserved:true};
   const started=Date.now(),deadline=started+Math.min(15000,Math.max(1,timeoutMs)),data=new Map();
-  const tasks=scopes.flatMap(scope=>state.bindings.map(binding=>({scope,binding})));
+  const bindingKey=binding=>binding.groupKey+':'+String(binding.allowPoultryCuts);
+  const uniqueBindings=[...new Map(state.bindings.map(binding=>[bindingKey(binding),binding])).values()];
+  const tasks=scopes.flatMap(scope=>uniqueBindings.map(binding=>({scope,binding})));
+  const anchorCards=new Map();
+  if(typeof catalog.bySourceProductIds==='function') {
+    const batches=scopes.flatMap(scope=>{
+      const ids=[...new Set(state.bindings.filter(b=>b.retailerId===scope.retailerId).map(b=>b.sourceProductId))];
+      return Array.from({length:Math.ceil(ids.length/40)},(_,index)=>({scope,ids:ids.slice(index*40,index*40+40)}));
+    });
+    let nextBatch=0;
+    await Promise.all([0,1].map(async()=>{
+      while(nextBatch<batches.length){
+        const {scope,ids}=batches[nextBatch++];if(Date.now()>=deadline)continue;
+        let response,timer;
+        try{response=await Promise.race([
+          Promise.resolve().then(()=>catalog.bySourceProductIds(ids,{scope})),
+          new Promise(resolve=>{timer=setTimeout(()=>resolve(null),Math.min(3500,Math.max(1,deadline-Date.now())));})
+        ]);}catch{/* A successful group read can still supply the anchor. */}finally{clearTimeout(timer);}
+        if(response?.kind==='catalog'&&Array.isArray(response.products))
+          anchorCards.set(scope.retailerId,[...(anchorCards.get(scope.retailerId)??[]),...response.products.filter(card=>ids.includes(card?.sourceProductId))].slice(0,64));
+      }
+    }));
+  }
   let next=0;
   const worker=async()=>{
     while(next<tasks.length){
       const {scope,binding}=tasks[next++],group=requestGroup(binding);
-      const key=scope.retailerId+':'+group.key;
+      const key=scope.retailerId+':'+bindingKey(binding);
       if(Date.now()>=deadline||!guidedGroupAllowed(group,memory)){data.set(key,[]);continue;}
       let response,timer;
       try{response=await Promise.race([
@@ -85,7 +107,9 @@ export async function loadSavedGuidedComparison(request,basket,{
   const drafts=scopes.map(scope=>({scope,rows:[]}));
   for(const binding of state.bindings){
     const item=basket.find(row=>row.id===binding.productId),baseGroup=requestGroup(binding);
-    const anchor=(data.get(binding.retailerId+':'+binding.groupKey)??[]).find(card=>{
+    const anchorScope=scopes.find(scope=>scope.retailerId===binding.retailerId);
+    const anchor=[...(anchorCards.get(binding.retailerId)??[]),...(data.get(binding.retailerId+':'+bindingKey(binding))??[])].find(card=>{
+      if(!admitted(card,anchorScope,baseGroup,memory,now()))return false;
       const identity=product(card);
       return card.sourceProductId===binding.sourceProductId&&identity.id===item.id
         &&identity.name===item.name&&identity.unit===item.unit;
@@ -93,7 +117,7 @@ export async function loadSavedGuidedComparison(request,basket,{
     const target=anchor&&catalogRequestForQuantity(anchor,item.quantity);
     const group={...baseGroup,...(target?{dailyAmount:target.amount,dimension:target.dimension}:{})};
     for(const draft of drafts){
-      const sourceCards=data.get(draft.scope.retailerId+':'+binding.groupKey)??[];
+      const sourceCards=data.get(draft.scope.retailerId+':'+bindingKey(binding))??[];
       let card=null,quantity=1,quantityReview=!target,intent=null;
       if(target){
         if(draft.scope.retailerId===binding.retailerId){card=anchor;quantity=item.quantity;}

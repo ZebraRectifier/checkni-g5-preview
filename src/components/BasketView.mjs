@@ -222,7 +222,7 @@ export function renderBasketView(container, items, actions) {
 
   const heading = document.createElement("h2");
   heading.id = "compare-title";
-  heading.textContent = actions?.guidedComparison ? "Сравнить выбранные магазины" : "Где корзина дешевле?";
+  heading.textContent = actions?.guidedComparison||actions?.manualComparison ? "Сравнить выбранные магазины" : "Где корзина дешевле?";
 
   const help = document.createElement("p");
   help.id = "compare-help";
@@ -260,8 +260,29 @@ export function renderBasketView(container, items, actions) {
     "Подтвердить свежие реальные цены для этой корзины"
   );
 
-  if (actions?.guidedComparison) {
-    help.textContent = 'Магазины сохранённого подбора. При сравнении заново проверим источники и учтём текущее количество.';
+  if(actions?.manualComparison && (!actions.guidedComparison||actions.manualComparison.kind!=='ready')) {
+    const manual=actions.manualComparison;
+    help.textContent=manual.kind==='ready'
+      ?'Подберём варианты для твоих количеств. Марки и фасовки могут отличаться; доставка и сборы не включены, наличие неизвестно.'
+      :manual.kind==='choose_magnit'
+      ?'Для списка доставки выбери конкретный Магнит. Сам список и количества сохранятся.'
+      :manual.reason==='request_limit'
+      ?'В одном сравнении пока поддерживается до 64 позиций. Весь список сохранён.'
+      :manual.reason==='different_magnit_addresses'
+      ?'В списке разные адреса Магнита. Пока не объединяем их в один магазин и не определяем выгоду.'
+      :'Для части позиций пока нет проверенных соответствий. Ничего не исключаем из сравнения молча: проверь товары в списке.';
+    compareStep.append(eyebrow,heading,help);
+    if(manual.names){const stores=document.createElement('p');stores.textContent=manual.names.join(' / ');compareStep.append(stores);}
+    if(manual.issues?.length){const pending=document.createElement('p');pending.textContent='Проверить: '+manual.issues.slice(0,4).map(row=>row?.name??'Неизвестная позиция').join('; ');compareStep.append(pending);}
+    if(manual.kind==='choose_magnit'){
+      const choose=document.createElement('button');choose.type='button';choose.className='secondary-button';choose.textContent='Выбрать Магнит';choose.addEventListener('click',actions.onChooseManualMagnit);compareStep.append(choose);
+    } else if(manual.kind!=='ready') {
+      const edit=document.createElement('button');edit.type='button';edit.className='secondary-button';edit.textContent='К товарам';edit.addEventListener('click',actions.onBackToShop);compareStep.append(edit);
+    }
+    compareStep.append(compareButton);
+    if(actions.guidedComparison){const reset=document.createElement('button');reset.type='button';reset.className='text-button';reset.textContent='Убрать сохранённый выбор магазинов';reset.addEventListener('click',actions.onClearGuidedComparison);compareStep.append(reset);}
+  } else if (actions?.guidedComparison) {
+    help.textContent = 'Выбранные каталоги. При сравнении заново проверим источники и учтём текущее количество.';
     const stores = document.createElement('p');
     stores.textContent = actions.guidedComparison.names.join(' / ');
     if(actions.guidedComparison.pending)help.textContent+=' В исходном подборе ещё '+actions.guidedComparison.pending+' поз. без подтверждённых товаров.';

@@ -1,6 +1,7 @@
 import { createRetailCatalogClient,readBoundedJsonResponse } from './retailCatalogPort.mjs';
 import {WEEKLY_PEREKRESTOK_IDENTITIES} from '../catalog/weeklyPerekrestokIdentities.mjs';
-import { WEEKLY_MAGNIT_IDENTITIES } from '../catalog/weeklyMagnitIdentities.mjs';
+import {weeklyMagnitCard} from '../catalog/reviewedMagnitCatalogCard.mjs';
+export {weeklyMagnitCard};
 import { validPublishedSnapshot,currentPublishedProducts,PUBLISHED_URL } from '../observations/okeyPublishedPromotions.mjs';
 import {validPyatSnapshot,pyatWeeklyCards,validPyatWeeklySource,PYAT_WEEKLY_SCOPE} from '../observations/pyaterochkaPublishedPromotions.mjs';
 import {resolveRegisteredMagnitStore} from '../data/registeredMagnitStores.mjs';
@@ -12,25 +13,6 @@ export const PEREKRESTOK_WEEKLY_SCOPE=Object.freeze({...PEREKRESTOK_REVIEWED_LIS
 export const OKEY_WEEKLY_SCOPE=Object.freeze({retailerId:'okey',storeId:'okey-moscow-proshoper',storeName:'О’КЕЙ · акции Москвы (Прошопер)',
   storeAddress:'Городской каталог, физический магазин не подтверждён',priceScope:'city-promotion',physicalStoreId:null});
 const normalize=s=>String(s??'').normalize('NFKC').toLowerCase().replace(/\s+/gu,' ').trim();
-export function weeklyMagnitCard(card) {
-  if(card?.retailerId!=='magnit')return card;
-  const condition=`${card.priceConditionLabel??'Условие цены неизвестно'} · условия карты не подтверждены`;
-  card={...card,priceConditionLabel:condition};
-  if(card?.retailerId==='magnit'&&/весов|примерно|около|[~≈]/iu.test(card.name??''))
-    return {...card,unit:'упаковка',catalogPurchaseBasis:null};
-  const identity=WEEKLY_MAGNIT_IDENTITIES.find(p=>p.sourceProductId===card?.sourceProductId&&normalize(p.name)===normalize(card.name));
-  if(!identity||card.retailerId!=='magnit')return card;
-  let url;try{url=new URL(card.productUrl);}catch{return card;}
-  if(url.protocol!=='https:'||!['magnit.ru','www.magnit.ru'].includes(url.host)||url.pathname!==identity.productPath
-    ||!/^\d{4,12}$/.test(url.searchParams.get('shopCode')??'')||!card.id.startsWith('retail:magnit:magnit-'+url.searchParams.get('shopCode')+':'))return card;
-  // An exact, reviewed pack identity can repair missing descriptive weight;
-  // it cannot change the observed amount, condition, address or timestamp.
-  if(card.unit&&card.unit!=='упаковка'&&normalize(card.unit).replaceAll(' ','')!==normalize(identity.unit).replaceAll(' ',''))return card;
-  return {...card,unit:identity.unit,priceConditionLabel:condition,...(identity.purchaseBasis==='weighed-portion'?{
-    catalogPurchaseBasis:'weighed-portion',
-    priceConditionLabel:`${condition} · весовой товар: цена за ориентировочную порцию ${identity.unit}; стоимость зависит от фактической массы`
-  }:{})};
-}
 const okeyUnits=Object.freeze({
   '51922355':{name:'БЗМЖ Йогурт Даниссимо Фантазия хрустящие шарики6,9%105г',unit:'105 г'},
   '51922403':{name:'БЗМЖ Сыр Ламбер мдж в сух в-е 50% сычужный Россия кг',unit:'1 кг'},
@@ -94,10 +76,33 @@ export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,create
       }catch{return [];}finally{checkedAt=now();inFlight=null;}
     })();return inFlight;
   }
-  return {async search(query,{scope,limit=40}={}) {
+  return {
+    async bySourceProductIds(ids,{scope}={}) {
+      if(!Array.isArray(ids)||!ids.length||ids.length>40||ids.some(id=>typeof id!=='string'||!/^[A-Za-z0-9_-]{1,80}$/u.test(id)))return {kind:'unavailable'};
+      if(scope?.retailerId==='perekrestok'&&scope.storeId===PEREKRESTOK_WEEKLY_SCOPE.storeId){
+        const response=await deliveryRows();if(response?.kind!=='catalog')return response;
+        return {...response,products:response.products.flatMap(card=>{
+          const identity=WEEKLY_PEREKRESTOK_IDENTITIES.find(p=>p.sourceProductId===card.sourceProductId&&ids.includes(p.sourceProductId));
+          if(!identity||normalize(card.name)!==normalize(identity.name)||normalize(card.unit)!==normalize(identity.sourceUnit)
+            ||card.id!==`retail:perekrestok:${PEREKRESTOK_WEEKLY_SCOPE.storeId}:${identity.sourceProductId}`
+            ||card.productUrl!==PEREKRESTOK_WEEKLY_SCOPE.sourceUrl)return [];
+          return [{...card,unit:identity.unit,...(identity.weighed?{catalogPurchaseBasis:'weighed-portion'}:{})}];
+        })};
+      }
+      if(scope?.retailerId==='magnit'){
+        const code=/^magnit-(\d{4,12})$/u.exec(scope.storeId??'')?.[1],store=code&&resolveRegisteredMagnitStore({shopCode:code});
+        if(!store||scope.store!==undefined&&scope.store?.shopCode!==code)return{kind:'unavailable'};
+        const response=await createMagnitClient({retailerId:'magnit',store}).bySourceProductIds(ids);
+        return response?.kind==='catalog'?{...response,products:response.products.map(weeklyMagnitCard)}:response;
+      }
+      return {kind:'unavailable'};
+    },
+    async search(query,{scope,limit=40}={}) {
     if(scope?.retailerId==='perekrestok'){
       if(scope.storeId!==PEREKRESTOK_WEEKLY_SCOPE.storeId)return {kind:'unavailable'};
-      const identities=WEEKLY_PEREKRESTOK_IDENTITIES.filter(p=>p.query===normalize(query));
+      const requested=normalize(query);
+      const identities=WEEKLY_PEREKRESTOK_IDENTITIES.filter(p=>p.query===requested
+        ||requested==='филе'&&p.query==='цыпл'&&normalize(p.name).includes('филе'));
       if(!identities.length)return {kind:'catalog',products:[]};
       const response=await deliveryRows();
       if(response?.kind!=='catalog')return response;
