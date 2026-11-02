@@ -20,7 +20,9 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
   const exact=quotes.every(quote=>quote.complete&&quote.allRecent&&!quote.hasEstimates);
   const status=el('p');status.setAttribute('role','status');
   const messages=[];
-  if(exact&&comparison.kind==='fresh')messages.push('Подытог товаров в '+comparison.lowerStoreName+' ниже на '+formatRubMinor(comparison.differenceMinor)+'.');
+  if(exact&&comparison.kind==='fresh')messages.push(comparison.differenceMinor===0
+    ?'По наблюдаемым ценам суммы товаров в этих вариантах совпали.'
+    :'По наблюдаемым ценам подытог товаров в '+comparison.lowerStoreName+' ниже на '+formatRubMinor(comparison.differenceMinor)+'.');
   else {
     if(quotes.some(quote=>!quote.complete))messages.push('Список неполный. Выгоду пока не определяем.');
     if(quotes.some(quote=>!quote.allRecent))messages.push('Есть старые или неизвестные цены.');
@@ -29,7 +31,7 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
   }
   status.textContent=messages.join(' ');
   if(result.request?.unresolvedGroupKeys?.length)parent.append(el('p','Сравниваем только выбранные позиции. В исходном подборе ещё '+result.request.unresolvedGroupKeys.length+' поз. без подтверждённых товаров.'));
-  parent.append(status,el('p','Марки и фасовки могут отличаться. Доставка и сборы не включены; наличие неизвестно.'));
+  parent.append(status,el('p','Марки и фасовки могут отличаться. Условия карт и акций проверяй по источнику. Доставка и сборы не включены; наличие неизвестно.'));
   result.drafts.forEach((draft,index)=>{
     const quote=quotes[index],details=el('details');details.className='future-step saved-catalog-variant';
     const total=quote.knownSubtotalMinor==null?'сумма неизвестна':formatRubMinor(quote.knownSubtotalMinor);

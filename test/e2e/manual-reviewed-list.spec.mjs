@@ -1,6 +1,29 @@
 import {test,expect} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
 import {selectStore,openBasket} from './helpers/pixel-surface.mjs';
+test('saved comparison distinguishes equal observed subtotals from a cheaper option and expired quotes',async({page,context})=>{
+ await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ const render=async(priceMinor,ageMs=0)=>page.evaluate(async({priceMinor,ageMs})=>{
+  const {renderSavedGuidedComparison}=await import('/src/components/SavedGuidedComparison.mjs');
+  const nowMs=Date.parse('2026-11-02T23:00:00Z');
+  const row={group:{key:'rice',label:'Рис',dimension:'g',dailyAmount:50},quantity:1,
+   product:{id:'test-rice',name:'Рис',unit:'1 кг'},card:{name:'Рис 1 кг',unit:'1 кг',priceMinor:10000,currency:'RUB',
+   observedAt:new Date(nowMs-ageMs).toISOString(),sourceUrl:'https://example.org/quote',priceConditionLabel:'Условия карты не подтверждены'}};
+  let root=document.querySelector('#comparison-contract-test');
+  if(!root){root=document.createElement('section');root.id='comparison-contract-test';document.body.append(root);}
+  renderSavedGuidedComparison(root,{kind:'catalog_comparison',drafts:[
+   {scope:{retailerId:'magnit',storeId:'a',storeName:'Магнит'},rows:[row]},
+   {scope:{retailerId:'perekrestok',storeId:'b',storeName:'Перекрёсток'},rows:[{...row,card:{...row.card,priceMinor}}]}
+  ]},{nowMs});
+ },{priceMinor,ageMs});
+ const output=page.locator('#comparison-contract-test');
+ await render(10000);await expect(output.getByRole('status')).toHaveText('По наблюдаемым ценам суммы товаров в этих вариантах совпали.');
+ await expect(output).not.toContainText('ниже на');await expect(output).toContainText('Условия карт и акций проверяй по источнику.');
+ await render(12000);await expect(output.getByRole('status')).toContainText('По наблюдаемым ценам подытог товаров в Магнит ниже на');
+ await render(12000,3600001);await expect(output.getByRole('status')).toContainText('Есть старые или неизвестные цены.');
+ await expect(output.getByRole('status')).not.toContainText('ниже на');
+});
 const {rows}=JSON.parse(await readFile(new URL('../../tests/fixtures/weekly-retail/cross-retailer-20261101.json',import.meta.url),'utf8'));
 test('manual reviewed products from both networks add and survive edits, Back and reload without AI',async({page,context})=>{
  let ai=0;const errors=[];page.on('pageerror',e=>errors.push(e.message));
