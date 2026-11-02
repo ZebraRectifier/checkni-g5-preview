@@ -521,7 +521,10 @@ body.pixel-workspace .hori-price-note #catalog-note { position: absolute; z-inde
 /* Hory is summoned from the single navigation entry, not a permanent pane. */
 body.pixel-workspace .pixel-hory-dialog { position: fixed; inset: 0; width: min(760px,calc(100% - 24px)); max-width: 760px; max-height: min(88dvh,900px); margin: auto; padding: 20px; overflow: auto; overscroll-behavior: contain; border: 2px solid var(--line); border-radius: 2px; background: var(--surface); color: var(--ink); box-shadow: none; }
 body.pixel-workspace .pixel-hory-dialog::backdrop { background: #09060dcc; }
-body.pixel-workspace .pixel-hory-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+/* Keep the exit reachable while reading a long answer. Reserve space when
+   keyboard navigation scrolls a control behind the pinned header. */
+body.pixel-workspace .pixel-hory-dialog { --hory-dialog-padding: 20px; scroll-padding-top: 160px; }
+body.pixel-workspace .pixel-hory-header { position: sticky; top: calc(-1 * var(--hory-dialog-padding)); z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: calc(-1 * var(--hory-dialog-padding)) calc(-1 * var(--hory-dialog-padding)) 16px; padding: var(--hory-dialog-padding); background: var(--surface); }
 body.pixel-workspace .pixel-hory-header h2 { margin: 0; font-size: 26px; }
 body.pixel-workspace .pixel-hory-identity { display: flex; gap: 12px; align-items: center; min-width: 0; }
 body.pixel-workspace .pixel-hory-identity img { flex: none; width: 56px; height: 56px; object-fit: contain; image-rendering: pixelated; }
@@ -612,7 +615,7 @@ body.pixel-workspace #basket-proposal-help { margin: 0; color: var(--muted); fon
   body.pixel-workspace .pixel-collection-row { grid-auto-columns: 124px; gap: 6px; }
   body.pixel-workspace .product-grid { gap: 8px; }
   body.pixel-workspace .product-card { padding: 6px; }
-  body.pixel-workspace .pixel-hory-dialog { padding: 14px; }
+  body.pixel-workspace .pixel-hory-dialog { --hory-dialog-padding: 14px; padding: 14px; }
   body.pixel-workspace .hori-composer { bottom: -14px; }
 }
 @media (prefers-reduced-motion: reduce) {
