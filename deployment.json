@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "2399d5d4cee752f3444cd918d02df3c9b557eeea",
+  "sourceCommit": "49c3f947670dbe4d522507a651c9e82625eb80b5",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -20,7 +20,9 @@
     "scope": "Москва · Яндекс Еда delivery",
     "products": null,
     "categories": null,
-    "autoRefresh": "Supabase Cron 06:17, 12:17, 18:17 UTC daily; source availability permitting"
+    "autoRefresh": "Supabase Cron 00:17, 06:17, 12:17, 18:17 UTC daily; five-hour minimum source pause; source availability permitting",
+    "freshComparisonMaxAgeHours": 1,
+    "continuousFreshPriceCoverage": "not established"
   },
   "da": {
     "storeId": "da-public-promo",
@@ -3046,5 +3048,31 @@
     },
     "browserTest": "Public address-search adaptation; historical fixture clock is synthetic, not live freshness evidence",
     "liveFreshnessAcceptance": "pending new source snapshots"
+  },
+  "sourceCommitRole": "Latest integrated private source; reviewed public-specific storefront overrides are retained.",
+  "savedBasketComparisonRelease": {
+    "sourcePr": 640,
+    "sourceCommit": "49c3f947670dbe4d522507a651c9e82625eb80b5",
+    "testedSourceHead": "e5a29885dfc013fe5bb38c26eb74f8eb43011dc9",
+    "sourceExactCI": "https://github.com/ZebraRectifier/Checkni/actions/runs/41522697529",
+    "sourceActualMainCI": "https://github.com/ZebraRectifier/Checkni/actions/runs/41527307271",
+    "retainedPublicBase": "330d40116545c12e3c65b4addb8f389c543d80fa",
+    "scope": "Preserve reviewed Magnit/Perekrestok catalogue selections for saved baskets; refetch current quantities; keep recognized compound exclusions out of purchase needs.",
+    "files": {
+      "src/app.mjs": "926ef14e9b72ce8ae57db6bfed64bf8217e2593b0ca0d91e213ca9aeaca5514a",
+      "src/components/BasketView.mjs": "895e50a703ba3cc15bb634b9a9fcff9c85f78354be4b03892a121fdc7ae458cb",
+      "src/components/SavedGuidedComparison.mjs": "bdc9d77d96f44c1e4123497869b57e7c0b13a6803ebc641d8ecfb724aee8d5dc",
+      "src/components/pixel-storefront.css": "e3eeb4a7d518b51e66b13911f1a05e7a28e5e13d78fc0c361aca419bb348b944",
+      "src/core/catalogDraft.mjs": "1795cb5b44a96385e165ee58ab74bcdcf1b713ff60be58800db99be9089c7d2e",
+      "src/intelligence/guidedShoppingPlan.mjs": "6c5f4a5c26569a02a94fcc7898fdc937f5baa21969ff1f51a1bc6681010ec0ff",
+      "src/runtime/guidedShoppingFlow.mjs": "d4259f6cc933377341abb76c266e3d20ab9cec9f2102a36ff1de91116d6d6a3a",
+      "src/runtime/savedGuidedComparison.mjs": "15005da63cfa57347d91f7c037333ec5acd81e1ac9a01f301b09033504be4f6f",
+      "src/runtime/shoppingConversationFlow.mjs": "1fb8c85af3b3d33c14ecfbac1ac7203071672123403da50005f3ff4270c3e8a5",
+      "src/runtime/shoppingNeedsFlow.mjs": "115f8db84d690c2a703abc054c594862078fe39e1288e1e7b8b72cadfe823d25",
+      "src/state/guidedBasketComparison.mjs": "abafa0e841319c30ca570c2dc56e17a79cc0d6896138cdcfb07d257b36e46f87"
+    },
+    "commercialBoundary": "Core goods subtotals for reviewed catalogue contexts; alternative brands/packs disclosed; delivery fees and stock unproven; not a whole-trip or district winner.",
+    "freshCompleteBasketAcceptance": "not established; missing products, dated observations and repeatable same-context cycles remain open",
+    "physicalAndroidAcceptance": "not established"
   }
 }

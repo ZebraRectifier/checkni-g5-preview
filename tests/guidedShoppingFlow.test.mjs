@@ -208,3 +208,15 @@ test('a superseded catalogue request cannot restore an old quote or mutate the b
   current = false; flow.start('Новый список', []); resolve({ kind: 'catalog', products: [card(fixtures[0])] }); await loading;
   assert.equal(flow.getState().presentation.guidedShopping, undefined); assert.deepEqual(basket.getSnapshot(), []);
 });
+
+test('guided comparison context is emitted only after successful explicit basket confirmation',async()=>{
+ const records=[];const {flow,basket}=setup({hasGuidedAgreedStore:()=>true,onGuidedBasketConfirmed:record=>records.push(record)});
+ await flow.run('Собери недорогую корзину на 2 дня для 4 человек');
+ await flow.run('Ограничений нет');
+ assert.equal(records.length,0);assert.deepEqual(basket.getSnapshot(),[]);
+ await flow.run('Добавить найденное');
+ assert.equal(records.length,1);
+ assert.ok(records[0].rows.some(row=>row.addable===true));
+ assert.ok(records[0].rows.every(row=>typeof row.addable==='boolean'));
+ assert.ok(basket.getSnapshot().length>0);
+});

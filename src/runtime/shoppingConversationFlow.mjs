@@ -618,6 +618,7 @@ export function createShoppingConversationFlow(options) {
           getRetailContextKey:options.getGuidedRetailContextKey,
           selectStore: options.selectGuidedStore,
           searchCatalog: options.searchGuidedCatalog,
+          onGuidedBasketConfirmed: options.onGuidedBasketConfirmed,
           compareBasket: options.compareGuidedBasket });
         state = guidedShopping.start(directGuidedBuild ? text : adviceHistory.find(row => row.role === "user")?.text ?? text,
           directGuidedBuild ? [] : adviceHistory);

@@ -657,3 +657,8 @@ body.pixel-workspace .nearby-address-row button { flex: none; }
 body.pixel-workspace #nearby-locate { justify-self: start; }
 body.pixel-workspace .nearby-extra > summary { min-height: 44px; cursor: pointer; color: var(--muted); padding-block: 10px; }
 body.pixel-workspace .nearby-home #nearby-shopping-panel { gap: 8px; }
+
+/* Saved basket comparison keeps its first status clear of the sticky basket summary. */
+body.pixel-workspace .saved-catalog-comparison { scroll-margin-block-start: 100px; }
+body.pixel-workspace #basket-view .saved-catalog-variant.future-step { padding: 12px 14px; margin: 12px 0; }
+body.pixel-workspace .saved-catalog-variant summary { cursor: pointer; min-height: 44px; }
