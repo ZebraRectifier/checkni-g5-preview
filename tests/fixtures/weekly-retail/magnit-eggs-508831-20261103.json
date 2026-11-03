@@ -1,0 +1,43 @@
+{
+  "purpose": "Retained source identity/count evidence; no claim of live freshness, stock or cross-store equivalence",
+  "provenance": {
+    "sourceRun": 41720985177,
+    "sourceCommit": "e3817184946d2085564af1de5797731d9ee48f3a",
+    "checkpointCommit": "2d6feb58bae5455a468a4e6d665a30b7614879d6",
+    "acceptedSourceFileSha256": "0cc72b749b75d83baafbaa6f9e0de09852de39f39feae91823a331727bc0a1bc"
+  },
+  "sourceProduct": {
+    "sourceProductId": "3454700001",
+    "name": "Куриное яйцо C1 10шт в ассортименте",
+    "priceMinor": 8999,
+    "oldPriceMinor": null,
+    "currency": "RUB",
+    "priceCondition": "public-online",
+    "salesChannel": "public-store-product-page",
+    "availability": "unknown",
+    "productUrl": "https://magnit.ru/product/3454700001-yaytso_stolovoe_s1_10sht_boks_20?shopCode=508831&shopType=1",
+    "sourceUrl": "https://magnit.ru/product/3454700001-yaytso_stolovoe_s1_10sht_boks_20?shopCode=508831&shopType=1",
+    "imageUrl": "https://images-foodtech.magnit.ru/OqqclOmVdgExE920w3zCERFRlOoXXPC8beUMEm5CmGU/rs:fit:416:416/plain/s3://img-dostavka/catalog/pim/goods/3454700001/image/1b60422a778ebb953412c9ebe3fd513b.jpeg@webp",
+    "categoryUrl": "https://magnit.ru/catalog/63963-testmmmolochnyy_prilavok?shopCode=508831&shopType=1",
+    "mainCategoryId": 63963,
+    "weightText": "10шт",
+    "locationLabel": "Московская обл, г Ногинск, д Щемилово, ул Орлова, д 26",
+    "scopeBinding": "public-store-product-page",
+    "bindingId": "magnit-shopcode-508831",
+    "scopeEvidenceUrl": "https://magnit.ru/product/3454700001-yaytso_stolovoe_s1_10sht_boks_20?shopCode=508831&shopType=1",
+    "observedAt": "2026-11-03T21:36:28.181Z",
+    "retailerId": "magnit",
+    "storeId": "magnit-508831",
+    "storeName": "Магнит · Московская обл, г Ногинск, д Щемилово, ул Орлова, д 26",
+    "localityId": "region-moscow-oblast",
+    "localityName": "Московская область",
+    "metadataSource": "original-public-navigation-response",
+    "selectedStoreControl": {
+      "selector": ".pl-shop-select-bar",
+      "visible": true,
+      "label": "Магнит",
+      "address": "Московская обл, г Ногинск, д Щемилово, ул Орлова, д 26",
+      "title": "Московская обл, г Ногинск, д Щемилово, ул Орлова, д 26"
+    }
+  }
+}
