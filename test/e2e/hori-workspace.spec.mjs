@@ -109,5 +109,7 @@ test('preferences before a store stay as intake and recipe follow-ups send the a
  await expect(page.locator('#basket-proposal-status')).toContainText('Для второго варианта');
  expect(calls).toHaveLength(2);expect(calls[1].history).toEqual([{role:'user',text:question},{role:'assistant',text:reply}]);
  expect(calls[1].context).toMatchObject({peopleCount:4,shoppingDays:10,cookingEffort:'minimal',excluded:['meat']});
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ await expect(page.locator('#basket-proposal-status')).toBeInViewport({ratio:0.9});
  await closeHory(page);await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(0);await expectNoOverflow(page);
 });
