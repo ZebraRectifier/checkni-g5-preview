@@ -3335,5 +3335,29 @@
     "databaseRlsAuthPricesCoreProviderAndAutomaticRetry": "unchanged",
     "sourceBackport": "local22cd96f9; not merged or deployed",
     "publicationAcceptance": "pending exact/main/Pages/served runtime and published recovery"
+  },
+  "reviewedCanonicalComparison20261103": {
+    "kind": "reviewed-canonical-selected-store-comparison",
+    "publicBase": "4b23da38780a58f4c0dea857c95e10521660b05b",
+    "sourceBase": "6325a8cd79d13d5a7ff66f76bb063d5da4bea038",
+    "sourceCandidate": "5461208d",
+    "testedRuntimeCommit": "917dc46341df6f71fdfd800d4bea9e213d0720f2",
+    "files": {
+      "src/app.mjs": "0383f9c10e423e62a2fae20def1eb5b39206269073c7978e9644cfc7c904a414",
+      "src/runtime/manualCatalogComparison.mjs": "a721fbaf1a75f3da45e187464421c0542e6bee69d9cdccd9614e6a91fd4b8434"
+    },
+    "trigger": "Adding reviewed canonical milk after explicitly choosing Magnit left the comparison on the independent legacy path.",
+    "result": "The explicit storefront opts reviewed exact canonical packs into the existing selected-store two-network request; lists without a selected store retain their independent route.",
+    "validation": {
+      "focusedNodePassed": 25,
+      "sourceBrowserPassed": 8,
+      "realApiComposedDesktopMobileCasesPassed": 4,
+      "workers": 1,
+      "retries": 0,
+      "realProviderRequests": 0,
+      "physicalAndroidVerified": false
+    },
+    "corePricesUnitsSourcesAndFreshnessPolicy": "unchanged",
+    "publicationAcceptance": "pending exact/main/Pages/served-runtime and published-path verification"
   }
 }
