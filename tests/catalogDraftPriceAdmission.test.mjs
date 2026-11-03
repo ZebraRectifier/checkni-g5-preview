@@ -41,3 +41,11 @@ test('dated prices remain explicit fallbacks and fresh candidates retain pack-co
   assert.equal(quote.allRecent, false);
   assert.equal(quote.winner, null);
 });
+
+test('an unresolved pack or quantity cannot enter the confirmed subtotal or addable basket',()=>{
+ const quote=quoteCatalogDraft([{card:card({}),product,quantity:3,quantityReview:true}],{nowMs});
+ assert.equal(quote.lines[0].unitPriceMinor,10000); // The observed unit price stays visible.
+ assert.equal(quote.lines[0].lineTotalMinor,null);
+ assert.equal(quote.knownSubtotalMinor,null);assert.equal(quote.complete,false);
+ assert.equal(quote.basket.length,0);
+});

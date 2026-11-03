@@ -143,14 +143,15 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
       return !deletion||!targets(deletion[1]).length;
     });
     const compoundMutation=compound.some(part=>/^(?:удали|убери|исключи)\s|\s(?:оставь|сделай|всего|ещ[её])\s|\s(?:убери|удали|не\s+(?:надо|нужно))$/iu.test(part));
+    const conversationUpdate=delta.reject.length>0||delta.unset.length>0||Object.keys(delta.facts).length>0;
     // Whole advice/planning turns must reach the existing guarded provider
     // before commas can turn their verbs into independent shopping needs.
     // Keep the exact conversational shorthand separate from real short names.
     // An unresolved refusal asks locally through the same delegate, not AI.
-    // A recognized refusal belongs to conversation memory before commas can
+    // Recognized preferences belong to conversation memory before commas can
     // turn its product names into purchases. Explicit needs edits keep their
     // existing atomic removal/quantity workflow.
-    if(unresolvedRefusal||(delta.reject.length>0&&!compoundMutation)||shoppingAdviceTopic(text)==='advice'||isShoppingPlanningRequest(text)||/^пп[.!?]*$/iu.test(text)) {
+    if(delta.newGoal||unresolvedRefusal||(conversationUpdate&&!compoundMutation)||shoppingAdviceTopic(text)==='advice'||isShoppingPlanningRequest(text)||/^пп[.!?]*$/iu.test(text)) {
       ownsView=false;selectionActive=false;
       await delegate.run(text);
       if(token!==epoch)return getState();

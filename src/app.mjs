@@ -1,3 +1,4 @@
+import {prepareManualCatalogComparison} from './runtime/manualCatalogComparison.mjs';
 import {createGuidedComparisonStore,createGuidedComparisonRequest,GUIDED_BASKET_COMPARISON_KEY} from './state/guidedBasketComparison.mjs';
 import {loadSavedGuidedComparison,savedComparisonScopes} from './runtime/savedGuidedComparison.mjs';
 import {renderSavedGuidedComparison,savedComparisonStoreLabel} from './components/SavedGuidedComparison.mjs';
@@ -278,9 +279,39 @@ function savedGuidedComparisonDescription() {
   const scopes=savedComparisonScopes(request);if(!scopes)return null;
   return {names:scopes.map(scope=>savedComparisonStoreLabel(scope)+' · '+scope.storeAddress),saved:savedGuidedComparisonStore.status().saved,pending:request.unresolvedGroupKeys.length};
 }
+function currentManualCatalogComparison() {
+  if(!publicRetailCatalogMode)return null;
+  const saved=savedGuidedComparisonStore.read();
+  if(saved&&saved.version!==2)return null;
+  return prepareManualCatalogComparison(basket.getSnapshot(),{
+    pinnedMagnitStoreId:saved?.scopes.find(scope=>scope.retailerId==='magnit')?.storeId,
+    magnitStoreId:retailSurfaceStage==='store'&&retailBrowserState.retailerId==='magnit'
+      ?'magnit-'+selectedMagnitStore.shopCode:null
+  });
+}
+function chooseManualMagnitCatalogue() {
+  // Follow the same explicit network/address entry as the store cards. Direct
+  // selectRetailer would bypass the public address chooser and use a default.
+  document.dispatchEvent(new CustomEvent('checkni:shop-action',{detail:{action:'stores'}}));
+  const card=document.getElementById('retail-store-card-magnit');
+  if(card)card.click();
+  else showToast('Выбор Магнита временно недоступен. Корзина сохранена.');
+}
+function startManualCatalogComparison() {
+  const candidate=currentManualCatalogComparison();
+  if(candidate?.kind!=='ready'){renderBasket();return;}
+  const written=savedGuidedComparisonStore.write(candidate.request);
+  if(!written.ok){showToast('Не удалось подготовить сравнение. Список сохранён.');return;}
+  invalidateSavedCatalogComparison();comparisonFlow.invalidate();renderBasket();
+  void compareSavedGuidedBasket();
+}
 async function compareSavedGuidedBasket() {
-  const items=basket.getSnapshot(),request=savedGuidedComparisonStore.read();
+  const items=basket.getSnapshot();let request=savedGuidedComparisonStore.read();
   if(!request)return;
+  if(request.version===2){const candidate=currentManualCatalogComparison();
+    if(candidate?.kind!=='ready'){renderBasket();return;}
+    const written=savedGuidedComparisonStore.write(candidate.request);if(!written.ok)return;request=candidate.request;
+  }
   const signature=JSON.stringify(items),requestKey=JSON.stringify(request),token=++savedCatalogComparisonVersion;
   if((basketProposalFlow.getUnresolvedNeeds?.().length??0)>0){renderComparisonState();return;}
   savedCatalogComparison={status:'loading',signature,requestKey};renderComparisonState();
@@ -2684,6 +2715,16 @@ function renderComparisonState({ focusResult = false } = {}) {
   const output = document.querySelector("#comparison-output");
   if (!compareButton || !output) return;
 
+  const manual=currentManualCatalogComparison();
+  if(manual&&(!savedGuidedComparisonStore.read()||manual.kind!=='ready')) {
+    output.classList.add('saved-catalog-comparison');output.replaceChildren();
+    const blocked=(basketProposalFlow.getUnresolvedNeeds?.().length??0)>0;
+    compareButton.disabled=manual.kind!=='ready'||blocked;
+    compareButton.setAttribute('aria-busy','false');
+    compareButton.textContent=blocked?'Сначала выбери оставшиеся товары':manual.kind==='ready'
+      ?'Сравнить Магнит и Перекрёсток':manual.kind==='choose_magnit'?'Сначала выбери Магнит':'Сначала проверь позиции списка';
+    return;
+  }
   if (publicRetailCatalogMode && savedGuidedComparisonStore.read()) {
     output.classList.add('saved-catalog-comparison');
     const loading=savedCatalogComparison?.status==='loading';
@@ -2693,7 +2734,7 @@ function renderComparisonState({ focusResult = false } = {}) {
     compareButton.textContent=loading?'Проверяем выбранные магазины…':needsSelection?'Сначала выбери оставшиеся товары':'Сравнить выбранные магазины';
     output.replaceChildren();
     if(loading){const p=document.createElement('p');p.textContent='Заново читаем цены выбранных магазинов…';output.append(p);}
-    else if(savedCatalogComparison?.result)renderSavedGuidedComparison(output,savedCatalogComparison.result);
+    else if(savedCatalogComparison?.result)renderSavedGuidedComparison(output,savedCatalogComparison.result,{onChooseProducts:returnToShop});
     if(focusResult&&output.firstElementChild){output.tabIndex=-1;output.focus({preventScroll:true});output.scrollIntoView({block:'start'});}
     return;
   }
@@ -2893,10 +2934,13 @@ function renderBasket() {
     onBackToShop: returnToShop,
     comparisonMode,
     guidedComparison: savedGuidedComparisonDescription(),
+    manualComparison:currentManualCatalogComparison(),
+    onChooseManualMagnit:chooseManualMagnitCatalogue,
     onClearGuidedComparison:()=>{const result=savedGuidedComparisonStore.clear();invalidateSavedCatalogComparison();comparisonFlow.invalidate();renderBasket();if(!result.saved)showToast('Не удалось убрать сохранённый выбор: запись недоступна. После перезагрузки он может вернуться.');},
     onCompare: () => {
       invalidateHybridForManualTakeover();
-      if(publicRetailCatalogMode&&savedGuidedComparisonStore.read())void compareSavedGuidedBasket();else void handleCompare();
+      if(currentManualCatalogComparison()?.kind==='ready')startManualCatalogComparison();
+      else if(publicRetailCatalogMode&&savedGuidedComparisonStore.read())void compareSavedGuidedBasket();else void handleCompare();
     }
   });
   renderShoppingNeeds(elements.basketContent, basketProposalFlow.getShoppingNeeds?.() ?? [], basketProposalFlow.getUnresolvedNeeds?.() ?? [], {
@@ -2911,7 +2955,7 @@ function renderBasket() {
     onLink: (lineId,product) => basketProposalFlow.linkNeed(lineId,product)
   });
   if (items.length > 0 && comparisonMode === COMPARISON_MODE.OBSERVED
-      && !(publicRetailCatalogMode&&savedGuidedComparisonStore.read())
+      && !(publicRetailCatalogMode&&(savedGuidedComparisonStore.read()||currentManualCatalogComparison()))
       && (publicRetailCatalogMode || comparisonAddressMode === "live-example")) {
     const addresses = createSelectedComparisonStores(currentComparisonStoreScope(), {
       onEdit: publicRetailCatalogMode ? retailerId => {

@@ -48,23 +48,27 @@ export function matchesReviewedPerekrestokListIdentity(product) {
     && unitKey(product.unit) === unitKey(identity.unit);
 }
 
-export function getReviewedPerekrestokListProduct(product) {
+export function matchesReviewedPerekrestokListContext(product, sourceProductId = product?.sourceProductId) {
   const context = PEREKRESTOK_REVIEWED_LIST_CONTEXT;
-  if (!product || product.retailerId !== context.retailerId) return null;
-  const pack = PEREKRESTOK_REVIEWED_LIST_PACKS.find(p => p.sourceProductId === product.sourceProductId);
-  if (!pack || nameKey(product.name) !== nameKey(pack.sourceName)
-      || (product.unit != null && unitKey(product.unit) !== unitKey(pack.identity.unit))
-      || !contextUrl(product.productUrl)) return null;
-
+  if (!product || product.retailerId !== context.retailerId
+      || typeof sourceProductId !== 'string' || !contextUrl(product.productUrl)) return false;
   // The normalizer first supplies only pack fields; the final card also carries
   // its retained context. Reject contradictory context whenever supplied.
   for (const [field, expected] of Object.entries({
-    id: `retail:${context.retailerId}:${context.storeId}:${pack.sourceProductId}`,
+    id: `retail:${context.retailerId}:${context.storeId}:${sourceProductId}`,
     storeId: context.storeId, storeName: context.storeName, bindingId: context.bindingId,
     salesChannel: context.salesChannel, scopeBinding: 'same-source'
-  })) if (Object.hasOwn(product, field) && product[field] !== expected) return null;
-  if (Object.hasOwn(product, 'sourceUrl') && !contextUrl(product.sourceUrl)) return null;
+  })) if (Object.hasOwn(product, field) && product[field] !== expected) return false;
+  if (Object.hasOwn(product, 'sourceUrl') && !contextUrl(product.sourceUrl)) return false;
   if (Object.hasOwn(product, 'priceCondition')
-      && !['yandex-eda-regular', 'yandex-eda-promo'].includes(product.priceCondition)) return null;
+      && !['yandex-eda-regular', 'yandex-eda-promo'].includes(product.priceCondition)) return false;
+  return true;
+}
+
+export function getReviewedPerekrestokListProduct(product) {
+  if (!matchesReviewedPerekrestokListContext(product)) return null;
+  const pack = PEREKRESTOK_REVIEWED_LIST_PACKS.find(p => p.sourceProductId === product.sourceProductId);
+  if (!pack || nameKey(product.name) !== nameKey(pack.sourceName)
+      || (product.unit != null && unitKey(product.unit) !== unitKey(pack.identity.unit))) return null;
   return pack.identity;
 }

@@ -119,7 +119,7 @@ export function quoteCatalogDraft(rows, { nowMs = Date.now(), maxAgeMs = 60 * 60
     const unit = catalogPurchaseUnit(card);
     const observation = catalogObservation(card, nowMs, maxAgeMs);
     const observedPrice = observation.valid;
-    const valid = observedPrice && Number.isSafeInteger(quantity) && quantity >= 1 && quantity <= 99 && unit;
+    const valid = observedPrice && row.quantityReview !== true && Number.isSafeInteger(quantity) && quantity >= 1 && quantity <= 99 && unit;
     const lineTotalMinor = valid ? card.priceMinor * quantity : null;
     const safe = lineTotalMinor !== null && Number.isSafeInteger(lineTotalMinor);
     return { ...row, unit, unitPriceMinor: observedPrice ? card.priceMinor : null, lineTotalMinor: safe ? lineTotalMinor : null,

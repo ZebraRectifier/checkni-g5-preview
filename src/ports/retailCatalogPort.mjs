@@ -1,3 +1,4 @@
+import {sourceScopedRetailListSelection} from '../catalog/sourceScopedRetailList.mjs';
 import {
   CATALOG_SEARCH_PUBLISHABLE_KEY
 } from "./catalogGatewayPort.mjs";
@@ -691,7 +692,7 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
     productUrl
   });
 
-  return Object.freeze({
+  const normalized = {
     id: `retail:${definition.retailerId}:${row.store_id}:${row.source_product_id}`,
     ...(basketProduct ? { basketProductId: basketProduct.id } : {}),
     name: row.name.trim(),
@@ -739,7 +740,13 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
       })
     } : {}),
     observedAt: new Date(observedMs).toISOString()
-  });
+  };
+  const scoped = !basketProduct && sourceScopedRetailListSelection(normalized);
+  // Keep source units intact for the delivery identity gate. The list has its own unit.
+  return Object.freeze(scoped ? {...normalized,basketProductId:scoped.product.id,
+    priceConditionLabel:scoped.card.priceConditionLabel
+      +(scoped.card.retailerId==='perekrestok'&&scoped.card.catalogPurchaseBasis==='weighed-portion'
+        ? ' · весовая порция; стоимость зависит от фактической массы' : '')} : normalized);
 }
 
 function normalizeRetailCategory(row, retailer = "globus") {

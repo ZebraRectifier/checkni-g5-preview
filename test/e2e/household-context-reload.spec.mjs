@@ -1,0 +1,32 @@
+import {test,expect} from '@playwright/test';
+import {openHory} from './helpers/pixel-surface.mjs';
+
+test('explicit household and period survive reload and clear for a new basket without AI',async({page,context})=>{
+  let ai=0;const errors=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  await context.route('**/*',route=>['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
+  await page.route('**/functions/v1/ai-basket-proposal',route=>{ai++;return route.abort();});
+  const facts=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.shopping.preferences.v1'))?.facts??{});
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  expect((await facts()).peopleCount).toBeUndefined();
+  expect((await facts()).shoppingDays).toBeUndefined();
+  await openHory(page);
+  const send=async text=>{await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};
+  await send('Нас шестеро, покупки на две недели');
+  await expect.poll(async()=>(await facts()).peopleCount?.value).toBe(6);
+  expect((await facts()).shoppingDays.value).toBe(14);
+  await send('Не хочу готовить');
+  await expect.poll(async()=>(await facts()).cookingEffort?.value).toBe('minimal');
+  await page.reload();await openHory(page);
+  await send('Что ты помнишь?');
+  await expect(page.locator('#basket-proposal-status')).toContainText('6 чел.');
+  await expect(page.locator('#basket-proposal-status')).toContainText('14 дней');
+  await send('Новая корзина');
+  await expect.poll(async()=>(await facts()).peopleCount).toBeUndefined();
+  expect((await facts()).shoppingDays).toBeUndefined();
+  expect((await facts()).cookingEffort.value).toBe('minimal');
+  const needs=await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.shopping-needs.v1'))?.lines??[]);
+  expect(needs).toEqual([]);
+  expect(ai).toBe(0);expect(errors).toEqual([]);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
