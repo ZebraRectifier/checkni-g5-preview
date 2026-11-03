@@ -1,14 +1,15 @@
 {
-  "kind": "public-surface-navigation-repair",
+  "kind": "public-hory-navigation-and-household-repair",
   "publicBase": "4ae9686dacfd6f754b2ba4e02e80cbcc3c33dc27",
   "sourceBase": "6342caf34a4abe314f3767a50f6a9bebe1694b5e",
-  "testedRuntimeCommit": "17bca1c2b246e777b5af6521183dd23b1fb33d05",
+  "testedRuntimeCommit": "a6c1aea92816e261b04809d82d8fad91cfec70cf",
   "files": {
     "src/app.mjs": "7e5d08955687ebb6c27b5cb98233258508c93c98497ed9b744d28afbcadc3ba4",
-    "src/components/HoriWorkspace.mjs": "491eb52482eb4d0d229ffa0da710d8fdfe2b7469f92b752dc12f0278a87e1cdc"
+    "src/components/HoriWorkspace.mjs": "491eb52482eb4d0d229ffa0da710d8fdfe2b7469f92b752dc12f0278a87e1cdc",
+    "src/intelligence/retailProductSelection.mjs": "bb257c946eaec7dc4de36ea81cd3ff9277027d00b2adabda389d93ad54bf2bd7"
   },
-  "trigger": "background shop-state carrying basket view dismissed an already-open dialogue, including after reload",
-  "result": "only explicit app basket navigation, existing shop actions and browser history dismiss the dialogue; background state notifications do not",
+  "trigger": "background shop-state carrying basket view dismissed an already-open dialogue, including after reload; generic shopping nouns with a selected retailer discarded household and duration",
+  "result": "only explicit app basket navigation, existing shop actions and browser history dismiss the dialogue; background state notifications do not; generic household requests persist people, days and preferences with a selected retailer and survive reload",
   "unchanged": [
     "price/Core calculations",
     "source contexts and original observations",
@@ -25,7 +26,9 @@
     ],
     "workers": 1,
     "retries": 0,
-    "providerCalls": 0
+    "providerCalls": 0,
+    "nodePassed": 65,
+    "selectedHouseholdRegressionBeforeFailed": 1
   },
   "privateSourceBackport": "pending independent integration; this is explicitly a public surface follow-up",
   "publicationAcceptance": "pending exact/main/Pages/runtime and actual published recovery/context journey"
