@@ -19,7 +19,7 @@ export function shoppingAdviceFocus(text) {
   return Object.freeze({ topic, targets: Object.freeze(targets), subject });
 }
 
-export function resolveShoppingAdviceFollowup(text, focus, volumeQuestionPending = false) {
+export function resolveShoppingAdviceFollowup(text, focus, volumeQuestionPending = false, hasAcceptedAdvice = false) {
   const value = normalizeShoppingText(stripAssistantGreetingPrefix(text)).replace(/[.!?]+$/u, "");
   const volumeLiteral = /^(?:на\s+)?(?:\d{1,2}(?:[.,]\d{1,2})?\s*|(?:один|одна|одно|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|полтора|полторы)\s+)(?:л|литр|литра|литров)$/u.test(value);
   if (focus && volumeQuestionPending === true && volumeLiteral) {
@@ -53,6 +53,13 @@ export function resolveShoppingAdviceFollowup(text, focus, volumeQuestionPending
       : focus?.subject && value.split(/\s+/u).includes(focus.subject));
   const commercial = /цен[ауы]|стоим|сто[ия]т|скидк|акци|дешев|налич|доставк|заказ|где|магнит|глобус|метро|пятерочк|перекресток/iu.test(value);
   const command = /новая\s+(?:корзина|задача)|другая\s+корзина|сбрось|забудь|отмени|откат|верни\s+как|перестрой|пересобери|обнови\s+корзину|(?:^|[,;.!?]\s*|\sи\s)(?:а\s+)?(?:добавь|положи|убери|удали|замени|возьми|купи|собери|закажи)(?=$|\s)/iu.test(value);
+  const recipeReference = /^(?:(?:оставим|берем|давай(?: оставим)?)\s+(?:первый|второй|третий|[1-3])\s+вариант[.!?,;]\s*)?как\s+(?:(?:его|ее|их|это)\s+(?:приготовить|сделать)|(?:приготовить|сделать)\s+(?:его|ее|их|это))(?:\s+.{1,80})?$/u.test(value);
+  if (recipeReference && !commercial && !command) {
+    if (!focus || !hasAcceptedAdvice) return { kind: "clarification", message: "Какой вариант блюда имеешь в виду? Назови его — подскажу простой способ." };
+    const subject = focus.targets.map(shoppingTargetLabel).join(" и ") || focus.subject;
+    const anchored = subject ? `Про ${subject}: ${text}` : text;
+    return { kind: "question", text: anchored.length <= 300 ? anchored : text, readOnly: true, adviceReference: true };
+  }
   const adviceExplanation = /^(?:а\s+)?(?:почему|зачем)(?=$|\s)/u.test(value)
     && !/корзин|набор|магазин|адрес|побед|сравнен|итог|сумм|стоим|дешев|выгод/u.test(value);
   const mincePurpose = focus?.topic === "selection" && focus.subject === "фарш" && /^(?:котлеты|соус|начинка)$/u.test(value);
