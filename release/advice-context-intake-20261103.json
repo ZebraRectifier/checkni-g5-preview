@@ -1,0 +1,32 @@
+{
+  "kind": "public-advice-context-and-intake-repair",
+  "publicBase": "904a194dfb7800cc8ec4cddcd0450b84aa79ad1b",
+  "sourceBase": "6342caf34a4abe314f3767a50f6a9bebe1694b5e",
+  "testedRuntimeCommit": "e6e5629387e1c5b249b3fe0869341181a94d3000",
+  "files": {
+    "src/intelligence/shoppingTurnContext.mjs": "cd0bcdea8287b6e9789dab6cbd8548ba6f0f99dcc676ab1ada9ca993a88d580a",
+    "src/runtime/shoppingConversationFlow.mjs": "40967a34e7cdc8acc0d73bdb2890ef1d0c4bc46b2326d81af9cf5dff69a7eabe"
+  },
+  "trigger": [
+    "an ordinal recipe follow-up changed topic and cleared the accepted advice history before its provider request",
+    "a preparation preference before retailer selection generated an unrelated historical seed draft"
+  ],
+  "result": [
+    "known recipe references retain the actual accepted advice; missing context asks one clarification",
+    "public shopping intake saves pure preferences before store selection without generating a seed basket"
+  ],
+  "localValidation": {
+    "regressionBeforeFailed": 2,
+    "newFocusedNodePassed": 3,
+    "combinedNodePassed": 159,
+    "combinedBrowserPassed": 17,
+    "combinedBrowserTimeouts": 1,
+    "isolatedManualRecheckPassed": 2,
+    "workers": 1,
+    "retries": 0,
+    "providerCallsForRegressionTests": 0
+  },
+  "serverProviderAuthQuotaAndCore": "unchanged",
+  "privateSourceBackport": "pending independent source integration",
+  "publicationAcceptance": "pending exact/main/Pages/served identity and actual published history payload"
+}
