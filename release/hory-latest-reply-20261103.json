@@ -2,18 +2,29 @@
   "kind": "public-latest-hory-reply-scroll-repair",
   "publicBase": "104aa8f03e1c766c3a4e2ace60f290cbcfad95d7",
   "sourceBase": "6342caf34a4abe314f3767a50f6a9bebe1694b5e",
-  "testedRuntimeCommit": "8120c895dec6d07e06e2644e19d8ce312b06766c",
+  "testedRuntimeCommit": "a261e3ce58acf637eadd3a8db85baf5ade9780b4",
   "files": {
-    "src/components/HoriWorkspace.mjs": "994bd9399ab92eb40433ee819f0b65d2ba0ef36849c7e53b105d9f4bcfe7b229"
+    "src/components/HoriWorkspace.mjs": "dc714cca47eebf21aa9dba9354f4350ff16c314c8965b566929e2b0a20ab08fe"
   },
   "trigger": "latest responses remained below the dialog viewport because revealDialogue scrolled an inner non-scrolling section",
-  "result": "scroll the actual native Hory dialog after the latest response renders; retain the existing composer and approved layout",
+  "result": "Reveal the start of the latest advice using the actual native dialog; do not override the structured product-results reveal.",
   "validation": {
     "beforeViewportFailed": 2,
     "afterBrowserPassed": 18,
     "workers": 1,
     "retries": 0,
-    "providerCalls": 0
+    "providerCalls": 0,
+    "refinedScroll": {
+      "initialBrowserPassed": 8,
+      "initialBrowserFailed": 2,
+      "initialFailures": "mobile page setup: Target crashed and setup timeout, concurrent observed environment OutOfMemory",
+      "isolatedMobileRecheckPassed": 2,
+      "longAdviceDesktopAndMobilePassed": 2,
+      "providerCalls": 0,
+      "fullFinalHeadVerification": "pending remote exact-head gates",
+      "finalWorkspaceBrowserPassed": 12,
+      "finalWorkspaceBrowserRetries": 0
+    }
   },
   "priceCoreProviderAuthAndQuota": "unchanged",
   "publicationAcceptance": "pending exact/main/Pages/served files and published recorded-response replay",
