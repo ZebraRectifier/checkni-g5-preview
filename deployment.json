@@ -17,7 +17,7 @@
   ],
   "perekrestok": {
     "storeId": "perekrestok-yandex-3186917",
-    "scope": "Москва · Яндекс Еда delivery",
+    "scope": "РњРѕСЃРєРІР° В· РЇРЅРґРµРєСЃ Р•РґР° delivery",
     "products": null,
     "categories": null,
     "autoRefresh": "Supabase Cron 00:17, 06:17, 12:17, 18:17 UTC daily; five-hour minimum source pause; source availability permitting",
@@ -26,7 +26,7 @@
   },
   "da": {
     "storeId": "da-public-promo",
-    "scope": "Сеть ДА! · публичный промо-каталог · наличие зависит от магазина",
+    "scope": "РЎРµС‚СЊ Р”Рђ! В· РїСѓР±Р»РёС‡РЅС‹Р№ РїСЂРѕРјРѕ-РєР°С‚Р°Р»РѕРі В· РЅР°Р»РёС‡РёРµ Р·Р°РІРёСЃРёС‚ РѕС‚ РјР°РіР°Р·РёРЅР°",
     "products": 94,
     "categories": 1,
     "validFrom": "2026-10-01",
@@ -35,7 +35,7 @@
   },
   "auchan": {
     "storeId": "auchan-msk-public-promo",
-    "scope": "Москва · публичный промо-каталог · наличие зависит от гипермаркета",
+    "scope": "РњРѕСЃРєРІР° В· РїСѓР±Р»РёС‡РЅС‹Р№ РїСЂРѕРјРѕ-РєР°С‚Р°Р»РѕРі В· РЅР°Р»РёС‡РёРµ Р·Р°РІРёСЃРёС‚ РѕС‚ РіРёРїРµСЂРјР°СЂРєРµС‚Р°",
     "products": 312,
     "categories": 1,
     "validFrom": "2026-10-01",
@@ -43,15 +43,15 @@
     "source": "https://catalog.auchan.ru/60z9R061p97677"
   },
   "okeyDirectory": {
-    "scope": "Официальный выбор Москва: 8 адресов в Москве, 3 в Московской области",
+    "scope": "РћС„РёС†РёР°Р»СЊРЅС‹Р№ РІС‹Р±РѕСЂ РњРѕСЃРєРІР°: 8 Р°РґСЂРµСЃРѕРІ РІ РњРѕСЃРєРІРµ, 3 РІ РњРѕСЃРєРѕРІСЃРєРѕР№ РѕР±Р»Р°СЃС‚Рё",
     "stores": 11,
     "storePricesWithCard": "unknown",
     "storePricesWithoutCard": "unknown",
     "autoRefresh": "unavailable without exact-store price source"
   },
   "okeyDelivery": {
-    "selectedDeliveryAddress": "Москва, проспект Мира, 211к2",
-    "scope": "Яндекс Еда · доставка на выбранный адрес; физический магазин выдачи не доказан",
+    "selectedDeliveryAddress": "РњРѕСЃРєРІР°, РїСЂРѕСЃРїРµРєС‚ РњРёСЂР°, 211Рє2",
+    "scope": "РЇРЅРґРµРєСЃ Р•РґР° В· РґРѕСЃС‚Р°РІРєР° РЅР° РІС‹Р±СЂР°РЅРЅС‹Р№ Р°РґСЂРµСЃ; С„РёР·РёС‡РµСЃРєРёР№ РјР°РіР°Р·РёРЅ РІС‹РґР°С‡Рё РЅРµ РґРѕРєР°Р·Р°РЅ",
     "products": 3860,
     "rootCategoriesVisited": 75,
     "complete": false,
@@ -504,11 +504,11 @@
       "storageQuestions": "current subject; manufacturer package instructions required",
       "groundedSelectionSourcePr": 509,
       "supportedSelectionAnswers": [
-        "котлеты",
-        "соус",
-        "начинка",
-        "только разогреть",
-        "без разогрева"
+        "РєРѕС‚Р»РµС‚С‹",
+        "СЃРѕСѓСЃ",
+        "РЅР°С‡РёРЅРєР°",
+        "С‚РѕР»СЊРєРѕ СЂР°Р·РѕРіСЂРµС‚СЊ",
+        "Р±РµР· СЂР°Р·РѕРіСЂРµРІР°"
       ],
       "readyFoodQuestion": "read-only; does not create a draft or infer a stored preference",
       "providerHistoryScope": "Bounded accepted advice pairs as untrusted data",
@@ -578,7 +578,7 @@
         "generalExpertise": "partial",
         "panVolume": "Two litres correctly interpreted as pan capacity after people-count and small-pan clarification",
         "householdOnlyAmount": "No amount inferred locally from people count or qualitative pan size",
-        "generatedQuantity": "After a given two-litre capacity, the model suggested an approximate 300–400 g; no recipe calculation or validation is claimed",
+        "generatedQuantity": "After a given two-litre capacity, the model suggested an approximate 300вЂ“400 g; no recipe calculation or validation is claimed",
         "appleAdvice": "Generated variety/texture advice remains general; scoped colour follow-up uses reviewed sources",
         "arbitraryProseTruth": "not established"
       },
@@ -603,7 +603,7 @@
         "selectionQuestion": "response drifted into home preparation"
       }
     },
-    "displayLabel": "Помощник CHECKNI",
+    "displayLabel": "РџРѕРјРѕС‰РЅРёРє CHECKNI",
     "displayLabelSourcePr": 513,
     "browserTransport": {
       "sourcePr": 513,
@@ -636,7 +636,7 @@
     "advicePurposeMemory": {
       "sourcePr": 520,
       "scope": "occasion-only answer within an active product-advice context",
-      "example": "budget 1300 ₽; cheese selection; for guests",
+      "example": "budget 1300 в‚Ѕ; cheese selection; for guests",
       "completeMemoryPreserved": true,
       "confirmedBasketPreserved": true,
       "confirmationDraftCreated": false,
@@ -647,12 +647,12 @@
     "clientRequestRecognition": {
       "sourcePr": 523,
       "affirmativeRequests": [
-        "Я хочу кефир",
-        "Мне нужен кефир",
-        "Мне нужны яблоки"
+        "РЇ С…РѕС‡Сѓ РєРµС„РёСЂ",
+        "РњРЅРµ РЅСѓР¶РµРЅ РєРµС„РёСЂ",
+        "РњРЅРµ РЅСѓР¶РЅС‹ СЏР±Р»РѕРєРё"
       ],
       "negativeRequests": [
-        "Мне не нужен кефир"
+        "РњРЅРµ РЅРµ РЅСѓР¶РµРЅ РєРµС„РёСЂ"
       ],
       "quantitiesPreserved": true,
       "modelRequired": false,
@@ -741,15 +741,15 @@
       "sourcePr": 555,
       "completeSocialTurnsBeforeRetailLookup": true,
       "examples": [
-        "Хай",
+        "РҐР°Р№",
         "hi",
-        "Слушай"
+        "РЎР»СѓС€Р°Р№"
       ],
       "localOnly": true,
       "oneTurnFactsExpire": true,
       "retiredChoicesCannotConfirm": true,
       "confirmedBasketPreserved": true,
-      "shoppingPrefixExample": "Слушай, хочу чай"
+      "shoppingPrefixExample": "РЎР»СѓС€Р°Р№, С…РѕС‡Сѓ С‡Р°Р№"
     },
     "gptunnel": {
       "sourcePrs": [
@@ -853,8 +853,8 @@
       "commercialAnswers": "Core tools",
       "arbitraryAccuracy": "not established",
       "descriptiveFollowups": [
-        "А зелёные можно?",
-        "А чем красные отличаются от зелёных?"
+        "Рђ Р·РµР»С‘РЅС‹Рµ РјРѕР¶РЅРѕ?",
+        "Рђ С‡РµРј РєСЂР°СЃРЅС‹Рµ РѕС‚Р»РёС‡Р°СЋС‚СЃСЏ РѕС‚ Р·РµР»С‘РЅС‹С…?"
       ],
       "realProviderVerified": true,
       "correctiveSourcePr": 558,
@@ -910,7 +910,7 @@
     "loading": "lazy",
     "decoding": "async",
     "imageRendering": "auto",
-    "missingUntrustedOrFailed": "Фото недоступно",
+    "missingUntrustedOrFailed": "Р¤РѕС‚Рѕ РЅРµРґРѕСЃС‚СѓРїРЅРѕ",
     "addressPriceSourceDatePreserved": true,
     "basketChangesAdded": false,
     "newSourceObservations": 0,
@@ -1380,7 +1380,7 @@
       "sourceCommit": "e7fe20f58a0ca1d4b459ee4b6beea24ad5b7ab33",
       "artifactId": 12118839802,
       "shopCode": "773505",
-      "storeAddress": "г Москва, ул 1-я Нововатутинская, д 1",
+      "storeAddress": "Рі РњРѕСЃРєРІР°, СѓР» 1-СЏ РќРѕРІРѕРІР°С‚СѓС‚РёРЅСЃРєР°СЏ, Рґ 1",
       "importedObservations": 64,
       "readBackRows": 64,
       "auditedFields": 1920,
@@ -1407,16 +1407,16 @@
       "allRecent": false,
       "recentAddable": 8,
       "olderAddable": [
-        "Курица",
-        "Яблоки"
+        "РљСѓСЂРёС†Р°",
+        "РЇР±Р»РѕРєРё"
       ],
       "missing": [
-        "Гречка",
-        "Макароны",
-        "Молоко",
-        "Бананы",
-        "Хлопья для каши",
-        "Свинина"
+        "Р“СЂРµС‡РєР°",
+        "РњР°РєР°СЂРѕРЅС‹",
+        "РњРѕР»РѕРєРѕ",
+        "Р‘Р°РЅР°РЅС‹",
+        "РҐР»РѕРїСЊСЏ РґР»СЏ РєР°С€Рё",
+        "РЎРІРёРЅРёРЅР°"
       ],
       "note": "An observed price is not stock. Unconfirmed source pages remain unpriced; milk sold by mass is not converted to litres."
     }
@@ -1504,7 +1504,7 @@
     "unpricedDiscoveryCandidates": 24,
     "magnitNewIdentity": {
       "sourceProductId": "1000303406",
-      "visiblePack": "800 г",
+      "visiblePack": "800 Рі",
       "oldUrlSlugIgnored": "900g",
       "newPriceImported": true,
       "priceImportVerifiedAt": "2026-10-18T03:52:01.525Z"
@@ -1636,7 +1636,7 @@
       "1000299642",
       "1349400001"
     ],
-    "oatmealPack": "500 г, exact-name identity; no observed price is embedded",
+    "oatmealPack": "500 Рі, exact-name identity; no observed price is embedded",
     "historicalCandidatesRetained": true,
     "boundedWindow": {
       "total": 80,
@@ -2119,8 +2119,8 @@
     "sourceCommit": "c8b82185fb85d8ff6085208ee522f2c3f2add546",
     "testedExactHead": "38ded73b985f0cee0bc23324f6166ee476c74b97",
     "scope": "Manual catalogue search and Hori comparison/beta panel readability",
-    "nativeSubmitButton": "Найти",
-    "stableAccessibleName": "Найти продукты",
+    "nativeSubmitButton": "РќР°Р№С‚Рё",
+    "stableAccessibleName": "РќР°Р№С‚Рё РїСЂРѕРґСѓРєС‚С‹",
     "explicitDraftAndEmptyRecovery": true,
     "noLiveSearchOnInput": true,
     "narrowToolbarWidthsVerified": [
@@ -2182,7 +2182,7 @@
     "reference": "ChatGPT Pixel Character desktop and Android",
     "flow": "stores -> explicit chain/address -> categories -> products -> list -> comparison",
     "assistant": "single inviting navigation button; native dialog, preserved draft and focus",
-    "mascot": "Хоря, black sunglasses and black/violet hoodie; hory-avatar-v5.webp",
+    "mascot": "РҐРѕСЂСЏ, black sunglasses and black/violet hoodie; hory-avatar-v5.webp",
     "themes": [
       "dark",
       "light"
@@ -3190,5 +3190,40 @@
     "freshCompleteBasketAcceptance": "not established; sufficient fresh comparable products remain required",
     "physicalAndroidAcceptance": "not established",
     "publicReleaseAcceptance": "pending exact/public-main gates and actual served runtime/user journey"
+  },
+  "horyBackgroundStateRepair": {
+    "kind": "public-hory-navigation-and-household-repair",
+    "publicBase": "4ae9686dacfd6f754b2ba4e02e80cbcc3c33dc27",
+    "sourceBase": "6342caf34a4abe314f3767a50f6a9bebe1694b5e",
+    "testedRuntimeCommit": "a6c1aea92816e261b04809d82d8fad91cfec70cf",
+    "files": {
+      "src/app.mjs": "7e5d08955687ebb6c27b5cb98233258508c93c98497ed9b744d28afbcadc3ba4",
+      "src/components/HoriWorkspace.mjs": "491eb52482eb4d0d229ffa0da710d8fdfe2b7469f92b752dc12f0278a87e1cdc",
+      "src/intelligence/retailProductSelection.mjs": "bb257c946eaec7dc4de36ea81cd3ff9277027d00b2adabda389d93ad54bf2bd7"
+    },
+    "trigger": "background shop-state carrying basket view dismissed an already-open dialogue, including after reload; generic shopping nouns with a selected retailer discarded household and duration",
+    "result": "only explicit app basket navigation, existing shop actions and browser history dismiss the dialogue; background state notifications do not; generic household requests persist people, days and preferences with a selected retailer and survive reload",
+    "unchanged": [
+      "price/Core calculations",
+      "source contexts and original observations",
+      "provider endpoint/auth/quota",
+      "first-visit optional assistant",
+      "v15/v16 layout and real photos"
+    ],
+    "localValidation": {
+      "regressionBeforeFailed": 2,
+      "composedBrowserPassed": 16,
+      "widths": [
+        1365,
+        390
+      ],
+      "workers": 1,
+      "retries": 0,
+      "providerCalls": 0,
+      "nodePassed": 65,
+      "selectedHouseholdRegressionBeforeFailed": 1
+    },
+    "privateSourceBackport": "pending independent integration; this is explicitly a public surface follow-up",
+    "publicationAcceptance": "pending exact/main/Pages/runtime and actual published recovery/context journey"
   }
 }

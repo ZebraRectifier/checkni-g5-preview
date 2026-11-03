@@ -30,7 +30,9 @@ export function retailSelectionRequest(text, catalog, delta, focus = null) {
   const need = extractShoppingNeedContext(text);
   if (need.clarification) return { kind: "clarification", message: need.clarification };
   text = need.text;
-  if (need.recognized && !text.replace(/[.!?]+$/u, "").trim()) return { kind: "context" };
+  // A generic shopping noun is still household context, not a product query.
+  const contextRemainder = normalizeRetailShoppingText(text).replace(/[.!?]+$/u, "").trim();
+  if (need.recognized && /^(?:покупки|продукты|закупки|еда)?$/iu.test(contextRemainder)) return { kind: "context" };
   const value = normalizeRetailShoppingText(text).toLocaleLowerCase("ru-RU");
   if (focus) {
     const chosen = value.match(/^(?:выбираю\s+(?:вариант\s+)?|вариант\s+)([1-5])$/u);

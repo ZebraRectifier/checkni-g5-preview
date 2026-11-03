@@ -71,3 +71,27 @@ test('cold reload restores a usable stores home and the optional composer at red
   await expect(page.locator('#basket-proposal-submit')).toBeInViewport();
   await expectNoOverflow(page);
 });
+
+
+test('background basket state preserves an open Hory, while explicit app navigation dismisses it',async({page,context})=>{
+ let ai=0;
+ await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
+ await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
+ await page.addInitScript(()=>document.addEventListener('checkni:shop-state',e=>{window.__checkniTestShopState=e.detail;}));
+ await setup(page);await openBasket(page);await openHory(page);
+ const input=page.locator('#basket-proposal-input'),dialog=page.locator('#pixel-hory-dialog');
+ const repeatCurrentState=()=>page.evaluate(()=>{
+  if(window.__checkniTestShopState?.view!=='basket')throw Error('Expected actual basket state');
+  document.dispatchEvent(new CustomEvent('checkni:shop-state',{detail:{...window.__checkniTestShopState}}));
+ });
+ await input.fill('Покупки на четырнадцать дней');await repeatCurrentState();
+ await expect(dialog).toBeVisible();await expect(input).toHaveValue('Покупки на четырнадцать дней');
+ // This is the existing app navigation entry, not another state notification.
+ await page.evaluate(()=>document.getElementById('open-basket').click());
+ await expect(dialog).toBeHidden();await expect(page.locator('#basket-view')).toBeVisible();
+ await openHory(page);await expect(input).toHaveValue('Покупки на четырнадцать дней');
+ await page.reload();await expect(page.locator('#basket-view')).toBeVisible();await openHory(page);
+ await input.fill('Что ты помнишь?');await repeatCurrentState();
+ await expect(dialog).toBeVisible();await expect(input).toBeEditable();await expect(input).toHaveValue('Что ты помнишь?');
+ await closeHory(page);await expectNoOverflow(page);expect(ai).toBe(0);
+});

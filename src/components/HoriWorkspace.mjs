@@ -53,7 +53,7 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   const results = document.createElement('section'); results.id = 'hori-shopping-results'; results.className = 'hori-shopping-results';
   results.setAttribute('aria-label', 'Подобранные товары и наблюдаемые цены'); results.hidden = true; horyDialog.append(results);
 
-  let restoreAssistantFocus = true; let currentView = 'shop'; let commerce;
+  let restoreAssistantFocus = true; let commerce;
   const closeAssistant = ({ restoreFocus = true } = {}) => {
     restoreAssistantFocus = restoreFocus;
     if (typeof horyDialog.close === 'function') horyDialog.close();
@@ -86,8 +86,9 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
       closeAssistant({ restoreFocus: false });
     }
   });
-  document.addEventListener('checkni:shop-state', event => {
-    if (event.detail?.view === 'shop' || event.detail?.view === 'basket') currentView = event.detail.view;
+  // State notifications also arrive from background catalogue/counter reads.
+  // Only an actual app navigation should dismiss the user's open conversation.
+  document.addEventListener('checkni:view-navigation', event => {
     if (event.detail?.view === 'basket' && horyDialog.open) {
       closeAssistant({ restoreFocus: false });
     }
