@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
-import {selectStore,openBasket} from './helpers/pixel-surface.mjs';
+import {selectStore,openBasket,openHory,closeHory} from './helpers/pixel-surface.mjs';
 test('saved comparison distinguishes equal observed subtotals from a cheaper option and expired quotes',async({page,context})=>{
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
  await page.goto('/?comparison=observed&catalog=retail#shop');
@@ -71,6 +71,15 @@ test('manual reviewed products from both networks add and survive edits, Back an
  await page.goBack();await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(2);
  await page.locator('.basket-row').last().getByRole('button',{name:/Удалить/}).click();await expect(page.locator('.basket-row')).toHaveCount(1);
  await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
+ const edited=await page.locator('.basket-list').innerText();await openHory(page);
+ const send=async text=>{await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};
+ const facts=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.shopping.preferences.v1'))?.facts??{});
+ await send('Нас шестеро, покупки на две недели');await expect.poll(async()=>(await facts()).peopleCount?.value).toBe(6);
+ expect((await facts()).shoppingDays?.value).toBe(14);await send('Не хочу готовить');
+ await expect.poll(async()=>(await facts()).cookingEffort?.value).toBe('minimal');
+ await page.reload();await openHory(page);await send('Что ты помнишь?');
+ await expect(page.locator('#basket-proposal-status')).toContainText('6 чел.');await expect(page.locator('#basket-proposal-status')).toContainText('14 дней');
+ await closeHory(page);await expect(page.locator('.basket-list')).toHaveText(edited,{useInnerText:true});
  expect(ai).toBe(0);expect(errors).toEqual([]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 

@@ -95,3 +95,21 @@ test('restorable sizing excludes model guesses, location and commercial data',()
   assert.equal(restored.facts.shoppingDays.value,10);
   assert.doesNotMatch(disk.getItem(SHOPPING_PREFERENCE_STORAGE_KEY),/Пушкино|Магнит|priceMinor|transcript|model guess|evidenceTurn/u);
 });
+
+
+test('household-only wording persists with an already-selected retailer and confirmed basket',async()=>{
+ for(const noun of ['покупки','продукты','закупки','еда']){
+  const disk=storage(),basket=createBasketStore({storage:null});basket.add(SHOP_CATALOG[0]);const before=basket.getSnapshot();let calls=0;
+  const flow=createShoppingConversationFlow({basket,localCatalog:SHOP_CATALOG,preferenceStorage:disk,
+   needsStore:createShoppingNeedsStore({storage:null,allowUnlockedForTests:true}),loader:{load:async()=>interpreter},
+   resolveRetailSelectionScope:()=>({retailerId:'perekrestok',storeId:'perekrestok-yandex-3186917'}),
+   resolveCommercialRequest:async()=>({kind:'unavailable'}),requestAiProposal:async()=>{calls++;return{kind:'unavailable'};}});
+  await flow.run(`Нас шестеро, ${noun} на две недели`);
+  assert.equal(flow.getConversation().facts.peopleCount?.value,6,noun);
+  assert.equal(flow.getConversation().facts.shoppingDays?.value,14,noun);
+  await flow.run('Не хочу готовить');
+  const persisted=createShoppingPreferenceStore({storage:disk}).read();
+  assert.equal(persisted.facts.peopleCount?.value,6,noun);assert.equal(persisted.facts.shoppingDays?.value,14,noun);
+  assert.equal(persisted.facts.cookingEffort?.value,'minimal',noun);assert.deepEqual(basket.getSnapshot(),before);assert.equal(calls,0,noun);
+ }
+});
