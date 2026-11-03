@@ -3041,6 +3041,7 @@ function navigate(view, {
 } = {}) {
   if (view !== VIEW.SHOP && view !== VIEW.BASKET) return;
 
+  document.dispatchEvent(new CustomEvent('checkni:view-navigation', { detail: { view } }));
   const previousView = currentView;
   currentView = view;
   const hash = hashForView(view);
