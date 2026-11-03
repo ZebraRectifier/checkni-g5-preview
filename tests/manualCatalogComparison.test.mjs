@@ -111,3 +111,17 @@ test('manual source milk retains its exact store even when the pack also has a l
  const partial=prepareManualCatalogComparison([item,unknown]);assert.equal(partial.kind,'needs_review');
  assert.match(partial.names[0],/Балашиха/u);assert.equal(partial.request,undefined);assert.equal(partial.issues[0],unknown);
 });
+
+
+test('a source-scoped milk anchor is quoted rather than lost to its legacy canonical alias',async()=>{
+ const fixture=normalized(rows.find(r=>r.retailer_id==='magnit'&&r.source_product_id==='1899800733'));
+ const item={...sourceScopedRetailListSelection(fixture).product,quantity:2};
+ const request=prepareManualCatalogComparison([item]).request;
+ const cards=scope=>rows.filter(r=>r.retailer_id===scope.retailerId&&r.store_id===scope.storeId).map(normalized).map(weeklyMagnitCard);
+ const catalog={bySourceProductIds:async(ids,{scope})=>({kind:'catalog',products:cards(scope).filter(p=>ids.includes(p.sourceProductId))}),
+ search:async(q,{scope})=>({kind:'catalog',products:cards(scope).filter(p=>p.name.toLowerCase().includes(q))})};
+ const result=await loadSavedGuidedComparison(request,[item],{catalog,now:()=>now});
+ assert.equal(result.quotes[0].complete,true);assert.equal(result.quotes[1].complete,true);
+ assert.equal(result.drafts[0].rows[0].card.id,item.id);assert.equal(result.drafts[0].rows[0].quantity,2);
+ assert.equal(result.drafts[0].rows[0].quantityReview,false);
+});

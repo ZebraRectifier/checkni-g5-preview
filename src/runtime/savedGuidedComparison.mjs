@@ -1,3 +1,4 @@
+import {sourceScopedRetailListSelection} from '../catalog/sourceScopedRetailList.mjs';
 import { guidedComparisonForBasket } from '../state/guidedBasketComparison.mjs';
 import { guidedGroupByKey, guidedGroupAllowed, guidedGroupMatches } from '../intelligence/guidedShoppingPlan.mjs';
 import { isShoppingProductRejected } from '../intelligence/shoppingConversation.mjs';
@@ -110,7 +111,8 @@ export async function loadSavedGuidedComparison(request,basket,{
     const anchorScope=scopes.find(scope=>scope.retailerId===binding.retailerId);
     const anchor=[...(anchorCards.get(binding.retailerId)??[]),...(data.get(binding.retailerId+':'+bindingKey(binding))??[])].find(card=>{
       if(!admitted(card,anchorScope,baseGroup,memory,now()))return false;
-      const identity=product(card);
+      const identity=item.id===card.id
+        ?sourceScopedRetailListSelection(card)?.product??product(card):product(card);
       return card.sourceProductId===binding.sourceProductId&&identity.id===item.id
         &&identity.name===item.name&&identity.unit===item.unit;
     });

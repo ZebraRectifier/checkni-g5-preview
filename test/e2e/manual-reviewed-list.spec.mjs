@@ -142,6 +142,8 @@ test('explicit Magnit storefront keeps reviewed canonical milk in the two-networ
  await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
  const request=await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.guided-comparison-request.v1')));
  expect(request.scopes[0].storeId).toBe('magnit-503695');expect(request.bindings[0].sourceProductId).toBe('1899800733');
+ const selected=page.locator('.saved-catalog-variant').filter({hasText:'Магнит'});await selected.locator('summary').click();
+ await expect(selected.locator('tbody tr')).toContainText('2 × 930 мл');
  await expect(page.locator('#comparison-output')).toContainText('Есть старые или неизвестные цены');
  await expect(page.locator('#comparison-output')).not.toContainText('ниже на');
  await page.reload();await expect(page.locator('.basket-row output')).toHaveText('2');
