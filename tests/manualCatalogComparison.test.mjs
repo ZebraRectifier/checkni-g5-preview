@@ -57,6 +57,16 @@ test('multiple manually chosen products of one family remain separate references
  const oversized={...result.request,bindings:Array.from({length:65},(_,i)=>({...result.request.bindings[0],productId:'item'+i}))};assert.equal(normalizeGuidedComparisonRequest(oversized),null);
 });
 
+test('an older unreviewed source card keeps the independent need flow until a reviewed pair opts in',()=>{
+ const old={id:'retail:magnit:magnit-777312:apple-fixture',name:'Яблоки проверенные',unit:'1 кг',quantity:1};
+ assert.equal(prepareManualCatalogComparison([old]),null);
+ assert.equal(prepareManualCatalogComparison([old],{magnitStoreId:'magnit-503695'}),null);
+ assert.equal(prepareManualCatalogComparison([banana(),old]).kind,'needs_review');
+ assert.equal(prepareManualCatalogComparison([old],{pinnedMagnitStoreId:'magnit-503695'}).kind,'needs_review');
+ const changed={...banana(),name:'Другой продукт'};
+ assert.equal(prepareManualCatalogComparison([changed]).kind,'needs_review');
+});
+
 import {PEREKRESTOK_WEEKLY_SCOPE,weeklyMagnitCard} from '../src/ports/weeklyRetailCatalogPort.mjs';
 test('an explicitly chosen SKU remains anchored when it is outside the generic search results',async()=>{
  const item=chosen('1000526136'),basket=[{...item,quantity:3}],request=prepareManualCatalogComparison(basket).request;

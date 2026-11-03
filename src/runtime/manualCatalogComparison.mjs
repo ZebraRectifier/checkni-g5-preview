@@ -13,16 +13,20 @@ const key=value=>typeof value==='string'?value.normalize('NFKC').toLowerCase().r
 export function prepareManualCatalogComparison(basket,{magnitStoreId=null,pinnedMagnitStoreId=null}={}) {
  if(!Array.isArray(basket)||!basket.length)return null;
  const stores=new Set(),references=[],issues=[];
- let relevant=false;
+ let relevant=Boolean(pinnedMagnitStoreId);
  for(const item of basket) {
    const scoped=/^retail:(magnit|perekrestok):([^:]+):([A-Za-z0-9_-]+)$/u.exec(item?.id??'');
    let retailerId,sourceProductId,title;
    if(scoped) {
-     relevant ||= ['magnit','perekrestok'].includes(scoped[1]);
      retailerId=scoped[1];sourceProductId=scoped[3];
      const identity=(retailerId==='magnit'?WEEKLY_MAGNIT_IDENTITIES:WEEKLY_PEREKRESTOK_IDENTITIES)
-       .find(row=>row.sourceProductId===sourceProductId&&key(row.name)===key(item.name));
-     if(!identity||retailerId==='perekrestok'&&scoped[2]!==PEREK.storeId){issues.push(item);continue;}
+       .find(row=>row.sourceProductId===sourceProductId);
+     // Unknown older source cards keep their independent manual/need flow.
+     // Once a reviewed anchor or saved pair opts in, every unmatched line
+     // still blocks this comparison rather than silently disappearing.
+     relevant ||= Boolean(identity);
+     if(!identity||key(identity.name)!==key(item.name)
+       ||retailerId==='perekrestok'&&scoped[2]!==PEREK.storeId){issues.push(item);continue;}
      if(retailerId==='magnit')stores.add(scoped[2]);
      title=identity.name;
    } else {

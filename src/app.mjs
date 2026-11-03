@@ -290,8 +290,12 @@ function currentManualCatalogComparison() {
   });
 }
 function chooseManualMagnitCatalogue() {
-  navigate(VIEW.SHOP,{focusMode:FOCUS_MODE.HEADING});
-  void selectRetailer('magnit');
+  // Follow the same explicit network/address entry as the store cards. Direct
+  // selectRetailer would bypass the public address chooser and use a default.
+  document.dispatchEvent(new CustomEvent('checkni:shop-action',{detail:{action:'stores'}}));
+  const card=document.getElementById('retail-store-card-magnit');
+  if(card)card.click();
+  else showToast('Выбор Магнита временно недоступен. Корзина сохранена.');
 }
 function startManualCatalogComparison() {
   const candidate=currentManualCatalogComparison();
