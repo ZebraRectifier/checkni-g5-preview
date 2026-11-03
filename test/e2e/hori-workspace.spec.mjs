@@ -51,6 +51,8 @@ test('weekly request retains supplied household and duration and asks only the n
   await expect(output).toContainText('Какие продукты исключить');
   await output.getByRole('button', { name: 'Ограничений нет', exact: true }).click();
   await expect(page.locator('#hori-shopping-results').getByRole('table')).toBeVisible();
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  await expect(page.locator('#hori-shopping-results').getByRole('columnheader').first()).toBeInViewport();
   await expect(output).toContainText('на 7 дн. для 3 человек');
   await page.locator('#basket-proposal-input').scrollIntoViewIfNeeded();
   await expect(page.locator('#basket-proposal-input')).toBeInViewport();
