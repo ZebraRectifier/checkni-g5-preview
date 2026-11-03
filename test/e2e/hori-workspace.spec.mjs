@@ -113,3 +113,16 @@ test('preferences before a store stay as intake and recipe follow-ups send the a
  await expect(page.locator('#basket-proposal-status')).toBeInViewport({ratio:0.9});
  await closeHory(page);await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(0);await expectNoOverflow(page);
 });
+
+
+test('long advice opens at its beginning instead of skipping to the bottom', async ({ page }) => {
+ const reply = 'Начало совета: сначала выбери простые блюда.\n' + Array.from({length:12},(_,i)=>`${i+1}. Овощи и крупы можно приготовить заранее небольшими порциями.`).join('\n');
+ await page.route('**/functions/v1/ai-basket-proposal',route=>route.fulfill({json:{kind:'advice',message:reply}}));
+ await setup(page);await send(page,'Как выбрать макароны для быстрых ужинов без мяса? Предложи два простых блюда.');
+ const output=page.locator('#basket-proposal-status');await expect(output).toContainText('Начало совета');
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ const position=await output.evaluate(node=>{const r=node.getBoundingClientRect(),d=node.closest('dialog').getBoundingClientRect(),h=node.closest('dialog').querySelector('.pixel-hory-header').getBoundingClientRect();return {top:r.top,bottom:r.bottom,dialogBottom:d.bottom,headerBottom:h.bottom};});
+ expect(position.top).toBeGreaterThanOrEqual(position.headerBottom-2);
+ expect(position.top).toBeLessThan(position.dialogBottom-80);
+ await expectNoOverflow(page);
+});
