@@ -3190,5 +3190,38 @@
     "freshCompleteBasketAcceptance": "not established; sufficient fresh comparable products remain required",
     "physicalAndroidAcceptance": "not established",
     "publicReleaseAcceptance": "pending exact/public-main gates and actual served runtime/user journey"
+  },
+  "horyBackgroundStateRepair": {
+    "manifest": "release/hory-background-state-20261103.json",
+    "kind": "public-surface-navigation-repair",
+    "publicBase": "4ae9686dacfd6f754b2ba4e02e80cbcc3c33dc27",
+    "sourceBase": "6342caf34a4abe314f3767a50f6a9bebe1694b5e",
+    "testedRuntimeCommit": "17bca1c2b246e777b5af6521183dd23b1fb33d05",
+    "files": {
+      "src/app.mjs": "7e5d08955687ebb6c27b5cb98233258508c93c98497ed9b744d28afbcadc3ba4",
+      "src/components/HoriWorkspace.mjs": "491eb52482eb4d0d229ffa0da710d8fdfe2b7469f92b752dc12f0278a87e1cdc"
+    },
+    "trigger": "background shop-state carrying basket view dismissed an already-open dialogue, including after reload",
+    "result": "only explicit app basket navigation, existing shop actions and browser history dismiss the dialogue; background state notifications do not",
+    "unchanged": [
+      "price/Core calculations",
+      "source contexts and original observations",
+      "provider endpoint/auth/quota",
+      "first-visit optional assistant",
+      "v15/v16 layout and real photos"
+    ],
+    "localValidation": {
+      "regressionBeforeFailed": 2,
+      "composedBrowserPassed": 16,
+      "widths": [
+        1365,
+        390
+      ],
+      "workers": 1,
+      "retries": 0,
+      "providerCalls": 0
+    },
+    "privateSourceBackport": "pending independent integration; this is explicitly a public surface follow-up",
+    "publicationAcceptance": "pending exact/main/Pages/runtime and actual published recovery/context journey"
   }
 }
