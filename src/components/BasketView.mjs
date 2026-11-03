@@ -86,7 +86,8 @@ export function basketSummaryText(items) {
 }
 
 export function basketHasWeightAmounts(items) {
-  return items.some(item => /^цена за\s+\d/iu.test(String(item.unit ?? '')));
+  // Both retained display formats describe an amount, not a piece count.
+  return items.some(item => /^(?:цена за\s+|≈\s*)\d/iu.test(String(item.unit ?? '')));
 }
 
 export function renderBasketView(container, items, actions) {

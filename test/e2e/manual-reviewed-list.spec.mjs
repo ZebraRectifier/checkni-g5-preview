@@ -52,6 +52,9 @@ test('manual reviewed products from both networks add and survive edits, Back an
  const chicken=page.locator('.product-card[data-product-id="retail:perekrestok:perekrestok-yandex-3186917:d91d7780-ffa9-43d3-8bf3-b9870a9bf791"]');
  await expect(chicken.locator('.add-button')).toBeEnabled();await chicken.locator('.add-button').click();await openBasket(page);
  await expect(page.locator('.basket-row')).toHaveCount(2);
+ await expect(page.locator('.basket-summary')).toContainText('2 позиции');
+ await expect(page.locator('.basket-summary')).not.toContainText('шт.');
+ await expect(page.locator('#basket-dock-copy')).toHaveText('2 поз.');
  expect(await page.evaluate(()=>localStorage.getItem('checkni.guided-comparison-request.v1'))).toBeNull();
  await expect(page.locator('#compare-basket')).toHaveText('Сравнить Магнит и Перекрёсток');
  await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);

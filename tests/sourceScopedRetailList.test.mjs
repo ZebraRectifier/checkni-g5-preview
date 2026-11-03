@@ -101,3 +101,13 @@ test('new source egg packs retain exact 20/10 counts and do not alias older ten-
   assert.equal(getReviewedRetailBasketIdentity(identity.id),null);
  }
 });
+
+import {basketSummaryText} from '../src/components/BasketView.mjs';
+test('a saved weighed portion is counted as a list position, never as pieces with a fixed pack',()=>{
+ const weighed={...getReviewedRetailBasketProduct(banana()),quantity:2};
+ const pack={id:'milk-pack',name:'Молоко',unit:'930 мл',quantity:1};
+ const persisted=JSON.parse(JSON.stringify([weighed,pack]));
+ assert.equal(basketSummaryText(persisted),'2 позиции');
+ assert.equal(basketSummaryText([pack]),'1 шт. · 1 позиция');
+ assert.equal(basketSummaryText([{...weighed,unit:'цена за 1 кг'},pack]),'2 позиции');
+});
