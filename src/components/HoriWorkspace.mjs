@@ -117,7 +117,7 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
     if (currentGreeting?.textContent.includes('Я Хори')) currentGreeting.textContent = currentGreeting.textContent.replace('Я Хори', 'Я Хоря');
   }
   renameAssistant();
-  const revealDialogue = () => view.requestAnimationFrame(() => { if (horyDialog.open) dialogue.scrollTop = dialogue.scrollHeight; });
+  const revealDialogue = () => view.requestAnimationFrame(() => { if (horyDialog.open && results.hidden) commerce.reveal(output); });
   new view.MutationObserver(revealDialogue).observe(output, { childList: true, subtree: true, characterData: true });
   return Object.freeze({ present() {
     renameAssistant(); commerce.mountExtras();
