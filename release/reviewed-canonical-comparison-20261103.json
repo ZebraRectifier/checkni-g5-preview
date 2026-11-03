@@ -1,24 +1,76 @@
 {
-  "kind": "reviewed-canonical-selected-store-comparison",
+  "kind": "manual-reviewed-source-identity-comparison",
   "publicBase": "4b23da38780a58f4c0dea857c95e10521660b05b",
-  "sourceBase": "6325a8cd79d13d5a7ff66f76bb063d5da4bea038",
-  "sourceCandidate": "5461208d",
-  "testedRuntimeCommit": "917dc46341df6f71fdfd800d4bea9e213d0720f2",
+  "sourceBase": "e3817184946d2085564af1de5797731d9ee48f3a",
+  "sourceCandidate": "2b1dea88490399ef438941ce04a3b94f6233c5c4",
+  "testedRuntimeCommit": "b3cda523d0bc9e6947ebc67dbbf6c8ebadcb863d",
   "files": {
-    "src/app.mjs": "0383f9c10e423e62a2fae20def1eb5b39206269073c7978e9644cfc7c904a414",
-    "src/runtime/manualCatalogComparison.mjs": "a721fbaf1a75f3da45e187464421c0542e6bee69d9cdccd9614e6a91fd4b8434"
+    "src/app.mjs": "84a49dc16d38486c53c685f80ff7f4049d7886f014687d800241347a7db6f2c0",
+    "src/runtime/manualCatalogComparison.mjs": "e9a035800af0bfac8342a091316edf63b252c2c5010225939c72add56ca7bbd0",
+    "src/runtime/savedGuidedComparison.mjs": "3991efaa1a641bf75a3dcaf37cc1470a2093e376e45ee2d4728f697f16446df6"
   },
   "trigger": "Adding reviewed canonical milk after explicitly choosing Magnit left the comparison on the independent legacy path.",
-  "result": "The explicit storefront opts reviewed exact canonical packs into the existing selected-store two-network request; lists without a selected store retain their independent route.",
+  "result": "Manual Magnit catalogue additions retain the existing reviewed source/store identity, including counter updates. Dialogue and legacy-list confirmation routes remain intact. Incomplete comparison keeps the chosen address visible without admitting unmatched products.",
   "validation": {
-    "focusedNodePassed": 25,
-    "sourceBrowserPassed": 8,
-    "realApiComposedDesktopMobileCasesPassed": 4,
+    "focusedNodePassed": 26,
+    "combinedManualAndNeedsDesktopMobileBrowserPassed": 14,
+    "counterBrowserRecheckPassed": 2,
+    "counterRecheckOverlapsCombined": true,
     "workers": 1,
     "retries": 0,
     "realProviderRequests": 0,
-    "physicalAndroidVerified": false
+    "physicalAndroidVerified": false,
+    "finalRealDataComposition": {
+      "passed": 4,
+      "receipts": [
+        {
+          "file": "magnit-scoped-anchor-composed-968822f3-508823-1365.json",
+          "shop": "508823",
+          "width": 1365,
+          "completed": true,
+          "freshRowsAtRead": 0,
+          "exactStoreRetained": true,
+          "backQuantityRetained": true
+        },
+        {
+          "file": "magnit-scoped-anchor-composed-968822f3-508823-390.json",
+          "shop": "508823",
+          "width": 390,
+          "completed": true,
+          "freshRowsAtRead": 0,
+          "exactStoreRetained": true,
+          "backQuantityRetained": true
+        },
+        {
+          "file": "magnit-scoped-anchor-composed-968822f3-508830-1365.json",
+          "shop": "508830",
+          "width": 1365,
+          "completed": true,
+          "freshRowsAtRead": 0,
+          "exactStoreRetained": true,
+          "backQuantityRetained": true
+        },
+        {
+          "file": "magnit-scoped-anchor-composed-968822f3-508830-390.json",
+          "shop": "508830",
+          "width": 390,
+          "completed": true,
+          "freshRowsAtRead": 0,
+          "exactStoreRetained": true,
+          "backQuantityRetained": true
+        }
+      ],
+      "deployed": false,
+      "freshness": "Original timestamps retained; both source contexts are stale at this later check; no savings claimed."
+    }
   },
   "corePricesUnitsSourcesAndFreshnessPolicy": "unchanged",
-  "publicationAcceptance": "pending exact/main/Pages/served-runtime and published-path verification"
+  "publicationAcceptance": "pending exact/main/Pages/served-runtime and published-path verification",
+  "retainedFailures": {
+    "initialPublicMagnitFailed": 10,
+    "initialPublicWeeklyFailed": 2,
+    "localAssociatedNeedsAttemptFailed": 2,
+    "explanation": "Initial opt-in routing lost selected address in partial lists and overrode legacy dialogue confirmation. Final runtime preserves exact manual source identity; tests and commercial gates remain.",
+    "interimSourceAnchorMissing": true
+  }
 }
