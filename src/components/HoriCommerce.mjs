@@ -327,13 +327,14 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     if (details.contains(target)) details.open = true;
     target.scrollIntoView({ block: 'start', behavior: 'auto' });
   }
-  function openDetails({ focusNearby = false, emit = true } = {}) {
+  function openDetails({ focusNearby = false, focusMap = false, emit = true } = {}) {
     closeAddressChooser();
     sharedDetailsOpen = true;
     mountExtras(); details.hidden = false; details.open = true; if (emit) action('address');
     view.requestAnimationFrame(() => {
       reveal(details);
-      const target = focusNearby ? detailsContent.querySelector('#nearby-address') : state.stage === 'store'
+      const target = focusMap ? detailsContent.querySelector('.stores-map')
+        : focusNearby ? detailsContent.querySelector('#nearby-address') : state.stage === 'store'
         ? [...pickers.querySelectorAll('select')].find(control => !control.closest('[hidden]'))
         : detailsContent.querySelector('#nearby-shopping button');
       (target || summary).focus({ preventScroll: true });
@@ -354,7 +355,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   document.addEventListener('checkni:shop-action', event => {
     if (event.detail?.action !== 'address' || !['nearby','map'].includes(event.detail?.target)) return;
     onOpenAddress?.();
-    openDetails({ focusNearby: true, emit: false });
+    openDetails({ focusNearby: event.detail.target === 'nearby', focusMap: event.detail.target === 'map', emit: false });
   });
 
   const selectableAddressIndex = new Map();

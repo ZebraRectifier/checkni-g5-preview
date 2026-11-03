@@ -1,0 +1,25 @@
+{
+  "kind": "public-manual-map-focus-repair",
+  "publicBase": "1f1704daa366f97124a4bdd12349e04a378a946d",
+  "sourceBase": "6342caf34a4abe314f3767a50f6a9bebe1694b5e",
+  "testedRuntimeCommit": "917667985a1a3ae3025147151652cd42d9d5860f",
+  "files": {
+    "src/components/HoriCommerce.mjs": "28ea903f21295caaaa817bad707d543793e22cfa0447a6c8afaae4966d4c1a3e"
+  },
+  "trigger": "next-frame details presentation focused the address field after the manual-map action focused the map; Enter could restart the unavailable address search",
+  "result": "explicit map action preserves map focus across presentation frames; nearby action still targets the address field",
+  "validation": {
+    "regressionBeforeFailed": 2,
+    "nodePassed": 35,
+    "browserPassed": 28,
+    "widths": [
+      1365,
+      390
+    ],
+    "workers": 1,
+    "retries": 0,
+    "providerCalls": 0
+  },
+  "publicationAcceptance": "pending exact/main/Pages/served bytes/published recovery",
+  "privateSourceBackport": "pending separate integration"
+}
