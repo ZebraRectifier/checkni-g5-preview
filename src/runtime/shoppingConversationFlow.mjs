@@ -666,7 +666,7 @@ export function createShoppingConversationFlow(options) {
     // The accepted history supplies the pending question, so edit preserves it
     // and clearing the dialogue/store cannot leave a separate stale flag.
     const volumeQuestionPending = hasPendingShoppingVolumeQuestion(adviceHistory, memory.facts.peopleCount?.value);
-    const possibleContinuation = adviceFocus ? resolveShoppingAdviceFollowup(text, adviceFocus, volumeQuestionPending) : null;
+    const possibleContinuation = adviceFocus ? resolveShoppingAdviceFollowup(text, adviceFocus, volumeQuestionPending, adviceHistory.length > 0) : null;
     const adviceContinuation = possibleContinuation?.adviceExplanation && !adviceHistory.length ? null : possibleContinuation;
     if (adviceContinuation?.kind === "clarification") {
       adviceExclusionPending = adviceContinuation.exclusion === true;
@@ -692,9 +692,13 @@ export function createShoppingConversationFlow(options) {
     const needDelta = extractShoppingDelta(text);
     const meatContext = /без\s+мяса[.!?]*$/iu.test(needContext.text)
       && needDelta.reject.length === 1 && needDelta.reject[0] === "meat" && !needDelta.unresolved.length && !needDelta.allow.length;
+    const retailIntakePreference = typeof options.searchGuidedCatalog === "function" && !selectionQuestion
+      && Object.keys(needDelta.facts).length > 0 && !shoppingTargets(text).length
+      && !needDelta.want.length && !needDelta.reject.length && !needDelta.allow.length && !needDelta.unresolved.length
+      && !needDelta.reset && !needDelta.undo && !needDelta.newGoal;
     const contextualShopping = (needContext.recognized || meatContext) && !selectionQuestion
       && !/цен[ауы]|стоим|сто[ия]т|скидк|акци|дешев|налич|доставк|заказ|где/iu.test(text);
-    if (contextualShopping && retailScope() === null) {
+    if ((contextualShopping || retailIntakePreference) && retailScope() === null) {
       pending = null; suspendedDraft = null; productSelection = null; retailList = null; hybrid.invalidate();
       if (needContext.clarification) { state = messageState("Уточню условие.", needContext.clarification); return state; }
       const updated = updateShoppingConversation(memory, { ...needDelta, facts: { ...needDelta.facts, ...needContext.facts } });
@@ -740,7 +744,7 @@ export function createShoppingConversationFlow(options) {
     }
     const inferredFocus = referencePlan.length === 1
       ? shoppingAdviceFocus(`Как выбрать ${byId.get(referencePlan[0].productId)?.name ?? ""}?`) : null;
-    const possibleFollowup = resolveShoppingAdviceFollowup(text, adviceFocus ?? inferredFocus, volumeQuestionPending);
+    const possibleFollowup = resolveShoppingAdviceFollowup(text, adviceFocus ?? inferredFocus, volumeQuestionPending, adviceHistory.length > 0);
     const followup = possibleFollowup?.adviceExplanation && !adviceHistory.length ? null : possibleFollowup;
     if (followup?.kind === "clarification") {
       adviceExclusionPending = followup.exclusion === true;

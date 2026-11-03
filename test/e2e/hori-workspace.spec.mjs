@@ -95,3 +95,19 @@ test('background basket state preserves an open Hory, while explicit app navigat
  await expect(dialog).toBeVisible();await expect(input).toBeEditable();await expect(input).toHaveValue('Что ты помнишь?');
  await closeHory(page);await expectNoOverflow(page);expect(ai).toBe(0);
 });
+
+test('preferences before a store stay as intake and recipe follow-ups send the actual previous advice',async({page})=>{
+ const calls=[],reply='Можно сделать пасту с томатным соусом или макароны с овощным рагу.';
+ await page.route('**/functions/v1/ai-basket-proposal',route=>{calls.push(route.request().postDataJSON());return route.fulfill({json:{kind:'advice',message:calls.length===1?reply:'Для второго варианта возьми макароны и овощную смесь: отвари и перемешай.'}});});
+ await setup(page);await send(page,'Нас четверо, покупки на десять дней');await send(page,'Не хочу готовить');
+ await expect(page.locator('#basket-proposal-status')).toContainText('Выбери магазин');
+ await expect(page.locator('#basket-proposal-status')).not.toContainText(/Историческ|₽|Колбас|Туш[её]н/);
+ expect(calls).toHaveLength(0);await send(page,'Без мяса');
+ const question='Как выбрать макароны для быстрых ужинов без мяса? Предложи два простых блюда.';
+ await send(page,question);await expect(page.locator('#basket-proposal-status')).toContainText(reply);
+ await send(page,'Оставим второй вариант. Как приготовить его попроще?');
+ await expect(page.locator('#basket-proposal-status')).toContainText('Для второго варианта');
+ expect(calls).toHaveLength(2);expect(calls[1].history).toEqual([{role:'user',text:question},{role:'assistant',text:reply}]);
+ expect(calls[1].context).toMatchObject({peopleCount:4,shoppingDays:10,cookingEffort:'minimal',excluded:['meat']});
+ await closeHory(page);await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(0);await expectNoOverflow(page);
+});
