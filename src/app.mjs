@@ -284,6 +284,7 @@ function currentManualCatalogComparison() {
   const saved=savedGuidedComparisonStore.read();
   if(saved&&saved.version!==2)return null;
   return prepareManualCatalogComparison(basket.getSnapshot(),{
+    includeReviewedCanonical:true,
     pinnedMagnitStoreId:saved?.scopes.find(scope=>scope.retailerId==='magnit')?.storeId,
     magnitStoreId:retailSurfaceStage==='store'&&retailBrowserState.retailerId==='magnit'
       ?'magnit-'+selectedMagnitStore.shopCode:null

@@ -113,3 +113,35 @@ test('manual twenty-egg pack is compared with two ten-egg delivery packs without
  await expect(page.locator('#comparison-output')).not.toContainText('ниже на');
  expect(ai).toBe(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+
+test('explicit Magnit storefront keeps reviewed canonical milk in the two-network comparison',async({page,context})=>{
+ let ai=0;
+ await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
+ await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
+ await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
+ await page.route('**/rest/v1/retail_catalog_items**',r=>{
+  const q=new URL(r.request().url()).searchParams,store=q.get('store_id')?.replace('eq.','');
+  const name=q.get('name')?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ').toLowerCase();
+  const ids=q.get('source_product_id')?.slice(4,-1).split(',');
+  return r.fulfill({json:rows.filter(p=>p.store_id===store&&(!ids||ids.includes(p.source_product_id))&&(!name||p.name.toLowerCase().includes(name))).slice(0,Number(q.get('limit')??40))});
+ });
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ const address=await page.locator('#magnit-store-address option[value="503695"]').textContent();
+ await page.locator('#pixel-store-search').fill(address.replace(/^(?:Москва|МО) · /u,''));
+ await page.locator('#pixel-store-address-results [data-store-id="503695"]').click();
+ await page.locator('#product-search').fill('молоко');await page.locator('#product-search').press('Enter');
+ await page.locator('.product-card[data-product-id="retail:magnit:magnit-503695:1899800733"] .add-button').click();
+ await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(1);
+ expect((await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1'))))[0].id).toBe('milk-25-900');
+ await expect(page.locator('#compare-basket')).toHaveText('Сравнить Магнит и Перекрёсток');
+ await page.locator('.basket-row').getByRole('button',{name:/Увеличить количество/}).click();
+ await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
+ const request=await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.guided-comparison-request.v1')));
+ expect(request.scopes[0].storeId).toBe('magnit-503695');expect(request.bindings[0].sourceProductId).toBe('1899800733');
+ await expect(page.locator('#comparison-output')).toContainText('Есть старые или неизвестные цены');
+ await expect(page.locator('#comparison-output')).not.toContainText('ниже на');
+ await page.reload();await expect(page.locator('.basket-row output')).toHaveText('2');
+ await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
+ await page.goBack();await openBasket(page);await expect(page.locator('.basket-row output')).toHaveText('2');expect(ai).toBe(0);
+});
