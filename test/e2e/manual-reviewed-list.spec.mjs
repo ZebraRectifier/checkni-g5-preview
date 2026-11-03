@@ -131,9 +131,12 @@ test('explicit Magnit storefront keeps reviewed canonical milk in the two-networ
  await page.locator('#pixel-store-search').fill(address.replace(/^(?:Москва|МО) · /u,''));
  await page.locator('#pixel-store-address-results [data-store-id="503695"]').click();
  await page.locator('#product-search').fill('молоко');await page.locator('#product-search').press('Enter');
- await page.locator('.product-card[data-product-id="retail:magnit:magnit-503695:1899800733"] .add-button').click();
+ const milkCard=page.locator('.product-card[data-product-id="retail:magnit:magnit-503695:1899800733"]');
+ await milkCard.locator('.add-button').click();await expect(milkCard.locator('.pixel-quantity')).toHaveText('1');
+ await milkCard.locator('.add-button').click();await expect(milkCard.locator('.pixel-quantity')).toHaveText('2');
+ await milkCard.locator('.pixel-remove-one').click();await expect(milkCard.locator('.pixel-quantity')).toHaveText('1');
  await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(1);
- expect((await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1'))))[0].id).toBe('milk-25-900');
+ expect((await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1'))))[0].id).toBe('retail:magnit:magnit-503695:1899800733');
  await expect(page.locator('#compare-basket')).toHaveText('Сравнить Магнит и Перекрёсток');
  await page.locator('.basket-row').getByRole('button',{name:/Увеличить количество/}).click();
  await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);

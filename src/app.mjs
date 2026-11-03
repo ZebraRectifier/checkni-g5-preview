@@ -1,3 +1,4 @@
+import {sourceScopedRetailListSelection} from './catalog/sourceScopedRetailList.mjs';
 import {prepareManualCatalogComparison} from './runtime/manualCatalogComparison.mjs';
 import {createGuidedComparisonStore,createGuidedComparisonRequest,GUIDED_BASKET_COMPARISON_KEY} from './state/guidedBasketComparison.mjs';
 import {loadSavedGuidedComparison,savedComparisonScopes} from './runtime/savedGuidedComparison.mjs';
@@ -283,12 +284,7 @@ function currentManualCatalogComparison() {
   if(!publicRetailCatalogMode)return null;
   const saved=savedGuidedComparisonStore.read();
   if(saved&&saved.version!==2)return null;
-  const items=basket.getSnapshot();
-  const needs=basketProposalFlow.needsStore?.getSnapshot().lines??[];
-  const associatedNeed=needs.some(line=>line.resolution.status==='selected'
-    &&items.some(item=>item.id===line.resolution.productId));
-  return prepareManualCatalogComparison(items,{
-    includeReviewedCanonical:!associatedNeed,
+  return prepareManualCatalogComparison(basket.getSnapshot(),{
     pinnedMagnitStoreId:saved?.scopes.find(scope=>scope.retailerId==='magnit')?.storeId,
     magnitStoreId:retailSurfaceStage==='store'&&retailBrowserState.retailerId==='magnit'
       ?'magnit-'+selectedMagnitStore.shopCode:null
@@ -594,9 +590,14 @@ if (elements.basketModeCopy) {
     : "Проверьте состав и запустите сравнение по трём демонстрационным магазинам.";
 }
 
+function manualCatalogListProduct(product) {
+  return publicRetailCatalogMode && product.retailerId==='magnit'
+    ? sourceScopedRetailListSelection(product)?.product??null : null;
+}
 function matchingBasketItemFor(product) {
-  const reviewed = product.basketProductId ? getReviewedRetailBasketProduct(product) : null;
-  const identity = reviewed && reviewed.id === product.basketProductId ? reviewed : product;
+  const reviewed = manualCatalogListProduct(product)
+    ?? (product.basketProductId ? getReviewedRetailBasketProduct(product) : null);
+  const identity = reviewed && (reviewed.id === product.basketProductId || reviewed.id === product.id) ? reviewed : product;
   const existing = basket.getSnapshot().find((item) => item.id === identity.id);
   if (!existing) return null;
 
@@ -1188,8 +1189,9 @@ function createCatalogProduct(product, live = true) {
       else basket.decrement(existing.id);
     },
     onAdd: selectedProduct => {
-      const existing = matchingBasketItemFor(selectedProduct);
-      const merged = basket.mergeValidatedBasket([{ product: existing ?? selectedProduct, quantity: 1 }]);
+      const basketProduct=manualCatalogListProduct(product)??selectedProduct;
+      const existing = matchingBasketItemFor(basketProduct);
+      const merged = basket.mergeValidatedBasket([{ product: existing ?? basketProduct, quantity: 1 }]);
       if (merged.rejectedRows.length > 0) {
         const reason = merged.rejectedRows[0].reason;
         showToast(reason === VALIDATED_MERGE_REASON.METADATA_CONFLICT
@@ -1200,7 +1202,7 @@ function createCatalogProduct(product, live = true) {
         return;
       }
       invalidateHybridForManualTakeover();
-      showToast(`${selectedProduct.name} добавлено`);
+      showToast(`${basketProduct.name} добавлено`);
     }
   };
   return (publicRetailCatalogMode ? createPixelProductCard : createProductCard)(product, options);

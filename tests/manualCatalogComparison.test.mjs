@@ -1,3 +1,4 @@
+import {sourceScopedRetailListSelection} from '../src/catalog/sourceScopedRetailList.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -96,20 +97,17 @@ test('an exact reviewed sliced loaf is a manual bread request; confectionery bar
 });
 
 
-test('explicit storefront opt-in compares a reviewed canonical pack without changing legacy list routing',()=>{
- const milk={id:'milk-25-900',name:'Молоко Простоквашино пастеризованное 2,5%',unit:'930 мл',quantity:2};
- const options={magnitStoreId:'magnit-508830',includeReviewedCanonical:true};
- const prepared=prepareManualCatalogComparison([milk],options);
- assert.equal(prepared.kind,'ready');
- assert.equal(prepared.request.scopes[0].storeId,'magnit-508830');
- assert.deepEqual(prepared.request.bindings.map(b=>[b.productId,b.sourceProductId,b.groupKey]),[['milk-25-900','1899800733','milk']]);
+test('manual source milk retains its exact store even when the pack also has a legacy canonical identity',()=>{
+ const card=normalized(rows.find(r=>r.retailer_id==='magnit'&&r.source_product_id==='1899800733'));
+ const canonical=getReviewedRetailBasketProduct(card);assert.equal(canonical.id,'milk-25-900');
+ const source=sourceScopedRetailListSelection(card).product;const item={...source,quantity:2};
+ const prepared=prepareManualCatalogComparison([item]);assert.equal(prepared.kind,'ready');
+ assert.equal(prepared.request.scopes[0].storeId,'magnit-503695');
+ assert.equal(prepared.request.bindings[0].sourceProductId,'1899800733');
+ assert.equal(prepared.request.bindings[0].productId,'retail:magnit:magnit-503695:1899800733');
  assert.doesNotMatch(JSON.stringify(prepared.request),/priceMinor|observedAt|availability/);
- assert.equal(prepareManualCatalogComparison([milk],{magnitStoreId:'magnit-508830'}),null);
- assert.equal(prepareManualCatalogComparison([milk],{includeReviewedCanonical:true}),null);
- assert.equal(prepareManualCatalogComparison([{...milk,unit:'1 л'}],options),null);
- assert.equal(prepareManualCatalogComparison([{...milk,name:'Любое молоко'}],options),null);
- assert.equal(prepareManualCatalogComparison([milk],{...options,magnitStoreId:'magnit-999999999'}).kind,'choose_magnit');
+ assert.equal(prepareManualCatalogComparison([{...canonical,quantity:2}],{magnitStoreId:'magnit-503695'}),null);
  const unknown={id:'unknown',name:'Моя еда',unit:'1 уп',quantity:1};
- const partial=prepareManualCatalogComparison([milk,unknown],options);
- assert.equal(partial.kind,'needs_review');assert.match(partial.names[0],/Подольск/u);assert.equal(partial.request,undefined);assert.equal(partial.issues[0],unknown);
+ const partial=prepareManualCatalogComparison([item,unknown]);assert.equal(partial.kind,'needs_review');
+ assert.match(partial.names[0],/Балашиха/u);assert.equal(partial.request,undefined);assert.equal(partial.issues[0],unknown);
 });

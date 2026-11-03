@@ -10,7 +10,7 @@ const key=value=>typeof value==='string'?value.normalize('NFKC').toLowerCase().r
 // This prepares a user request, not an offer or a name-based equivalence.
 // Actual SKU, source, pack, amount and observation are checked by the existing
 // saved comparison loader/Core after the user explicitly selects the pair.
-export function prepareManualCatalogComparison(basket,{magnitStoreId=null,pinnedMagnitStoreId=null,includeReviewedCanonical=false}={}) {
+export function prepareManualCatalogComparison(basket,{magnitStoreId=null,pinnedMagnitStoreId=null}={}) {
  if(!Array.isArray(basket)||!basket.length)return null;
  const stores=new Set(),references=[],issues=[];
  let relevant=Boolean(pinnedMagnitStoreId);
@@ -35,12 +35,7 @@ export function prepareManualCatalogComparison(basket,{magnitStoreId=null,pinned
        relevant=true;retailerId='perekrestok';sourceProductId=delivery.sourceProductId;title=delivery.sourceName;
      } else {
        const ids=getReviewedRetailSourceProductIds('magnit',[item]);
-       if(ids.length===1){
-         // The storefront explicitly supplies its chosen address. This opt-in
-         // retains legacy independent lists when no store has been selected.
-         relevant ||= includeReviewedCanonical===true&&Boolean(magnitStoreId);
-         retailerId='magnit';sourceProductId=ids[0];title=item.name;
-       }
+       if(ids.length===1){retailerId='magnit';sourceProductId=ids[0];title=item.name;}
        else {issues.push(item);continue;}
      }
    }
