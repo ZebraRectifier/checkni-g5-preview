@@ -1,0 +1,21 @@
+{
+  "kind": "public-catalog-search-read-recovery",
+  "publicBase": "1ab14e59f5857ba8497b649c400315768b3de2d3",
+  "sourceBase": "6342caf34a4abe314f3767a50f6a9bebe1694b5e",
+  "testedRuntimeCommit": "0b294004e70866c21468fff958b42aa4006bddf5",
+  "files": {
+    "src/app.mjs": "4198d52351264d9930b9751e8e86e6338ec59a44b870c9732578c8c6bce10441"
+  },
+  "trigger": "Observed PostgREST500/57014 search timeout was shown together with a nothing-found heading and zero count.",
+  "result": "Distinguish failed reads from successful empty results and expose one explicit retry through the existing submit path; preserve query, exact store and basket.",
+  "validation": {
+    "beforeDatabaseTimeoutBrowserFailed": 2,
+    "afterDesktopMobileBrowserPassed": 8,
+    "workers": 1,
+    "retries": 0,
+    "realProviderRequests": 0
+  },
+  "databaseRlsAuthPricesCoreProviderAndAutomaticRetry": "unchanged",
+  "sourceBackport": "local22cd96f9; not merged or deployed",
+  "publicationAcceptance": "pending exact/main/Pages/served runtime and published recovery"
+}

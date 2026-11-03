@@ -228,7 +228,7 @@ test('the Okey address disclosure stays readable in both pixel themes and fits t
   }
 });
 
-for (const failure of ['503', 'timeout', 'empty']) {
+for (const failure of ['503', '57014', 'timeout', 'empty']) {
   test(`public manual search distinguishes ${failure} and preserves the selected store, basket and query without global/MOCK fallback`, async ({ page }) => {
     const calls = await setup(page, { items: [milk], instrumentMock: true }), requests = [];
     let release;
@@ -238,6 +238,7 @@ for (const failure of ['503', 'timeout', 'empty']) {
       if (!params.has('name')) return route.fulfill({ json: [milk] });
       requests.push({ query: params.get('name'), retailer: params.get('retailer_id'), store: params.get('store_id') });
       if (requests.length === 1 && failure === 'timeout') { await gate; return route.abort().catch(() => {}); }
+      if (requests.length === 1 && failure === '57014') return route.fulfill({status:500,json:{code:'57014',message:'canceling statement due to statement timeout'}});
       if (requests.length === 1 && failure === '503') return route.fulfill({ status: 503, json: [] });
       return route.fulfill({ json: failure === 'empty' ? [] : [milk] });
     });
@@ -256,10 +257,14 @@ for (const failure of ['503', 'timeout', 'empty']) {
       if (failure === 'empty') {
         await expect(page.locator('#search-status')).toHaveText('Подтверждённых товаров не найдено');
         await expect(page.locator('#empty-search-copy')).toHaveText('В живом каталоге по этому запросу ничего не найдено.');
+        await expect(page.locator('#empty-search h3')).toHaveText('Ничего не нашли');
+        await expect(page.locator('#catalog-search-retry')).toBeHidden();
         await expect(page.locator('#catalog-eyebrow')).toHaveText('Живой каталог · Магнит');
         await expect(page.locator('#catalog-eyebrow')).not.toContainText('Open Food Facts');
       } else {
         await expect(page.locator('#search-status')).toHaveText('Живой каталог временно недоступен');
+        await expect(page.locator('#empty-search h3')).toHaveText('Не удалось загрузить товары');
+        await expect(page.locator('#result-count')).not.toHaveText('0');
         await expect(page.locator('#empty-search-copy')).toHaveText('Живой каталог сейчас не загрузился. Попробуйте ещё раз.');
         await expect(page.locator('#catalog-eyebrow')).toHaveText('Живой каталог недоступен');
         await expect(page.locator('#empty-search-copy')).not.toContainText('ничего не найдено');
@@ -269,7 +274,7 @@ for (const failure of ['503', 'timeout', 'empty']) {
       expect(requests).toHaveLength(1); expect(calls.global).toBe(0); expect(calls.ai).toBe(0);
       expect(await page.evaluate(() => globalThis.__auditMockCalls ?? 0)).toBe(0);
       if (failure !== 'empty') {
-        release(); await submit.click();
+        release(); await page.getByRole('button',{name:'Повторить поиск',exact:true}).click();
         await expect(page.locator('#product-grid [data-product-id$=":1899800733"]')).toBeVisible();
         await expect(page.locator('#search-status')).toHaveText('Найдено товаров: 1');
         await expect(page.locator('#empty-search')).toBeHidden();

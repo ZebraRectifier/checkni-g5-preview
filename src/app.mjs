@@ -1950,6 +1950,16 @@ function setupManualSearchControls() {
   }
   elements.searchSubmit = elements.searchForm.querySelector(".catalog-search-submit");
   elements.searchSubmit.disabled = !elements.searchInput.value.trim();
+  elements.emptySearchTitle = elements.emptySearch.querySelector("h3");
+  const retry = document.createElement("button");
+  retry.id = "catalog-search-retry"; retry.type = "button";
+  retry.className = "text-button"; retry.textContent = "Повторить поиск";
+  retry.hidden = true;
+  retry.addEventListener("click", () => {
+    if (elements.searchInput.value.trim()) elements.searchForm.requestSubmit();
+    else elements.clearSearch.click();
+  });
+  elements.emptySearch.append(retry); elements.searchRetry = retry;
   const prompt = document.createElement("p");
   prompt.id = "catalog-search-prompt";
   prompt.className = "field-help catalog-search-prompt";
@@ -2109,6 +2119,9 @@ function renderCatalog() {
   const hasVisibleProducts = hasResults || featuredIds.size > 0;
   elements.productGrid.hidden = !hasResults;
   elements.emptySearch.hidden = draft || loading || hasVisibleProducts || categoryBrowsing;
+  if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = fallback
+    ? "Не удалось загрузить товары" : "Ничего не нашли";
+  if (elements.searchRetry) elements.searchRetry.hidden = !fallback || draft || loading || hasVisibleProducts || categoryBrowsing;
   if (publicRetailCatalogMode) {
     const heading = elements.productGrid.closest('.catalog-section').querySelector('.section-heading');
     if (heading) heading.hidden = !hasResults && featuredIds.size > 0;
@@ -2120,7 +2133,7 @@ function renderCatalog() {
   }
   elements.resultCount.textContent = loading
     ? "…"
-    : draft || categoryBrowsing
+    : draft || categoryBrowsing || fallback
       ? "—"
       : String(results.length);
 
