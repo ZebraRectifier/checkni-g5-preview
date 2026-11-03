@@ -2,7 +2,7 @@
   "product": "CHECKNI",
   "hosting": "GitHub Pages",
   "sourceRepository": "ZebraRectifier/Checkni",
-  "sourceCommit": "49c3f947670dbe4d522507a651c9e82625eb80b5",
+  "sourceCommit": "6342caf34a4abe314f3767a50f6a9bebe1694b5e",
   "comparisonDefault": "observed",
   "demoOptIn": "?comparison=demo",
   "retailers": [
@@ -3074,5 +3074,121 @@
     "commercialBoundary": "Core goods subtotals for reviewed catalogue contexts; alternative brands/packs disclosed; delivery fees and stock unproven; not a whole-trip or district winner.",
     "freshCompleteBasketAcceptance": "not established; missing products, dated observations and repeatable same-context cycles remain open",
     "physicalAndroidAcceptance": "not established"
+  },
+  "manualSourceScopedComparisonRelease": {
+    "manifest": "release/manual-source-list-20261103.json",
+    "sourcePr": 641,
+    "sourceCommit": "6342caf34a4abe314f3767a50f6a9bebe1694b5e",
+    "testedSourceHead": "c7240bf8f7e943180af013a06c510fc20d69f9dc",
+    "sourceExactGates": [
+      {
+        "id": 41557892328,
+        "name": "CI",
+        "head": "c7240bf8f7e943180af013a06c510fc20d69f9dc",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/41557892328"
+      },
+      {
+        "id": 41557892427,
+        "name": "Public artifact package",
+        "head": "c7240bf8f7e943180af013a06c510fc20d69f9dc",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/41557892427"
+      },
+      {
+        "id": 41557892388,
+        "name": "Perekrestok hosted release gate",
+        "head": "c7240bf8f7e943180af013a06c510fc20d69f9dc",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/41557892388"
+      }
+    ],
+    "sourceActualMainGates": [
+      {
+        "id": 41564001278,
+        "name": "CI",
+        "head": "6342caf34a4abe314f3767a50f6a9bebe1694b5e",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/41564001278"
+      },
+      {
+        "id": 41564001125,
+        "name": "Public artifact package",
+        "head": "6342caf34a4abe314f3767a50f6a9bebe1694b5e",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ZebraRectifier/Checkni/actions/runs/41564001125"
+      }
+    ],
+    "retainedPublicBase": "c749fd63b5bc589cc5f9a078eeb5279804a6a1fd",
+    "scope": "Reviewed manual source/store lists, editable two-network catalogue comparison, explicit household reload and shared pinned delivery context guard.",
+    "files": {
+      "src/app.mjs": "edf4661bd73e3a85c7ab6d79d23b8eb191f6ae8079d8a9f4070413c5fcb3f425",
+      "src/catalog/perekrestokReviewedList.mjs": "7574676e779fffb77cf1b25279e5678481a0aefbb14634831319f3f257fb2587",
+      "src/catalog/reviewedMagnitCatalogCard.mjs": "f0859652d62877b4cd37f39e99e08ee5c249d1fcb96b8539fddaf627fe1d71f9",
+      "src/catalog/reviewedRetailBasket.mjs": "61d2aaf915b776936c436d72b5ca9a2df6014fe9cbc71737c127f9245e1ef1a6",
+      "src/catalog/sourceScopedRetailList.mjs": "8faa3d8434f6f41b6c447bae381e118c0b0adf633ca84b8c416e9e9421ff5161",
+      "src/catalog/weeklyMagnitIdentities.mjs": "626923fc914e8713e8d7bd21aa079e09d9327cd2d771211544dba1b28602a355",
+      "src/components/BasketView.mjs": "3e804c8550b8591d5f79619637983a3560cf68a8c80db48437643098c7d6b000",
+      "src/components/SavedGuidedComparison.mjs": "69470ea6609f24c086660036c3a588afd3db3ccdf8a31ac770103c5eee0d9f02",
+      "src/core/catalogDraft.mjs": "0b8a0b0ac6b29c407a9015b0bf4fde5b0dc0db1116278d16b7ef8feaa70d6b2f",
+      "src/intelligence/guidedShoppingPlan.mjs": "32e24d5baf29969aa31dd0b360ccdb777b12e57605b0b64f7609729088cc962e",
+      "src/intelligence/shoppingNeedContext.mjs": "66987d2e017bb6a72f4de334bad84de1da8e2c0d581d7633fdbd68dbf74a3307",
+      "src/ports/retailCatalogPort.mjs": "723c9fe22181bf8df7ea7514c4d0f883e1202473698ec8c617450db7445ca6e3",
+      "src/ports/weeklyRetailCatalogPort.mjs": "04a5f0ffabcdc32c261351c790b0c9322fd7e0c692a5aca0114ae43a2bf8c0c6",
+      "src/runtime/manualCatalogComparison.mjs": "9a468933e91e50c11bffff5e3bc050ef101fb2df54bb79d7153c543183ea685e",
+      "src/runtime/savedGuidedComparison.mjs": "187a4502a08ab839c8293d741f9f2abeef1c49d6c73d28259c359b06b1f5f1fe",
+      "src/runtime/shoppingNeedsFlow.mjs": "3971dc56504c159961b9caa5c8633ea7a381de47dbfcf5fcdcff8f8100fe29f3",
+      "src/runtime/shoppingPreferenceStorage.mjs": "9585408f0efa4baa6329797fe62ce23ddb877ca7dec1794621207cdf7a134928",
+      "src/state/guidedBasketComparison.mjs": "3311e2ab939510284fbf9deacbc0f7e7a18b1ccd173579c71106c6780e9bea49"
+    },
+    "publicInterfaceFollowup": "Existing weighed-portion display labels suppress piece totals in the list and dock. Public surface-only correction, not a Core/quantity conversion or private-source runtime identity claim.",
+    "listStorage": "Identity, descriptive unit, quantity and request references; no price, observation date, stock or coordinates.",
+    "collectorPolicy": {
+      "stableKnownTargets": 13,
+      "documentPriorityKnownLimits": [
+        80,
+        32,
+        16
+      ],
+      "pausesGuardsFreshnessUnchanged": true,
+      "postChangeLiveAcceptance": "pending subsequent automatic cycles"
+    },
+    "acceptedOriginalPolicyCycles": [
+      {
+        "run": 41500827061,
+        "rows": 200,
+        "selectedRows": 64
+      },
+      {
+        "run": 41531848982,
+        "rows": 274,
+        "selectedRows": 68
+      },
+      {
+        "run": 41545332569,
+        "rows": 272,
+        "selectedRows": 67
+      },
+      {
+        "run": 41561828156,
+        "rows": 292,
+        "selectedRows": 21
+      }
+    ],
+    "catalogueDatabaseMigration": {
+      "version": "20261102231022",
+      "applied": true,
+      "pricesAndRlsUnchanged": true
+    },
+    "commercialBoundary": "Observed goods subtotals only; brands, packs and price conditions need review; fees and stock unproven. No district or checkout winner.",
+    "perekrestokSourceLimitation": "Scheduled 2026-11-03T00:17Z refresh failed at upstream catalogue HTTP404; previous observations retained with original dates.",
+    "freshCompleteBasketAcceptance": "not established; sufficient fresh comparable products remain required",
+    "physicalAndroidAcceptance": "not established",
+    "publicReleaseAcceptance": "pending exact/public-main gates and actual served runtime/user journey"
   }
 }
