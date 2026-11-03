@@ -1,6 +1,6 @@
 import {WEEKLY_MAGNIT_IDENTITIES} from './weeklyMagnitIdentities.mjs';
 import {WEEKLY_PEREKRESTOK_IDENTITIES} from './weeklyPerekrestokIdentities.mjs';
-import {PEREKRESTOK_REVIEWED_LIST_CONTEXT as PEREK} from './perekrestokReviewedList.mjs';
+import {PEREKRESTOK_REVIEWED_LIST_CONTEXT as PEREK, matchesReviewedPerekrestokListContext} from './perekrestokReviewedList.mjs';
 import {resolveRegisteredMagnitStore} from '../data/registeredMagnitStores.mjs';
 import {catalogPurchaseUnit} from '../core/catalogDraft.mjs';
 import {weeklyMagnitCard} from './reviewedMagnitCatalogCard.mjs';
@@ -42,7 +42,8 @@ export function sourceScopedRetailListSelection(input) {
    if(unit(card.unit)!==unit(identity.unit))return null;
  } else {
    const identity=WEEKLY_PEREKRESTOK_IDENTITIES.find(p=>p.sourceProductId===input.sourceProductId&&key(p.name)===key(input.name));
-   if(!identity||input.id!==`retail:perekrestok:${PEREK.storeId}:${identity.sourceProductId}`
+   if(!identity||!matchesReviewedPerekrestokListContext(input)
+     ||input.id!==`retail:perekrestok:${PEREK.storeId}:${identity.sourceProductId}`
      ||input.storeId!=null&&input.storeId!==PEREK.storeId
      ||input.sourceUrl!==PEREK.sourceUrl||input.productUrl!==PEREK.sourceUrl
      ||!['yandex-eda-regular','yandex-eda-promo'].includes(input.priceCondition)

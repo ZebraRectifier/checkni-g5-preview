@@ -69,8 +69,12 @@ test('reviewed delivery portions and fixed packs are addable under the pinned so
   assert.equal(card.priceMinor,raw.price_minor);assert.equal(Date.parse(card.observedAt),Date.parse(raw.observed_at));
   if(selection.product.unit.includes('≈'))approx++;
   for(const patch of [{id:card.id.replace('3186917','3186918')},{sourceUrl:card.sourceUrl+'&another=1'},
-   {productUrl:'https://eda.yandex.ru/retail/perekrestok'}, {unit:'999 г'}, {priceCondition:'regular'}])
-   assert.equal(sourceScopedRetailListSelection({...card,...patch}),null);
+   {productUrl:'https://eda.yandex.ru/retail/perekrestok'}, {unit:'999 г'}, {priceCondition:'regular'},
+   {storeName:'Перекрёсток · другой контекст'},{bindingId:'another'},
+   {scopeBinding:'city-public-promo'},{salesChannel:'store'}]) {
+   assert.equal(sourceScopedRetailListSelection({...card,...patch}),null,JSON.stringify(patch));
+   assert.equal(getReviewedRetailBasketProduct({...card,...patch}),null,JSON.stringify(patch));
+  }
  }
  assert.ok(added>=10);assert.ok(approx>=1);
 });
