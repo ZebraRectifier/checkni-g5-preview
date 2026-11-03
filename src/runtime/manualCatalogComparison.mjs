@@ -52,17 +52,18 @@ export function prepareManualCatalogComparison(basket,{magnitStoreId=null,pinned
  if(!relevant)return null;
  if(pinnedMagnitStoreId&&stores.size&&[...stores].some(id=>id!==pinnedMagnitStoreId))return {kind:'needs_review',reason:'different_magnit_addresses',issues:basket};
  if(stores.size>1)return {kind:'needs_review',reason:'different_magnit_addresses',issues:basket};
- if(issues.length)return {kind:'needs_review',reason:'unmatched_items',issues};
- if(!references.length)return {kind:'needs_review',reason:'empty',issues:basket};
- // A source-scoped Magnit item identifies its address. Delivery-only and old
- // canonical lists require an explicitly chosen Magnit catalogue, never a default.
+ // Keep the chosen address visible even when an unmatched line prevents
+ // comparison. This context does not admit that line or establish a winner.
  const chosen=stores.size?[...stores][0]:pinnedMagnitStoreId??magnitStoreId;
  const code=/^magnit-(\d{4,12})$/u.exec(chosen??'')?.[1];
  const store=code&&resolveRegisteredMagnitStore({shopCode:code});
+ const names=store?['Магнит · '+store.address,PEREK.storeName]:null;
+ if(issues.length)return {kind:'needs_review',reason:'unmatched_items',issues,...(names?{names}:{})};
+ if(!references.length)return {kind:'needs_review',reason:'empty',issues:basket};
  if(!store)return {kind:'choose_magnit'};
  const request=normalizeGuidedComparisonRequest({version:2,
    scopes:[{retailerId:'magnit',storeId:'magnit-'+code},{retailerId:'perekrestok',storeId:PEREK.storeId}],
    bindings:references,unresolvedGroupKeys:[]});
  if(!request)return {kind:'needs_review',reason:'request_limit',issues:basket};
- return {kind:'ready',request,names:['Магнит · '+store.address,PEREK.storeName]};
+ return {kind:'ready',request,names};
 }

@@ -283,8 +283,12 @@ function currentManualCatalogComparison() {
   if(!publicRetailCatalogMode)return null;
   const saved=savedGuidedComparisonStore.read();
   if(saved&&saved.version!==2)return null;
-  return prepareManualCatalogComparison(basket.getSnapshot(),{
-    includeReviewedCanonical:true,
+  const items=basket.getSnapshot();
+  const needs=basketProposalFlow.needsStore?.getSnapshot().lines??[];
+  const associatedNeed=needs.some(line=>line.resolution.status==='selected'
+    &&items.some(item=>item.id===line.resolution.productId));
+  return prepareManualCatalogComparison(items,{
+    includeReviewedCanonical:!associatedNeed,
     pinnedMagnitStoreId:saved?.scopes.find(scope=>scope.retailerId==='magnit')?.storeId,
     magnitStoreId:retailSurfaceStage==='store'&&retailBrowserState.retailerId==='magnit'
       ?'magnit-'+selectedMagnitStore.shopCode:null

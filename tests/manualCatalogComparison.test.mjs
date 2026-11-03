@@ -110,5 +110,6 @@ test('explicit storefront opt-in compares a reviewed canonical pack without chan
  assert.equal(prepareManualCatalogComparison([{...milk,name:'Любое молоко'}],options),null);
  assert.equal(prepareManualCatalogComparison([milk],{...options,magnitStoreId:'magnit-999999999'}).kind,'choose_magnit');
  const unknown={id:'unknown',name:'Моя еда',unit:'1 уп',quantity:1};
- assert.equal(prepareManualCatalogComparison([milk,unknown],options).kind,'needs_review');
+ const partial=prepareManualCatalogComparison([milk,unknown],options);
+ assert.equal(partial.kind,'needs_review');assert.match(partial.names[0],/Подольск/u);assert.equal(partial.request,undefined);assert.equal(partial.issues[0],unknown);
 });
