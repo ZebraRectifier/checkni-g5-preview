@@ -1,0 +1,21 @@
+{
+  "kind": "public-latest-hory-reply-scroll-repair",
+  "publicBase": "104aa8f03e1c766c3a4e2ace60f290cbcfad95d7",
+  "sourceBase": "6342caf34a4abe314f3767a50f6a9bebe1694b5e",
+  "testedRuntimeCommit": "8120c895dec6d07e06e2644e19d8ce312b06766c",
+  "files": {
+    "src/components/HoriWorkspace.mjs": "994bd9399ab92eb40433ee819f0b65d2ba0ef36849c7e53b105d9f4bcfe7b229"
+  },
+  "trigger": "latest responses remained below the dialog viewport because revealDialogue scrolled an inner non-scrolling section",
+  "result": "scroll the actual native Hory dialog after the latest response renders; retain the existing composer and approved layout",
+  "validation": {
+    "beforeViewportFailed": 2,
+    "afterBrowserPassed": 18,
+    "workers": 1,
+    "retries": 0,
+    "providerCalls": 0
+  },
+  "priceCoreProviderAuthAndQuota": "unchanged",
+  "publicationAcceptance": "pending exact/main/Pages/served files and published recorded-response replay",
+  "privateSourceBackport": "pending independent integration"
+}
