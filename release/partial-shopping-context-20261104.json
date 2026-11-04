@@ -1,0 +1,73 @@
+{
+  "kind": "retain-partial-shopping-intent-and-explicit-store-context",
+  "publicBase": "cf1ccbc0c6251cf6952d5562ae24d3ed89d68bbc",
+  "sourcePr": 647,
+  "sourceHead": "b68a8c7aacc649c89e1466ec94e187aa59d69264",
+  "sourceMain": "6e5bcfa6eb0a4401977b1230a0ff8dbde21cf8df",
+  "testedRuntimeCommit": "df8e04f284526766d1e094f498431c700194beee",
+  "files": {
+    "src/app.mjs": "663cc9eedee4a8d67863b4e791816003f5be582c3807903c53e3e487299a75a4",
+    "src/data/shoppingLocations.mjs": "44b5a236c0137e1bfcc8b28058b017859f0f43789076f0f049abade753e70bff",
+    "src/state/guidedBasketComparison.mjs": "13678683b3eab137aad1f570944b0c876033127c188b44e43393641be02cbacf",
+    "src/runtime/manualCatalogComparison.mjs": "4353eb6aff5bfc53369381e29b8091ad0926f1b501fd74f9db4200096ab71117",
+    "src/runtime/savedGuidedComparison.mjs": "ff7b37a7c139b5db6ddb8c424c7f9250a74ab85f524eb6198bda8f877848bf92",
+    "src/components/BasketView.mjs": "c5e8180702828375eef7b513d608531b4e9a32ac44a2997c263acf26a718fd46",
+    "src/components/GuidedShoppingTable.mjs": "19e65b19993e50cd03015eca0fa11bbaa779eb3a837e55d62b98de97af4fb6c8",
+    "src/components/SavedGuidedComparison.mjs": "ba2b3c4eee7d8215476fd482f076eaeef444e4119e37ef49bc38a3cc6462cc4c"
+  },
+  "sourceValidation": {
+    "pr": 647,
+    "testedHead": "b68a8c7aacc649c89e1466ec94e187aa59d69264",
+    "main": "6e5bcfa6eb0a4401977b1230a0ff8dbde21cf8df",
+    "exactCI": 41757316186,
+    "exactNodePassed": 3051,
+    "exactBrowserPassed": 610,
+    "failures": 0,
+    "skips": 0,
+    "flaky": 0,
+    "exactPackage": 41757316169,
+    "actualMainCI": 41761450338,
+    "actualMainPackage": 41761450182,
+    "actualMainPackageConclusion": "success",
+    "actualMainAccepted": true,
+    "identicalTree": "bc9d6624fa7b308a669fb9b6394f4f9eed2ad567",
+    "actualMainNodePassed": 3051,
+    "actualMainBrowserPassed": 609,
+    "actualMainFlaky": 1,
+    "actualMainFailures": 0,
+    "actualMainSkips": 0,
+    "actualMainCIConclusion": "success",
+    "actualMainJobs": [
+      126349848508,
+      126350919839
+    ],
+    "focusedOriginalDeadlineReport": "main647-deadline-focused-report.json",
+    "focusedOriginalDeadlinePassed": 2,
+    "focusedOriginalDeadlineRetries": 0,
+    "focusedOriginalDeadlineTimeoutMs": 30000,
+    "mainFlakyCase": "desktop shopping-dialogue-recovery.spec.mjs:100 transient initial loading text changed before assertion; passed configured retry",
+    "flakyCauseResolved": false
+  },
+  "validation": {
+    "sourceFocusedNodePassed": 105,
+    "publicFocusedNodePassed": 44,
+    "sourceBrowserPassed": 18,
+    "publicBrowserPassed": 18,
+    "composedRealData": [
+      "composed-partial-intent-cf1ccbc0-390-011752f1.json",
+      "composed-partial-intent-cf1ccbc0-1365-f69f645e.json"
+    ],
+    "paidProviderCalls": 0,
+    "physicalPhoneVerified": false
+  },
+  "preservedPublicFixes": [
+    "explicit address before catalogue",
+    "submitted search wins late category response"
+  ],
+  "limits": [
+    "Actual published acceptance remains required.",
+    "No complete fresh two-network basket or delivery eligibility is proved.",
+    "The separate live addressed-recipe routing defect remains unresolved.",
+    "Collector group priority is private-only and requires actual runtime evidence."
+  ]
+}
