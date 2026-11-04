@@ -20,9 +20,10 @@
     "scope": "РњРѕСЃРєРІР° В· РЇРЅРґРµРєСЃ Р•РґР° delivery",
     "products": null,
     "categories": null,
-    "autoRefresh": "Supabase Cron 00:17, 06:17, 12:17, 18:17 UTC daily; five-hour minimum source pause; source availability permitting",
+    "autoRefresh": "Supabase Cron 17 */6 * * * UTC; durable eligibility and source pauses enforced; source availability permitting",
     "freshComparisonMaxAgeHours": 1,
-    "continuousFreshPriceCoverage": "not established"
+    "continuousFreshPriceCoverage": "not established",
+    "refreshRuntimeCheckedAt": "2026-11-04T07:11:37.603789+00:00"
   },
   "da": {
     "storeId": "da-public-promo",
@@ -3439,5 +3440,82 @@
       "src/components/GuidedShoppingTable.mjs": "19e65b19993e50cd03015eca0fa11bbaa779eb3a837e55d62b98de97af4fb6c8",
       "src/components/SavedGuidedComparison.mjs": "ba2b3c4eee7d8215476fd482f076eaeef444e4119e37ef49bc38a3cc6462cc4c"
     }
+  },
+  "horyConditionalNearby20261104": {
+    "kind": "conditional-dialogue-and-nearby-consent",
+    "publicBase": "21d3cca528c1ee9d8097e726246d41b9cfaf8579",
+    "sourcePr": 650,
+    "sourceHead": "b432b77e86b6033eb7378f6b01ce6f47077bc5f4",
+    "sourceMain": "a585fc71e71e40b728d2122e5ddff756895539a7",
+    "frontendOrigin": {
+      "pr": 649,
+      "testedHead": "bf427301171e22023a4648901f7df9265bf85d79",
+      "main": "75aa6642fec8b9a9d318749ce9feb6898a5e02d4",
+      "originalMainFirstPass": 611,
+      "originalMainFlaky": 1,
+      "stableVerificationFollowupPr": 650
+    },
+    "testedRuntimeCommit": "6a7256740080ab81bdc290c31823ee8b10cdf783",
+    "files": {
+      "src/app.mjs": "dce4fbf46572f3441d6e176664c62686f277e831e06e5ad017a2be7d7f82a1c8",
+      "src/runtime/shoppingNeedsFlow.mjs": "cf575b63832a4910d6499ccd9d6aebac1b89a00538e04d22191e687e5bf44e88"
+    },
+    "sourceValidation": {
+      "pr": 650,
+      "testedHead": "b432b77e86b6033eb7378f6b01ce6f47077bc5f4",
+      "base": "75aa6642fec8b9a9d318749ce9feb6898a5e02d4",
+      "exactCI": 41783006419,
+      "exactBaselineJob": 126418661758,
+      "exactCIStatus": "completed",
+      "package": "N/A: existing pages.yml filter does not cover these five backend/test/status paths; do not claim PASS",
+      "focusedNodePassed": 70,
+      "focusedBrowserPassed": 2,
+      "focusedBrowserRetries": 0,
+      "actualMainAccepted": true,
+      "deployed": false,
+      "frontendOriginPr": 649,
+      "frontendOriginHead": "bf427301171e22023a4648901f7df9265bf85d79",
+      "frontendOriginMain": "75aa6642fec8b9a9d318749ce9feb6898a5e02d4",
+      "frontendOriginMainFirstPass": 611,
+      "frontendOriginMainFlaky": 1,
+      "requiredBeforePublicRelease": "A complete stable exact/main follow-up, preserving original649flaky evidence; no relabeling611+1 as612clean.",
+      "exactNodePassed": 3065,
+      "exactNodeFailures": 0,
+      "exactNodeSkips": 0,
+      "exactBrowserJob": 126419687820,
+      "exactBrowserStatus": "completed",
+      "exactCIConclusion": "success",
+      "exactBrowserPassed": 612,
+      "failures": 0,
+      "skips": 0,
+      "flaky": 0,
+      "main": "a585fc71e71e40b728d2122e5ddff756895539a7",
+      "identicalTree": "5cbe57d3fc2398c4e035764f0816fa5dbfbcdba3",
+      "actualMainCI": 41786542613,
+      "actualMainBaselineJob": 126429867922,
+      "actualMainE2eJob": 126430913839,
+      "actualMainCIStatus": "completed",
+      "actualMainNodePassed": 3065,
+      "actualMainNodeFailures": 0,
+      "actualMainNodeSkips": 0,
+      "actualMainBrowserStatus": "completed",
+      "actualMainCIConclusion": "success",
+      "actualMainBrowserPassed": 612,
+      "actualMainFailures": 0,
+      "actualMainSkips": 0,
+      "actualMainFlaky": 0
+    },
+    "localValidation": {
+      "nodePassed": 40,
+      "browserPassed": 22,
+      "browserRetries": 0,
+      "paidProviderCalls": 0,
+      "physicalPhoneVerified": false
+    },
+    "limits": [
+      "Public exact/main gates and actual served verification are still required.",
+      "No fresh two-network winner, stock, checkout, continuous freshness or physical-device proof follows from source CI.",
+      "Perekrestok server runtime status remains a separate dated verification."
+    ]
   }
 }
