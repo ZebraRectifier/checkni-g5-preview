@@ -16,7 +16,7 @@ test('exact delivery packs add to a manual list, keep quantities through reload 
  let aiRequests=0;const errors=[];page.on('pageerror',e=>errors.push(String(e)));
  await page.route('**/functions/v1/ai-basket-proposal',r=>{aiRequests++;return r.abort();});
  await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
- await page.route('**/rest/v1/retail_catalog_items**',r=>r.fulfill({json:new URL(r.request().url()).searchParams.get('retailer_id')==='eq.perekrestok'?[...rows,unreviewed]:[]}));
+ await page.route('**/rest/v1/**retail_catalog_items**',r=>r.fulfill({json:new URL(r.request().url()).searchParams.get('retailer_id')==='eq.perekrestok'?[...rows,unreviewed]:[]}));
  await page.route('**/src/ports/observedOffersPort.mjs',r=>r.fulfill({contentType:'text/javascript',body:'export const observedOffersPort={async load(){return []}};'}));
  await page.goto('/?comparison=observed&catalog=retail#shop');await selectStore(page,'perekrestok');
  for(const [sku] of packs){const card=page.locator(`[data-product-id="retail:perekrestok:perekrestok-yandex-3186917:${sku}"]`);await expect(card.locator('.add-button')).toBeEnabled();await card.locator('.add-button').click();await expect(card.locator('.pixel-quantity')).toHaveText('1');}

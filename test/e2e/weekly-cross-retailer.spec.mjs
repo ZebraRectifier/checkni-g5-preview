@@ -8,10 +8,10 @@ test('weekly alternatives keep delivery separate, require confirmation, persist,
   await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
   await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
   await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
-  await page.route('**/rest/v1/retail_catalog_items**',r=>{
+  await page.route('**/rest/v1/**retail_catalog_items**',r=>{
     const q=new URL(r.request().url()).searchParams,store=q.get('store_id')?.replace('eq.','');
     const ids=q.get('source_product_id')?.slice(4,-1).split(',');
-    const name=q.get('name')?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ');
+    const name=(q.get('name') ?? (q.has('p_query') ? 'ilike.*'+q.get('p_query').replaceAll(' ','*')+'*' : null))?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ');
     if(store==='perekrestok-yandex-3186917'&&ids)deliveryReads++;
     return r.fulfill({json:rows.filter(p=>p.store_id===store&&(!ids||ids.includes(p.source_product_id))&&(!name||p.name.toLowerCase().includes(name.toLowerCase())))
       .slice(0,Number(q.get('limit')??40)).map(p=>({...p,observed_at:at}))});
