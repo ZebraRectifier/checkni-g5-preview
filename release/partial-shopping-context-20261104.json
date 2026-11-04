@@ -58,7 +58,19 @@
       "composed-partial-intent-cf1ccbc0-1365-f69f645e.json"
     ],
     "paidProviderCalls": 0,
-    "physicalPhoneVerified": false
+    "physicalPhoneVerified": false,
+    "additionalLocalBrowserChecks": [
+      {
+        "report": "public113-magnit-address-report.json",
+        "passed": 18,
+        "retries": 0
+      },
+      {
+        "report": "public113-deadline-report.json",
+        "passed": 2,
+        "retries": 0
+      }
+    ]
   },
   "preservedPublicFixes": [
     "explicit address before catalogue",
@@ -69,5 +81,15 @@
     "No complete fresh two-network basket or delivery eligibility is proved.",
     "The separate live addressed-recipe routing defect remains unresolved.",
     "Collector group priority is private-only and requires actual runtime evidence."
-  ]
+  ],
+  "testAdaptation": {
+    "priorHead": "8339398e1c7c4461717d28b90f26d939530d21e7",
+    "priorMagnitRun": 41764776458,
+    "priorMagnitPassed": 16,
+    "priorMagnitFailed": 2,
+    "reason": "Two tests still clicked a current-store confirmation after an explicit address choice; assert the chosen address and next missing condition instead.",
+    "deadlineAssertion": "Assert the actual pending submit state, retaining the same deadline, one-call and recovery assertions. No timeout or retry increase.",
+    "runtimeFilesUnchanged": true,
+    "exactHeadAndMainGatesStillRequired": true
+  }
 }

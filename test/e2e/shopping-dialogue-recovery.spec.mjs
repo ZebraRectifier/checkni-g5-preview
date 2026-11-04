@@ -86,7 +86,7 @@ async function deadlineRecovery(page) {
   await page.goto('/?comparison=demo#shop');
   await submit(page, 'Нужна еда на две недели для троих');
   await expect.poll(() => calls).toBe(1);
-  await expect(status(page)).toContainText('Сейчас подумаю');
+  await expect(page.locator('#basket-proposal-submit')).toHaveText('Обновить запрос');
   await page.clock.fastForward(20_100);
   await expect(status(page)).toContainText('Какой общий бюджет');
   await expect(status(page)).not.toContainText('Сейчас подумаю');
