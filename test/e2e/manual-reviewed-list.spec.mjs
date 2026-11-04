@@ -65,7 +65,9 @@ test('an incomplete single-store Hory draft keeps missing needs through explicit
 });
 test('manual reviewed products from both networks add and survive edits, Back and reload without AI',async({page,context})=>{
  let ai=0;const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
+ // Keep external requests offline without sending every local module through
+ // a Node route.continue round-trip on each of this journey's reloads.
+ await context.route(/^https?:\/\/(?!(?:127\.0\.0\.1|localhost)(?::\d+)?\/)/,r=>r.abort());
  await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
  await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
  await page.route('**/rest/v1/**retail_catalog_items**',r=>{
