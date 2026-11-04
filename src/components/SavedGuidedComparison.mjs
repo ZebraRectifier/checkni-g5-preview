@@ -20,7 +20,9 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
   const exact=quotes.every(quote=>quote.complete&&quote.allRecent&&!quote.hasEstimates);
   const status=el('p');status.setAttribute('role','status');
   const messages=[];
-  if(exact&&comparison.kind==='fresh')messages.push(comparison.differenceMinor===0
+  const pendingCount=result.request?.unresolvedGroupKeys?.length??0;
+  if(pendingCount)messages.push('Подбор ещё неполный. Выгоду всего подбора пока не определяем.');
+  if(!pendingCount&&exact&&comparison.kind==='fresh')messages.push(comparison.differenceMinor===0
     ?'По наблюдаемым ценам суммы товаров в этих вариантах совпали.'
     :'По наблюдаемым ценам подытог товаров в '+comparison.lowerStoreName+' ниже на '+formatRubMinor(comparison.differenceMinor)+'.');
   else {

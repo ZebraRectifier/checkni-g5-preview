@@ -4,7 +4,7 @@ import {selectStore,openBasket,openHory,closeHory} from './helpers/pixel-surface
 test('saved comparison distinguishes equal observed subtotals from a cheaper option and expired quotes',async({page,context})=>{
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
  await page.goto('/?comparison=observed&catalog=retail#shop');
- const render=async(priceMinor,ageMs=0)=>page.evaluate(async({priceMinor,ageMs})=>{
+ const render=async(priceMinor,ageMs=0,unresolvedGroupKeys=[])=>page.evaluate(async({priceMinor,ageMs,unresolvedGroupKeys})=>{
   const {renderSavedGuidedComparison}=await import('/src/components/SavedGuidedComparison.mjs');
   const nowMs=Date.parse('2026-11-02T23:00:00Z');
   const row={group:{key:'rice',label:'Рис',dimension:'g',dailyAmount:50},quantity:1,
@@ -12,15 +12,16 @@ test('saved comparison distinguishes equal observed subtotals from a cheaper opt
    observedAt:new Date(nowMs-ageMs).toISOString(),sourceUrl:'https://example.org/quote',priceConditionLabel:'Условия карты не подтверждены'}};
   let root=document.querySelector('#comparison-contract-test');
   if(!root){root=document.createElement('section');root.id='comparison-contract-test';document.body.append(root);}
-  renderSavedGuidedComparison(root,{kind:'catalog_comparison',drafts:[
+  renderSavedGuidedComparison(root,{kind:'catalog_comparison',request:{unresolvedGroupKeys},drafts:[
    {scope:{retailerId:'magnit',storeId:'a',storeName:'Магнит'},rows:[row]},
    {scope:{retailerId:'perekrestok',storeId:'b',storeName:'Перекрёсток'},rows:[{...row,card:{...row.card,priceMinor}}]}
   ]},{nowMs});
- },{priceMinor,ageMs});
+ },{priceMinor,ageMs,unresolvedGroupKeys});
  const output=page.locator('#comparison-contract-test');
  await render(10000);await expect(output.getByRole('status')).toHaveText('По наблюдаемым ценам суммы товаров в этих вариантах совпали.');
  await expect(output).not.toContainText('ниже на');await expect(output).toContainText('Условия карт и акций проверяй по источнику.');
  await render(12000);await expect(output.getByRole('status')).toContainText('По наблюдаемым ценам подытог товаров в Магнит ниже на');
+ await render(12000,0,['potatoes']);await expect(output.getByRole('status')).toContainText('Подбор ещё неполный');await expect(output.getByRole('status')).not.toContainText('ниже на');await expect(output).toContainText('В исходном подборе ещё 1 поз.');
  await render(12000,3600001);await expect(output.getByRole('status')).toContainText('Есть старые или неизвестные цены.');
  await expect(output.getByRole('status')).not.toContainText('ниже на');
 });
@@ -57,8 +58,9 @@ test('an incomplete single-store Hory draft keeps missing needs through explicit
  await page.locator('.basket-row').getByRole('button',{name:/Увеличить количество/}).click();await page.reload();
  await page.locator('#compare-basket').click();await expect(page.locator('#comparison-output')).toContainText('В исходном подборе ещё');
  expect((await request()).unresolvedGroupKeys).toEqual(pending.unresolvedGroupKeys);
- await page.locator('#basket-content').getByRole('button',{name:'Убрать сохранённый выбор магазинов'}).click();
+ await page.locator('#basket-content').getByRole('button',{name:'Оставить только найденное'}).click();
  expect(await request()).toBeNull();await expect(page.locator('.basket-row')).toHaveCount(1);
+ await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);expect((await request()).unresolvedGroupKeys).toEqual([]);
  expect(ai).toBe(0);expect(errors).toEqual([]);
 });
 test('manual reviewed products from both networks add and survive edits, Back and reload without AI',async({page,context})=>{
