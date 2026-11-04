@@ -482,3 +482,20 @@ test("basket replacement rejects all invalid rows atomically and notifies only o
   assert.equal(basket.replaceReviewedBasket(base, []).applied, false);
   assert.equal(notifications, 1);
 });
+
+
+test("no-other-restrictions aside does not become an excluded food or erase unknown constraints", () => {
+  for (const text of ["Без фруктов, других ограничений нет", "Без фруктов и яиц, иных ограничений нет"]) {
+    const delta = extractShoppingDelta(text);
+    assert.ok(delta.reject.includes("fruit"));
+    assert.deepEqual(delta.unresolved, []);
+    assert.equal(delta.clearUnresolved, false);
+  }
+  for (const text of ["Без фруктов и арахиса, других ограничений нет", "Без арахиса, других ограничений нет", "Без фруктов, других ограничений нет кроме сахара"]) {
+    assert.ok(extractShoppingDelta(text).unresolved.length > 0, text);
+  }
+  const unknown = update(createShoppingConversation(), "Без арахиса");
+  const clarifiedFruit = update(unknown, "Без фруктов, других ограничений нет");
+  assert.deepEqual(clarifiedFruit.facts.unresolvedConstraints.value, unknown.facts.unresolvedConstraints.value);
+  assert.equal(clarifiedFruit.rejected.fruit.value, true);
+});

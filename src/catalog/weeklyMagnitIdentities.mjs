@@ -386,5 +386,12 @@ export const WEEKLY_MAGNIT_IDENTITIES = Object.freeze([
     "name": "Яйцо Окское С1 белые 10шт",
     "unit": "10 шт",
     "productPath": "/product/2047000033-yaytso_kurinoe_okskoe_s1_belye_10sht"
+  },
+  // Retained Nov 3 exact SKU: original response weightText is 10 pieces.
+  {
+    "sourceProductId": "3454700001",
+    "name": "Куриное яйцо C1 10шт в ассортименте",
+    "unit": "10 шт",
+    "productPath": "/product/3454700001-yaytso_stolovoe_s1_10sht_boks_20"
   }
 ]);

@@ -162,7 +162,10 @@ export function extractShoppingDelta(text) {
         // "без яиц и глютена" still needs clarification about gluten.
         const parts = without[1].split(/\s*,\s*|\s+и\s+/u).map(part => part.trim()).filter(Boolean);
         if (parts.length > 1) for (const part of parts) {
-          if (!shoppingTargets(part).length && !/^(?:готовк[аиу]|пожалуйста|пж|плиз|спасибо)$/u.test(part)) {
+          // A closed conversational aside is not another excluded food. Do not
+          // clear existing unresolved constraints or ignore unknown list members.
+          const noOtherRestrictions = /^(?:других|иных|остальных) ограничений нет$/u.test(part);
+          if (!shoppingTargets(part).length && !noOtherRestrictions && !/^(?:готовк[аиу]|пожалуйста|пж|плиз|спасибо)$/u.test(part)) {
             delta.unresolved.push(`без ${part.replace(/^без\s+/u, "")}`.slice(0, 80));
           }
         }

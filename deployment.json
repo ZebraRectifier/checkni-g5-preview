@@ -3411,5 +3411,16 @@
       "explanation": "Initial opt-in routing lost selected address in partial lists and overrode legacy dialogue confirmation. Final runtime preserves exact manual source identity; tests and commercial gates remain.",
       "interimSourceAnchorMissing": true
     }
+  },
+  "horyListComparison20261104": {
+    "manifest": "release/hory-list-comparison-20261104.json",
+    "sourcePr": 645,
+    "sourceHead": "eb2cf3b1ac66295554ea08deeba676ef3c0690b9",
+    "sourceMain": "ff0d4e0ece9b5c269ae76c1782a5a009f572a3cb",
+    "testedRuntimeCommit": "9406ecdd2d8a17de2818fe7b3346b4156857874e",
+    "files": {
+      "src/catalog/weeklyMagnitIdentities.mjs": "9fba0d36280f09529c2e19bec6c495e8ec7212c6de8067f9c18759572be069e5",
+      "src/intelligence/shoppingConversation.mjs": "058210e3b00e460d74d258269caafa5f3bc1c87588afc56b10d9a7090aa28f89"
+    }
   }
 }
