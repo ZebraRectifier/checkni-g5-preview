@@ -64,6 +64,40 @@ test('exact newly connected Moscow and regional addresses select their own Magni
   }
   expect(ai).toBe(0);
 });
+test('an explicitly chosen nearby address is remembered while its catalogue is still loading', async ({page}) => {
+  await isolate(page);let ai=0,heldReads=0,release;
+  const gate=new Promise(resolve=>{release=resolve;});
+  const point=joinedDirectory.stores.find(p=>p.catalogBinding?.shopCode==='502843');
+  expect(point).toBeTruthy();
+  await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
+  await page.route('**/functions/v1/nearby-address',r=>r.fulfill({json:{version:1,candidates:[{
+    lat:point.lat,lon:point.lon,label:point.address,precision:'house'
+  }]}}));
+  await page.route('**/rest/v1/**',async route=>{
+    if(new URL(route.request().url()).searchParams.get('store_id')==='eq.magnit-502843'){
+      heldReads++;await gate;
+    }
+    await route.fulfill({json:[]}).catch(()=>{});
+  });
+  try{
+    await page.goto('/?comparison=observed&catalog=retail#shop');await selectStore(page);await openStoreDetails(page);
+    await page.locator('#nearby-shopping').getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
+    await page.locator('#nearby-address').fill(point.address);await page.locator('#nearby-address-search').click();
+    await page.locator('#nearby-address-candidates').getByRole('button').click();
+    await page.locator('#nearby-radius').selectOption('1');
+    const row=page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
+    await row.getByRole('button',{name:'Выбрать магазин',exact:true}).click();
+    await expect.poll(()=>heldReads).toBeGreaterThan(0);
+    await expect(page.locator('#magnit-store-address')).toHaveValue('502843');
+    await say(page,'Собери недорогую корзину на пять дней для четверых');
+    const output=page.locator('#basket-proposal-status');
+    await expect(output).toContainText('Какие продукты исключить');
+    await expect(output).not.toContainText('Где закупаемся');
+    await expect(output.getByRole('button',{name:'Текущий магазин',exact:true})).toHaveCount(0);
+    expect(ai).toBe(0);
+  }finally{release();}
+});
+
 test('a bound Magnit map pin selects its exact address, while the legacy point stays nonselectable',async({page})=>{
   await isolate(page);
   await page.goto('/?comparison=observed&catalog=retail#shop');

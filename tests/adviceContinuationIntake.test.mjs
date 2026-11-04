@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createShoppingConversationFlow} from '../src/runtime/shoppingConversationFlow.mjs';
 import {createBasketStore} from '../src/state/basketStore.mjs';
+import {createShoppingNeedsStore} from '../src/state/shoppingNeedsStore.mjs';
 import {SHOP_CATALOG} from '../src/data/shopCatalog.mjs';
 import * as interpreter from '../src/runtime/hybridBasketInterpreter.mjs';
 function session(){
@@ -34,4 +35,19 @@ test('a cooking preference before store selection is intake, not a historical se
 test('an ordinal recipe reference without a prior answer asks one question without calling a model',async()=>{
  const s=session();const state=await s.send('Оставим второй вариант. Как приготовить его попроще?');
  assert.equal(s.advice.length,0);assert.match(state.presentation.message,/вариант|блюд/u);assert.deepEqual(s.basket.getSnapshot(),[]);
+});
+
+test('a conditional follow-up with a comma remains dialogue in the real needs-store mode',async()=>{
+ const needs=createShoppingNeedsStore({storage:null,allowUnlockedForTests:true});
+ const basket=createBasketStore({storage:null}),advice=[];
+ const firstReply='Можно сделать котлеты или потушить фарш с овощами на сковороде.';
+ const flow=createShoppingConversationFlow({basket,needsStore:needs,preferenceStorage:null,localCatalog:SHOP_CATALOG,
+  loader:{load:async()=>interpreter},requestAiProposal:async()=>{throw Error('A cooking question must not request basket products');},
+  requestShoppingAdvice:async input=>{advice.push(structuredClone(input));return{kind:'advice',message:advice.length===1?firstReply:'Котлеты можно приготовить партиями на одной сковороде.'};}});
+ await flow.run('Помоги составить меню из фарша на два ужина. Есть только сковорода.');
+ await flow.run('А если у меня только одна сковорода, как приготовить первый вариант?');
+ assert.equal(advice.length,2);
+ assert.ok(advice[1].history.some(row=>row.role==='assistant'&&row.text===firstReply));
+ assert.deepEqual(needs.getSnapshot().lines,[]);
+ assert.deepEqual(basket.getSnapshot(),[]);
 });
