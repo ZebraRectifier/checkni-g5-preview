@@ -2334,9 +2334,12 @@ if(publicRetailCatalogMode){
         const store=resolveMagnitMoscowStore({shopCode:catalog.store.shopCode,address:catalog.store.address});
         if(!store)return false;selectedMagnitStore=store;comparedGlobusStore=null;
       }else return false;
-      comparisonAddressChanged();await selectRetailer(catalog.retailerId,{replaceHistory:true});
+      comparisonAddressChanged();
+      // The exact choice is consent even while the selected catalogue is loading.
+      agreedNearbyStoreKey=JSON.stringify([catalog.retailerId,retailClientFor(catalog.retailerId)?.definition.storeId]);
+      await selectRetailer(catalog.retailerId,{replaceHistory:true});
       if(!isCurrent())return false;
-      agreedNearbyStoreKey=JSON.stringify([catalog.retailerId,currentRetailClient()?.definition.storeId]);return true;
+      return true;
     },
     onBuild:()=>{elements.proposalInput.value=nearbyBuildGoal;elements.proposalInput.dispatchEvent(new Event('input',{bubbles:true}));elements.proposalForm.requestSubmit();}
   });
