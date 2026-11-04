@@ -1370,3 +1370,50 @@ test("Magnit client refuses addresses that do not match the official directory",
   assert.equal(client.definition, null);
   assert.equal(client.definition, null);
 });
+
+
+test("Perekrestok keyword search uses bounded invoker RPC without slow output ILIKE", async () => {
+  const calls = [];
+  const client = createRetailCatalogClient({
+    retailerId: "perekrestok",
+    endpoint: "https://project.supabase.co/rest/v1/retail_catalog_items",
+    fetchImpl: async (url, options) => {
+      calls.push({url: new URL(url), options});
+      return new Response(JSON.stringify([perekrestokRow()]));
+    }
+  });
+  const found = await client.search("  Фарш   куриный  ", {limit: 8});
+  assert.equal(found.kind, "catalog");
+  assert.equal(found.products.length, 1);
+  const {url, options} = calls[0];
+  assert.equal(url.pathname, "/rest/v1/rpc/retail_catalog_items_search");
+  assert.equal(url.searchParams.get("p_retailer_id"), "perekrestok");
+  assert.equal(url.searchParams.get("p_store_id"), "perekrestok-yandex-3186917");
+  assert.equal(url.searchParams.get("p_locality_id"), "city-moscow");
+  assert.equal(url.searchParams.get("p_query"), "Фарш куриный");
+  assert.equal(url.searchParams.get("p_limit"), "8");
+  assert.equal(url.searchParams.has("name"), false);
+  assert.equal(options.credentials, "omit");
+  assert.equal(options.cache, "no-store");
+  assert.equal(calls.length, 1);
+  await client.browse();
+  await client.bySourceProductIds([perekrestokRow().source_product_id]);
+  assert.equal(calls[1].url.pathname, "/rest/v1/retail_catalog_items");
+  assert.equal(calls[2].url.pathname, "/rest/v1/retail_catalog_items");
+});
+
+test("Perekrestok RPC rejects foreign scope and surfaces failure without hidden retry", async () => {
+  let calls = 0;
+  const client = createRetailCatalogClient({retailerId: "perekrestok", fetchImpl: async () => {
+    calls++;
+    return calls === 1 ? new Response(JSON.stringify({code: "57014"}), {status: 500})
+      : new Response(JSON.stringify([perekrestokRow({store_id: "other"}), perekrestokRow()]));
+  }});
+  assert.equal((await client.search("фарш")).kind, "unavailable");
+  assert.equal(calls, 1);
+  const retried = await client.search("фарш");
+  assert.equal(retried.kind, "catalog");
+  assert.equal(retried.products.length, 1);
+  assert.equal(retried.partial, true);
+  assert.equal(calls, 2);
+});

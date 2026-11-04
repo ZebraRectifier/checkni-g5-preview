@@ -32,9 +32,9 @@ test('an incomplete single-store Hory draft keeps missing needs through explicit
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
  await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
  await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
- await page.route('**/rest/v1/retail_catalog_items**',r=>{
+ await page.route('**/rest/v1/**retail_catalog_items**',r=>{
   const q=new URL(r.request().url()).searchParams,store=q.get('store_id')?.replace('eq.','');
-  const name=q.get('name')?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ').toLowerCase();
+  const name=(q.get('name') ?? (q.has('p_query') ? 'ilike.*'+q.get('p_query').replaceAll(' ','*')+'*' : null))?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ').toLowerCase();
   const ids=q.get('source_product_id')?.slice(4,-1).split(',');
   return r.fulfill({json:rows.filter(p=>p.store_id===store&&(p.retailer_id!=='magnit'||p.source_product_id==='1000526136')
     &&(!ids||ids.includes(p.source_product_id))&&(!name||p.name.toLowerCase().includes(name))).slice(0,Number(q.get('limit')??40))});
@@ -68,9 +68,9 @@ test('manual reviewed products from both networks add and survive edits, Back an
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
  await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
  await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
- await page.route('**/rest/v1/retail_catalog_items**',r=>{
+ await page.route('**/rest/v1/**retail_catalog_items**',r=>{
   const q=new URL(r.request().url()).searchParams,store=q.get('store_id')?.replace('eq.','');
-  const name=q.get('name')?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ').toLowerCase();
+  const name=(q.get('name') ?? (q.has('p_query') ? 'ilike.*'+q.get('p_query').replaceAll(' ','*')+'*' : null))?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ').toLowerCase();
    const ids=q.get('source_product_id')?.slice(4,-1).split(',');
   return r.fulfill({json:rows.filter(p=>p.store_id===store&&(!ids||ids.includes(p.source_product_id))&&(!name||p.name.toLowerCase().includes(name))).slice(0,Number(q.get('limit')??40))});
  });
@@ -129,9 +129,9 @@ test('manual twenty-egg pack is compared with two ten-egg delivery packs without
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
  await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
  await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
- await page.route('**/rest/v1/retail_catalog_items**',r=>{
+ await page.route('**/rest/v1/**retail_catalog_items**',r=>{
    const q=new URL(r.request().url()).searchParams,store=q.get('store_id')?.replace('eq.','');
-   const name=q.get('name')?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ').toLowerCase();
+   const name=(q.get('name') ?? (q.has('p_query') ? 'ilike.*'+q.get('p_query').replaceAll(' ','*')+'*' : null))?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ').toLowerCase();
    const ids=q.get('source_product_id')?.slice(4,-1).split(',');
    return r.fulfill({json:dataset.filter(p=>p.store_id===store&&(!ids||ids.includes(p.source_product_id))&&(!name||p.name.toLowerCase().includes(name))).slice(0,Number(q.get('limit')??40))});
  });
@@ -158,9 +158,9 @@ test('explicit Magnit storefront keeps reviewed canonical milk in the two-networ
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
  await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
  await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
- await page.route('**/rest/v1/retail_catalog_items**',r=>{
+ await page.route('**/rest/v1/**retail_catalog_items**',r=>{
   const q=new URL(r.request().url()).searchParams,store=q.get('store_id')?.replace('eq.','');
-  const name=q.get('name')?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ').toLowerCase();
+  const name=(q.get('name') ?? (q.has('p_query') ? 'ilike.*'+q.get('p_query').replaceAll(' ','*')+'*' : null))?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ').toLowerCase();
   const ids=q.get('source_product_id')?.slice(4,-1).split(',');
   return r.fulfill({json:rows.filter(p=>p.store_id===store&&(!ids||ids.includes(p.source_product_id))&&(!name||p.name.toLowerCase().includes(name))).slice(0,Number(q.get('limit')??40))});
  });

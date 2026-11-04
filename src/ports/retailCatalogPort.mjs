@@ -853,6 +853,20 @@ export function createRetailCatalogClient(options = {}) {
       return result("unavailable", { code: "transport_unconfigured" });
     }
 
+    // Only the reproduced Perekrestok keyword path uses the bounded RPC.
+    // Browsing, category and exact-ID reads retain their existing transport.
+    const boundedSearch = query !== null && definition.retailerId === "perekrestok";
+    if (boundedSearch) {
+      url.pathname = url.pathname.replace(/\/retail_catalog_items$/u, "/rpc/retail_catalog_items_search");
+      if (!url.pathname.endsWith("/rpc/retail_catalog_items_search")) {
+        return result("unavailable", { code: "transport_unconfigured" });
+      }
+      url.searchParams.set("p_retailer_id", definition.retailerId);
+      url.searchParams.set("p_store_id", definition.storeId);
+      url.searchParams.set("p_locality_id", definition.localityId);
+      url.searchParams.set("p_query", query);
+      url.searchParams.set("p_limit", String(limit));
+    }
     url.searchParams.set("select", SELECT_FIELDS);
     url.searchParams.set("retailer_id", `eq.${definition.retailerId}`);
     url.searchParams.set("store_id", `eq.${definition.storeId}`);
@@ -861,7 +875,7 @@ export function createRetailCatalogClient(options = {}) {
     if (sourceProductIds !== null) {
       url.searchParams.set("source_product_id", `in.(${sourceProductIds.join(",")})`);
     }
-    if (query !== null) {
+    if (query !== null && !boundedSearch) {
       url.searchParams.set("name", `ilike.*${query.replace(/\s+/gu, "*")}*`);
     }
     if (categoryId !== null) {
