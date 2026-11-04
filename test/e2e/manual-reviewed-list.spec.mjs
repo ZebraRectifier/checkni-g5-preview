@@ -4,7 +4,7 @@ import {selectStore,openBasket,openHory,closeHory} from './helpers/pixel-surface
 test('saved comparison distinguishes equal observed subtotals from a cheaper option and expired quotes',async({page,context})=>{
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
  await page.goto('/?comparison=observed&catalog=retail#shop');
- const render=async(priceMinor,ageMs=0)=>page.evaluate(async({priceMinor,ageMs})=>{
+ const render=async(priceMinor,ageMs=0,unresolvedGroupKeys=[])=>page.evaluate(async({priceMinor,ageMs,unresolvedGroupKeys})=>{
   const {renderSavedGuidedComparison}=await import('/src/components/SavedGuidedComparison.mjs');
   const nowMs=Date.parse('2026-11-02T23:00:00Z');
   const row={group:{key:'rice',label:'Рис',dimension:'g',dailyAmount:50},quantity:1,
@@ -12,19 +12,57 @@ test('saved comparison distinguishes equal observed subtotals from a cheaper opt
    observedAt:new Date(nowMs-ageMs).toISOString(),sourceUrl:'https://example.org/quote',priceConditionLabel:'Условия карты не подтверждены'}};
   let root=document.querySelector('#comparison-contract-test');
   if(!root){root=document.createElement('section');root.id='comparison-contract-test';document.body.append(root);}
-  renderSavedGuidedComparison(root,{kind:'catalog_comparison',drafts:[
+  renderSavedGuidedComparison(root,{kind:'catalog_comparison',request:{unresolvedGroupKeys},drafts:[
    {scope:{retailerId:'magnit',storeId:'a',storeName:'Магнит'},rows:[row]},
    {scope:{retailerId:'perekrestok',storeId:'b',storeName:'Перекрёсток'},rows:[{...row,card:{...row.card,priceMinor}}]}
   ]},{nowMs});
- },{priceMinor,ageMs});
+ },{priceMinor,ageMs,unresolvedGroupKeys});
  const output=page.locator('#comparison-contract-test');
  await render(10000);await expect(output.getByRole('status')).toHaveText('По наблюдаемым ценам суммы товаров в этих вариантах совпали.');
  await expect(output).not.toContainText('ниже на');await expect(output).toContainText('Условия карт и акций проверяй по источнику.');
  await render(12000);await expect(output.getByRole('status')).toContainText('По наблюдаемым ценам подытог товаров в Магнит ниже на');
+ await render(12000,0,['potatoes']);await expect(output.getByRole('status')).toContainText('Подбор ещё неполный');await expect(output.getByRole('status')).not.toContainText('ниже на');await expect(output).toContainText('В исходном подборе ещё 1 поз.');
  await render(12000,3600001);await expect(output.getByRole('status')).toContainText('Есть старые или неизвестные цены.');
  await expect(output.getByRole('status')).not.toContainText('ниже на');
 });
 const {rows}=JSON.parse(await readFile(new URL('../../tests/fixtures/weekly-retail/cross-retailer-20261101.json',import.meta.url),'utf8'));
+
+test('an incomplete single-store Hory draft keeps missing needs through explicit comparison and reload',async({page,context})=>{
+ let ai=0;const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
+ await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
+ await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
+ await page.route('**/rest/v1/retail_catalog_items**',r=>{
+  const q=new URL(r.request().url()).searchParams,store=q.get('store_id')?.replace('eq.','');
+  const name=q.get('name')?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ').toLowerCase();
+  const ids=q.get('source_product_id')?.slice(4,-1).split(',');
+  return r.fulfill({json:rows.filter(p=>p.store_id===store&&(p.retailer_id!=='magnit'||p.source_product_id==='1000526136')
+    &&(!ids||ids.includes(p.source_product_id))&&(!name||p.name.toLowerCase().includes(name))).slice(0,Number(q.get('limit')??40))});
+ });
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ const address=await page.locator('#magnit-store-address option[value="503695"]').textContent();
+ await page.locator('#pixel-store-search').fill(address);await page.locator('#pixel-store-address-results [data-store-id="503695"]').click();
+ await expect(page.locator('#pixel-storefront')).toBeVisible();await openHory(page);
+ const send=async text=>{await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};
+ await send('Собери недорогую корзину на 5 дней для 4 человек до 8000 рублей');
+ await expect(page.locator('#basket-proposal-status')).not.toContainText('Где закупаемся');
+ await page.locator('#basket-proposal-status').getByRole('button',{name:'Ограничений нет',exact:true}).click();
+ const add=page.locator('#basket-proposal-status').getByRole('button',{name:'Добавить найденное',exact:true});await expect(add).toBeVisible();await add.click();
+ await closeHory(page);await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(1);
+ const request=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.guided-comparison-request.v1')));
+ const pending=await request();expect(pending.version).toBe(3);expect(pending.scopes).toHaveLength(1);expect(pending.unresolvedGroupKeys.length).toBeGreaterThan(0);
+ await page.reload();await expect(page.locator('#basket-content')).toContainText('в исходном подборе ещё');
+ await expect(page.locator('#compare-basket')).toBeEnabled();await page.locator('#compare-basket').click();
+ await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);await expect(page.locator('#comparison-output')).toContainText('В исходном подборе ещё');
+ expect((await request()).version).toBe(2);expect((await request()).unresolvedGroupKeys).toEqual(pending.unresolvedGroupKeys);
+ await page.locator('.basket-row').getByRole('button',{name:/Увеличить количество/}).click();await page.reload();
+ await page.locator('#compare-basket').click();await expect(page.locator('#comparison-output')).toContainText('В исходном подборе ещё');
+ expect((await request()).unresolvedGroupKeys).toEqual(pending.unresolvedGroupKeys);
+ await page.locator('#basket-content').getByRole('button',{name:'Оставить только найденное'}).click();
+ expect(await request()).toBeNull();await expect(page.locator('.basket-row')).toHaveCount(1);
+ await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);expect((await request()).unresolvedGroupKeys).toEqual([]);
+ expect(ai).toBe(0);expect(errors).toEqual([]);
+});
 test('manual reviewed products from both networks add and survive edits, Back and reload without AI',async({page,context})=>{
  let ai=0;const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());

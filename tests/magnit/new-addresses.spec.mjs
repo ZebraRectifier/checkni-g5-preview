@@ -61,8 +61,10 @@ test('new My Price point: weekly request uses real source packs and preserves it
  const say=async text=>{await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};
  const output=page.locator('#basket-proposal-status');
  await say('Собери недорогую корзину на неделю для троих');
- await output.getByRole('button',{name:'Текущий магазин',exact:true}).click();
  await expect(output).toContainText('Какие продукты исключить');
+ await expect(output).not.toContainText('Где закупаемся');
+ await expect(output.getByRole('button',{name:'Текущий магазин',exact:true})).toHaveCount(0);
+ await expect(page.locator('#magnit-store-address')).toHaveValue('402835');
  await say('Ограничений нет');const commerce=page.locator('#hori-shopping-results');
  const table=commerce.getByRole('table');await expect(table).toBeVisible();
  await expect(output).toContainText('на 7 дн. для 3 человек');

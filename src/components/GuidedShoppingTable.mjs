@@ -30,7 +30,7 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
       }
     }
     if(model.alternatives.some(store=>store.priceScope==='delivery-catalog')){
-      const delivery=document.createElement('p');delivery.textContent='Перекрёсток: цены доставки Яндекс Еды для указанного адреса. Доставка и сборы не включены; цены в физическом магазине могут отличаться.';coverage.append(delivery);
+      const delivery=document.createElement('p');delivery.textContent='Перекрёсток: подключённый каталог доставки в Москве. Доставка по твоему адресу не подтверждена. Доставка и сборы не включены; цены в физическом магазине могут отличаться.';coverage.append(delivery);
       if(!model.alternatives.every(store=>store.complete&&store.allRecent)){
         const missing=document.createElement('p');missing.setAttribute('role','status');missing.textContent='Сравнение свежих сумм пока недоступно: есть недостающие позиции или цены старше часа. Старую цену не считаем сегодняшней.';coverage.append(missing);
       }
@@ -91,7 +91,7 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
     const condition = document.createElement('small'); condition.textContent = row.card?.priceConditionLabel ?? 'Условие цены неизвестно'; price.append(condition); tr.append(price);
     const source = document.createElement('div');
     const url = validWeeklyCardSource(row.card,row.card?.retailerId==='pyaterochka'?PYAT_WEEKLY_SCOPE:OKEY_WEEKLY_SCOPE)?row.card.sourceUrl:retailSelectionUrl(row.card?.sourceUrl, row.card?.retailerId);
-    if (url) { const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = row.card.storeName ?? model.storeName; source.append(link); }
+    if (url) { const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'Источник цены'; link.setAttribute('aria-label', 'Источник цены: '+(row.card.storeName ?? model.storeName)); source.append(link); }
     const date = document.createElement('small'); date.textContent = row.card
       ? `${new Date(row.card.observedAt).toLocaleDateString('ru-RU', { timeZone: 'UTC' })} · ${row.freshness === 'dated' ? 'старое наблюдение' : 'наличие неизвестно'}` : 'Карточка не получена'; source.append(date); price.append(source);
     body.append(tr);

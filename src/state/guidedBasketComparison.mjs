@@ -12,8 +12,8 @@ const id = value => typeof value === 'string' && value.length > 0 && value.lengt
 // This is a user's comparison request, never a cached quote. Unknown fields
 // (including prices, dates, stock, free-form source URLs) fail closed.
 export function normalizeGuidedComparisonRequest(value) {
-  if (!keys(value,['version','scopes','bindings','unresolvedGroupKeys']) || ![1,2].includes(value.version)
-    || !Array.isArray(value.scopes) || value.scopes.length !== 2
+  if (!keys(value,['version','scopes','bindings','unresolvedGroupKeys']) || ![1,2,3].includes(value.version)
+    || !Array.isArray(value.scopes) || value.scopes.length !== (value.version===3?1:2)
     || !Array.isArray(value.bindings) || !value.bindings.length || value.bindings.length > (value.version===2?64:16)
     || !Array.isArray(value.unresolvedGroupKeys) || value.unresolvedGroupKeys.length > 16) return null;
   const scopes = [];
@@ -26,6 +26,8 @@ export function normalizeGuidedComparisonRequest(value) {
     if (scopes.some(row => row.retailerId === scope.retailerId)) return null;
     scopes.push({retailerId:scope.retailerId,storeId:scope.storeId});
   }
+  // Version 3 retains a single chosen Magnit draft; it is not consent to a second catalogue.
+  if(value.version===3&&scopes[0].retailerId!=='magnit')return null;
   const bindings = [], products = new Set(), groups = new Set();
   for (const binding of value.bindings) {
     if (!keys(binding,['productId','sourceProductId','groupKey','retailerId','allowPoultryCuts'])
@@ -34,7 +36,7 @@ export function normalizeGuidedComparisonRequest(value) {
       || !guidedGroupByKey(binding.groupKey)
       || typeof binding.allowPoultryCuts!=='boolean' || binding.allowPoultryCuts && binding.groupKey!=='chicken'
       || !scopes.some(scope=>scope.retailerId === binding.retailerId)
-      || products.has(binding.productId) || value.version===1 && groups.has(binding.groupKey)) return null;
+      || products.has(binding.productId) || value.version!==2 && groups.has(binding.groupKey)) return null;
     products.add(binding.productId); groups.add(binding.groupKey);
     bindings.push({...binding});
   }
@@ -64,7 +66,7 @@ export function guidedComparisonForBasket(request, basket) {
 
 export function createGuidedComparisonRequest({rows,drafts}) {
   if (!Array.isArray(rows) || !Array.isArray(drafts)) return null;
-  return normalizeGuidedComparisonRequest({version:1,
+  return normalizeGuidedComparisonRequest({version:drafts.length===1&&drafts[0].scope?.retailerId==='magnit'?3:1,
     scopes:drafts.map(draft=>({retailerId:draft.scope?.retailerId,storeId:draft.scope?.storeId})),
     unresolvedGroupKeys:rows.filter(row=>row.addable!==true).map(row=>row.group?.key),
     bindings:rows.filter(row=>row.addable===true && row.card && row.product).map(row=>({

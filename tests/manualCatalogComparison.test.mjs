@@ -16,6 +16,24 @@ const chosen=id=>{const card=normalized(rows.find(row=>row.source_product_id===i
 const banana=()=>chosen('9072651501');
 const chicken=()=>chosen('d91d7780-ffa9-43d3-8bf3-b9870a9bf791');
 
+test('single-store partial intent survives reload, explicit pair promotion and later manual completion',async()=>{
+ const basket=[chosen('1000526136')],base=prepareManualCatalogComparison(basket);
+ const pending=normalizeGuidedComparisonRequest({...base.request,version:3,scopes:base.request.scopes.slice(0,1),
+   unresolvedGroupKeys:['bananas','potatoes','carrots']});assert.ok(pending);
+ const data=new Map(),storage={getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v),removeItem:k=>data.delete(k)};
+ createGuidedComparisonStore({storage}).write(pending);
+ const restored=createGuidedComparisonStore({storage}).read();
+ let reads=0;
+ const unconfirmed=await loadSavedGuidedComparison(restored,basket,{catalog:{search(){reads++;}},now:()=>now});
+ assert.equal(unconfirmed.kind,'unavailable');assert.equal(reads,0,'a single retained store is not a confirmed pair');
+ const promote=items=>prepareManualCatalogComparison(items,{pinnedMagnitStoreId:restored.scopes[0].storeId,unresolvedGroupKeys:restored.unresolvedGroupKeys});
+ const pair=promote(basket);assert.equal(pair.kind,'ready');assert.equal(pair.request.version,2);assert.equal(pair.pending,3);
+ createGuidedComparisonStore({storage}).write(pair.request);
+ const again=createGuidedComparisonStore({storage}).read();assert.deepEqual(again.unresolvedGroupKeys,restored.unresolvedGroupKeys);
+ const filled=promote([...basket,banana()]);assert.equal(filled.pending,2);assert.deepEqual(filled.request.unresolvedGroupKeys,['potatoes','carrots']);
+ for(const invalid of [['invented'],['potatoes','potatoes'],null])assert.equal(prepareManualCatalogComparison(basket,{unresolvedGroupKeys:invalid}).kind,'needs_review');
+});
+
 test('manual selection proposes the exact Magnit address and explicit delivery alternative without AI',()=>{
  const basket=[banana(),chicken()],result=prepareManualCatalogComparison(basket);assert.equal(result.kind,'ready');
  assert.equal(result.request.version,2);assert.equal(result.request.bindings.length,2);assert.equal(result.request.bindings[1].allowPoultryCuts,false);

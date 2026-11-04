@@ -283,9 +283,10 @@ function savedGuidedComparisonDescription() {
 function currentManualCatalogComparison() {
   if(!publicRetailCatalogMode)return null;
   const saved=savedGuidedComparisonStore.read();
-  if(saved&&saved.version!==2)return null;
+  if(saved&&![2,3].includes(saved.version))return null;
   return prepareManualCatalogComparison(basket.getSnapshot(),{
     pinnedMagnitStoreId:saved?.scopes.find(scope=>scope.retailerId==='magnit')?.storeId,
+    unresolvedGroupKeys:saved?.unresolvedGroupKeys??[],
     magnitStoreId:retailSurfaceStage==='store'&&retailBrowserState.retailerId==='magnit'
       ?'magnit-'+selectedMagnitStore.shopCode:null
   });
@@ -351,7 +352,7 @@ const basketProposalFlow = createShoppingConversationFlow({
   requestShoppingAdvice,
   ...(publicRetailCatalogMode ? {
     getGuidedRetailContextKey:()=>selectedMagnitStore.shopCode,
-    hasGuidedAgreedStore:()=>agreedNearbyStoreKey===JSON.stringify([retailBrowserState.retailerId,currentRetailClient()?.definition.storeId]),
+    hasGuidedAgreedStore:()=>retailSurfaceStage==='store'&&agreedNearbyStoreKey===JSON.stringify([retailBrowserState.retailerId,currentRetailClient()?.definition.storeId]),
     getGuidedRetailContexts: ids=>[
       ...(ids.includes('magnit')?[{...retailClientFor('magnit').definition,store:selectedMagnitStore,priceScope:'address-public-price'}]:[]),
       ...(ids.includes('okey')?[OKEY_WEEKLY_SCOPE]:[]),
@@ -1855,6 +1856,8 @@ function setupRetailBrowser() {
         selectedMagnitStore = store;
         comparedGlobusStore = null;
         comparisonAddressChanged();
+        // The exact address picker is explicit consent, just like a nearby-store card.
+        agreedNearbyStoreKey=JSON.stringify(['magnit','magnit-'+store.shopCode]);
         void selectRetailer("magnit");
       }
     });

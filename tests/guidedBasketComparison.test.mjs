@@ -6,6 +6,19 @@ const request=()=>({version:1,unresolvedGroupKeys:[],scopes:[{retailerId:'magnit
   bindings:[{productId:'selected-milk',sourceProductId:'milk-id',groupKey:'milk',retailerId:'perekrestok',allowPoultryCuts:false}]});
 const storage=()=>{const data=new Map();return{getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,value),removeItem:key=>data.delete(key)};};
 
+test('one chosen Magnit draft retains missing needs without inventing a second chosen catalogue',()=>{
+ const rows=[{addable:true,group:{key:'milk'},card:{sourceProductId:'milk-id',retailerId:'magnit'},product:{id:'selected-milk'}},
+   ...['potatoes','carrots','onions'].map(key=>({addable:false,group:{key}}))];
+ const pending=createGuidedComparisonRequest({rows,drafts:[{scope:{retailerId:'magnit',storeId:'magnit-777885'}}]});
+ assert.equal(pending.version,3);assert.equal(pending.scopes.length,1);
+ assert.deepEqual(pending.unresolvedGroupKeys,['potatoes','carrots','onions']);
+ const disk=storage();createGuidedComparisonStore({storage:disk}).write(pending);
+ assert.deepEqual(createGuidedComparisonStore({storage:disk}).read(),pending);
+ assert.equal(normalizeGuidedComparisonRequest({...pending,version:1}),null);
+ assert.equal(normalizeGuidedComparisonRequest({...pending,scopes:request().scopes}),null);
+ assert.equal(normalizeGuidedComparisonRequest({...pending,scopes:[request().scopes[1]]}),null);
+});
+
 test('comparison store restores only selected references after reload; quantity changes use current basket',()=>{
  const disk=storage(),first=createGuidedComparisonStore({storage:disk});
  assert.deepEqual(first.write(request()),{ok:true,saved:true});

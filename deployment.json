@@ -3422,5 +3422,22 @@
       "src/catalog/weeklyMagnitIdentities.mjs": "9fba0d36280f09529c2e19bec6c495e8ec7212c6de8067f9c18759572be069e5",
       "src/intelligence/shoppingConversation.mjs": "058210e3b00e460d74d258269caafa5f3bc1c87588afc56b10d9a7090aa28f89"
     }
+  },
+  "partialShoppingContext20261104": {
+    "manifest": "release/partial-shopping-context-20261104.json",
+    "sourcePr": 647,
+    "sourceHead": "b68a8c7aacc649c89e1466ec94e187aa59d69264",
+    "sourceMain": "6e5bcfa6eb0a4401977b1230a0ff8dbde21cf8df",
+    "testedRuntimeCommit": "df8e04f284526766d1e094f498431c700194beee",
+    "files": {
+      "src/app.mjs": "663cc9eedee4a8d67863b4e791816003f5be582c3807903c53e3e487299a75a4",
+      "src/data/shoppingLocations.mjs": "44b5a236c0137e1bfcc8b28058b017859f0f43789076f0f049abade753e70bff",
+      "src/state/guidedBasketComparison.mjs": "13678683b3eab137aad1f570944b0c876033127c188b44e43393641be02cbacf",
+      "src/runtime/manualCatalogComparison.mjs": "4353eb6aff5bfc53369381e29b8091ad0926f1b501fd74f9db4200096ab71117",
+      "src/runtime/savedGuidedComparison.mjs": "ff7b37a7c139b5db6ddb8c424c7f9250a74ab85f524eb6198bda8f877848bf92",
+      "src/components/BasketView.mjs": "c5e8180702828375eef7b513d608531b4e9a32ac44a2997c263acf26a718fd46",
+      "src/components/GuidedShoppingTable.mjs": "19e65b19993e50cd03015eca0fa11bbaa779eb3a837e55d62b98de97af4fb6c8",
+      "src/components/SavedGuidedComparison.mjs": "ba2b3c4eee7d8215476fd482f076eaeef444e4119e37ef49bc38a3cc6462cc4c"
+    }
   }
 }

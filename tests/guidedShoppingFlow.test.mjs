@@ -46,6 +46,19 @@ function setup(options = {}) {
   return { flow, basket, calls: () => calls };
 }
 
+test('an agreed store is reused unless the user explicitly requests another place',async()=>{
+ const goal='Собери недорогую корзину на 5 дней для 4 человек до 8000 рублей';
+ let reads=0;
+ const options={hasGuidedAgreedStore:()=>true,searchGuidedCatalog:async()=>{reads++;return {kind:'unavailable'};}};
+ const current=setup(options);await current.flow.run(goal);
+ assert.doesNotMatch(current.flow.getState().presentation.message,/Где закупаемся/u);
+ for(const change of ['в другом магазине','в другом районе','по другому адресу','не в этом магазине']){
+  const next=setup(options);await next.flow.run(goal+' '+change);
+  assert.match(next.flow.getState().presentation.message,/Где закупаемся/u,change);
+ }
+ assert.equal(reads,0,'a changed location is clarified before any catalogue is requested');
+});
+
 test('the actual user dialogue progresses from advice to quantities, source prices, comparison and a confirmed basket', async () => {
   const { flow, basket, calls } = setup();
   await flow.run('хочу качественную еду на 3 дня');

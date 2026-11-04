@@ -272,6 +272,7 @@ export function renderBasketView(container, items, actions) {
       :manual.reason==='different_magnit_addresses'
       ?'В списке разные адреса Магнита. Пока не объединяем их в один магазин и не определяем выгоду.'
       :'Для части позиций пока нет проверенных соответствий. Ничего не исключаем из сравнения молча: проверь товары в списке.';
+    if(manual.pending)help.textContent+=' Сравним найденную часть; в исходном подборе ещё '+manual.pending+' поз. без подтверждённых товаров.';
     compareStep.append(eyebrow,heading,help);
     if(manual.names){const stores=document.createElement('p');stores.textContent=manual.names.join(' / ');compareStep.append(stores);}
     if(manual.issues?.length){const pending=document.createElement('p');pending.textContent='Проверить: '+manual.issues.slice(0,4).map(row=>row?.name??'Неизвестная позиция').join('; ');compareStep.append(pending);}
@@ -281,14 +282,14 @@ export function renderBasketView(container, items, actions) {
       const edit=document.createElement('button');edit.type='button';edit.className='secondary-button';edit.textContent='К товарам';edit.addEventListener('click',actions.onBackToShop);compareStep.append(edit);
     }
     compareStep.append(compareButton);
-    if(actions.guidedComparison){const reset=document.createElement('button');reset.type='button';reset.className='text-button';reset.textContent='Убрать сохранённый выбор магазинов';reset.addEventListener('click',actions.onClearGuidedComparison);compareStep.append(reset);}
+    if(actions.guidedComparison||manual.pending){const reset=document.createElement('button');reset.type='button';reset.className='text-button';reset.textContent=manual.pending?'Оставить только найденное':'Убрать сохранённый выбор магазинов';reset.addEventListener('click',actions.onClearGuidedComparison);compareStep.append(reset);}
   } else if (actions?.guidedComparison) {
     help.textContent = 'Выбранные каталоги. При сравнении заново проверим источники и учтём текущее количество.';
     const stores = document.createElement('p');
     stores.textContent = actions.guidedComparison.names.join(' / ');
     if(actions.guidedComparison.pending)help.textContent+=' В исходном подборе ещё '+actions.guidedComparison.pending+' поз. без подтверждённых товаров.';
     const reset = document.createElement('button');reset.type='button';reset.className='text-button';
-    reset.textContent='Убрать сохранённый выбор магазинов';reset.addEventListener('click',actions.onClearGuidedComparison);
+    reset.textContent=actions.guidedComparison.pending?'Оставить только найденное':'Убрать сохранённый выбор магазинов';reset.addEventListener('click',actions.onClearGuidedComparison);
     compareStep.append(eyebrow,heading,help,stores,compareButton,reset);
     if (!actions.guidedComparison.saved) {
       const notice=document.createElement('p');notice.textContent='Выбор магазинов пока хранится только в этой вкладке: запись недоступна.';compareStep.append(notice);
