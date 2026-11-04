@@ -45,7 +45,7 @@ test('an incomplete single-store Hory draft keeps missing needs through explicit
  await expect(page.locator('#pixel-storefront')).toBeVisible();await openHory(page);
  const send=async text=>{await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};
  await send('Собери недорогую корзину на 5 дней для 4 человек до 8000 рублей');
- await page.locator('#basket-proposal-status').getByRole('button',{name:'Текущий магазин',exact:true}).click();
+ await expect(page.locator('#basket-proposal-status')).not.toContainText('Где закупаемся');
  await page.locator('#basket-proposal-status').getByRole('button',{name:'Ограничений нет',exact:true}).click();
  const add=page.locator('#basket-proposal-status').getByRole('button',{name:'Добавить найденное',exact:true});await expect(add).toBeVisible();await add.click();
  await closeHory(page);await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(1);

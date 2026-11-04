@@ -352,7 +352,7 @@ const basketProposalFlow = createShoppingConversationFlow({
   requestShoppingAdvice,
   ...(publicRetailCatalogMode ? {
     getGuidedRetailContextKey:()=>selectedMagnitStore.shopCode,
-    hasGuidedAgreedStore:()=>agreedNearbyStoreKey===JSON.stringify([retailBrowserState.retailerId,currentRetailClient()?.definition.storeId]),
+    hasGuidedAgreedStore:()=>retailSurfaceStage==='store'&&agreedNearbyStoreKey===JSON.stringify([retailBrowserState.retailerId,currentRetailClient()?.definition.storeId]),
     getGuidedRetailContexts: ids=>[
       ...(ids.includes('magnit')?[{...retailClientFor('magnit').definition,store:selectedMagnitStore,priceScope:'address-public-price'}]:[]),
       ...(ids.includes('okey')?[OKEY_WEEKLY_SCOPE]:[]),
@@ -1856,6 +1856,8 @@ function setupRetailBrowser() {
         selectedMagnitStore = store;
         comparedGlobusStore = null;
         comparisonAddressChanged();
+        // The exact address picker is explicit consent, just like a nearby-store card.
+        agreedNearbyStoreKey=JSON.stringify(['magnit','magnit-'+store.shopCode]);
         void selectRetailer("magnit");
       }
     });
