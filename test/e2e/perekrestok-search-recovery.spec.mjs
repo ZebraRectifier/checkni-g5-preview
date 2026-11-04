@@ -23,6 +23,7 @@ test('Perekrestok keyword RPC preserves basket across explicit failure recovery 
   expect(p.get('p_locality_id')).toBe('city-moscow');
   expect(p.get('p_query')).toBe('фарш');
   expect(p.has('name')).toBe(false);
+  expect(p.get('select').split(',')).toContain('updated_at');
   searches++;
   return searches===1?r.fulfill({status:503,json:{code:'controlled_unavailable'}}):r.fulfill({json:[product]});
  });

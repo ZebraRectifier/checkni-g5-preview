@@ -1417,3 +1417,29 @@ test("Perekrestok RPC rejects foreign scope and surfaces failure without hidden 
   assert.equal(retried.partial, true);
   assert.equal(calls, 2);
 });
+
+
+test("Perekrestok RPC projects its ordering field required by actual PostgREST", async () => {
+  const client = createRetailCatalogClient({retailerId: "perekrestok", fetchImpl: async url => {
+    const p = new URL(url).searchParams;
+    // Actual hosted baseline returned42703 for an RPC order column omitted
+    // from select; table GET reads do not have this RPC projection behavior.
+    const projected = p.get("select").split(",");
+    const orderColumns = p.get("order").split(",").map(part => part.split(".")[0]);
+    if (orderColumns.some(column => !projected.includes(column))) {
+      return new Response(JSON.stringify({code: "42703"}), {status: 400});
+    }
+    return new Response(JSON.stringify([perekrestokRow({updated_at: "2026-11-04T11:05:37Z"})]));
+  }});
+  const result = await client.search("фарш");
+  assert.equal(result.kind, "catalog");
+  assert.equal(result.products.length, 1);
+});
+
+test("RPC ordering metadata cannot replace the original price observation time", () => {
+  const baseline = normalizeRetailRow(perekrestokRow(), "perekrestok");
+  const changed = normalizeRetailRow(perekrestokRow({updated_at: "2030-01-01T00:00:00Z"}), "perekrestok");
+  assert.deepEqual(changed, baseline);
+  assert.equal(changed.observedAt, perekrestokRow().observed_at);
+  assert.equal(changed.priceMinor, perekrestokRow().price_minor);
+});
