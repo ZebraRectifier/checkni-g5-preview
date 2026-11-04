@@ -283,9 +283,10 @@ function savedGuidedComparisonDescription() {
 function currentManualCatalogComparison() {
   if(!publicRetailCatalogMode)return null;
   const saved=savedGuidedComparisonStore.read();
-  if(saved&&saved.version!==2)return null;
+  if(saved&&![2,3].includes(saved.version))return null;
   return prepareManualCatalogComparison(basket.getSnapshot(),{
     pinnedMagnitStoreId:saved?.scopes.find(scope=>scope.retailerId==='magnit')?.storeId,
+    unresolvedGroupKeys:saved?.unresolvedGroupKeys??[],
     magnitStoreId:retailSurfaceStage==='store'&&retailBrowserState.retailerId==='magnit'
       ?'magnit-'+selectedMagnitStore.shopCode:null
   });

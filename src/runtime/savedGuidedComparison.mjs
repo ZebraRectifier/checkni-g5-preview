@@ -12,6 +12,7 @@ import { catalogPurchaseUnit, catalogRequestForQuantity, economicalCatalogCards,
   compareCatalogDraftAlternatives } from '../core/catalogDraft.mjs';
 
 export function savedComparisonScopes(request) {
+  if(request.version===3)return null; // A retained single-store draft is not a confirmed pair.
   const reference=request.scopes.find(scope=>scope.retailerId==='magnit');
   const code=/^magnit-(\d{4,12})$/u.exec(reference?.storeId??'')?.[1];
   const store=code&&resolveRegisteredMagnitStore({shopCode:code});

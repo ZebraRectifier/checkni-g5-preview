@@ -3,15 +3,18 @@ import {WEEKLY_PEREKRESTOK_IDENTITIES} from '../catalog/weeklyPerekrestokIdentit
 import {PEREKRESTOK_REVIEWED_LIST_CONTEXT as PEREK,PEREKRESTOK_REVIEWED_LIST_PACKS} from '../catalog/perekrestokReviewedList.mjs';
 import {getReviewedRetailSourceProductIds,matchesReviewedRetailBasketIdentity} from '../catalog/reviewedRetailBasket.mjs';
 import {resolveRegisteredMagnitStore} from '../data/registeredMagnitStores.mjs';
-import {guidedGroupsForCard} from '../intelligence/guidedShoppingPlan.mjs';
+import {guidedGroupsForCard,guidedGroupByKey} from '../intelligence/guidedShoppingPlan.mjs';
 import {normalizeGuidedComparisonRequest} from '../state/guidedBasketComparison.mjs';
 const key=value=>typeof value==='string'?value.normalize('NFKC').toLowerCase().replaceAll('ё','е').replace(/\s+/gu,' ').trim():null;
 
 // This prepares a user request, not an offer or a name-based equivalence.
 // Actual SKU, source, pack, amount and observation are checked by the existing
 // saved comparison loader/Core after the user explicitly selects the pair.
-export function prepareManualCatalogComparison(basket,{magnitStoreId=null,pinnedMagnitStoreId=null}={}) {
+export function prepareManualCatalogComparison(basket,{magnitStoreId=null,pinnedMagnitStoreId=null,unresolvedGroupKeys=[]}={}) {
  if(!Array.isArray(basket)||!basket.length)return null;
+ if(!Array.isArray(unresolvedGroupKeys)||unresolvedGroupKeys.length>16
+   ||new Set(unresolvedGroupKeys).size!==unresolvedGroupKeys.length
+   ||unresolvedGroupKeys.some(key=>!guidedGroupByKey(key)))return {kind:'needs_review',reason:'invalid_pending_context',issues:basket};
  const stores=new Set(),references=[],issues=[];
  let relevant=Boolean(pinnedMagnitStoreId);
  for(const item of basket) {
@@ -58,7 +61,7 @@ export function prepareManualCatalogComparison(basket,{magnitStoreId=null,pinned
  if(!store)return {kind:'choose_magnit'};
  const request=normalizeGuidedComparisonRequest({version:2,
    scopes:[{retailerId:'magnit',storeId:'magnit-'+code},{retailerId:'perekrestok',storeId:PEREK.storeId}],
-   bindings:references,unresolvedGroupKeys:[]});
+   bindings:references,unresolvedGroupKeys:unresolvedGroupKeys.filter(key=>!references.some(binding=>binding.groupKey===key))});
  if(!request)return {kind:'needs_review',reason:'request_limit',issues:basket};
- return {kind:'ready',request,names};
+ return {kind:'ready',request,names,pending:request.unresolvedGroupKeys.length};
 }

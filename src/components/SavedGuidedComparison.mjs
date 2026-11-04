@@ -32,6 +32,7 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
   status.textContent=messages.join(' ');
   if(result.request?.unresolvedGroupKeys?.length)parent.append(el('p','Сравниваем только выбранные позиции. В исходном подборе ещё '+result.request.unresolvedGroupKeys.length+' поз. без подтверждённых товаров.'));
   parent.append(status,el('p','Марки и фасовки могут отличаться. Условия карт и акций проверяй по источнику. Доставка и сборы не включены; наличие неизвестно.'));
+  if(result.drafts.some(draft=>draft.scope.retailerId==='perekrestok'))parent.append(el('p','Перекрёсток — подключённый каталог доставки в Москве. Доставка по твоему адресу не подтверждена.'));
   result.drafts.forEach((draft,index)=>{
     const quote=quotes[index],details=el('details');details.className='future-step saved-catalog-variant';
     const total=quote.knownSubtotalMinor==null?'сумма неизвестна':formatRubMinor(quote.knownSubtotalMinor);
