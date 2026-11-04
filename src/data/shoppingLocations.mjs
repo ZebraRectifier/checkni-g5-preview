@@ -16,7 +16,8 @@ export function shoppingLocationRequest(text) {
   const landmark = SHOPPING_LANDMARKS.find(row => row.id === 'zavety-ilyicha-station'
     && /завет(?:ы|ах|ов)\s+ильича/u.test(value));
   if (/не\s+(?:станци\S*\s+)?завет/u.test(value)) return { unsupported: true };
-  if (!landmark) return radius || /(?:станци|живу|магазины рядом)/u.test(value) ? { unsupported: true } : null;
+  const changedPlace = /друг(?:ой|ом|им|ие|их)\s+(?:магазин|район)|другому\s+адрес|не\s+в\s+этом\s+магазин/u.test(value);
+  if (!landmark) return radius || changedPlace || /(?:станци|живу|магазины рядом)/u.test(value) ? { unsupported: true } : null;
   const radiusKm = radius ? Number(radius[1]) : 20;
   if (radiusKm < 1 || radiusKm > 20) return { unsupported: true };
   return { landmark, radiusKm };
