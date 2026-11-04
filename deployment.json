@@ -3551,5 +3551,1147 @@
       "This presentation release does not fix the separately reproduced Perekrestok RPC57014 timeout. Search caller candidate remains unpublished.",
       "Existing AI management access and physical-device verification remain incomplete."
     ]
+  },
+  "perekrestokBoundedSearch20261104": {
+    "kind": "perekrestok-bounded-keyword-search",
+    "publicBase": "612f72f5faa32be10a5edf66ca1c0f6f95de1ef5",
+    "sourcePr": 654,
+    "sourceHead": "2b71778f14283ee61c93f1de233e6a16b581ea86",
+    "sourceMain": "887f375d451bf3cf77ab4001deb13d645afc1f6d",
+    "files": {
+      "src/ports/retailCatalogPort.mjs": "d9485973cc7f0b51d91fe83bfe91105fa810984cfbba0aea0564459977f5f046",
+      "src/runtime/guidedShoppingFlow.mjs": "2306be5b4b5b76a3f2fd7e40c6ba2a23b36d5e04996c80a5cdbcc03a6f21abe6",
+      "src/core/catalogDraft.mjs": "0b8a0b0ac6b29c407a9015b0bf4fde5b0dc0db1116278d16b7ef8feaa70d6b2f",
+      "src/core/observed-price-core.mjs": "b11336490faed0faa00f2db91245111c8a06369240bd2f65789faded7383f75d"
+    },
+    "sourceValidation": {
+      "at": "2026-11-04T16:30:31.865389+00:00",
+      "pr": 654,
+      "testedHead": "2b71778f14283ee61c93f1de233e6a16b581ea86",
+      "base": "be173c00128deac1a495646a8e2ed96625fe4bff",
+      "previousFailedHead": "4b55d1d091be95144b12c3a71921eba6fd61a42a",
+      "previousFailureProof": "source-release-654-proof.pending.json",
+      "candidateFocusedBrowserPassed": 6,
+      "candidateFocusedBrowserFailures": 0,
+      "candidateFocusedBrowserSkips": 0,
+      "candidateFocusedBrowserFlaky": 0,
+      "candidateFocusedRetries": 0,
+      "testTimeoutMs": 30000,
+      "runtimeCodeChangedFromPreviousHead": false,
+      "exactCIRequired": true,
+      "actualMainAccepted": true,
+      "merged": true,
+      "hostedMigrationApplied": false,
+      "checkerInitialized": false,
+      "frontendPublished": false,
+      "exactCI": 41867824424,
+      "exactBaselineJob": 126706570635,
+      "exactNodePassed": 3163,
+      "exactNodeFailures": 0,
+      "exactNodeSkips": 0,
+      "exactNodeCancelled": 0,
+      "exactNodeVerifiedFromRawLog": true,
+      "exactE2eJob": 126708431668,
+      "exactE2eAccepted": true,
+      "hostedReleaseGate": 41867824450,
+      "hostedReleaseGateJob": 126706571513,
+      "hostedReleaseGateAccepted": true,
+      "hostedReleaseGateStatus": "completed-success",
+      "exactPackage": 41867824328,
+      "exactPackageJob": 126706570711,
+      "exactPackageAccepted": true,
+      "hostedNodePassed": 3163,
+      "hostedBrowserPassed": 614,
+      "hostedBrowserMinutes": 25.8,
+      "hostedFailures": 0,
+      "hostedSkips": 0,
+      "hostedFlaky": 0,
+      "hostedExactHeadPresentInRawLog": true,
+      "exactE2eStatus": "completed-success",
+      "main": "887f375d451bf3cf77ab4001deb13d645afc1f6d",
+      "tree": "25c9d0a796e2e51b6b68168bb904c41172cb6cd8",
+      "identicalTree": true,
+      "sourceBranchPreserved": true,
+      "exactBrowserPassed": 614,
+      "exactBrowserMinutes": 25.7,
+      "failures": 0,
+      "skips": 0,
+      "flaky": 0,
+      "exactE2eVerifiedFromRawLog": true,
+      "actualMainCI": 41879978396,
+      "actualMainPackage": 41879978411,
+      "premergeConflictProof": "source654-v2-premerge-conflict-proof.json",
+      "other15HeadsUnchangedBeforeMerge": true,
+      "actualMainNodePassed": 3163,
+      "actualMainBrowserPassed": 614,
+      "actualMainFailures": 0,
+      "actualMainSkips": 0,
+      "actualMainFlaky": 0,
+      "actualMainPackageAccepted": true,
+      "actualMainBaselineJob": 126749617875,
+      "actualMainE2eJob": 126751270955,
+      "actualMainPackageJob": 126749619620,
+      "actualMainFormalStatus": "completed-success",
+      "actualMainRawLogsVerified": true,
+      "verifiedAt": "2026-11-04T18:13:58.864594+00:00"
+    },
+    "backendValidation": {
+      "checkedAt": "2026-11-04T18:15:48.919Z",
+      "accepted": true,
+      "sourceMain": "887f375d451bf3cf77ab4001deb13d645afc1f6d",
+      "sourceHead": "2b71778f14283ee61c93f1de233e6a16b581ea86",
+      "migrationSha256": "3bd15de8c339dff5595e54d57b6a6e48735f03c28fa36ab0aa18a34ae5b7b74c",
+      "securityInvoker": true,
+      "rlsUnchanged": true,
+      "publicExecute": false,
+      "bodyMatchesReviewedSource": true,
+      "publicApiAccepted": true,
+      "parallelChecks": [
+        {
+          "query": "фарш",
+          "elapsedMs": 127.60320000000002,
+          "count": 17
+        },
+        {
+          "query": "молоко",
+          "elapsedMs": 540.7875000000004,
+          "count": 40
+        },
+        {
+          "query": "картофель",
+          "elapsedMs": 346.7718,
+          "count": 37
+        }
+      ],
+      "parallelGuidedDeadlineMs": 3500,
+      "portSha256": "d9485973cc7f0b51d91fe83bfe91105fa810984cfbba0aea0564459977f5f046",
+      "checks": [
+        {
+          "query": "фарш",
+          "products": [
+            {
+              "id": "91777388-eeb2-4119-b8a9-f91df800a665",
+              "priceMinor": 17000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "17200cea-745a-44cd-b3da-4817bba71113",
+              "priceMinor": 29000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "494b1fdb-b943-4618-b260-92873dab2e16",
+              "priceMinor": 34600,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "09b4b2c7-d76b-4f37-bd95-ff2c93ca701f",
+              "priceMinor": 29000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "af5830b1-b613-4e1d-86be-e59ce62cb528",
+              "priceMinor": 29000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "3352edc7-a938-4edd-b113-053ac7e6f997",
+              "priceMinor": 57000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d15c4b04-9bb0-4c5e-9d32-36169f2b4f0d",
+              "priceMinor": 45000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d3ddca3a-00b8-4b58-94b2-a6ac01e46a98",
+              "priceMinor": 40000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "f4be693f-380e-47ac-aee8-7ad020ced947",
+              "priceMinor": 90000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "0a7f2205-2559-4ce0-8431-2f494191384b",
+              "priceMinor": 32300,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "6201f41b-168f-43f4-a141-f9e75bba2931",
+              "priceMinor": 21200,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "c6134d41-fce9-41ef-a6ae-c660db9388c4",
+              "priceMinor": 36700,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "0a07b838-1997-476e-b7aa-678f39904784",
+              "priceMinor": 54000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "22f84859-1ad2-481f-9250-c24580363f8c",
+              "priceMinor": 26000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "fcce16bb-4f0a-46c1-aedc-531dadaa8f20",
+              "priceMinor": 56100,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "352e2a33-4b4c-4c4a-a126-4ba187c39d65",
+              "priceMinor": 42900,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "e1e92ab9-5b63-4bf1-8d38-98388b7cb54e",
+              "priceMinor": 33700,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            }
+          ]
+        },
+        {
+          "query": "ФАРШ",
+          "products": [
+            {
+              "id": "91777388-eeb2-4119-b8a9-f91df800a665",
+              "priceMinor": 17000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "17200cea-745a-44cd-b3da-4817bba71113",
+              "priceMinor": 29000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "494b1fdb-b943-4618-b260-92873dab2e16",
+              "priceMinor": 34600,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "09b4b2c7-d76b-4f37-bd95-ff2c93ca701f",
+              "priceMinor": 29000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "af5830b1-b613-4e1d-86be-e59ce62cb528",
+              "priceMinor": 29000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "3352edc7-a938-4edd-b113-053ac7e6f997",
+              "priceMinor": 57000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d15c4b04-9bb0-4c5e-9d32-36169f2b4f0d",
+              "priceMinor": 45000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d3ddca3a-00b8-4b58-94b2-a6ac01e46a98",
+              "priceMinor": 40000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "f4be693f-380e-47ac-aee8-7ad020ced947",
+              "priceMinor": 90000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "0a7f2205-2559-4ce0-8431-2f494191384b",
+              "priceMinor": 32300,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "6201f41b-168f-43f4-a141-f9e75bba2931",
+              "priceMinor": 21200,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "c6134d41-fce9-41ef-a6ae-c660db9388c4",
+              "priceMinor": 36700,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "0a07b838-1997-476e-b7aa-678f39904784",
+              "priceMinor": 54000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "22f84859-1ad2-481f-9250-c24580363f8c",
+              "priceMinor": 26000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "fcce16bb-4f0a-46c1-aedc-531dadaa8f20",
+              "priceMinor": 56100,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "352e2a33-4b4c-4c4a-a126-4ba187c39d65",
+              "priceMinor": 42900,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "e1e92ab9-5b63-4bf1-8d38-98388b7cb54e",
+              "priceMinor": 33700,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            }
+          ]
+        },
+        {
+          "query": "молоко",
+          "products": [
+            {
+              "id": "16d9d81e-2549-44cc-9729-e14cc0ef1e31",
+              "priceMinor": 14900,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "1a08ad4d-989a-4498-ad34-4a59bc533a55",
+              "priceMinor": 10000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "232e83a4-6803-4f6a-8b8f-9da1397f1d5f",
+              "priceMinor": 10000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "5e784514-8119-4f57-a670-fc695077c57a",
+              "priceMinor": 16800,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "cb5f7b0e-ffe2-4279-bed9-0c8b15691f0d",
+              "priceMinor": 12000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "fc757c1c-b9bb-49d1-ab59-b00e0858d1ae",
+              "priceMinor": 10500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "1d2907ad-fd00-45f6-ba53-84b8c83876f8",
+              "priceMinor": 3600,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "f1d5305d-39d9-4c3d-960a-1d53d333527c",
+              "priceMinor": 20700,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d975ff0b-9f8c-4315-b23d-2628be873b08",
+              "priceMinor": 8000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "2d106264-609f-4094-b85b-6a55580d0563",
+              "priceMinor": 20000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "2c35f9a5-da1e-4a6c-8be4-c72ffc14cd36",
+              "priceMinor": 20000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "aee3f72a-97c3-4ca0-8f00-7d419ad14163",
+              "priceMinor": 13000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "aaef3f94-0e97-46d6-9e0e-7e52edf91244",
+              "priceMinor": 15000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d0194737-b337-4e32-9f27-a35ed203f515",
+              "priceMinor": 17000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "1c43590e-264d-4396-8ec4-8816f6d52be4",
+              "priceMinor": 5300,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "75e379d7-ea4f-456e-af63-92a084d94823",
+              "priceMinor": 9400,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "2bfd8e44-e7ec-4301-bed6-50cf960f2e9e",
+              "priceMinor": 18000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "ca26789c-5ee4-4d14-8f70-1d457e3d61d5",
+              "priceMinor": 5900,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "4b1a6b1a-d253-4bf8-bb10-68e6ec9db9f2",
+              "priceMinor": 20000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "a80ae9ce-5ce9-4da7-8494-c7c84d1eb477",
+              "priceMinor": 11000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "935a44a8-f2b9-48f5-bfd7-c34e68bf99be",
+              "priceMinor": 15900,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "72683dfc-bbff-43fd-b332-877a4a5374b9",
+              "priceMinor": 24100,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "9b4cd6db-1438-4b7b-863f-bbb2467f2cab",
+              "priceMinor": 19300,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "3b7b0c9d-ecbb-4268-9447-424f1b145d8f",
+              "priceMinor": 13200,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "a16746d5-6939-48d6-878c-62ad85cc6630",
+              "priceMinor": 15900,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "9c84950c-1d9d-403c-9fbb-1c0210b46d50",
+              "priceMinor": 4800,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "4f244972-6b90-45a4-b7f7-226c0bb5d2f2",
+              "priceMinor": 11500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "4638504d-a520-46f4-ad47-f400229b9e6a",
+              "priceMinor": 14000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "18795a5e-4cff-4a22-b0ca-582d3717b280",
+              "priceMinor": 20800,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "91d703ad-05af-469c-a4bd-a7358a51fdb9",
+              "priceMinor": 50600,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "a6907b63-9adb-4645-8f6c-8072b2b00ec7",
+              "priceMinor": 38000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "be3f2971-2776-4c43-b5a8-e47047319c86",
+              "priceMinor": 10300,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "ef370338-da97-44c9-a559-faaa43a38a7e",
+              "priceMinor": 8800,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "61fe14cf-f9e5-4bd4-85a3-37601bb6c7c4",
+              "priceMinor": 23000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "2416ea20-9933-4a75-8940-e59776462e64",
+              "priceMinor": 6000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "85898b38-381a-4963-8187-8eae60c95243",
+              "priceMinor": 23000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "5031a7a3-830f-49c5-bbb6-87df701d404f",
+              "priceMinor": 8500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d3d026e3-86fa-4ad9-aae7-626af4f76901",
+              "priceMinor": 16000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "a827bbbc-9337-4e47-8aab-fd814808cfe0",
+              "priceMinor": 9500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "8c3ee5ff-5317-41bd-aa5d-06685f23f829",
+              "priceMinor": 11000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            }
+          ]
+        },
+        {
+          "query": "масло сливочное",
+          "products": [
+            {
+              "id": "8080adf1-a945-4636-9af8-067f54594fdd",
+              "priceMinor": 23000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "109a979a-c63d-43e8-a2b9-a409ce73e652",
+              "priceMinor": 12000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "800d6430-d6c9-4e89-9bd3-81f26faa5aa9",
+              "priceMinor": 19000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "f7185575-7ce1-4a5e-a7a5-d261c1a4ef7a",
+              "priceMinor": 18000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "e8e7ef7c-2188-4098-8992-a6cc8b3a49a9",
+              "priceMinor": 18500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "7219ca8b-e2e0-443f-86bd-a96a8b6d4838",
+              "priceMinor": 23200,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "ad0edda4-adaf-49d1-bee7-7487b6c19293",
+              "priceMinor": 40000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "bf157b91-4ac4-4798-89a3-175fa1ac7750",
+              "priceMinor": 22000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "a3385fb5-1a0c-4f1b-84ef-07bf24b44974",
+              "priceMinor": 31400,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "ba7360f8-b94a-419d-bf26-7adb03aabd3a",
+              "priceMinor": 19000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "86ed4dfb-a72e-40ae-9c56-9c51b77ba351",
+              "priceMinor": 18000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "af67bfef-34c0-4658-8dd8-15381a076bfd",
+              "priceMinor": 12500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "1b468099-fe5d-4324-b3e1-ac9b41ac6927",
+              "priceMinor": 22000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "ea76d341-e6f8-418a-9d00-aa3240785134",
+              "priceMinor": 17500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "6b9ebac8-fc47-4d6a-a782-394cadfea282",
+              "priceMinor": 20000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            }
+          ]
+        },
+        {
+          "query": "фарш",
+          "products": [
+            {
+              "id": "91777388-eeb2-4119-b8a9-f91df800a665",
+              "priceMinor": 17000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "17200cea-745a-44cd-b3da-4817bba71113",
+              "priceMinor": 29000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "494b1fdb-b943-4618-b260-92873dab2e16",
+              "priceMinor": 34600,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "09b4b2c7-d76b-4f37-bd95-ff2c93ca701f",
+              "priceMinor": 29000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "af5830b1-b613-4e1d-86be-e59ce62cb528",
+              "priceMinor": 29000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "3352edc7-a938-4edd-b113-053ac7e6f997",
+              "priceMinor": 57000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d15c4b04-9bb0-4c5e-9d32-36169f2b4f0d",
+              "priceMinor": 45000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d3ddca3a-00b8-4b58-94b2-a6ac01e46a98",
+              "priceMinor": 40000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "f4be693f-380e-47ac-aee8-7ad020ced947",
+              "priceMinor": 90000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "0a7f2205-2559-4ce0-8431-2f494191384b",
+              "priceMinor": 32300,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "6201f41b-168f-43f4-a141-f9e75bba2931",
+              "priceMinor": 21200,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "c6134d41-fce9-41ef-a6ae-c660db9388c4",
+              "priceMinor": 36700,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "0a07b838-1997-476e-b7aa-678f39904784",
+              "priceMinor": 54000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "22f84859-1ad2-481f-9250-c24580363f8c",
+              "priceMinor": 26000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "fcce16bb-4f0a-46c1-aedc-531dadaa8f20",
+              "priceMinor": 56100,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "352e2a33-4b4c-4c4a-a126-4ba187c39d65",
+              "priceMinor": 42900,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "e1e92ab9-5b63-4bf1-8d38-98388b7cb54e",
+              "priceMinor": 33700,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            }
+          ]
+        },
+        {
+          "query": "ФАРШ",
+          "products": [
+            {
+              "id": "91777388-eeb2-4119-b8a9-f91df800a665",
+              "priceMinor": 17000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "17200cea-745a-44cd-b3da-4817bba71113",
+              "priceMinor": 29000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "494b1fdb-b943-4618-b260-92873dab2e16",
+              "priceMinor": 34600,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "09b4b2c7-d76b-4f37-bd95-ff2c93ca701f",
+              "priceMinor": 29000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "af5830b1-b613-4e1d-86be-e59ce62cb528",
+              "priceMinor": 29000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "3352edc7-a938-4edd-b113-053ac7e6f997",
+              "priceMinor": 57000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d15c4b04-9bb0-4c5e-9d32-36169f2b4f0d",
+              "priceMinor": 45000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d3ddca3a-00b8-4b58-94b2-a6ac01e46a98",
+              "priceMinor": 40000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "f4be693f-380e-47ac-aee8-7ad020ced947",
+              "priceMinor": 90000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "0a7f2205-2559-4ce0-8431-2f494191384b",
+              "priceMinor": 32300,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "6201f41b-168f-43f4-a141-f9e75bba2931",
+              "priceMinor": 21200,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "c6134d41-fce9-41ef-a6ae-c660db9388c4",
+              "priceMinor": 36700,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "0a07b838-1997-476e-b7aa-678f39904784",
+              "priceMinor": 54000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "22f84859-1ad2-481f-9250-c24580363f8c",
+              "priceMinor": 26000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "fcce16bb-4f0a-46c1-aedc-531dadaa8f20",
+              "priceMinor": 56100,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "352e2a33-4b4c-4c4a-a126-4ba187c39d65",
+              "priceMinor": 42900,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "e1e92ab9-5b63-4bf1-8d38-98388b7cb54e",
+              "priceMinor": 33700,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            }
+          ]
+        },
+        {
+          "query": "молоко",
+          "products": [
+            {
+              "id": "16d9d81e-2549-44cc-9729-e14cc0ef1e31",
+              "priceMinor": 14900,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "1a08ad4d-989a-4498-ad34-4a59bc533a55",
+              "priceMinor": 10000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "232e83a4-6803-4f6a-8b8f-9da1397f1d5f",
+              "priceMinor": 10000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "5e784514-8119-4f57-a670-fc695077c57a",
+              "priceMinor": 16800,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "cb5f7b0e-ffe2-4279-bed9-0c8b15691f0d",
+              "priceMinor": 12000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "fc757c1c-b9bb-49d1-ab59-b00e0858d1ae",
+              "priceMinor": 10500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "1d2907ad-fd00-45f6-ba53-84b8c83876f8",
+              "priceMinor": 3600,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "f1d5305d-39d9-4c3d-960a-1d53d333527c",
+              "priceMinor": 20700,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d975ff0b-9f8c-4315-b23d-2628be873b08",
+              "priceMinor": 8000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "2d106264-609f-4094-b85b-6a55580d0563",
+              "priceMinor": 20000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "2c35f9a5-da1e-4a6c-8be4-c72ffc14cd36",
+              "priceMinor": 20000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "aee3f72a-97c3-4ca0-8f00-7d419ad14163",
+              "priceMinor": 13000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "aaef3f94-0e97-46d6-9e0e-7e52edf91244",
+              "priceMinor": 15000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d0194737-b337-4e32-9f27-a35ed203f515",
+              "priceMinor": 17000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "1c43590e-264d-4396-8ec4-8816f6d52be4",
+              "priceMinor": 5300,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "75e379d7-ea4f-456e-af63-92a084d94823",
+              "priceMinor": 9400,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "2bfd8e44-e7ec-4301-bed6-50cf960f2e9e",
+              "priceMinor": 18000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "ca26789c-5ee4-4d14-8f70-1d457e3d61d5",
+              "priceMinor": 5900,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "4b1a6b1a-d253-4bf8-bb10-68e6ec9db9f2",
+              "priceMinor": 20000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "a80ae9ce-5ce9-4da7-8494-c7c84d1eb477",
+              "priceMinor": 11000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "935a44a8-f2b9-48f5-bfd7-c34e68bf99be",
+              "priceMinor": 15900,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "72683dfc-bbff-43fd-b332-877a4a5374b9",
+              "priceMinor": 24100,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "9b4cd6db-1438-4b7b-863f-bbb2467f2cab",
+              "priceMinor": 19300,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "3b7b0c9d-ecbb-4268-9447-424f1b145d8f",
+              "priceMinor": 13200,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "a16746d5-6939-48d6-878c-62ad85cc6630",
+              "priceMinor": 15900,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "9c84950c-1d9d-403c-9fbb-1c0210b46d50",
+              "priceMinor": 4800,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "4f244972-6b90-45a4-b7f7-226c0bb5d2f2",
+              "priceMinor": 11500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "4638504d-a520-46f4-ad47-f400229b9e6a",
+              "priceMinor": 14000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "18795a5e-4cff-4a22-b0ca-582d3717b280",
+              "priceMinor": 20800,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "91d703ad-05af-469c-a4bd-a7358a51fdb9",
+              "priceMinor": 50600,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "a6907b63-9adb-4645-8f6c-8072b2b00ec7",
+              "priceMinor": 38000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "be3f2971-2776-4c43-b5a8-e47047319c86",
+              "priceMinor": 10300,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "ef370338-da97-44c9-a559-faaa43a38a7e",
+              "priceMinor": 8800,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "61fe14cf-f9e5-4bd4-85a3-37601bb6c7c4",
+              "priceMinor": 23000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "2416ea20-9933-4a75-8940-e59776462e64",
+              "priceMinor": 6000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "85898b38-381a-4963-8187-8eae60c95243",
+              "priceMinor": 23000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "5031a7a3-830f-49c5-bbb6-87df701d404f",
+              "priceMinor": 8500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "d3d026e3-86fa-4ad9-aae7-626af4f76901",
+              "priceMinor": 16000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "a827bbbc-9337-4e47-8aab-fd814808cfe0",
+              "priceMinor": 9500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "8c3ee5ff-5317-41bd-aa5d-06685f23f829",
+              "priceMinor": 11000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            }
+          ]
+        },
+        {
+          "query": "масло сливочное",
+          "products": [
+            {
+              "id": "8080adf1-a945-4636-9af8-067f54594fdd",
+              "priceMinor": 23000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "109a979a-c63d-43e8-a2b9-a409ce73e652",
+              "priceMinor": 12000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "800d6430-d6c9-4e89-9bd3-81f26faa5aa9",
+              "priceMinor": 19000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "f7185575-7ce1-4a5e-a7a5-d261c1a4ef7a",
+              "priceMinor": 18000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "e8e7ef7c-2188-4098-8992-a6cc8b3a49a9",
+              "priceMinor": 18500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "7219ca8b-e2e0-443f-86bd-a96a8b6d4838",
+              "priceMinor": 23200,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "ad0edda4-adaf-49d1-bee7-7487b6c19293",
+              "priceMinor": 40000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "bf157b91-4ac4-4798-89a3-175fa1ac7750",
+              "priceMinor": 22000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "a3385fb5-1a0c-4f1b-84ef-07bf24b44974",
+              "priceMinor": 31400,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "ba7360f8-b94a-419d-bf26-7adb03aabd3a",
+              "priceMinor": 19000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "86ed4dfb-a72e-40ae-9c56-9c51b77ba351",
+              "priceMinor": 18000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "af67bfef-34c0-4658-8dd8-15381a076bfd",
+              "priceMinor": 12500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "1b468099-fe5d-4324-b3e1-ac9b41ac6927",
+              "priceMinor": 22000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "ea76d341-e6f8-418a-9d00-aa3240785134",
+              "priceMinor": 17500,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            },
+            {
+              "id": "6b9ebac8-fc47-4d6a-a782-394cadfea282",
+              "priceMinor": 20000,
+              "observedAt": "2026-11-04T18:15:01.717Z"
+            }
+          ]
+        }
+      ],
+      "calls": [
+        {
+          "query": "фарш",
+          "path": "/rest/v1/rpc/retail_catalog_items_search",
+          "status": 200,
+          "headersReceivedMs": 590.7102
+        },
+        {
+          "query": "ФАРШ",
+          "path": "/rest/v1/rpc/retail_catalog_items_search",
+          "status": 200,
+          "headersReceivedMs": 164.04089999999985
+        },
+        {
+          "query": "молоко",
+          "path": "/rest/v1/rpc/retail_catalog_items_search",
+          "status": 200,
+          "headersReceivedMs": 185.10629999999992
+        },
+        {
+          "query": "масло сливочное",
+          "path": "/rest/v1/rpc/retail_catalog_items_search",
+          "status": 200,
+          "headersReceivedMs": 203.52739999999994
+        },
+        {
+          "query": "фарш",
+          "path": "/rest/v1/rpc/retail_catalog_items_search",
+          "status": 200,
+          "headersReceivedMs": 207.92349999999988
+        },
+        {
+          "query": "ФАРШ",
+          "path": "/rest/v1/rpc/retail_catalog_items_search",
+          "status": 200,
+          "headersReceivedMs": 173.58830000000012
+        },
+        {
+          "query": "молоко",
+          "path": "/rest/v1/rpc/retail_catalog_items_search",
+          "status": 200,
+          "headersReceivedMs": 130.3895
+        },
+        {
+          "query": "масло сливочное",
+          "path": "/rest/v1/rpc/retail_catalog_items_search",
+          "status": 200,
+          "headersReceivedMs": 236.2047
+        },
+        {
+          "query": "фарш",
+          "path": "/rest/v1/rpc/retail_catalog_items_search",
+          "status": 200,
+          "headersReceivedMs": 124.35539999999992
+        },
+        {
+          "query": "молоко",
+          "path": "/rest/v1/rpc/retail_catalog_items_search",
+          "status": 200,
+          "headersReceivedMs": 524.2943
+        },
+        {
+          "query": "картофель",
+          "path": "/rest/v1/rpc/retail_catalog_items_search",
+          "status": 200,
+          "headersReceivedMs": 341.65970000000016
+        }
+      ],
+      "invalidLimit": {
+        "status": 400,
+        "code": "22023"
+      },
+      "wrongLocalityEmpty": true,
+      "providerCalls": 0,
+      "retailerSourceCalls": 0,
+      "frontendPublished": false,
+      "physicalPhoneVerified": false
+    },
+    "reviewedPublicOverrides": [],
+    "priorFailure": {
+      "sourceMain": "887f375d451bf3cf77ab4001deb13d645afc1f6d",
+      "accepted": false,
+      "query": "фарш",
+      "status": 500,
+      "postgresCode": "57014",
+      "headersReceivedMs": 3521.3687,
+      "attempts": 1,
+      "frontendPublished": false,
+      "followup": "Read-only actual-scope anon direct plan 36.258ms and function plan 98.87ms; subsequent bounded API acceptance passed. Initial timeout cause remains unproven; no timeout increase or hidden retry."
+    },
+    "limits": [
+      "First post-deployment API request timed out; later bounded acceptance passed. Initial cause remains unproven; continued runtime recovery and automatic-cycle evidence required.",
+      "Public exact/main gates and served-browser acceptance remain required.",
+      "Does not prove full assortment, stock, delivery eligibility, weight-basis equivalence or complete basket winner.",
+      "Physical phone unverified. Existing AI and Core contracts preserved."
+    ]
   }
 }
