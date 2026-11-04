@@ -38,7 +38,9 @@ export function createGuidedShoppingFlow(options) {
     const quote = quoteCatalogDraft(plan.rows, { nowMs: options.now?.() ?? Date.now() });
     const missing = quote.lines.filter(row => !row.addable).map(row => row.group.label);
     const budget = plan.budgetMinor != null && quote.knownSubtotalMinor != null
-      ? quote.knownSubtotalMinor > plan.budgetMinor ? ' По найденной части сумма выше бюджета. Можно уменьшить количества или заменить товары.'
+      ? !quote.allRecent ? ' Для проверки бюджета нужны свежие цены.'
+        : quote.hasEstimates ? ' Сумма ориентировочная. Чтобы проверить бюджет, нужно уточнить массу и условия цены.'
+        : quote.knownSubtotalMinor > plan.budgetMinor ? ' По найденной части сумма выше бюджета. Можно уменьшить количества или заменить товары.'
         : quote.complete ? ' По указанным наблюдениям список укладывается в бюджет.' : ' Весь список по бюджету ещё не проверен.' : '';
     const messageText = message || `Вот конкретные варианты из каталога ${plan.storeName}. Количества — мой предварительный вариант; меняй их в таблице.`;
     const deliveryAlternatives=plan.alternatives?.some(a=>a.retailerId==='perekrestok');

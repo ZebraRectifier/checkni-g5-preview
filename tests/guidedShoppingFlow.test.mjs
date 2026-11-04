@@ -233,3 +233,28 @@ test('guided comparison context is emitted only after successful explicit basket
  assert.ok(records[0].rows.every(row=>typeof row.addable==='boolean'));
  assert.ok(basket.getSnapshot().length>0);
 });
+
+
+for(const scenario of [
+ {name:'fresh exact packs within budget',age:60000,estimate:false,budget:5000,claim:true},
+ {name:'fresh weighed estimate within budget',age:60000,estimate:true,budget:5000,warning:/ориентир|ориентировочн/u},
+ {name:'dated exact packs within budget',age:7200000,estimate:false,budget:5000,warning:/свежие цены/u},
+ {name:'dated exact packs above budget',age:7200000,estimate:false,budget:100,warning:/свежие цены/u},
+ {name:'fresh weighed estimate above budget',age:60000,estimate:true,budget:100,warning:/ориентир|ориентировочн/u},
+ {name:'fresh exact packs above budget',age:60000,estimate:false,budget:100,above:true}
+])test(`guided budget certainty follows Core quote evidence: ${scenario.name}`,async()=>{
+ const {flow,basket,calls}=setup({searchGuidedCatalog:async query=>({kind:'catalog',products:fixtures.filter(row=>row[0]===query).map(row=>card(row,{
+  observedAt:new Date(now-scenario.age).toISOString(),
+  ...(scenario.estimate&&query==='филе'?{catalogPurchaseBasis:'weighed-portion'}:{})
+ }))})});
+ await flow.run('хочу качественную еду на 3 дня');await flow.run('Ну собери');await flow.run('на 3');
+ await flow.run(String(scenario.budget));await flow.run('Ограничений нет');await flow.run('Подобрать товары и цены');
+ const state=flow.getState(),quote=state.presentation.guidedShopping.quote;
+ assert.equal(quote.complete,true);assert.equal(quote.hasEstimates,scenario.estimate);assert.equal(quote.allRecent,scenario.age<3600000);
+ if(scenario.claim)assert.match(state.presentation.message,/укладывается в бюджет/u);
+ else assert.doesNotMatch(state.presentation.message,/укладывается в бюджет/u);
+ if(scenario.warning){assert.match(state.presentation.message,scenario.warning);assert.doesNotMatch(state.presentation.message,/сумма выше бюджета/u);}
+ if(scenario.above)assert.match(state.presentation.message,/сумма выше бюджета/u);
+ assert.equal(quote.winner,null);assert.deepEqual(basket.getSnapshot(),[]);assert.equal(calls(),1);
+ assert.ok(quote.lines.every(row=>row.card.observedAt===new Date(now-scenario.age).toISOString()));
+});
