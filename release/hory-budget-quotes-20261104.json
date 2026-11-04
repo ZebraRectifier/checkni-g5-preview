@@ -1,0 +1,34 @@
+{
+  "kind": "honest-guided-budget-presentation",
+  "publicBase": "b1bf67e7e68bcb21bb85e72acf566a95997eb379",
+  "publicRuntimeCommit": "b7a149f06373ca9bdd95b93f38a5241568eb8efe",
+  "sourceBaselineMain": "be173c00128deac1a495646a8e2ed96625fe4bff",
+  "sourceBaselineGuideSha256": "d4259f6cc933377341abb76c266e3d20ab9cec9f2102a36ff1de91116d6d6a3a",
+  "files": {
+    "src/runtime/guidedShoppingFlow.mjs": "2306be5b4b5b76a3f2fd7e40c6ba2a23b36d5e04996c80a5cdbcc03a6f21abe6"
+  },
+  "publicReviewedPresentationChange": true,
+  "sourceBackportLocalCommit": "b1258d0f3eb2d6b56d355399b862840fee810799",
+  "sourceBackportIntegrated": false,
+  "validation": {
+    "localNodePassed": 30,
+    "failedRegressionCasesBeforeFix": 4,
+    "failures": 0,
+    "skips": 0,
+    "publicExactAndMainStillRequired": true,
+    "actualPublishedAcceptance": false,
+    "physicalPhoneVerified": false
+  },
+  "behavior": "Budget certainty is withheld for dated or estimated Core quotes. Fresh exact-pack quotes retain existing budget guidance. No monetary arithmetic or price data changes.",
+  "unchanged": [
+    "Core price calculations",
+    "price observation timestamps",
+    "retailer transport",
+    "AI endpoint and quotas",
+    "pixel layout and product photographs"
+  ],
+  "limits": [
+    "This presentation release does not fix the separately reproduced Perekrestok RPC57014 timeout. Search caller candidate remains unpublished.",
+    "Existing AI management access and physical-device verification remain incomplete."
+  ]
+}
