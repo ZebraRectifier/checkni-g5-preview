@@ -2324,7 +2324,7 @@ if(publicRetailCatalogMode){
     port: nearbyShoppingPort,
     locationController:shoppingLocationController,
     onInvalidate:()=>{agreedNearbyStoreKey=null;basketProposalFlow.invalidate();renderBasketProposalState();},
-    onManualMap:()=>{document.getElementById('stores-manual-location')?.click();document.getElementById('stores-section')?.scrollIntoView({block:'start'});},
+    onManualMap:()=>storesSection?.openNearbyMap(),
     onChoose:async(catalog,point,isCurrent)=>{
       if(catalog.retailerId==='globus'){
         const store=resolveGlobusMoscowRegionStore(catalog.store.officialStoreId);
@@ -3517,6 +3517,7 @@ setupRetailBrowser();
 // Map selections use the same exact-address registry and invalidation as the pickers.
 try {
   storesSection = createStoresSection({
+    onBackToNearby: nearbyShopping ? () => nearbyShopping.open() : undefined,
     locationController:shoppingLocationController,
     selectedScope: comparisonMode === COMPARISON_MODE.OBSERVED
       && (publicRetailCatalogMode || comparisonAddressMode === "live-example")
