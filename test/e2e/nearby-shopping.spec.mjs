@@ -21,7 +21,7 @@ test('home address → nearest exact card → own catalogue; location remains vo
   await page.locator('.nearby-network-filters').getByRole('button',{name:'Магнит',exact:true}).click();
   const card = page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
   await expect(card).toContainText('Каталог этого адреса подключён');
-  await card.getByRole('button',{name:'Выбрать магазин'}).click();
+  await card.getByRole('button',{name:'Открыть товары'}).click();
   await expect(page.locator('#pixel-storefront')).toBeVisible();
   await expect(page.locator('#magnit-store-address')).toHaveValue('699415');
   await page.reload();
@@ -55,7 +55,7 @@ test('exact newly connected Moscow and regional addresses select their own Magni
     await page.locator('#nearby-radius').selectOption('1');
     const row=page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
     await expect(row).toContainText('Каталог этого адреса подключён');
-    await row.getByRole('button',{name:'Выбрать магазин',exact:true}).click();
+    await row.getByRole('button',{name:'Открыть товары',exact:true}).click();
     await expect(page.locator('#magnit-store-address')).toHaveValue(shopCode);
     await expect(page.locator('#nearby-selected-store')).toContainText(point.address);
     await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
@@ -86,7 +86,7 @@ test('an explicitly chosen nearby address is remembered while its catalogue is s
     await page.locator('#nearby-address-candidates').getByRole('button').click();
     await page.locator('#nearby-radius').selectOption('1');
     const row=page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
-    await row.getByRole('button',{name:'Выбрать магазин',exact:true}).click();
+    await row.getByRole('button',{name:'Открыть товары',exact:true}).click();
     await expect.poll(()=>heldReads).toBeGreaterThan(0);
     await expect(page.locator('#magnit-store-address')).toHaveValue('502843');
     await say(page,'Собери недорогую корзину на пять дней для четверых');
@@ -145,7 +145,7 @@ test('address consent → candidate → radius → agreed store → household in
   await expect(page.locator('#nearby-results')).toContainText('Каталог этого адреса пока не подключён');
   await page.locator('#nearby-connected-only').check();
   await expect(page.locator('#nearby-results')).toContainText('Глобус Пушкино');
-  await page.locator('#nearby-results article').filter({hasText:'Глобус Пушкино'}).getByRole('button',{name:'Выбрать магазин',exact:true}).click();
+  await page.locator('#nearby-results article').filter({hasText:'Глобус Пушкино'}).getByRole('button',{name:'Открыть товары',exact:true}).click();
   await expect(page.locator('#nearby-selected-store')).toContainText('Глобус Пушкино');
   await expect(page.locator('#globus-store-address')).toHaveValue('5014');
   await page.getByRole('button',{name:'Собрать корзину здесь',exact:true}).click();
@@ -200,7 +200,7 @@ test('a full spoken goal keeps people and period while the precise address stays
   const stored=await page.evaluate(()=>JSON.stringify({...localStorage}));expect(stored).not.toContain('Пушкино');
   await page.locator('#stores-manual-location').click();await page.locator('.stores-map').press('Enter');
   await page.locator('#nearby-radius').selectOption('20');await page.locator('#nearby-connected-only').check();
-  const choose=page.locator('#nearby-results article').first().getByRole('button',{name:'Выбрать магазин',exact:true});
+  const choose=page.locator('#nearby-results article').first().getByRole('button',{name:'Открыть товары',exact:true});
   await choose.click();await page.getByRole('button',{name:'Собрать корзину здесь',exact:true}).click();
   await openHory(page);
   await expect(page.locator('#basket-proposal-status')).toContainText('для 3 человек, на 7 дн.');

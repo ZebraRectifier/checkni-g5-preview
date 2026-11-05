@@ -18,7 +18,7 @@ for(const failure of ['transient','persistent'])test(`address ${failure} failure
  if(failure==='persistent')await expect(page.locator('#nearby-status')).toContainText('Это адрес магазина, не твоя геолокация');
  await page.locator('#nearby-address-candidates button').first().click();
  const card=page.locator('#nearby-results article').filter({hasText:'Глобус Красногорск'});
- await card.getByRole('button',{name:'Выбрать магазин'}).click();
+ await card.getByRole('button',{name:'Открыть товары'}).click();
  await expect(page.locator('#globus-store-address')).toHaveValue('5011');
  await expect(page.locator('#pixel-storefront')).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -68,9 +68,9 @@ test('latest nearby store choice owns the visible action and basket target', asy
 
   const cards = page.locator('#nearby-results article');
   await expect(cards).toHaveCount(2);
-  await cards.nth(0).getByRole('button', { name: 'Выбрать магазин' }).click();
+  await cards.nth(0).getByRole('button', { name: 'Открыть товары' }).click();
   await page.waitForFunction(() => typeof window.__nearbyChoiceProbe.releaseFirst === 'function');
-  await cards.nth(1).getByRole('button', { name: 'Выбрать магазин' }).click();
+  await cards.nth(1).getByRole('button', { name: 'Открыть товары' }).click();
   await expect(page.locator('#nearby-selected-store')).toContainText('Открытое шоссе, 2 к12');
 
   await page.evaluate(async () => {
