@@ -95,12 +95,14 @@ export function boundMagnitMapLocations(directory){
   if(byCode.size>200)return Object.freeze([]);
   return Object.freeze([...byCode.values()].filter(Boolean));
 }
-export function nearbyGroceryMatches(stores,position,radiusKm,{connectedOnly=false}={}){
+const localDirectoryHosts=new Set(['www.openstreetmap.org','globus.ru','www.globus.ru']);
+const regionalDirectoryHosts=new Set(['www.openstreetmap.org','www.metro-cc.ru','spb.vkusvill.ru','kzn.vkusvill.ru','ekb.vkusvill.ru','nnv.vkusvill.ru']);
+export function nearbyGroceryMatches(stores,position,radiusKm,{connectedOnly=false,regional=false}={}){
   if(!Array.isArray(stores)||!Number.isFinite(radiusKm)||radiusKm<1||radiusKm>20)return[];
   const seen=new Set();return stores.flatMap(point=>{
     const meters=distanceMeters(position,point);if(meters===null||meters>radiusKm*1000||typeof point.name!=='string'||!point.id||seen.has(point.id))return[];
-    try{const u=new URL(point.sourceUrl);if(u.protocol!=='https:'||u.username||u.password||!['www.openstreetmap.org','globus.ru','www.globus.ru'].includes(u.hostname))return[];}catch{return[];}
-    seen.add(point.id);const binding=nearbyCatalogBinding(point);if(connectedOnly&&!binding)return[];
+    try{const u=new URL(point.sourceUrl);if(u.protocol!=='https:'||u.username||u.password||!(regional?regionalDirectoryHosts:localDirectoryHosts).has(u.hostname))return[];}catch{return[];}
+    seen.add(point.id);const binding=regional?null:nearbyCatalogBinding(point);if(connectedOnly&&!binding)return[];
     return[{...point,distanceMeters:meters,catalog:binding}];
   }).sort((a,b)=>a.distanceMeters-b.distanceMeters||a.id.localeCompare(b.id));
 }
