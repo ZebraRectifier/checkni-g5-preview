@@ -5,7 +5,7 @@ const {rows}=JSON.parse(await readFile(new URL('../../tests/fixtures/weekly-reta
 test('saved basket compares its selected catalogues after reload and quantity/removal edits without cached prices',async({page,context})=>{
  test.setTimeout(90000);
  const at='2026-11-02T08:00:00Z';await page.clock.setFixedTime(new Date(at));
- let ai=0;const reads=[];
+ let ai=0,hideDeliveryMilk=false;const reads=[];
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
  await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
  await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
@@ -14,7 +14,8 @@ test('saved basket compares its selected catalogues after reload and quantity/re
   const ids=q.get('source_product_id')?.slice(4,-1).split(',');
   const name=(q.get('name') ?? (q.has('p_query') ? 'ilike.*'+q.get('p_query').replaceAll(' ','*')+'*' : null))?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ');
   reads.push(store);
-  return r.fulfill({json:rows.filter(p=>p.store_id===store&&(!ids||ids.includes(p.source_product_id))&&(!name||p.name.toLowerCase().includes(name.toLowerCase())))
+  return r.fulfill({json:rows.filter(p=>p.store_id===store&&(!ids||ids.includes(p.source_product_id))&&(!name||p.name.toLowerCase().includes(name.toLowerCase()))
+    &&!(hideDeliveryMilk&&store==='perekrestok-yandex-3186917'&&p.name.toLowerCase().includes('молоко')))
     .slice(0,Number(q.get('limit')??40)).map(p=>({...p,observed_at:at}))});
  });
  await page.goto('/?comparison=observed&catalog=retail#shop');
@@ -55,6 +56,13 @@ test('saved basket compares its selected catalogues after reload and quantity/re
  await page.clock.setFixedTime(new Date(Date.parse(at)+3600001));
  await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
  await expect(page.locator('#comparison-output')).toContainText('старые или неизвестные цены');
+ await expect(page.locator('.saved-comparison-gaps').filter({hasText:'Перекрёсток'})).toContainText('Нужны свежие цены — весь список');
  await expect(page.locator('#comparison-output')).not.toContainText('ниже на');
+ const remaining=await page.locator('.basket-list').innerText();
+ hideDeliveryMilk=true;
+ await page.reload();await expect(page.locator('.basket-list')).toHaveText(remaining,{useInnerText:true});
+ await page.locator('#compare-basket').click();
+ await expect(page.locator('.saved-comparison-gaps').filter({hasText:'Перекрёсток'})).toContainText('Товар не подтверждён — Молоко');
+ await expect(page.locator('.basket-list')).toHaveText(remaining,{useInnerText:true});
  expect(ai).toBe(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

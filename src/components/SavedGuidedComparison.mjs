@@ -3,6 +3,22 @@ import {quoteCatalogDraft,compareCatalogDraftAlternatives} from '../core/catalog
 
 export const savedComparisonStoreLabel = scope => scope.retailerId==='magnit'?'Магнит':'Перекрёсток · доставка';
 
+function describeGaps(quote) {
+  const reasons = [
+    ['Товар не подтверждён', line => !line.card],
+    ['Уточнить вес, фасовку или количество', line => line.card && (line.quantityReview || !line.unit || line.unit.approximate)],
+    ['Нужны свежие цены', line => line.card && line.freshness !== 'recent']
+  ];
+  return reasons.flatMap(([label, isGap]) => {
+    const lines = quote.lines.filter(isGap);
+    if (!lines.length) return [];
+    if (lines.length === quote.lines.length) return [label + ' — весь список'];
+    const names = [...new Set(lines.map(line => line.group.label))];
+    const preview = names.slice(0, 4).join(', ');
+    return [label + ' — ' + preview + (names.length > 4 ? ' и ещё ' + (names.length - 4) : '')];
+  });
+}
+
 export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onChooseProducts}={}) {
   const doc=parent.ownerDocument,el=(tag,text)=>{const e=doc.createElement(tag);if(text)e.textContent=text;return e;};
   parent.replaceChildren();
@@ -26,6 +42,9 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
     ?'По наблюдаемым ценам суммы товаров в этих вариантах совпали.'
     :'По наблюдаемым ценам подытог товаров в '+comparison.lowerStoreName+' ниже на '+formatRubMinor(comparison.differenceMinor)+'.');
   else {
+    if (exact && comparison.kind === 'incompatible') {
+      messages.push('Не удалось сопоставить выбранные позиции. Проверь товары и количество.');
+    }
     if(quotes.some(quote=>!quote.complete))messages.push('Список неполный. Выгоду пока не определяем.');
     if(quotes.some(quote=>!quote.allRecent))messages.push('Есть старые или неизвестные цены.');
     if(quotes.some(quote=>quote.hasEstimates)||result.drafts.some(draft=>draft.rows.some(row=>row.quantityReview)))
@@ -37,12 +56,19 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
   if(result.drafts.some(draft=>draft.scope.retailerId==='perekrestok'))parent.append(el('p','Перекрёсток — подключённый каталог доставки в Москве. Доставка по твоему адресу не подтверждена.'));
   result.drafts.forEach((draft,index)=>{
     const quote=quotes[index],details=el('details');details.className='future-step saved-catalog-variant';
+    const storeLabel = savedComparisonStoreLabel(draft.scope);
+    const gaps = describeGaps(quote);
+    if (gaps.length) {
+      const notice = el('p', storeLabel + '. ' + gaps.join('. ') + '.');
+      notice.className = 'saved-comparison-gaps';
+      parent.append(notice);
+    }
     const total=quote.knownSubtotalMinor==null?'сумма неизвестна':formatRubMinor(quote.knownSubtotalMinor);
-    const summary=el('summary',savedComparisonStoreLabel(draft.scope)+' · '+quote.basket.length+'/'+quote.lines.length+' поз. · '
+    const summary=el('summary',storeLabel+' · '+quote.basket.length+'/'+quote.lines.length+' поз. · '
       +(quote.complete?'':'найденная часть: ')+total+(quote.hasEstimates?' · ориентировочно':''));
     details.append(summary,el('p',draft.scope.storeAddress??''));
     const scroll=el('div');scroll.className='guided-shopping-scroll';scroll.tabIndex=0;
-    const table=el('table');table.className='guided-shopping-table';table.append(el('caption','Товары и цены · '+savedComparisonStoreLabel(draft.scope)));
+    const table=el('table');table.className='guided-shopping-table';table.append(el('caption','Товары и цены · '+storeLabel));
     const head=el('thead'),headRow=el('tr');
     for(const text of ['Товар и количество','Цена и источник']){const th=el('th',text);th.scope='col';headRow.append(th);}
     head.append(headRow);table.append(head);const body=el('tbody');
