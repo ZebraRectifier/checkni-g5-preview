@@ -8,6 +8,10 @@ export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
     try{
       const r=await fetchImpl(NEARBY_ADDRESS_ENDPOINT,{method:'POST',credentials:'omit',headers:{'content-type':'application/json',
         apikey:CATALOG_SEARCH_PUBLISHABLE_KEY},body:JSON.stringify({query,consent:true}),signal:AbortSignal.timeout(10000)});
+      if(r.status===429){
+        const rejection=await readBoundedJsonResponse(r,1024);
+        return{kind:'limited',candidates:[],retryable:rejection?.version===1&&rejection.error==='busy'};
+      }
       if(!r.ok){try{r.body?.cancel().catch(()=>{});}catch{}
         return{kind:r.status===429?'limited':'unavailable',candidates:[],retryable:[408,500,502,503,504].includes(r.status)};}
       const d=await readBoundedJsonResponse(r,32768);

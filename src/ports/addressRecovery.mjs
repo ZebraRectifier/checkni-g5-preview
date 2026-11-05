@@ -13,9 +13,9 @@ export function createAddressRecovery({request,now=Date.now,wait=ms=>new Promise
       let value;
       for(let attempt=0;attempt<2;attempt++){
         try{value=await request(key);}catch{value={kind:'unavailable',candidates:[],retryable:true};}
-        if(value.kind!=='unavailable'||value.retryable!==true||attempt===1)break;
-        // Respect the server's one-second admission interval. Never retry 429,
-        // auth failures or invalid payloads; at most two requests per action.
+        if(value.retryable!==true||attempt===1)break;
+        // Respect the server's admission interval. Retry transient responses
+        // or explicit short contention, with at most two requests per action.
         await wait(1200);
       }
       const result={kind:value.kind,candidates:value.candidates??[]};
