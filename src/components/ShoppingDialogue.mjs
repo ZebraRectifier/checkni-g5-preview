@@ -38,9 +38,17 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
   welcome.setAttribute('aria-label', 'С чего начнём покупки');
   const entry = document.createElement('div'); entry.className = 'shopping-conversation-choices';
   for (const [label, text] of [['Собрать корзину', 'Собери недорогую корзину'],
-    ['У меня есть список', null]]) {
+    ['Сравнить цены', null]]) {
     const button = document.createElement('button'); button.type = 'button'; button.textContent = label;
-    button.addEventListener('click', () => { if (!text) { const greeting = welcome.querySelector('.hori-greeting'); if (greeting) greeting.textContent = 'Напиши продукты одним сообщением — помогу собрать список.'; input.focus({ preventScroll: true }); return; } input.value = text; input.dispatchEvent(new Event('input', { bubbles: true })); form.requestSubmit(); });
+    button.addEventListener('click', () => {
+      if (!text) {
+        document.getElementById('open-basket')?.click();
+        return;
+      }
+      input.value = text;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      form.requestSubmit();
+    });
     entry.append(button);
   }
   welcome.append(entry);
