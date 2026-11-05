@@ -18,6 +18,7 @@ import {
 import { VALIDATED_MERGE_REASON, createBasketStore, countBasketUnits } from "./state/basketStore.mjs";
 import { createProductCard } from "./components/ProductCard.mjs";
 import { createPixelProductCard } from "./components/PixelProductCard.mjs";
+import { watchCatalogMore } from "./components/catalogMoreOnScroll.mjs";
 import { sortPixelCategories, pixelCategoryImage, pixelCollectionCategories } from "./components/pixelCategoryPresentation.mjs";
 import { BASKET_COMPARE_LABEL, renderBasketView, basketHasWeightAmounts } from "./components/BasketView.mjs";
 import {
@@ -198,6 +199,7 @@ let retailSurfaceStage = history.state?.checkniRetailSurface === 'store'
   || (!history.state?.checkniRetailSurface && history.state?.checkniRetailNavigation === true)
   ? 'store' : 'stores';
 let pixelAllCategories = false;
+let stopCatalogMoreWatch;
 let retailCollectionsVersion = 0;
 let retailCollections = [];
 const retailCatalogClients = new Map(
@@ -1096,12 +1098,19 @@ function renderRetailBrowser() {
     const title = document.createElement("strong");
     title.textContent = category.name;
     const illustration = pixelCategoryImage(category);
+    const fallbackIcon = document.createElement('span');
+    fallbackIcon.className = 'pixel-category-image pixel-category-fallback';
+    fallbackIcon.setAttribute('aria-hidden', 'true');
+    fallbackIcon.textContent = '▦';
     if (illustration) {
       const image = document.createElement('img');
       image.className = 'pixel-category-image';
       image.src = illustration; image.alt = ''; image.loading = 'lazy';
       image.decoding = 'async'; image.width = 120; image.height = 100;
+      image.addEventListener('error', () => image.replaceWith(fallbackIcon), { once: true });
       button.append(image);
+    } else {
+      button.append(fallbackIcon);
     }
     const count = document.createElement("span");
     const productNoun = russianCountNoun(
@@ -1607,9 +1616,7 @@ async function loadRetailCategoryProducts(category, {
       categoryName: category.name,
       categoryExpectedCount: expectedCount,
       nextOffset,
-      canLoadMore: pageSize === pageLimit && (
-        expectedCount <= 0 || nextOffset < expectedCount
-      ),
+      canLoadMore: pageSize === pageLimit && nextOffset > 0 && (expectedCount <= 0 || nextOffset < expectedCount),
       loadingMore: false,
       loadMoreError: false
     };
@@ -1638,11 +1645,10 @@ async function loadRetailCategoryProducts(category, {
   }
 }
 
-async function loadMoreRetailCategoryProducts() {
+async function loadMoreRetailProducts() {
   if (
     !publicRetailCatalogMode
     || catalogSearchState.status !== "live"
-    || !catalogSearchState.categoryName
     || !catalogSearchState.canLoadMore
     || catalogSearchState.loadingMore
   ) {
@@ -1650,13 +1656,12 @@ async function loadMoreRetailCategoryProducts() {
   }
 
   const category = retailBrowserState.path.at(-1);
-  if (!category) return;
 
   const retailerId = retailBrowserState.retailerId;
   const navigationRequestId = retailBrowserRequestVersion;
   const client = currentRetailClient();
   const requestId = ++catalogRequestVersion;
-  const pageLimit = 40;
+  const pageLimit = category ? 40 : 24;
   const offset = Number.isSafeInteger(catalogSearchState.nextOffset)
     ? catalogSearchState.nextOffset
     : catalogSearchState.products.length;
@@ -1668,10 +1673,8 @@ async function loadMoreRetailCategoryProducts() {
   };
   renderCatalog();
 
-  const result = await client.browseCategory(category, {
-    limit: pageLimit,
-    offset
-  });
+  const options = { limit: pageLimit, offset };
+  const result = await (category ? client.browseCategory(category, options) : client.browse(options));
 
   if (
     requestId !== catalogRequestVersion
@@ -1704,11 +1707,6 @@ async function loadMoreRetailCategoryProducts() {
   const pageSize = Number.isSafeInteger(result.pageSize)
     ? result.pageSize
     : result.products.length;
-  const expectedCount = Number.isSafeInteger(
-    catalogSearchState.categoryExpectedCount
-  )
-    ? catalogSearchState.categoryExpectedCount
-    : products.length;
 
   catalogSearchState = {
     ...catalogSearchState,
@@ -1716,9 +1714,9 @@ async function loadMoreRetailCategoryProducts() {
     retailCount: products.length,
     discoveredCount: products.length,
     nextOffset,
-    canLoadMore: pageSize === pageLimit && (
-      expectedCount <= 0 || nextOffset < expectedCount
-    ),
+    hasPaged: true,
+    canLoadMore: pageSize === pageLimit && nextOffset > offset && nextOffset <= 10_000
+      && (!category || !catalogSearchState.categoryExpectedCount || nextOffset < catalogSearchState.categoryExpectedCount),
     loadingMore: false,
     loadMoreError: false
   };
@@ -1991,7 +1989,9 @@ function setupManualSearchControls() {
 }
 
 function renderCatalog() {
-  document.querySelector("#retail-load-more")?.remove();
+  stopCatalogMoreWatch?.();
+  stopCatalogMoreWatch = undefined;
+  document.querySelector("#retail-load-more, #retail-page-end")?.remove();
   if (elements.searchSubmit) elements.searchSubmit.disabled = !elements.searchInput.value.trim();
   const normalizedQuery = activeQuery.trim();
   if (publicRetailCatalogMode) {
@@ -2044,7 +2044,7 @@ function renderCatalog() {
 
   if (
     live
-    && catalogSearchState.categoryName
+    && !normalizedQuery
     && (
       catalogSearchState.canLoadMore
       || catalogSearchState.loadingMore
@@ -2063,12 +2063,20 @@ function renderCatalog() {
         : "Показать ещё";
     loadMore.setAttribute(
       "aria-label",
-      `${loadMore.textContent}: ${catalogSearchState.categoryName}`
+      `${loadMore.textContent}: ${catalogSearchState.categoryName || retailName}`
     );
     loadMore.addEventListener("click", () => {
-      void loadMoreRetailCategoryProducts();
+      void loadMoreRetailProducts();
     });
     elements.productGrid.after(loadMore);
+    if (!catalogSearchState.loadingMore && !catalogSearchState.loadMoreError) {
+      stopCatalogMoreWatch = watchCatalogMore(loadMore, () => void loadMoreRetailProducts());
+    }
+  } else if (publicRetailCatalogMode && live && !normalizedQuery && catalogSearchState.hasPaged && results.length) {
+    const end = document.createElement('p');
+    end.id = 'retail-page-end';
+    end.textContent = 'Все доступные товары показаны';
+    elements.productGrid.after(end);
   }
 
   if (draft) {
@@ -3236,7 +3244,9 @@ async function loadInitialRetailCatalog() {
       query: "",
       products: retailResult.products,
       retailCount: retailResult.products.length,
-      discoveredCount: retailResult.products.length
+      discoveredCount: retailResult.products.length,
+      nextOffset: retailResult.nextOffset,
+      canLoadMore: retailResult.pageSize === 24 && retailResult.nextOffset > 0
     };
   } else {
     catalogSearchState = {

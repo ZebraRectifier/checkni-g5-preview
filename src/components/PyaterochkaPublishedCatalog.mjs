@@ -1,3 +1,4 @@
+import { watchCatalogMore } from './catalogMoreOnScroll.mjs';
 import{currentPyatProducts,pyatWeeklyCards}from'../observations/pyaterochkaPublishedPromotions.mjs';
 import{readBoundedJsonResponse}from'../ports/retailCatalogPort.mjs';
 const rub=n=>new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB'}).format(n/100);
@@ -7,9 +8,10 @@ export function createPyaterochkaPublishedCatalog({document=globalThis.document,
   const css=el('link');css.rel='stylesheet';css.href=new URL('./pyaterochka-published.css',import.meta.url).href;document.head.append(css);
   root.append(el('summary','Пятёрочка · акции Москвы'));
   const status=el('p','Открой, чтобы посмотреть продуктовые акции.');status.setAttribute('role','status');root.append(status);
-  const content=el('div');root.append(content);let pending=false,bundle=null,expiryTimer=null;
+  const content=el('div');root.append(content);let pending=false,bundle=null,expiryTimer=null,stopMoreWatch;
   const retry=()=>{const b=el('button','Обновить каталог');b.type='button';b.addEventListener('click',()=>{bundle=null;void load();});return b;};
   async function render(){
+    stopMoreWatch?.();
     if(expiryTimer!==null){clearTimeout(expiryTimer);expiryTimer=null;}
     const products=currentPyatProducts(bundle,now());content.replaceChildren();
     if(!products.length){status.textContent='Свежего каталога сейчас нет. Можно продолжить с магазинами, у которых доступны цены.';content.append(retry());return;}
@@ -22,7 +24,9 @@ export function createPyaterochkaPublishedCatalog({document=globalThis.document,
       if(!currentPyatProducts(bundle,now()).length){void render();return;}onBuild?.();});
     build.hidden=!pyatWeeklyCards(bundle,now()).length;
     const count=el('p');let limit=8;
+    const loadMore=()=>{limit+=8;show();};
     function show(){
+      stopMoreWatch?.();
       grid.replaceChildren();const current=currentPyatProducts(bundle,now());
       if(!current.length){void render();return;}
       const q=search.value.trim().toLowerCase().replaceAll('ё','е');
@@ -33,8 +37,9 @@ export function createPyaterochkaPublishedCatalog({document=globalThis.document,
         const source=el('a','Карточка акции');source.href=p.productUrl;source.target='_blank';source.rel='noopener noreferrer';card.append(source);grid.append(card);
       }
       more.hidden=rows.length<=limit;
+      if(!more.hidden)stopMoreWatch=watchCatalogMore(more,loadMore);
     }
-    search.addEventListener('input',()=>{limit=8;show();});more.addEventListener('click',()=>{limit+=8;show();});
+    search.addEventListener('input',()=>{limit=8;show();});more.addEventListener('click',loadMore);
     content.append(label,search,count,grid,more,build);show();
     const deadline=Math.min(Date.parse(bundle.observedAt)+86400001,Date.parse(bundle.cataloguePeriod.until+'T21:00:00Z'));
     expiryTimer=setTimeout(()=>{expiryTimer=null;void render();},Math.max(1,deadline-now()));

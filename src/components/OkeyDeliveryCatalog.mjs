@@ -1,3 +1,4 @@
+import { watchCatalogMore } from './catalogMoreOnScroll.mjs';
 import { historySnapshots, latestForAddress, observationTime } from '../observations/addressPriceHistory.mjs';
 import { readBoundedJsonResponse } from '../ports/retailCatalogPort.mjs';
 import { createAddressPriceHistory } from './AddressPriceHistory.mjs';
@@ -40,8 +41,10 @@ export function createOkeyDeliveryCatalog({fetchImpl=globalThis.fetch}={}){
       const note=node('p');const grid=node('div');grid.className='okey-delivery-grid';
       const more=node('button','Показать ещё');more.type='button';
       details.append(label,category,search,note,grid,more);
-      let limit=24;
+      let limit=24, stopMoreWatch;
+      const loadMore=()=>{limit+=24;render();};
       function render(){
+        stopMoreWatch?.();
         const snapshot=latestForAddress(bundle,address.value);
         grid.replaceChildren();
         const age=Date.now()-Date.parse(snapshot.observedDate+'T00:00:00Z');
@@ -61,6 +64,7 @@ export function createOkeyDeliveryCatalog({fetchImpl=globalThis.fetch}={}){
         }
         if(!rows.length)grid.append(node('p','В собранных наблюдениях такого товара нет.'));
         more.hidden=rows.length<=limit;
+        if(!more.hidden)stopMoreWatch=watchCatalogMore(more,loadMore);
       }
       function categories(){
         category.replaceChildren();const all=node('option','Все категории');all.value='';category.append(all);
@@ -72,7 +76,7 @@ export function createOkeyDeliveryCatalog({fetchImpl=globalThis.fetch}={}){
       address.addEventListener('change',()=>{limit=24;categories();render();});
       category.addEventListener('change',()=>{limit=24;render();});
       search.addEventListener('input',()=>{limit=24;render();});
-      more.addEventListener('click',()=>{limit+=24;render();});
+      more.addEventListener('click',loadMore);
       categories();render();
       // An open catalog picks up published observations without a page reload.
       setInterval(async()=>{
