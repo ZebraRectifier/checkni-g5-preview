@@ -113,3 +113,32 @@ test('Hory semantic poses animate only while open and respect reduced motion', a
   await openHory(page);
   await expect(identity).toHaveCSS('animation-name', 'hory-v17-check');
 });
+
+for (const theme of ['light', 'dark']) {
+  test(`Hory restores an unsent tab draft in ${theme} and keeps accepted household context`, async ({ page }) => {
+    await page.addInitScript(theme => localStorage.setItem('checkni.appearance.v1', theme), theme);
+    await setup(page);
+    await openHory(page);
+    const input = page.locator('#basket-proposal-input');
+    await input.fill('Хочу собрать корзину на 4 человек');
+    await page.locator('#basket-proposal-submit').click();
+    await expect(page.locator('#basket-proposal-status')).toContainText('4 чел');
+    await expect.poll(() => page.evaluate(() => sessionStorage.getItem('checkni.hory.draft.v1'))).toBeNull();
+    await input.fill('И добавь яблоки');
+    await page.reload();
+    await openHory(page);
+    await expect(input).toHaveValue('И добавь яблоки');
+    await expect(page.locator('body')).toHaveAttribute('data-hori-theme', theme);
+    await input.fill('Что ты помнишь?');
+    await page.locator('#basket-proposal-submit').click();
+    await expect(page.locator('#basket-proposal-status')).toContainText('4 чел');
+    await page.reload();
+    await openHory(page);
+    await expect(input).toHaveValue('');
+    await input.fill('Новое сообщение');
+    await input.fill('');
+    await page.reload();
+    await openHory(page);
+    await expect(input).toHaveValue('');
+  });
+}
