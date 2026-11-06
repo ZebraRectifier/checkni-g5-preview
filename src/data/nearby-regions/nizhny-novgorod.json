@@ -4872,6 +4872,51 @@
       "observedAt": "2026-11-05T16:06:56.418827+00:00",
       "sourceType": "official-directory",
       "verification": "official-listed"
+    },
+    {
+      "id": "osm:node:1708285554",
+      "retailerId": "pyaterochka",
+      "name": "Пятёрочка",
+      "city": "Нижний Новгород",
+      "lat": 56.1472094,
+      "lon": 44.1975865,
+      "sourceUrl": "https://www.openstreetmap.org/node/1708285554",
+      "sourceType": "osm-containing-addressed-building",
+      "coordinateEvidence": "osm-node",
+      "addressEvidenceUrl": "https://www.openstreetmap.org/way/154740808",
+      "address": "Нижний Новгород, улица 40 лет Октября, 16",
+      "observedAt": "2026-11-06T10:38:27+00:00",
+      "verification": "map-observed"
+    },
+    {
+      "id": "osm:node:2001546266",
+      "retailerId": "pyaterochka",
+      "name": "Пятёрочка",
+      "city": "Нижний Новгород",
+      "lat": 56.3241226,
+      "lon": 43.9175923,
+      "sourceUrl": "https://www.openstreetmap.org/node/2001546266",
+      "sourceType": "osm-containing-addressed-building",
+      "coordinateEvidence": "osm-node",
+      "addressEvidenceUrl": "https://www.openstreetmap.org/way/103649710",
+      "address": "Нижний Новгород, Сормовское шоссе, 8",
+      "observedAt": "2026-11-06T10:38:27+00:00",
+      "verification": "map-observed"
+    },
+    {
+      "id": "osm:node:9811657737",
+      "retailerId": "magnit",
+      "name": "Магнит",
+      "city": "Нижний Новгород",
+      "lat": 56.3235424,
+      "lon": 43.9193246,
+      "sourceUrl": "https://www.openstreetmap.org/node/9811657737",
+      "sourceType": "osm-containing-addressed-building",
+      "coordinateEvidence": "osm-node",
+      "addressEvidenceUrl": "https://www.openstreetmap.org/way/103649697",
+      "address": "Нижний Новгород, Сормовское шоссе, 9",
+      "observedAt": "2026-11-06T10:38:27+00:00",
+      "verification": "map-observed"
     }
   ],
   "sources": [

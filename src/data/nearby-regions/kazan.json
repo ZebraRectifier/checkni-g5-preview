@@ -8821,6 +8821,51 @@
       "observedAt": "2026-11-05T16:06:56.418827+00:00",
       "sourceType": "official-directory",
       "verification": "official-listed"
+    },
+    {
+      "id": "osm:node:3663217766",
+      "retailerId": "pyaterochka",
+      "name": "Пятёрочка",
+      "city": "Казань",
+      "lat": 55.8636973,
+      "lon": 49.0913425,
+      "sourceUrl": "https://www.openstreetmap.org/node/3663217766",
+      "sourceType": "osm-containing-addressed-building",
+      "coordinateEvidence": "osm-node",
+      "addressEvidenceUrl": "https://www.openstreetmap.org/way/72575897",
+      "address": "Казань, улица Лукина, 15А",
+      "observedAt": "2026-11-06T10:38:27+00:00",
+      "verification": "map-observed"
+    },
+    {
+      "id": "osm:node:4146739952",
+      "retailerId": "pyaterochka",
+      "name": "Пятёрочка",
+      "city": "Казань",
+      "lat": 55.8380796,
+      "lon": 49.0888072,
+      "sourceUrl": "https://www.openstreetmap.org/node/4146739952",
+      "sourceType": "osm-containing-addressed-building",
+      "coordinateEvidence": "osm-node",
+      "addressEvidenceUrl": "https://www.openstreetmap.org/way/71169490",
+      "address": "Казань, улица Гагарина, 22",
+      "observedAt": "2026-11-06T10:38:27+00:00",
+      "verification": "map-observed"
+    },
+    {
+      "id": "osm:node:4214959753",
+      "retailerId": "pyaterochka",
+      "name": "Пятёрочка",
+      "city": "Казань",
+      "lat": 55.7369804,
+      "lon": 49.2070847,
+      "sourceUrl": "https://www.openstreetmap.org/node/4214959753",
+      "sourceType": "osm-containing-addressed-building",
+      "coordinateEvidence": "osm-node",
+      "addressEvidenceUrl": "https://www.openstreetmap.org/way/282533696",
+      "address": "Казань, Дубравная улица, 14А",
+      "observedAt": "2026-11-06T10:38:27+00:00",
+      "verification": "map-observed"
     }
   ],
   "sources": [

@@ -5619,6 +5619,21 @@
       "observedAt": "2026-11-05T16:06:56.418827+00:00",
       "sourceType": "official-directory",
       "verification": "official-listed"
+    },
+    {
+      "id": "osm:node:8593969013",
+      "retailerId": "pyaterochka",
+      "name": "Пятёрочка",
+      "city": "Екатеринбург",
+      "lat": 56.7809017,
+      "lon": 60.6736363,
+      "sourceUrl": "https://www.openstreetmap.org/node/8593969013",
+      "sourceType": "osm-containing-addressed-building",
+      "coordinateEvidence": "osm-node",
+      "addressEvidenceUrl": "https://www.openstreetmap.org/way/96791755",
+      "address": "Екатеринбург, Рощинская улица, 46/2",
+      "observedAt": "2026-11-06T10:38:27+00:00",
+      "verification": "map-observed"
     }
   ],
   "sources": [
