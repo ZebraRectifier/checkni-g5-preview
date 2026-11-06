@@ -20,6 +20,10 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   sheet.href = new URL('./pixel-storefront.css', import.meta.url).href; document.head.append(sheet);
   const storefrontSheet = document.createElement('link'); storefrontSheet.rel = 'stylesheet';
   storefrontSheet.href = new URL('./storefront-v15.css', import.meta.url).href; document.head.append(storefrontSheet);
+  const shoppingSheet = document.createElement('link');
+  shoppingSheet.rel = 'stylesheet';
+  shoppingSheet.href = new URL('./pixel-basket-hory.css', import.meta.url).href;
+  document.head.append(shoppingSheet);
   document.body.classList.add('hori-workspace', 'pixel-workspace');
   header.classList.replace('app-header', 'hori-header'); header.classList.add('pixel-header');
   const badge = document.getElementById('comparison-mode-badge'); if (badge) badge.hidden = true;
