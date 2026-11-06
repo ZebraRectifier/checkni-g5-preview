@@ -113,8 +113,6 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   commerce.headerControls.prepend(theme); applyTheme();
   initShoppingV17(document);
   mountHoryV17({ document });
-  document.documentElement.dataset.checkniBoot = 'ready';
-  document.getElementById('checkni-boot')?.remove();
   commerce.motionHost.hidden = true;
   commerce.motionControls.hidden = true;
 

@@ -3601,3 +3601,11 @@ renderDock();
 renderBetaLiveSection();
 renderBasketProposalState();
 renderView({ scrollY: scrollYFromState(history.state) });
+
+// Reveal the composed surface only after initial routing and extra panels mount.
+if (document.documentElement.dataset.checkniBoot === 'loading') {
+  requestAnimationFrame(() => {
+    document.documentElement.dataset.checkniBoot = 'ready';
+    document.getElementById('checkni-boot')?.remove();
+  });
+}
