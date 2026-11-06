@@ -173,6 +173,13 @@ export function createProductCard(product, {
         })
       : "время неизвестно";
     source.textContent = `${product.storeName ?? product.retailerDisplayName ?? "Магазин"} · источник · ${observedLabel}`;
+    if (price && Number.isFinite(observed.getTime())) {
+      const stamp = document.createElement("time");
+      stamp.className = "product-observed-at";
+      stamp.dateTime = observed.toISOString();
+      stamp.textContent = `Цена от ${observedLabel}`;
+      price.append(stamp);
+    }
   }
 
   const button = document.createElement("button");
