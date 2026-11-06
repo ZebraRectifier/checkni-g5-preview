@@ -1,3 +1,4 @@
+import { publicDataUrl } from './publicDataUrl.mjs';
 import{CATALOG_SEARCH_PUBLISHABLE_KEY}from'./catalogGatewayPort.mjs';
 import{readBoundedJsonResponse}from'./retailCatalogPort.mjs';
 import{createAddressRecovery,directoryAddressCandidates}from'./addressRecovery.mjs';
@@ -23,7 +24,7 @@ export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
   const port={
     async regionalDirectory(region){
       if(!regionalDirectories.has(region))throw Error('directory_invalid_region');
-      const url=new URL(`../data/nearby-regions/${region}.json`,import.meta.url);
+      const url=publicDataUrl(`nearby-regions/${region}.json`);
       const response=await fetchImpl(url,{credentials:'omit',signal:AbortSignal.timeout(10000)});
       if(!response.ok)throw Error('directory_unavailable');
       const data=await readBoundedJsonResponse(response,8*1024*1024);
@@ -37,7 +38,7 @@ export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
     async directory(){
       if(cached)return cached;
       if(!pending)pending=(async()=>{try{
-        const r=await fetchImpl(new URL('../data/nearbyGroceryStores.json',import.meta.url),{credentials:'omit',signal:AbortSignal.timeout(10000)});
+        const r=await fetchImpl(publicDataUrl('nearbyGroceryStores.json'),{credentials:'omit',signal:AbortSignal.timeout(10000)});
         if(!r.ok)throw Error('directory_unavailable');const d=await readBoundedJsonResponse(r,8*1024*1024);
         if(d?.schemaVersion!==1||d.region!=='moscow-and-oblast'||d.exhaustive!==false||d.priceEvidence!==false
           ||!Array.isArray(d.stores)||d.stores.length>25000||!Number.isFinite(Date.parse(d.observedAt)))throw Error('directory_invalid');

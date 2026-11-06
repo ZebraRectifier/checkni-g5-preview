@@ -1,3 +1,4 @@
+import { publicDataUrl } from '../ports/publicDataUrl.mjs';
 import { currentOfficialProducts,validOfficialSnapshot } from '../observations/okeyOfficialPromotions.mjs';
 import { currentPublishedProducts,validPublishedSnapshot } from '../observations/okeyPublishedPromotions.mjs';
 import { readBoundedJsonResponse } from '../ports/retailCatalogPort.mjs';
@@ -38,7 +39,7 @@ export function createOkeyOfficialCatalog({fetchImpl=globalThis.fetch}={}) {
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),5000);
     try {
-      const response=await fetchImpl(new URL('../data/'+file,import.meta.url),{cache:'no-store',signal:controller.signal});
+      const response=await fetchImpl(publicDataUrl(file),{cache:'no-store',signal:controller.signal});
       if(!response.ok)throw Error('unavailable');
       const value=await readBoundedJsonResponse(response,262_144);
       if(value===null)throw Error('unavailable');
