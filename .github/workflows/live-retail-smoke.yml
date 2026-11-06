@@ -378,7 +378,7 @@ jobs:
               const text = await card.innerText();
               assert(/\d[\d\s]*,\d{2} ₽/u.test(text),"GLOBUS exact-address card must expose a positive RUB observation");
               assert(text.includes("Обычная цена без карты"),"GLOBUS loyalty discount must not masquerade as the no-card price");
-              assert(await card.getByRole("button").isDisabled(),"GLOBUS observations remain display-only");
+              assert(await card.locator(".add-button").isDisabled(),"GLOBUS observations remain display-only");
               assert(await page.locator('#product-grid [data-product-id^="retail:globus:"]:not([data-product-id^="retail:globus:globus-store-'+code+':"])').count()===0,"A previous address leaked into the new catalog");
               await page.reload({waitUntil:"domcontentloaded"});
               await page.waitForFunction(code => document.querySelector("#globus-store-address")?.value===code,code,{timeout:15000});
@@ -663,7 +663,7 @@ jobs:
               );
             }
 
-            const addButton = card.getByRole("button");
+            const addButton = card.locator(".add-button");
             assert(
               await addButton.isDisabled(),
               "Display-only Lenta observation must not enter the comparison basket"
@@ -794,7 +794,7 @@ jobs:
               "Official Magnit product image did not load"
             );
             assert(
-              await magnitCard.getByRole("button").isDisabled(),
+              await magnitCard.locator(".add-button").isDisabled(),
               "Display-only Magnit observation must not enter the comparison basket"
             );
 
@@ -832,7 +832,7 @@ jobs:
               .filter(Boolean);
             const daCards = page.locator('#product-grid [data-product-id^="retail:da:da-public-promo:"]');
             if (expectedDaRows.length === 0) {
-              await page.locator("#empty-search-copy").filter({ hasText: /сейчас нет товаров/ })
+              await page.locator("#empty-search").getByRole("heading", { name: "Действующих акций сейчас нет", exact: true })
                 .waitFor({ state: "visible", timeout: 15000 });
               assert(await daCards.count() === 0,
                 "Expired or unproven DA observations must not become current product cards");
@@ -941,7 +941,7 @@ jobs:
                 "Published Auchan card lost Moscow promo/source provenance"
               );
               assert(
-                await auchanCard.getByRole("button").isDisabled(),
+                await auchanCard.locator(".add-button").isDisabled(),
                 "Display-only Auchan promo observation must not enter the comparison basket"
               );
             } else {

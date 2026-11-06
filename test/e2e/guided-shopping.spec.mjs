@@ -5,6 +5,45 @@ import { resolveGlobusMoscowRegionStore } from '../../src/data/globusMoscowRegio
 // Controlled transport fixtures prove the complete interaction and arithmetic,
 // not live prices. The separate manual preview uses the real catalogue.
 const submit = async (page, text) => { await openHory(page); await page.locator('#basket-proposal-input').fill(text); await page.locator('#basket-proposal-submit').click(); };
+test('city-only intake preserves household and a mixed pork restriction', async ({ page, context }) => {
+  const scopes = [];
+  await context.route('**/*', route => ['127.0.0.1', 'localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort());
+  await page.route('**/rest/v1/retail_catalog_categories**', route => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/retail_catalog_items**', route => {
+    const params = new URL(route.request().url()).searchParams;
+    if (params.has('name')) scopes.push(params.get('store_id'));
+    return route.fulfill({ json: products.map(row => ({ ...row,
+      name: row.source_product_id === 'mince' ? 'Фарш свиной' : row.name,
+      observed_at: new Date().toISOString() })) });
+  });
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  const status = page.locator('#basket-proposal-status');
+  await submit(page, 'Нужны недорогие продукты на 4 человек на 7 дней');
+  await expect(status).toContainText('Где закупаемся');
+  await submit(page, 'Москва');
+  await expect(status).toContainText('для 4 человек, на 7 дн');
+  await submit(page, 'Без свинины, что посоветуешь вместо неё?');
+  await expect(status).toContainText('приблизительный ориентир');
+  await expect(status).not.toContainText('непонятое ограничение');
+  await closeHory(page);
+  await selectStore(page);
+  scopes.length = 0;
+  await submit(page, 'Подобрать товары и цены');
+  const commerce = page.locator('#hori-shopping-results');
+  await expect(commerce.getByRole('table')).toBeVisible();
+  await expect(commerce).toContainText('Фарш Говяжий');
+  await expect(commerce).not.toContainText('Фарш свиной');
+  expect(scopes.length).toBeGreaterThan(0);
+  expect(new Set(scopes)).toEqual(new Set(['eq.globus-store-5011']));
+  await status.getByRole('button', { name: /Добавить (найденное|показанное)/u }).click();
+  await expect(status).toContainText('Корзина собрана');
+  const basket = await page.evaluate(() => JSON.parse(localStorage.getItem('checkni.surface.basket.v1')));
+  expect(basket.length).toBeGreaterThan(0);
+  expect(basket.every(row => row.id.startsWith('retail:globus:globus-store-5011:'))).toBe(true);
+  expect(basket.some(row => row.id.endsWith(':mince'))).toBe(false);
+  // 4 people × 7 days × 200 ml, rounded up to whole one-litre packages.
+  expect(basket.find(row => row.id.endsWith(':milk')).quantity).toBe(6);
+});
 const products = [
   ['mayo', 'Майонез на перепелином яйце', '400 мл', 12799],
   ['yogurt', 'Йогурт греческий', '250 г', 8799], ['porridge', 'Каша яблоко-корица', '60 г', 9799],
