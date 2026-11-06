@@ -102,7 +102,9 @@ test('saved 12-minute catalogue prices expire at original hour; manual fresh ret
   state.catalogAt = new Date(START + 48 * 60000 + 1).toISOString();
   await page.locator('#compare-basket').click(); await expect(result).toContainText('446,00 ₽');
   expect(counts.exactReads).toBe(reads + 1);
-  await page.reload(); await openBasket(page); await expect(page.locator('.basket-summary')).toContainText('3 шт.');
+  await page.reload();
+  // A reload composes its first visible frame; advance the deliberately paused clock.
+  await page.clock.runFor(32); await openBasket(page); await expect(page.locator('.basket-summary')).toContainText('3 шт.');
   await expect(page.getByLabel('Результат по наблюдаемым ценам')).toHaveCount(0);
 });
 
