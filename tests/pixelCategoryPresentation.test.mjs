@@ -35,18 +35,19 @@ test('sorting filters malformed entries without inventing or deduplicating valid
   for (const input of [null, undefined, {}, 'Молоко']) assert.deepEqual(sortPixelCategories(input), []);
 });
 
-test('known category illustrations are bundled assets, while ready meals and brands stay unillustrated', async () => {
+test('known category illustrations use bundled assets', async () => {
   for (const [name, file] of [
     ['Молоко, сыр и яйца', 'cat-dairy.png'], ['Фрукты, ягоды и овощи', 'cat-veg.png'],
     ['Рыба и морепродукты', 'cat-meat.png'], ['Хлеб, выпечка', 'cat-bread.png'],
-    ['Чай, кофе', 'cat-drinks.png'], ['Крупы и макароны', 'cat-grocery.png']
+    ['Чай, кофе', 'cat-drinks.png'], ['Крупы и макароны', 'cat-grocery.png'],
+    ['Наши бренды', 'cat-brands.svg'], ['Готовая еда', 'cat-ready-food.svg']
   ]) {
     const row = category(name, 1, { imageUrl: 'https://untrusted.test/image.png' });
     const image = pixelCategoryImage(row);
     assert.equal(image, new URL(`../src/img/${file}`, import.meta.url).href, name);
     await access(new URL(image));
   }
-  for (const name of ['Наши бренды', 'Готовая еда', 'Вся готовая еда', 'Кулинария', 'Для дома', 'Хлебопечки', 'Мясорубки', 'МолочноеXYZ']) {
+  for (const name of ['Для дома', 'Хлебопечки', 'Мясорубки', 'МолочноеXYZ']) {
     assert.equal(pixelCategoryImage(category(name, 1)), null, name);
   }
   for (const row of [null, undefined, {}, [], { name: 12 }]) assert.equal(pixelCategoryImage(row), null);
