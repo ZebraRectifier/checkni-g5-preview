@@ -37,7 +37,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   const radiusLabel=el('label','Радиус по прямой');radiusLabel.htmlFor=radius.id;
   const connected=el('input');connected.type='checkbox';connected.id='nearby-connected-only';connected.checked=true;
   const connectedLabel=el('label');connectedLabel.append(connected,document.createTextNode(' Только с подключённым каталогом'));
-  const status=el('p','Укажи адрес, разреши геолокацию или выбери точку на карте.');status.id='nearby-status';status.setAttribute('role','status');
+  const status=el('p');status.id='nearby-status';status.setAttribute('role','status');
   const candidates=el('div');candidates.id='nearby-address-candidates';
   const selection=el('div');selection.id='nearby-selected-store';selection.hidden=true;
   const results=el('div');results.id='nearby-results';
@@ -48,7 +48,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     const chip=button(name,()=>{network=id;for(const b of networks.children)b.setAttribute('aria-pressed',String(b===chip));limit=5;void renderResults();});
     chip.setAttribute('aria-pressed',String(id==='all'));networks.append(chip);
   }
-  const filters=el('div');filters.className='nearby-actions';filters.append(radiusLabel,radius,connectedLabel);
+  const filters=el('div');filters.className='nearby-actions nearby-result-filters';filters.append(radiusLabel,radius,connectedLabel);
   const directoryDate=el('p');directoryDate.hidden=true;
   const note=el('details');const noteTitle=el('summary','Откуда магазины и что известно о ценах');
   const noteCopy=el('p','Это датированный справочник карты, а не полный список работающих магазинов. Расстояния — по прямой. Совпадение адреса с каталогом не подтверждает свежесть цен, наличие или доставку. Геопозиция хранится только в памяти вкладки и исчезает после перезагрузки.');
