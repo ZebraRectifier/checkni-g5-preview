@@ -77,12 +77,15 @@ test('cold stores home and its local chain filter make no catalogue, global-sear
  await expect(page.locator('#pixel-hory-dialog')).toBeHidden();
  await expect(page.locator('#retail-store-card')).toBeVisible();
  await expect(page.locator('#retail-store-card-magnit')).toBeVisible();
+ await expect(page.locator('#nearby-address')).toBeVisible();
+ await expect(page.locator('#pixel-store-search')).toBeHidden();
+ await page.getByText('Поиск по сетям и адресам', {exact:true}).click();
  await page.locator('#pixel-store-search').fill('Магнит');
  await expect(page.locator('#retail-store-card-magnit')).toBeVisible();
  await expect(page.locator('#retail-store-card')).toBeHidden();
  await page.locator('#pixel-store-search').fill('такой сети нет');
  await expect(page.locator('#retail-store-grid .retail-store-card:visible')).toHaveCount(0);
- await page.locator('#pixel-store-search').fill('');
+ await page.getByText('Поиск по сетям и адресам', {exact:true}).click();
  await expect(page.locator('#retail-store-card')).toBeVisible();
  // Allow an accidental debounce to surface: this filter is entirely local.
  await page.waitForTimeout(350);
@@ -93,6 +96,7 @@ test('cold stores home and its local chain filter make no catalogue, global-sear
 test('city search exposes only selectable exact addresses and opens their own catalogues',async({page})=>{
  test.setTimeout(75_000);
  const calls=await setup(page);
+ if (await page.locator(".pixel-directory-search:not([open])").count()) await page.getByText("Поиск по сетям и адресам", {exact:true}).click();
  const search=page.locator('#pixel-store-search');
  await search.fill('Пушкино');
  await expect(page.locator('#retail-store-grid .retail-store-card:visible')).toHaveCount(2);

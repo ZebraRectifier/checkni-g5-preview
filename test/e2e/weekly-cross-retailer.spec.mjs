@@ -17,6 +17,7 @@ test('weekly alternatives keep delivery separate, require confirmation, persist,
       .slice(0,Number(q.get('limit')??40)).map(p=>({...p,observed_at:at}))});
   });
   await page.goto('/?comparison=observed&catalog=retail#shop');
+  if (await page.locator(".pixel-directory-search:not([open])").count()) await page.getByText("Поиск по сетям и адресам", {exact:true}).click();
   await page.locator('#pixel-store-search').fill('Балашиха Свердлова 26');
   await page.locator('#pixel-store-address-results [data-store-id="503695"]').click();
   await expect(page.locator('#pixel-storefront')).toBeVisible();

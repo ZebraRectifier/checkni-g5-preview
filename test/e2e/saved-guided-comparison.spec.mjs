@@ -20,6 +20,7 @@ test('saved basket compares its selected catalogues after reload and quantity/re
  });
  await page.goto('/?comparison=observed&catalog=retail#shop');
  const address=await page.locator('#magnit-store-address option[value="503695"]').textContent();
+ if (await page.locator(".pixel-directory-search:not([open])").count()) await page.getByText("Поиск по сетям и адресам", {exact:true}).click();
  await page.locator('#pixel-store-search').fill(address.replace(/^(?:Москва|МО) · /u,''));
  await page.locator('#pixel-store-address-results [data-store-id="503695"]').click();
  await expect(page.locator('#pixel-storefront')).toBeVisible();

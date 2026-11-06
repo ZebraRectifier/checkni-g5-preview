@@ -730,3 +730,19 @@ body.pixel-workspace .pixel-all-categories .pixel-category-fallback::before {
 body.pixel-workspace .nearby-location-actions button {
   flex: 0 1 auto;
 }
+
+body.pixel-workspace .pixel-directory-search { margin-block: 0 12px; }
+body.pixel-workspace .pixel-directory-search > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  cursor: pointer;
+}
+body.pixel-workspace .pixel-directory-search > summary::after {
+  content: '⌄';
+  margin-inline-start: 8px;
+  color: var(--accent);
+}
+body.pixel-workspace .pixel-directory-search[open] > summary { margin-bottom: 8px; }
+body.pixel-workspace .pixel-directory-search[open] > summary::after { content: '⌃'; }
