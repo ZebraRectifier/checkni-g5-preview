@@ -23,7 +23,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   const title=el('h3','Где ищем продукты?');
   const input=el('input');input.id='nearby-address';input.type='search';input.maxLength=160;
   input.placeholder='Город, улица или станция';
-  const label=el('label','Адрес в Москве или Московской области');label.htmlFor=input.id;
+  const label=el('label','Город, улица или станция');label.htmlFor=input.id;
   const consent=el('small','По кнопке «Найти адрес» запрос уйдёт в Photon / OpenStreetMap через сервер CHECKNI. В AI и историю адрес не передаётся.');
   const addressButton=button('Найти адрес',()=>searchAddress());addressButton.id='nearby-address-search';
   const locate=button('Определить моё место',()=>{version++;geo.request();});locate.id='nearby-locate';
