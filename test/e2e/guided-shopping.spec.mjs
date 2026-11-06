@@ -5,6 +5,18 @@ import { resolveGlobusMoscowRegionStore } from '../../src/data/globusMoscowRegio
 // Controlled transport fixtures prove the complete interaction and arithmetic,
 // not live prices. The separate manual preview uses the real catalogue.
 const submit = async (page, text) => { await openHory(page); await page.locator('#basket-proposal-input').fill(text); await page.locator('#basket-proposal-submit').click(); };
+test('city-only intake preserves household and a mixed pork restriction', async ({ page, context }) => {
+  await context.route('**/*', route => ['127.0.0.1', 'localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort());
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  const status = page.locator('#basket-proposal-status');
+  await submit(page, 'Нужны недорогие продукты на 4 человек на 7 дней');
+  await expect(status).toContainText('Где закупаемся');
+  await submit(page, 'Москва');
+  await expect(status).toContainText('для 4 человек, на 7 дн');
+  await submit(page, 'Без свинины, что посоветуешь вместо неё?');
+  await expect(status).toContainText('приблизительный ориентир');
+  await expect(status).not.toContainText('непонятое ограничение');
+});
 const products = [
   ['mayo', 'Майонез на перепелином яйце', '400 мл', 12799],
   ['yogurt', 'Йогурт греческий', '250 г', 8799], ['porridge', 'Каша яблоко-корица', '60 г', 9799],

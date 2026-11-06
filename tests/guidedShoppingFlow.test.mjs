@@ -11,6 +11,25 @@ import { guidedGroupMatches } from '../src/intelligence/guidedShoppingPlan.mjs';
 import { catalogPurchaseUnit } from '../src/core/catalogDraft.mjs';
 const now = Date.now();
 
+test('city intake retains household and mixed pork refusal without using a default store', async () => {
+  let searches = 0;
+  const { flow, basket } = setup({ searchGuidedCatalog: async () => { searches++; return { kind: 'unavailable' }; } });
+  await flow.run('Нужны недорогие продукты на 4 человек на 7 дней');
+  assert.equal(flow.getState().presentation.locationRequested, true);
+  await flow.run('Москва');
+  assert.match(flow.getState().presentation.message, /для 4 человек, на 7 дн/u);
+  assert.doesNotMatch(flow.getState().presentation.message, /Где закупаемся/u);
+  await flow.run('Без свинины, что посоветуешь вместо неё?');
+  const memory = flow.getConversation();
+  assert.equal(memory.facts.peopleCount.value, 4);
+  assert.equal(memory.facts.shoppingDays.value, 7);
+  assert.ok(memory.rejected.pork);
+  assert.equal(memory.facts.unresolvedConstraints, undefined);
+  assert.match(flow.getState().presentation.message, /приблизительный ориентир/u);
+  assert.equal(searches, 0);
+  assert.deepEqual(basket.getSnapshot(), []);
+});
+
 test('changing cooking preference after review rebuilds the draft before confirmation',async()=>{
  const {flow,basket}=setup();
  await flow.run('Нужна еда на 3 дня для троих');await flow.run('Ну собери');

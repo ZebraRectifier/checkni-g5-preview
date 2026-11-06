@@ -2598,7 +2598,11 @@ async function handleBasketProposal() {
   const submittedText = elements.proposalInput.value;
   const localGoal=submittedText.split(/[,.;]?\s+(?:я\s+живу|мой адрес)(?=[:\s])/iu)[0];
   if(isGuidedEntryRequest(localGoal))nearbyBuildGoal=localGoal;
-  const nearbyIntent=nearbyShopping&&nearbyShoppingIntent(submittedText,basketProposalFlow.getState().presentation?.locationRequested===true);
+  const expectsLocation=basketProposalFlow.getState().presentation?.locationRequested===true;
+  // A city-only intake answer is an approximate preference, not an agreed
+  // address. Preserve the conversation; require a chosen store before loading.
+  const cityIntake=expectsLocation&&/^(?:г\.?\s*|город\s+)?москва[.!?]?$/iu.test(submittedText.trim());
+  const nearbyIntent=!cityIntake&&nearbyShopping&&nearbyShoppingIntent(submittedText,expectsLocation);
   if(nearbyIntent){
     if(nearbyIntent.preferenceText){
       if(!basketProposalFlow.rememberLocationConstraint(nearbyIntent.preferenceText)){
