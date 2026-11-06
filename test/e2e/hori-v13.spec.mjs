@@ -56,6 +56,9 @@ test('approved PixelCharacter has stable stores-first and storefront visual base
   const condition=card.locator('.product-price-unit');
   await expect(condition).toBeVisible();
   await expect(condition).toContainText('без карты');
+  const observedAt = card.locator('time.product-observed-at');
+  await expect(observedAt).toBeVisible();
+  await expect(observedAt).toHaveAttribute('datetime', new Date(products[0].observed_at).toISOString());
   // Provenance is an intentional disclosure. Exercise its actual summary so
   // the date and source are available to a user, not merely present in the DOM.
   const details=card.locator('details.pixel-product-details');
