@@ -70,10 +70,12 @@ const basketValue = page => page.evaluate(() => localStorage.getItem('checkni.su
 test('cold stores include existing city catalogues and fold spelling without a data request', async ({ page }) => {
   const calls = await setup(page);
   for (const [query, id] of [['окей', 'okey'], ["o'key", 'okey'], ['пятерочка', 'pyaterochka'], ['Перекресток', 'perekrestok']]) {
+    if (await page.locator(".pixel-directory-search:not([open])").count()) await page.getByText("Поиск по сетям и адресам", {exact:true}).click();
     await page.locator('#pixel-store-search').fill(query);
     await expect(page.locator('.retail-store-card:visible')).toHaveCount(1);
     await expect(page.locator('#retail-store-card-' + id)).toBeVisible();
   }
+  if (await page.locator(".pixel-directory-search:not([open])").count()) await page.getByText("Поиск по сетям и адресам", {exact:true}).click();
   await page.locator('#pixel-store-search').fill('');
   await expect(page.locator('#retail-store-card-okey')).toContainText('цена в конкретном магазине не подтверждена');
   for (const id of ['okey', 'pyaterochka']) {

@@ -50,6 +50,7 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
     await page.goto(base+`releases/${id}/index.html?comparison=observed&catalog=retail#shop`);
     console.log('Opened immutable preview');
     expect(errors).toEqual([]);
+    if (await page.locator(".pixel-directory-search:not([open])").count()) await page.getByText("Поиск по сетям и адресам", {exact:true}).click();
     await page.locator('#pixel-store-search').fill('Берёзовая 17',{timeout:10000});
     await page.locator('#pixel-store-address-results [data-store-id="777312"]').click({timeout:10000});
     console.log('Selected fixture address');

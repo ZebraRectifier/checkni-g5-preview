@@ -55,8 +55,12 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
       scope: 'Акции Москвы · цена в конкретном магазине не подтверждена' }
   ];
   const publishedButtons = new Map();
-  home.append(homeTitle, storeSearch, storeStatus, addressChooser); if (stores) home.append(stores);
-  home.append(addressResults);
+  const directorySearch = node('details', 'pixel-directory-search');
+  const directorySummary = node('summary', '', 'Поиск по сетям и адресам');
+  directorySearch.append(directorySummary, storeSearch, storeStatus, addressResults);
+  home.append(homeTitle, directorySearch, addressChooser);
+  if (stores) home.append(stores);
+
 
   const storefront = node('section', 'pixel-storefront');
   storefront.id = 'pixel-storefront'; storefront.hidden = true;
@@ -276,7 +280,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     if (nearby) {
       const destination = state.stage === 'store' ? detailsContent : home;
       if (nearby.parentElement !== destination) {
-        if (destination === home) home.insertBefore(nearby, storeSearch); else destination.append(nearby);
+        if (destination === home) home.insertBefore(nearby, directorySearch); else destination.append(nearby);
         const extra = nearby.querySelector('.nearby-extra');
         if (extra) extra.open = destination !== home;
       }
@@ -439,6 +443,11 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   }
   storeSearch.addEventListener('submit', event => { event.preventDefault(); filterStores(); });
   searchInput.addEventListener('input', filterStores);
+  directorySearch.addEventListener('toggle', () => {
+    if (directorySearch.open || !searchInput.value) return;
+    searchInput.value = '';
+    filterStores();
+  });
   if (stores) new view.MutationObserver(filterStores).observe(stores, { childList: true });
 
   function applyState(detail = {}) {
