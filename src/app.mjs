@@ -1141,7 +1141,6 @@ function renderRetailBrowser() {
     const icon = document.createElement('span');
     icon.className = 'pixel-category-image pixel-category-fallback';
     icon.setAttribute('aria-hidden', 'true');
-    icon.textContent = '▦';
     const label = document.createElement('strong');
     label.textContent = 'Все категории';
     all.append(icon, label);
