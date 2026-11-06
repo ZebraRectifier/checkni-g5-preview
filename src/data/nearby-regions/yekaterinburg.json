@@ -5634,6 +5634,21 @@
       "address": "Екатеринбург, Рощинская улица, 46/2",
       "observedAt": "2026-11-06T10:38:27+00:00",
       "verification": "map-observed"
+    },
+    {
+      "id": "official:vkusvill:5771366",
+      "retailerId": "vkusvill",
+      "sourceStoreId": "9515",
+      "name": "ВкусВилл",
+      "city": "Екатеринбург",
+      "lat": 56.81471,
+      "lon": 60.64527,
+      "sourceUrl": "https://ekb.vkusvill.ru/shops/?shop_id=5771366",
+      "sourceType": "official-directory",
+      "coordinateEvidence": "official-map-pin",
+      "address": "Екатеринбург, парк Маяковского",
+      "observedAt": "2026-11-06T10:48:32Z",
+      "verification": "official-listed"
     }
   ],
   "sources": [
