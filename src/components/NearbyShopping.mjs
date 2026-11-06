@@ -138,6 +138,9 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     candidates.scrollIntoView({block:'center'});
   }
   const locationChanged=s=>{
+    const showMapRecovery=s.status==='denied'||s.status==='error';
+    if(showMapRecovery)status.after(manual);
+    else if(manual.parentElement!==actions)actions.insertBefore(manual,clear);
     version++;
     if(s.status==='loading'){status.textContent='Жду разрешение браузера на геолокацию…';return;}
     if(s.position && s.status!=='loading' && s.status!=='denied' && s.status!=='error'){clearSelection();position=s.position;pointName=pendingPlaceLabel??(s.position.source==='manual'?'Точка на карте':`Моё место · точность ≈${Math.round(s.position.accuracyMeters)} м`);pendingPlaceLabel=null;limit=5;
