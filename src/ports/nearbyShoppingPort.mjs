@@ -2,6 +2,7 @@ import{CATALOG_SEARCH_PUBLISHABLE_KEY}from'./catalogGatewayPort.mjs';
 import{readBoundedJsonResponse}from'./retailCatalogPort.mjs';
 import{createAddressRecovery,directoryAddressCandidates}from'./addressRecovery.mjs';
 export const NEARBY_ADDRESS_ENDPOINT='https://cxpneczhczashanbetgj.supabase.co/functions/v1/nearby-address';
+const regionalDirectories=new Set(['saint-petersburg','kazan','yekaterinburg','novosibirsk','nizhny-novgorod']);
 export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
   let cached=null,pending=null;
   const address=createAddressRecovery({request:async query=>{
@@ -20,6 +21,18 @@ export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
     }catch{return{kind:'unavailable',candidates:[],retryable:true};}
   }});
   const port={
+    async regionalDirectory(region){
+      if(!regionalDirectories.has(region))throw Error('directory_invalid_region');
+      const url=new URL(`../data/nearby-regions/${region}.json`,import.meta.url);
+      const response=await fetchImpl(url,{credentials:'omit',signal:AbortSignal.timeout(10000)});
+      if(!response.ok)throw Error('directory_unavailable');
+      const data=await readBoundedJsonResponse(response,8*1024*1024);
+      if(data?.schemaVersion!==1||data.region!==region||data.exhaustive!==false||data.priceEvidence!==false
+        ||!Array.isArray(data.stores)||data.stores.length>25000||!Number.isFinite(Date.parse(data.observedAt))
+        ||data.stores.some(store=>!store||store.catalogBinding!=null))throw Error('directory_invalid');
+      return data;
+    },
+
     clearAddressMemory(){address.clear();},
     async directory(){
       if(cached)return cached;

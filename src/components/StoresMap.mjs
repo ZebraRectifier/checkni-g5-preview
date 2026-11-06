@@ -99,6 +99,7 @@ export function createStoresSection({
   selectedScope = null,
   onStoreSelect,
   onEditStore,
+  onBackToNearby,
   loadBoundMagnitLocations,
   locationController,
   geolocationOptions = {}
@@ -111,7 +112,7 @@ export function createStoresSection({
     textEl("p", "stores-copy", "Выберите адрес для корзины. Точки «Глобуса» взяты из официального справочника; "
       + "точка на карте приблизительная у магазинов со знаком ≈. Координаты не подтверждают свежую цену или наличие."));
 
-  let center = { ...DEFAULT_CENTER }, zoom = DEFAULT_ZOOM, manualPicking = false;
+  let center = { ...DEFAULT_CENTER }, zoom = DEFAULT_ZOOM, manualPicking = false, nearbyMode = false;
   let geoState = { status: "idle", position: null };
   let currentScope = selectedScope;
   let mapStores = [...observedStores];
@@ -133,6 +134,10 @@ export function createStoresSection({
     map.classList.remove("stores-map-picking"); geo.clear();
   });
   clearButton.id = "stores-clear-location";
+  if (onBackToNearby) controls.append(button("К списку магазинов", () => {
+    setNearbyMode(false);
+    onBackToNearby();
+  }));
   controls.append(geoButton, manualButton, clearButton);
   const geoStatus = textEl("p", "stores-status", "");
   geoStatus.id = "stores-location-status"; geoStatus.setAttribute("role", "status");
@@ -166,6 +171,7 @@ export function createStoresSection({
   ];
   mapControls.append(networkLabel, networkFilter, zoomIn, zoomOut,
     ...panButtons, ownCenter,
+    button("Искать здесь", () => geo.setManual(center)),
     button("Показать магазины", () => { center = { ...DEFAULT_CENTER }; zoom = DEFAULT_ZOOM; renderMap(); }));
   ["Запад", "Север", "Юг", "Восток"].forEach((label, i) =>
     panButtons[i].setAttribute("aria-label", "Карта: " + label));
@@ -187,7 +193,7 @@ export function createStoresSection({
     if (event.target !== map) return;
     const shifts = { ArrowLeft: [-180, 0], ArrowRight: [180, 0], ArrowUp: [0, -180], ArrowDown: [0, 180] };
     if (shifts[event.key]) { event.preventDefault(); redrawCenter(shiftMapCenter(center, ...shifts[event.key], zoom)); }
-    else if (manualPicking && event.key === "Enter") { event.preventDefault(); geo.setManual(center); }
+    else if ((manualPicking || nearbyMode) && event.key === "Enter") { event.preventDefault(); geo.setManual(center); }
     else if (event.key === "Escape" && manualPicking) {
       manualPicking = false; manualButton.setAttribute("aria-pressed", "false");
       map.classList.remove("stores-map-picking"); renderGeoStatus(); renderMap(); manualButton.focus();
@@ -196,6 +202,8 @@ export function createStoresSection({
   const attribution = textEl("p", "stores-map-attribution", "Карта: ");
   attribution.append(externalLink("© участники OpenStreetMap", "https://www.openstreetmap.org/copyright"));
   const selected = textEl("div", "stores-selected", "");
+  const pinCard = textEl("div", "stores-selected", "");
+  pinCard.hidden = true;
   selected.id = "stores-selected-addresses"; selected.setAttribute("aria-label", "Адреса на карте для сравнения");
   const list = textEl("ul", "stores-list", "");
   list.id = "stores-known-locations";
@@ -244,9 +252,10 @@ export function createStoresSection({
       if (!pin.inside) continue;
       const own = pin.id === "user-location";
       const marker = own ? textEl("span", "stores-user-pin", "")
-        : manualPicking || canSelect(pin) ? button("", event => {
+        : nearbyMode || manualPicking || canSelect(pin) ? button("", event => {
           event.stopPropagation();
           if (manualPicking) geo.setManual({ lat: pin.lat, lon: pin.lon });
+          else if (nearbyMode) showPin(pin);
           else chooseStore(pin);
         }, "stores-pin")
           : externalLink("", pointMapUrl(pin));
@@ -256,6 +265,7 @@ export function createStoresSection({
         marker.classList.toggle("stores-pin-selected", Boolean(isSelected(pin)));
         marker.setAttribute("aria-label", manualPicking
           ? `Указать ориентир: ${pin.name}, ${pin.address}`
+          : nearbyMode ? `Открыть: ${pin.name}, ${pin.address}`
           : canSelect(pin) ? `Выбрать для корзины: ${pin.name}, ${pin.address}`
             : `${pin.name}, ${pin.address}, открыть точку на OpenStreetMap`);
         marker.title = `${pin.name} · ${pin.address} · ${coordinateNote(pin)}`;
@@ -299,6 +309,7 @@ export function createStoresSection({
       const row = textEl("li", null, ""); row.dataset.storeLocationId = store.id;
       row.append(textEl("strong", null, store.name), textEl("span", "stores-list-note", store.address),
         textEl("span", "stores-list-note", coordinateNote(store) + distanceNote(geoState.position, store)),
+        externalLink("Маршрут", "https://yandex.ru/maps/?rtext=~" + encodeURIComponent(store.lat + "," + store.lon) + "&rtt=auto"),
         externalLink("Открыть адрес на карте", storeAddressMapUrl(store)));
       if (canSelect(store)) {
         const choose = button(isSelected(store) ? "Выбран для корзины" : "Выбрать для корзины", () => chooseStore(store));
@@ -342,8 +353,26 @@ export function createStoresSection({
   section.updateSelection = scope => {
     currentScope = scope; renderSelected(); renderList(); renderMap();
   };
-  section.append(controls, geoStatus, privacy, mapControls, map, attribution, tileStatus, selected,
-    directory, createMagnitStoreDirectory());
+  const magnitDirectory = createMagnitStoreDirectory();
+  function showPin(pin) {
+    pinCard.replaceChildren(textEl("strong", null, pin.name), textEl("p", null, pin.address),
+      externalLink("Маршрут", "https://yandex.ru/maps/?rtext=~" + encodeURIComponent(pin.lat + "," + pin.lon) + "&rtt=auto"));
+    if (canSelect(pin)) pinCard.append(button("Открыть товары", () => chooseStore(pin)));
+    pinCard.hidden = false;
+  }
+  function setNearbyMode(enabled) {
+    nearbyMode = enabled;
+    for (const element of [directory, magnitDirectory, selected]) element.hidden = enabled;
+    pinCard.hidden = true;
+    renderMap();
+  }
+  section.openNearbyMap = () => {
+    setNearbyMode(true);
+    section.scrollIntoView({ block: "start" });
+    map.focus({ preventScroll: true });
+  };
+  section.append(controls, geoStatus, privacy, mapControls, map, attribution, tileStatus, pinCard, selected,
+    directory, magnitDirectory);
   renderGeoStatus(); renderMap(); renderSelected(); renderList();
   if (typeof loadBoundMagnitLocations === "function") {
     let started = false;
