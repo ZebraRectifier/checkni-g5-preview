@@ -925,7 +925,8 @@ function renderRetailStoreButtons() {
     const count = selected
       ? retailBrowserState.rootProductCount
       : definition.defaultProductCount;
-    total.textContent = retailStoreCountCopy(definition, count);
+    total.textContent = definition.requiresPromoValidity
+      ? "Проверить акции" : retailStoreCountCopy(definition, count);
 
     button.append(logo, copy, total);
     button.addEventListener("click", () => {
@@ -1119,7 +1120,7 @@ function renderRetailBrowser() {
       "товара",
       "товаров"
     );
-    count.textContent = category.productCount > 0
+    count.textContent = definition.requiresPromoValidity ? "Проверить акции" : category.productCount > 0
       ? `${formatCatalogCount(category.productCount)} ${productNoun} · открыть`
       : "Товары не заявлены · проверить раздел";
 
