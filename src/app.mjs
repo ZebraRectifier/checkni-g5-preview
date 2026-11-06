@@ -1138,7 +1138,13 @@ function renderRetailBrowser() {
   if (visibleCategories.length < orderedCategories.length) {
     const all = document.createElement('button');
     all.type = 'button'; all.className = 'retail-category-button pixel-all-categories';
-    all.textContent = 'Все категории';
+    const icon = document.createElement('span');
+    icon.className = 'pixel-category-image pixel-category-fallback';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = '▦';
+    const label = document.createElement('strong');
+    label.textContent = 'Все категории';
+    all.append(icon, label);
     all.addEventListener('click', () => { pixelAllCategories = true; renderRetailBrowser(); });
     elements.retailCategoryGrid.append(all);
   }
