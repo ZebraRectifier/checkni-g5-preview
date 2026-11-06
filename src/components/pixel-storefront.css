@@ -805,3 +805,8 @@ body.pixel-workspace #pixel-store-home .retail-store-logo {
   height: clamp(76px, 9vw, 112px);
   aspect-ratio: auto;
 }
+
+body.pixel-workspace .nearby-home :is(#nearby-address-candidates, #nearby-results):empty {
+  display: none;
+}
+body.pixel-workspace .pixel-directory-search { margin-block-end: 4px; }

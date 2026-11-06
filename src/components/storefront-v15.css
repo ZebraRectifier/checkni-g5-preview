@@ -103,10 +103,6 @@ body.pixel-workspace #pixel-storefront .pixel-product-card .product-body {
     border-radius: 8px;
   }
 
-  body.pixel-workspace #pixel-storefront .pixel-product-card:has(.pixel-product-actions:not(.is-view-only)) .product-photo {
-    height: calc(100% - 42px);
-  }
-
   body.pixel-workspace #pixel-storefront .pixel-product-actions:not(.is-view-only) {
     grid-area: 1 / 1;
     align-self: end;
@@ -135,3 +131,5 @@ body.pixel-workspace #pixel-storefront .pixel-product-card .product-body {
     overflow-wrap: anywhere;
   }
 }
+
+body.pixel-workspace #pixel-storefront .catalog-section { margin-block-start: 8px; }
