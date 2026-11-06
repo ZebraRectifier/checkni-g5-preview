@@ -88,7 +88,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
       for(const row of rows.slice(0,limit)){
         const card=el('article');card.className='nearby-store';
         card.append(el('strong',row.name+' · '+(row.distanceMeters<1000?Math.round(row.distanceMeters)+' м':(row.distanceMeters/1000).toFixed(1)+' км')),
-          el('p',row.address??'Адрес в карте не указан'),el('small',row.catalog?'Каталог этого адреса подключён; цены проверим при подборе.':'Каталог этого адреса пока не подключён. Цены неизвестны.'));
+          el('p',row.address??'Адрес в карте не указан'),el('small',row.catalog?'Каталог этого адреса подключён. Актуальность цен и возможность добавить товар указаны в каталоге.':'Каталог этого адреса пока не подключён. Цены неизвестны.'));
         if(row.catalog){
           const open=button('Открыть товары',()=>choose(row));open.className='nearby-open-catalog';card.append(open);
           card.addEventListener('click',event=>{if(!event.target.closest('button,a'))open.click();});
