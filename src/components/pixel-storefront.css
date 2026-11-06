@@ -783,3 +783,25 @@ body.pixel-workspace #pixel-store-home [data-retailer-id='magnit'] .retail-store
   height: clamp(40px, 6vw, 76px);
   filter: brightness(0) invert(1);
 }
+
+/* Address entry is part of the store screen, with filters revealed with results. */
+body.pixel-workspace #pixel-store-home .nearby-home {
+  margin-block-end: 8px;
+  background: transparent;
+}
+body.pixel-workspace #pixel-store-home .nearby-home #nearby-shopping-panel {
+  background: transparent;
+}
+body.pixel-workspace .nearby-home #nearby-status:empty,
+body.pixel-workspace .nearby-home #nearby-shopping-panel:has(.nearby-network-filters[hidden]) .nearby-result-filters {
+  display: none;
+}
+body.pixel-workspace .nearby-home #nearby-address-search {
+  background: var(--accent-strong);
+  color: white;
+}
+body.pixel-workspace #pixel-store-home .retail-store-logo {
+  min-height: 0;
+  height: clamp(76px, 9vw, 112px);
+  aspect-ratio: auto;
+}
