@@ -96,7 +96,7 @@ body.pixel-workspace .stores-map-frame .stores-map { max-width:none; margin:0; }
 body.pixel-workspace .stores-pin-card { padding:20px; border:1px solid var(--line); background:var(--surface); border-radius:12px; box-shadow:0 8px 24px #28143812; }
 body.pixel-workspace .stores-pin-card strong { display:block; font-size:20px; }
 body.pixel-workspace .stores-pin-card p { color:var(--muted); line-height:1.5; }
-body.pixel-workspace .stores-pin-card button { display:block; width:100%; margin-top:16px; background:var(--accent); color:white; border:0; }
+body.pixel-workspace .stores-pin-card button { display:block; width:100%; margin-top:16px; background:var(--accent-strong); color:white; border:0; }
 body.pixel-workspace .stores-pin-card a { display:inline-flex; align-items:center; min-height:44px; }
 @media(min-width:900px) {
  body.pixel-workspace .stores-map-frame:has(.stores-pin-card:not([hidden])) { grid-template-columns:minmax(0,2fr) minmax(240px,1fr); }
