@@ -175,7 +175,7 @@ export function createProductCard(product, {
     source.textContent = `${product.storeName ?? product.retailerDisplayName ?? "Магазин"} · источник · ${observedLabel}`;
     if (price && Number.isFinite(observed.getTime())) {
       const stamp = document.createElement("time");
-      stamp.className = "product-price-unit";
+      stamp.className = "product-observed-at";
       stamp.dateTime = observed.toISOString();
       stamp.textContent = `Цена от ${observedLabel}`;
       price.append(stamp);
