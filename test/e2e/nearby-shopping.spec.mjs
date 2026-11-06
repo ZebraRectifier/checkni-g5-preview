@@ -26,7 +26,7 @@ test('home address → nearest exact card → own catalogue; location remains vo
   await expect(page.locator('#magnit-store-address')).toHaveValue('699415');
   await page.reload();
   await expect(page.locator('#magnit-store-address')).toHaveValue('699415');
-  await page.locator('.pixel-location').click();
+  await page.locator('.pixel-store-address').click();
   await expect(page.locator('#nearby-address')).toBeVisible();
   await expect(page.locator('#pixel-hory-dialog')).toBeHidden();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
