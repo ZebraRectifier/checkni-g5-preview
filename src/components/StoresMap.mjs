@@ -108,7 +108,7 @@ export function createStoresSection({
   section.className = "future-step stores-section"; section.id = "stores-section";
   section.setAttribute("aria-label", "Магазины, с которыми работает CHECKNI");
   section.append(textEl("p", "eyebrow", "Магазины"),
-    textEl("h2", null, "Магазины и ваше место"),
+    textEl("h2", null, "Магазины на карте"),
     textEl("p", "stores-copy", "Выберите адрес для корзины. Точки «Глобуса» взяты из официального справочника; "
       + "точка на карте приблизительная у магазинов со знаком ≈. Координаты не подтверждают свежую цену или наличие."));
 
@@ -203,6 +203,10 @@ export function createStoresSection({
   attribution.append(externalLink("© участники OpenStreetMap", "https://www.openstreetmap.org/copyright"));
   const selected = textEl("div", "stores-selected", "");
   const pinCard = textEl("div", "stores-selected", "");
+  pinCard.classList.add('stores-pin-card');
+  pinCard.setAttribute('aria-label', 'Выбранный магазин');
+  const mapFrame = textEl('div', 'stores-map-frame', '');
+  mapFrame.append(map, pinCard);
   pinCard.hidden = true;
   selected.id = "stores-selected-addresses"; selected.setAttribute("aria-label", "Адреса на карте для сравнения");
   const list = textEl("ul", "stores-list", "");
@@ -375,7 +379,7 @@ export function createStoresSection({
   mapInfo.className = 'stores-map-info';
   mapInfo.append(textEl('summary', null, 'О карте и данных'), section.querySelector('.stores-copy'), privacy);
   section.querySelector('.eyebrow')?.remove();
-  section.append(controls, geoStatus, mapControls, map, attribution, tileStatus, pinCard, mapInfo, selected,
+  section.append(controls, geoStatus, mapControls, mapFrame, attribution, tileStatus, mapInfo, selected,
     directory, magnitDirectory);
   renderGeoStatus(); renderMap(); renderSelected(); renderList();
   if (typeof loadBoundMagnitLocations === "function") {
