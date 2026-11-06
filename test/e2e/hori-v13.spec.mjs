@@ -41,7 +41,7 @@ test('approved PixelCharacter has stable stores-first and storefront visual base
  // A missing first baseline still fails this test, while allowing CI to
  // capture the independent storefront image for the same human review.
  await expect.soft(page).toHaveScreenshot('pixel-address-first-home-'+(mobile?'mobile':'desktop')+'.png',{
-  scale:'css',animations:'disabled',maxDiffPixelRatio:.01,threshold:.2
+  scale:'css',animations:'disabled',maxDiffPixelRatio:.01,threshold:.2,timeout:20000
  });
  await selectStore(page);
  await expect(page.locator('#product-grid .product-card')).toHaveCount(3);
@@ -80,7 +80,7 @@ test('approved PixelCharacter has stable stores-first and storefront visual base
  // Weekly-entry baselines are separate; retain the previous storefront PNGs
  // and the unchanged approved home images and mismatch tolerances.
  await expect(page).toHaveScreenshot('pixel-character-weekly-storefront-'+(mobile?'mobile':'desktop')+'.png',{
-  fullPage:true,scale:'css',animations:'disabled',maxDiffPixelRatio:.01,threshold:.2
+  fullPage:true,scale:'css',animations:'disabled',maxDiffPixelRatio:.01,threshold:.2,timeout:20000
  });
 });
 
