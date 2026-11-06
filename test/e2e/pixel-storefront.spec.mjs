@@ -207,7 +207,14 @@ test('nonempty source collections deduplicate shared SKUs and keep list controls
 
  const milk=brands.locator('.product-card');
  const rice=ready.locator('.product-card');
- await addButton(milk).click();
+ // Real store roots can contain only collections, with an empty product grid.
+ // The same product dialogue must work there and delegate to that exact card.
+ await milk.locator('.shopping-detail-trigger').click();
+ const productDialog=page.getByRole('dialog',{name:'Информация о товаре',exact:true});
+ await expect(productDialog).toBeVisible();
+ await expect(productDialog).toContainText(products[0].name);
+ await productDialog.getByRole('button',{name:'Добавить в корзину',exact:true}).click();
+ await expect(productDialog).toBeHidden();
  await expect(milk.locator('.pixel-quantity')).toHaveText('1');
  await addButton(milk).click();
  await expect(milk.locator('.pixel-quantity')).toHaveText('2');
