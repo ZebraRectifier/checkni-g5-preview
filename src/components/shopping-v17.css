@@ -172,3 +172,9 @@ body.pixel-workspace .shopping-product-dialog .pixel-product-details summary { m
  body.pixel-workspace .shopping-product-dialog > .primary-button { grid-column:1; }
  body.pixel-workspace .shopping-product-dialog .product-body h3 { font-size:19px; }
 }
+/* Added-item notices must not cover the basket's primary action. */
+body.pixel-workspace .toast-region { top:calc(80px + env(safe-area-inset-top)); bottom:auto; }
+body.pixel-workspace #basket-view > .back-button { margin-bottom:8px; }
+body.pixel-workspace #basket-view .basket-heading { margin:8px 0 12px; }
+body.pixel-workspace #basket-view .basket-summary { min-height:32px; margin-bottom:0; position:static; }
+body.pixel-workspace #basket-content { row-gap:12px; }
