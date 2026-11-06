@@ -128,3 +128,28 @@ test('small and keyboard-height viewports keep optional input and store/address 
   await expect(page.locator('#nearby-address')).toBeVisible();
  await expectNoOverflow(page);
 });
+
+test('v17 first visible frame retains theme while application loads and after reload', async ({page}) => {
+ for (const theme of ['light', 'dark']) {
+  await page.goto('about:blank');
+  await page.addInitScript(value => localStorage.setItem('checkni.appearance.v1', value), theme);
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  await page.route('**/src/app.mjs', async route => { await gate; await route.continue(); });
+  await page.goto('/?catalog=retail#shop', {waitUntil:'commit'});
+  await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','loading');
+  await expect(page.locator('html')).toHaveAttribute('data-hori-theme',theme);
+  await expect(page.locator('#checkni-boot')).toBeVisible();
+  await expect(page.locator('.app-header')).toBeHidden();
+  await expect(page.locator('#shop-title')).toBeHidden();
+  release();
+  await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready');
+  await expect(page.locator('body')).toHaveAttribute('data-hori-theme',theme);
+  await expect(page.locator('#checkni-boot')).toHaveCount(0);
+  await page.unroute('**/src/app.mjs');
+  await page.reload();
+  await expect(page.locator('body')).toHaveAttribute('data-hori-theme',theme);
+  await expect(page.locator('#pixel-store-home')).toBeVisible();
+ }
+});
+
