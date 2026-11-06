@@ -874,6 +874,13 @@ export function createRetailCatalogClient(options = {}) {
     url.searchParams.set("store_id", `eq.${definition.storeId}`);
     url.searchParams.set("locality_id", `eq.${definition.localityId}`);
     url.searchParams.set("active", "eq.true");
+    if (definition.requiresPromoValidity && query === null && sourceProductIds === null) {
+      // Page only the active promo issue. The normalizer still validates the
+      // individual offer's dates and sale conditions from its own evidence.
+      const day = moscowDateKey(normalizeOptions.nowMs ?? Date.now());
+      url.searchParams.set("quantity_semantics->>promo_valid_from", `lte.${day}`);
+      url.searchParams.set("quantity_semantics->>promo_valid_to", `gte.${day}`);
+    }
     if (sourceProductIds !== null) {
       url.searchParams.set("source_product_id", `in.(${sourceProductIds.join(",")})`);
     }

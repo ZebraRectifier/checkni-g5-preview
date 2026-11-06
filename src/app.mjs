@@ -925,7 +925,8 @@ function renderRetailStoreButtons() {
     const count = selected
       ? retailBrowserState.rootProductCount
       : definition.defaultProductCount;
-    total.textContent = retailStoreCountCopy(definition, count);
+    total.textContent = definition.requiresPromoValidity
+      ? "Проверить акции" : retailStoreCountCopy(definition, count);
 
     button.append(logo, copy, total);
     button.addEventListener("click", () => {
@@ -1119,7 +1120,7 @@ function renderRetailBrowser() {
       "товара",
       "товаров"
     );
-    count.textContent = category.productCount > 0
+    count.textContent = definition.requiresPromoValidity ? "Проверить акции" : category.productCount > 0
       ? `${formatCatalogCount(category.productCount)} ${productNoun} · открыть`
       : "Товары не заявлены · проверить раздел";
 
@@ -1602,8 +1603,10 @@ async function loadRetailCategoryProducts(category, {
     const pageSize = Number.isSafeInteger(result.pageSize)
       ? result.pageSize
       : result.products.length;
-    const expectedCount =
-      Number.isSafeInteger(category.productCount) && category.productCount >= 0
+    // Promo category totals include rows outside today's admitted issue.
+    const expectedCount = client.definition?.requiresPromoValidity
+      ? 0
+      : Number.isSafeInteger(category.productCount) && category.productCount >= 0
         ? category.productCount
         : result.products.length;
 
@@ -2173,6 +2176,13 @@ function renderCatalog() {
   }
 
   if (live && !hasVisibleProducts) {
+    if (publicRetailCatalogMode && !normalizedQuery && retailDefinition?.requiresPromoValidity
+        && !catalogSearchState.canLoadMore) {
+      if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = "Действующих акций сейчас нет";
+      elements.emptySearchCopy.textContent = "Открой другой магазин или проверь этот каталог позже.";
+      elements.searchStatus.textContent = "Действующих акций сейчас нет";
+      return;
+    }
     if (catalogSearchState.categoryName) {
       elements.emptySearchCopy.textContent =
         `В этой категории ${retailName} сейчас нет товаров.`;

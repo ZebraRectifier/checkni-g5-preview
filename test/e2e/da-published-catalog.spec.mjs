@@ -99,7 +99,7 @@ for (const issue of [
   await expect(store).not.toContainText("1 категория · 94 товара");
 
   await store.click();
-  await expect(store).toContainText(`1 категория · ${issue.countText}`);
+  await expect(store).toContainText("Проверить акции");
   await expect(
     page.getByRole("button", { name: /Текущий промо-каталог/ })
   ).toBeVisible();
