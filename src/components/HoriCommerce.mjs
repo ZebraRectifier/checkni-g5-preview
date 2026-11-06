@@ -307,6 +307,13 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
         button.setAttribute('aria-label', `${entry.name}: ${entry.scope}`);
         button.setAttribute('aria-controls', target.id);
         const logo = node('span', 'retail-store-logo', entry.name); logo.setAttribute('aria-hidden', 'true');
+        if (entry.id === 'pyaterochka') {
+          const image = node('img');
+          image.src = new URL('../img/logo-pyaterochka.png', import.meta.url).href;
+          image.alt = '';
+          image.addEventListener('error', () => { logo.textContent = entry.name; }, { once: true });
+          logo.replaceChildren(image);
+        }
         const copy = node('span', 'retail-store-copy');
         copy.append(node('span', 'retail-store-kicker', 'Акции Москвы'), node('strong', '', entry.name), node('span', '', entry.scope));
         button.append(logo, copy, node('span', 'retail-store-total', 'Посмотреть акции'));
