@@ -671,3 +671,34 @@ body.pixel-workspace .retail-category-button .pixel-category-fallback {
   font-size: 2rem;
   line-height: 1;
 }
+
+/* Keep the address field and store cards within the first mobile screen. */
+@media (max-width: 620px) {
+  body.pixel-workspace .nearby-home { margin-block-end: 12px; }
+  body.pixel-workspace .nearby-home #nearby-shopping-panel { padding: 10px; gap: 6px; }
+  body.pixel-workspace .nearby-home #nearby-shopping-panel > label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  body.pixel-workspace .nearby-home #nearby-shopping-panel > .nearby-actions { gap: 6px 10px; }
+  body.pixel-workspace .nearby-home #nearby-status { margin: 0; }
+  body.pixel-workspace .nearby-home .nearby-extra > summary { padding-block: 6px; }
+  body.pixel-workspace #pixel-store-search-form { margin-block-end: 8px; }
+}
+
+body.pixel-workspace .product-card .retail-photo-fallback {
+  background: var(--surface-soft);
+  color: var(--muted);
+  border: 1px dashed var(--line);
+}
+@media (max-width: 620px) {
+  body.pixel-workspace[data-pixel-stage=stores] .pixel-header {
+    margin-block-end: 8px;
+    padding-block: max(8px,env(safe-area-inset-top,0px)) 2px;
+  }
+  body.pixel-workspace[data-pixel-stage=stores] #pixel-store-home-title { margin-block-end: 8px; }
+  body.pixel-workspace .nearby-home #nearby-address-search { background: var(--accent-strong); }
+}
