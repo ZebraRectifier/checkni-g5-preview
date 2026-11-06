@@ -889,7 +889,7 @@ export function createRetailCatalogClient(options = {}) {
     url.searchParams.set(
       "order",
       categoryId === null && categoryUrlPrefix === null
-        ? "updated_at.desc"
+        ? "updated_at.desc,source_product_id.asc"
         : "name.asc,source_product_id.asc"
     );
     url.searchParams.set("limit", String(limit));
@@ -1046,7 +1046,8 @@ export function createRetailCatalogClient(options = {}) {
     async browse(browseOptions = {}) {
       return requestRows({
         query: null,
-        limit: browseOptions.limit ?? 24
+        limit: browseOptions.limit ?? 24,
+        offset: browseOptions.offset ?? 0
       });
     },
     async browseCategory(categoryRef, browseOptions = {}) {
