@@ -19,8 +19,14 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
 
   const home = node('section', 'pixel-store-home');
   home.id = 'pixel-store-home'; home.setAttribute('aria-labelledby', 'pixel-store-home-title');
-  const homeTitle = node('h1', '', 'Где ищем продукты?');
+  const homeTitle = node('h1', '', 'Сравнивай цены на продукты рядом');
   homeTitle.id = 'pixel-store-home-title'; homeTitle.tabIndex = -1;
+  const homeIntro = node('div', 'pixel-home-intro');
+  const homePortrait = node('span', 'hory-v17-sprite pixel-home-portrait');
+  homePortrait.setAttribute('aria-hidden', 'true');
+  const homeCopy = node('div', 'pixel-home-copy');
+  homeCopy.append(homeTitle, node('p', '', 'Выбери адрес, найди товары и сравни цены в магазинах поблизости.'));
+  homeIntro.append(homePortrait, homeCopy);
   const storeSearch = node('form', 'pixel-store-search');
   storeSearch.id = 'pixel-store-search-form'; storeSearch.setAttribute('role', 'search');
   const searchLabel = node('label', 'sr-only', 'Найти магазин'); searchLabel.htmlFor = 'pixel-store-search';
@@ -58,7 +64,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   const directorySearch = node('details', 'pixel-directory-search');
   const directorySummary = node('summary', '', 'Поиск по сетям и адресам');
   directorySearch.append(directorySummary, storeSearch, storeStatus, addressResults);
-  home.append(homeTitle, directorySearch, addressChooser);
+  home.append(homeIntro, directorySearch, addressChooser);
   if (stores) home.append(stores);
 
 

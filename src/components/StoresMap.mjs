@@ -108,7 +108,7 @@ export function createStoresSection({
   section.className = "future-step stores-section"; section.id = "stores-section";
   section.setAttribute("aria-label", "Магазины, с которыми работает CHECKNI");
   section.append(textEl("p", "eyebrow", "Магазины"),
-    textEl("h2", null, "Магазины и ваше место"),
+    textEl("h2", null, "Магазины на карте"),
     textEl("p", "stores-copy", "Выберите адрес для корзины. Точки «Глобуса» взяты из официального справочника; "
       + "точка на карте приблизительная у магазинов со знаком ≈. Координаты не подтверждают свежую цену или наличие."));
 
@@ -160,6 +160,8 @@ export function createStoresSection({
   function redrawCenter(next) { if (next) { center = next; renderMap(); } }
   const zoomIn = button("Приблизить", () => { zoom = Math.min(16, zoom + 1); renderMap(); });
   const zoomOut = button("Отдалить", () => { zoom = Math.max(3, zoom - 1); renderMap(); });
+  zoomIn.setAttribute('aria-label', 'Приблизить'); zoomIn.textContent = '+';
+  zoomOut.setAttribute('aria-label', 'Отдалить'); zoomOut.textContent = '−';
   const ownCenter = button("К моему месту", () => {
     if (geoState.position) { center = normalizeMapCenter(geoState.position); zoom = 12; renderMap(); }
   });
@@ -169,10 +171,12 @@ export function createStoresSection({
     button("↓", () => redrawCenter(shiftMapCenter(center, 0, 180, zoom))),
     button("→", () => redrawCenter(shiftMapCenter(center, 180, 0, zoom)))
   ];
-  mapControls.append(networkLabel, networkFilter, zoomIn, zoomOut,
-    ...panButtons, ownCenter,
-    button("Искать здесь", () => geo.setManual(center)),
+  const navigationTools = document.createElement('details');
+  navigationTools.className = 'stores-map-navigation';
+  navigationTools.append(textEl('summary', null, 'Перемещение карты'), ...panButtons, ownCenter,
     button("Показать магазины", () => { center = { ...DEFAULT_CENTER }; zoom = DEFAULT_ZOOM; renderMap(); }));
+  mapControls.append(networkLabel, networkFilter, zoomIn, zoomOut,
+    button("Искать здесь", () => geo.setManual(center)), navigationTools);
   ["Запад", "Север", "Юг", "Восток"].forEach((label, i) =>
     panButtons[i].setAttribute("aria-label", "Карта: " + label));
   const map = textEl("div", "stores-map", "");
@@ -203,6 +207,10 @@ export function createStoresSection({
   attribution.append(externalLink("© участники OpenStreetMap", "https://www.openstreetmap.org/copyright"));
   const selected = textEl("div", "stores-selected", "");
   const pinCard = textEl("div", "stores-selected", "");
+  pinCard.classList.add('stores-pin-card');
+  pinCard.setAttribute('aria-label', 'Выбранный магазин');
+  const mapFrame = textEl('div', 'stores-map-frame', '');
+  mapFrame.append(map, pinCard);
   pinCard.hidden = true;
   selected.id = "stores-selected-addresses"; selected.setAttribute("aria-label", "Адреса на карте для сравнения");
   const list = textEl("ul", "stores-list", "");
@@ -371,7 +379,11 @@ export function createStoresSection({
     section.scrollIntoView({ block: "start" });
     map.focus({ preventScroll: true });
   };
-  section.append(controls, geoStatus, privacy, mapControls, map, attribution, tileStatus, pinCard, selected,
+  const mapInfo = document.createElement('details');
+  mapInfo.className = 'stores-map-info';
+  mapInfo.append(textEl('summary', null, 'О карте и данных'), section.querySelector('.stores-copy'), privacy);
+  section.querySelector('.eyebrow')?.remove();
+  section.append(controls, geoStatus, mapControls, mapFrame, attribution, tileStatus, mapInfo, selected,
     directory, magnitDirectory);
   renderGeoStatus(); renderMap(); renderSelected(); renderList();
   if (typeof loadBoundMagnitLocations === "function") {
