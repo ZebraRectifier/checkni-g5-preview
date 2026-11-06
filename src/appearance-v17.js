@@ -10,6 +10,8 @@
     if (saved === 'dark' || saved === 'light') theme = saved;
   } catch {}
   document.documentElement.dataset.horiTheme = theme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#292333' : '#e9e6f0');
+  document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', theme);
   function showLoadFailure() {
     if (document.documentElement.dataset.checkniBoot !== 'loading') return;
     const boot = document.getElementById('checkni-boot');

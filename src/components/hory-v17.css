@@ -80,3 +80,12 @@ body.pixel-workspace .shopping-dialogue-header > strong { display: none; }
 
 body.pixel-workspace .pixel-hory-form { min-height: calc(100dvh - 150px); }
 body.pixel-workspace .hori-composer { margin-top: auto; }
+
+/* Leave the two entry actions above the composer when the phone keyboard
+   reduces the visual viewport. The conversation itself remains scrollable. */
+@media (max-height: 600px) {
+  body.pixel-workspace .hory-v17-welcome { width: 64px; height: 64px; margin-block: 0 8px; }
+  body.pixel-workspace .hori-greeting { margin-bottom: 8px; font-size: 16px; }
+  body.pixel-workspace .shopping-conversation-choices { margin-block: 8px; gap: 6px; }
+  body.pixel-workspace .pixel-hory-form { gap: 8px; }
+}

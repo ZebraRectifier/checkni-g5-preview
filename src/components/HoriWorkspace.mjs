@@ -100,6 +100,8 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   const applyTheme = () => {
     const dark = appearance === 'dark'; document.body.dataset.horiTheme = dark ? 'dark' : 'light';
     document.documentElement.dataset.horiTheme = dark ? 'dark' : 'light';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#292333' : '#e9e6f0');
+    document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', dark ? 'dark' : 'light');
     theme.innerHTML = '<span aria-hidden="true">☀</span><span aria-hidden="true">☾</span>';
     theme.setAttribute('aria-label', dark ? 'Включить светлую тему' : 'Включить тёмную тему');
   };

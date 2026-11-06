@@ -70,3 +70,23 @@ body.pixel-workspace .pixel-store-heading h2 { font-size:26px; }
  body.pixel-workspace .pixel-header { min-height:72px; padding:12px; }
  body.pixel-workspace #pixel-storefront { gap:16px; }
 }
+
+/* Approved v17 welcome: useful address search beside the shared character. */
+body.pixel-workspace .pixel-home-intro { display:flex; align-items:center; gap:24px; padding:12px 0 20px; max-width:760px; }
+body.pixel-workspace .pixel-home-intro .pixel-home-portrait { width:152px; height:152px; }
+body.pixel-workspace .pixel-home-copy h1 { margin:0 0 12px; font-size:clamp(26px,3vw,38px); line-height:1.12; letter-spacing:-.035em; }
+body.pixel-workspace .pixel-home-copy p { margin:0; max-width:480px; color:var(--muted); line-height:1.5; }
+body.pixel-workspace #nearby-shopping.nearby-home { background:transparent; border:0; padding:0 0 20px; }
+body.pixel-workspace #nearby-shopping.nearby-home h3 { display:block; font-size:18px; margin:0 0 12px; }
+body.pixel-workspace #nearby-shopping.nearby-home :is(#nearby-address-search,#nearby-locate) { min-height:48px; }
+@media(max-width:600px) {
+ body.pixel-workspace .pixel-home-intro { gap:12px; padding:18px 0; flex-direction:row-reverse; }
+ body.pixel-workspace .pixel-home-intro .pixel-home-portrait { width:88px; height:88px; }
+ body.pixel-workspace .pixel-home-copy h1 { font-size:23px; margin-bottom:8px; }
+ body.pixel-workspace .pixel-home-copy p { font-size:13px; line-height:1.35; }
+}
+body.pixel-workspace #nearby-shopping.nearby-home { margin-bottom:12px; padding-bottom:0; }
+body.pixel-workspace .nearby-home #nearby-shopping-panel > label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+body.pixel-workspace #nearby-address-search { background:var(--accent); color:white; border:0; box-shadow:inset 0 -3px 0 #54249a; clip-path:polygon(4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px),0 4px,4px 4px); }
+body.pixel-workspace #nearby-address-search:hover { background:var(--accent-strong); }
+body.pixel-workspace #nearby-address-search:active { transform:translateY(1px); }
