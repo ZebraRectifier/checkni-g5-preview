@@ -65,7 +65,7 @@ export function initShoppingV17(document) {
     addButton.disabled = !add || add.disabled;
     addButton.addEventListener('click', () => {
       // The current real card owns all admission and basket updates.
-      const current = [...document.querySelectorAll('#product-grid .product-card')]
+      const current = [...document.querySelectorAll('#pixel-storefront .product-card')]
         .find(card => card.dataset.productId === sourceCard.dataset.productId);
       current?.querySelector('.add-button')?.click();
       close();
@@ -77,7 +77,7 @@ export function initShoppingV17(document) {
     dialog.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
   }
   function enhance() {
-    document.querySelectorAll('#product-grid .product-card').forEach(card => {
+    document.querySelectorAll('#pixel-storefront .product-card').forEach(card => {
       const heading = card.querySelector('h3');
       if (!heading || heading.querySelector('button')) return;
       const button = document.createElement('button');
@@ -94,10 +94,16 @@ export function initShoppingV17(document) {
       heading.replaceChildren(button);
     });
   }
-  const observer = new view.MutationObserver(enhance);
-  const grid = document.getElementById('product-grid');
-  if (grid) observer.observe(grid, {childList: true});
+  const catalogue = document.querySelector('#pixel-storefront .catalog-section');
+  const observer = new view.MutationObserver(() => {
+    // Title wrapping changes the observed subtree. Disconnect while enhancing
+    // so our own insertions cannot create a repeated observer cycle.
+    observer.disconnect();
+    enhance();
+    if (catalogue) observer.observe(catalogue, {childList: true, subtree: true});
+  });
   enhance();
+  if (catalogue) observer.observe(catalogue, {childList: true, subtree: true});
   dialog.addEventListener('click', event => { if (event.target === dialog) close(); });
   return () => { observer.disconnect(); basketObserver.disconnect(); miniBasket.remove(); dialog.remove(); };
 }

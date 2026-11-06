@@ -115,3 +115,16 @@ body.pixel-workspace .stores-map-network-label { position:absolute; width:1px; h
 body.pixel-workspace .stores-map-navigation { flex-basis:100%; }
 body.pixel-workspace .stores-map-navigation summary { display:list-item; min-height:44px; padding:12px 0; cursor:pointer; color:var(--muted); }
 body.pixel-workspace .stores-map-navigation > button { margin:0 6px 6px 0; }
+/* Keep products close to the store heading on narrow screens. */
+@media(max-width:700px) {
+ body.pixel-workspace[data-pixel-stage=store] .pixel-header { min-height:64px; padding-block:8px; }
+ body.pixel-workspace[data-pixel-stage=store] .pixel-header .pixel-location { display:none; }
+ body.pixel-workspace #pixel-storefront { gap:12px; }
+ body.pixel-workspace .pixel-store-heading h2 { font-size:24px; margin-block:0; }
+ body.pixel-workspace .pixel-store-address { max-width:100%; font-size:13px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+ body.pixel-workspace #retail-browser { display:flex; flex-direction:column; gap:8px; }
+ body.pixel-workspace #weekly-route { order:2; margin-block:0 !important; padding:0 !important; border:0 !important; }
+ body.pixel-workspace #retail-category-title { font-size:18px; margin:0; }
+ body.pixel-workspace .catalog-section .section-heading { margin-block:8px; }
+ body.pixel-workspace .catalog-section .section-heading h2 { font-size:21px; }
+}
