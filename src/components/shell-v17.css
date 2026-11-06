@@ -1,0 +1,72 @@
+html[data-hori-theme] { background:#e9e6f0; color-scheme:light; }
+html[data-hori-theme=dark] { background:#292333; color-scheme:dark; }
+#checkni-boot { display:none; }
+html[data-checkni-boot=loading] body > :not(#checkni-boot) { visibility:hidden; }
+html[data-checkni-boot=loading] body { background:transparent; }
+html[data-checkni-boot=loading] #checkni-boot { display:flex; position:fixed; inset:0; align-items:center; justify-content:center; flex-direction:column; gap:20px; color:#362347; font:16px system-ui; }
+html[data-hori-theme=dark] #checkni-boot { color:#f7f2ff; }
+#checkni-boot strong { font-size:28px; letter-spacing:2px; }
+body.hori-workspace.pixel-workspace[data-hori-theme=light] {
+ --bg:#e9e6f0; --surface:#fff; --surface-soft:#f4f0fa; --ink:#30203f;
+ --muted:#655972; --line:#d6cde2; --accent:#7936cf; --accent-strong:#6726be;
+ --accent-soft:#e9ddfa;
+}
+body.hori-workspace.pixel-workspace[data-hori-theme=dark] {
+ --bg:#292333; --surface:#342c40; --surface-soft:#40364e;
+ --ink:#faf6ff; --muted:#d3c8df; --line:#675977;
+}
+body.pixel-workspace { background:var(--bg); }
+body.pixel-workspace .pixel-header { background:var(--surface); border-bottom:1px solid var(--line); }
+body.pixel-workspace .pixel-store-home { padding-top:20px; }
+
+body.pixel-workspace .pixel-motion-band { display:none; }
+body.pixel-workspace .pixel-store-home { max-width:1200px; margin-inline:auto; }
+body.pixel-workspace .pixel-store-home > h1 { font-size:clamp(24px,3vw,36px); letter-spacing:-.03em; }
+body.pixel-workspace :is(.nearby-shopping,.pixel-address-chooser,.pixel-directory-search) {
+ border:1px solid var(--line); border-radius:12px; background:var(--surface);
+}
+body.pixel-workspace :is(input[type=search],input[type=text],select) {
+ border:1px solid var(--line); border-radius:8px; min-height:48px;
+}
+body.pixel-workspace .pixel-location { border-radius:8px; border-color:var(--line); }
+body.pixel-workspace .pixel-exact-address-cards { gap:12px; }
+body.pixel-workspace :is(.pixel-exact-address-card,.nearby-store-card) {
+ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:16px;
+}
+body.pixel-workspace :is(button,a):focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+@media(max-width:600px) {
+ body.pixel-workspace .pixel-store-home { padding-inline:14px; }
+ body.pixel-workspace .pixel-store-home > h1 { margin-bottom:16px; }
+}
+
+body.pixel-workspace #nearby-shopping { padding:16px; background:var(--surface); }
+body.pixel-workspace .nearby-store { padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
+body.pixel-workspace #pixel-store-home .retail-store-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+body.pixel-workspace #pixel-store-home .retail-store-card { flex-direction:row; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:10px; clip-path:none; min-height:80px; }
+body.pixel-workspace #pixel-store-home .retail-store-logo { width:52px; height:52px; min-height:52px; flex:0 0 52px; padding:5px; border-radius:8px; clip-path:none; font-size:10px; }
+body.pixel-workspace #pixel-store-home .retail-store-title { padding:0; }
+body.pixel-workspace #pixel-store-home .retail-store-note { font-size:12px; }
+@media(max-width:600px) {
+ body.pixel-workspace #pixel-store-home .retail-store-grid { grid-template-columns:1fr; }
+ body.pixel-workspace .pixel-header { padding:12px; width:100%; }
+ body.pixel-workspace .pixel-store-home { padding-top:0; }
+ body.pixel-workspace #nearby-shopping { padding:12px; }
+}
+
+body.pixel-workspace .stores-section { padding:18px; border-radius:12px; }
+body.pixel-workspace .stores-map { max-height:60vh; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+body.pixel-workspace .stores-map-controls { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+body.pixel-workspace .stores-controls { display:flex; flex-wrap:wrap; gap:8px; }
+body.pixel-workspace .stores-map-info { margin:12px 0; color:var(--muted); font-size:14px; }
+body.pixel-workspace .stores-map-info summary { min-height:44px; padding:10px 0; cursor:pointer; }
+body.pixel-workspace .stores-section button { min-height:44px; border-radius:6px; }
+
+body.pixel-workspace .catalog-section > .section-heading .eyebrow { display:none; }
+body.pixel-workspace .pixel-store-heading { padding:0; }
+body.pixel-workspace .pixel-store-heading h1,
+body.pixel-workspace .pixel-store-heading h2 { font-size:26px; }
+@media(min-width:900px) {
+ body.pixel-workspace .catalog-sort { max-width:240px; }
+ body.pixel-workspace .pixel-header { min-height:72px; padding:12px; }
+ body.pixel-workspace #pixel-storefront { gap:16px; }
+}

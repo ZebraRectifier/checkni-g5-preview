@@ -371,7 +371,11 @@ export function createStoresSection({
     section.scrollIntoView({ block: "start" });
     map.focus({ preventScroll: true });
   };
-  section.append(controls, geoStatus, privacy, mapControls, map, attribution, tileStatus, pinCard, selected,
+  const mapInfo = document.createElement('details');
+  mapInfo.className = 'stores-map-info';
+  mapInfo.append(textEl('summary', null, 'О карте и данных'), section.querySelector('.stores-copy'), privacy);
+  section.querySelector('.eyebrow')?.remove();
+  section.append(controls, geoStatus, mapControls, map, attribution, tileStatus, pinCard, mapInfo, selected,
     directory, magnitDirectory);
   renderGeoStatus(); renderMap(); renderSelected(); renderList();
   if (typeof loadBoundMagnitLocations === "function") {

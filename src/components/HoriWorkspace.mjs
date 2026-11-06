@@ -1,5 +1,6 @@
+import { mountHoryV17 } from './hory-v17.mjs';
+import { initShoppingV17 } from './shopping-v17.mjs';
 import { createHoriCommerce } from './HoriCommerce.mjs';
-import { createHoriCubes } from './HoriCubes.mjs';
 
 // Existing assistant nodes keep their listeners, conversation and confirmation
 // state. The app and Core remain the owners of all shopping facts.
@@ -16,14 +17,6 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   if ('scrollRestoration' in view.history) view.history.scrollRestoration = 'manual';
   const savedScrollY = view.history.state?.checkniSurfaceScrollY;
   view.scrollTo({ top: Number.isFinite(savedScrollY) && savedScrollY >= 0 ? savedScrollY : 0, behavior: 'instant' });
-  const sheet = document.createElement('link'); sheet.rel = 'stylesheet';
-  sheet.href = new URL('./pixel-storefront.css', import.meta.url).href; document.head.append(sheet);
-  const storefrontSheet = document.createElement('link'); storefrontSheet.rel = 'stylesheet';
-  storefrontSheet.href = new URL('./storefront-v15.css', import.meta.url).href; document.head.append(storefrontSheet);
-  const shoppingSheet = document.createElement('link');
-  shoppingSheet.rel = 'stylesheet';
-  shoppingSheet.href = new URL('./pixel-basket-hory.css', import.meta.url).href;
-  document.head.append(shoppingSheet);
   document.body.classList.add('hori-workspace', 'pixel-workspace');
   header.classList.replace('app-header', 'hori-header'); header.classList.add('pixel-header');
   const badge = document.getElementById('comparison-mode-badge'); if (badge) badge.hidden = true;
@@ -105,7 +98,8 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   try { const saved = view.localStorage.getItem('checkni.appearance.v1'); if (['light', 'dark'].includes(saved)) appearance = saved; }
   catch { /* Theme remains usable without persistence. */ }
   const applyTheme = () => {
-    const dark = appearance !== 'light'; document.body.dataset.horiTheme = dark ? 'dark' : 'light';
+    const dark = appearance === 'dark'; document.body.dataset.horiTheme = dark ? 'dark' : 'light';
+    document.documentElement.dataset.horiTheme = dark ? 'dark' : 'light';
     theme.innerHTML = '<span aria-hidden="true">☀</span><span aria-hidden="true">☾</span>';
     theme.setAttribute('aria-label', dark ? 'Включить светлую тему' : 'Включить тёмную тему');
   };
@@ -115,7 +109,12 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
     applyTheme();
   });
   commerce.headerControls.prepend(theme); applyTheme();
-  createHoriCubes(commerce.motionHost, { toggleHost: commerce.motionControls });
+  initShoppingV17(document);
+  mountHoryV17({ document });
+  document.documentElement.dataset.checkniBoot = 'ready';
+  document.getElementById('checkni-boot')?.remove();
+  commerce.motionHost.hidden = true;
+  commerce.motionControls.hidden = true;
 
   function renameAssistant() {
     const heading = dialogue.querySelector('.shopping-dialogue-header strong'); if (heading?.textContent === 'Хори') heading.textContent = 'Хоря';
