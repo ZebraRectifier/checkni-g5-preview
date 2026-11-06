@@ -110,7 +110,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     geo.clear();const token=++version;clearSelection();position=null;candidates.replaceChildren();results.replaceChildren();addressButton.disabled=true;
     status.textContent='Ищу адрес…';
     const [cityName,...streetParts]=query.split(',');
-    const city=cityCentres.get(cityName.trim().toLowerCase().replace(/[.!]$/u,''));
+    const city=cityCentres.get(cityName.trim().toLowerCase().replace(/^г(?:\.\s*|\s+)/u,'').replace(/[.!]$/u,''));
     const street=streetParts.join(',').trim();
     let response;
     try{
