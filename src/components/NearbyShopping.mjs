@@ -27,7 +27,8 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   const consent=el('small','По кнопке «Найти адрес» запрос уйдёт в Photon / OpenStreetMap через сервер CHECKNI. В AI и историю адрес не передаётся.');
   const addressButton=button('Найти адрес',()=>searchAddress());addressButton.id='nearby-address-search';
   const locate=button('Определить моё место',()=>{version++;geo.request();});locate.id='nearby-locate';
-  const manual=button('Выбрать точку на карте',()=>{document.dispatchEvent(new document.defaultView.CustomEvent('checkni:shop-action',{detail:{action:'address',target:'map'}}));onManualMap?.();});
+  const manual=button('На карте',()=>{document.dispatchEvent(new document.defaultView.CustomEvent('checkni:shop-action',{detail:{action:'address',target:'map'}}));onManualMap?.();});
+  manual.setAttribute('aria-label','Выбрать точку на карте');
   const clear=button('Убрать моё место',()=>{version++;geo.clear();position=null;pointName='';candidates.replaceChildren();results.replaceChildren();clearSelection();
     input.value='';port.clearAddressMemory?.();
     status.textContent='Место удалено. Можно указать другое.';});
