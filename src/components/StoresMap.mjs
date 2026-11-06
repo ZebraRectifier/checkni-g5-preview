@@ -160,6 +160,8 @@ export function createStoresSection({
   function redrawCenter(next) { if (next) { center = next; renderMap(); } }
   const zoomIn = button("Приблизить", () => { zoom = Math.min(16, zoom + 1); renderMap(); });
   const zoomOut = button("Отдалить", () => { zoom = Math.max(3, zoom - 1); renderMap(); });
+  zoomIn.setAttribute('aria-label', 'Приблизить'); zoomIn.textContent = '+';
+  zoomOut.setAttribute('aria-label', 'Отдалить'); zoomOut.textContent = '−';
   const ownCenter = button("К моему месту", () => {
     if (geoState.position) { center = normalizeMapCenter(geoState.position); zoom = 12; renderMap(); }
   });
@@ -169,10 +171,12 @@ export function createStoresSection({
     button("↓", () => redrawCenter(shiftMapCenter(center, 0, 180, zoom))),
     button("→", () => redrawCenter(shiftMapCenter(center, 180, 0, zoom)))
   ];
-  mapControls.append(networkLabel, networkFilter, zoomIn, zoomOut,
-    ...panButtons, ownCenter,
-    button("Искать здесь", () => geo.setManual(center)),
+  const navigationTools = document.createElement('details');
+  navigationTools.className = 'stores-map-navigation';
+  navigationTools.append(textEl('summary', null, 'Перемещение карты'), ...panButtons, ownCenter,
     button("Показать магазины", () => { center = { ...DEFAULT_CENTER }; zoom = DEFAULT_ZOOM; renderMap(); }));
+  mapControls.append(networkLabel, networkFilter, zoomIn, zoomOut,
+    button("Искать здесь", () => geo.setManual(center)), navigationTools);
   ["Запад", "Север", "Юг", "Восток"].forEach((label, i) =>
     panButtons[i].setAttribute("aria-label", "Карта: " + label));
   const map = textEl("div", "stores-map", "");

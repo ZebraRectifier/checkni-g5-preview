@@ -110,3 +110,8 @@ body.pixel-workspace .stores-pin-card a { display:inline-flex; align-items:cente
 /* Map markers must not inherit the rectangular form-button dimensions. */
 body.pixel-workspace .stores-section button.stores-pin { width:24px; height:24px; min-width:24px; min-height:24px; padding:0; border-radius:50% 50% 50% 0; }
 body.pixel-workspace .stores-section button.stores-pin::before { content:''; position:absolute; inset:-10px; border-radius:50%; }
+body.pixel-workspace .stores-map-controls > button { min-width:44px; }
+body.pixel-workspace .stores-map-network-label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+body.pixel-workspace .stores-map-navigation { flex-basis:100%; }
+body.pixel-workspace .stores-map-navigation summary { display:list-item; min-height:44px; padding:12px 0; cursor:pointer; color:var(--muted); }
+body.pixel-workspace .stores-map-navigation > button { margin:0 6px 6px 0; }

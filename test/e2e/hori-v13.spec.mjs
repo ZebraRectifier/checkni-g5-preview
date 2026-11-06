@@ -153,3 +153,19 @@ test('v17 first visible frame retains theme while application loads and after re
  }
 });
 
+
+test('a failed application load offers retry without exposing the old interface', async ({page}) => {
+ let first=true;
+ await page.route('**/src/app.mjs',route=>{
+  if(first){first=false;return route.abort();}
+  return route.continue();
+ });
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ const retry=page.locator('#checkni-boot').getByRole('button',{name:'Повторить'});
+ await expect(retry).toBeVisible();
+ await expect(page.locator('.app-header')).toBeHidden();
+ await retry.click();
+ // Match the finite twenty-second boot recovery budget, including reloading modules.
+ await expect(page.locator('#pixel-store-home')).toBeVisible({timeout:20000});
+ await expect(page.locator('#checkni-boot')).toHaveCount(0);
+});
