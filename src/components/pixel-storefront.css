@@ -779,5 +779,7 @@ body.pixel-workspace .pixel-directory-search[open] > summary::after { content: '
 }
 
 body.pixel-workspace #pixel-store-home [data-retailer-id='magnit'] .retail-store-logo img {
+  width: auto;
+  height: clamp(40px, 6vw, 76px);
   filter: brightness(0) invert(1);
 }
