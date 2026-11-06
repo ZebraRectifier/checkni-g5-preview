@@ -57,6 +57,47 @@ const products = [
   scope_binding: 'same-source', binding_id: 'store:5011', location_label: 'г. Москва, вн.тер.г. муниципальный округ Кунцево, Новорижское шоссе 22-й км, д. 1 стр. 1',
   observed_at: '2026-10-10T08:30:00Z' }));
 
+test('switching store during an in-flight guided lookup cannot publish the previous quote', async ({ page, context }) => {
+  let releaseOld, oldStarted = 0, oldCompleted = 0;
+  const oldGate = new Promise(resolve => { releaseOld = resolve; });
+  await context.route('**/*', route => ['127.0.0.1', 'localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort());
+  await page.route('**/rest/v1/retail_catalog_categories**', route => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/retail_catalog_items**', async route => {
+    const params = new URL(route.request().url()).searchParams;
+    const old = params.get('store_id') === 'eq.globus-store-5011';
+    const delayed = old && params.has('name');
+    if (delayed) { oldStarted++; await oldGate; }
+    await route.fulfill({ json: products.map(row => ({ ...row, observed_at: new Date().toISOString(),
+      ...(old ? { price_minor: 111 } : { store_id: 'globus-store-5014', store_name: 'Глобус Пушкино',
+        locality_id: 'region-moscow-oblast', locality_name: 'Московская область', binding_id: 'store:5014',
+        location_label: 'г. Пушкино, Красноармейское ш., вл. 105' }) })) });
+    if (delayed) oldCompleted++;
+  });
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  await selectStore(page);
+  await submit(page, 'Нужны недорогие продукты на 4 человек на 7 дней');
+  await expect(page.locator('#basket-proposal-status')).toContainText('Какие продукты исключить');
+  await submit(page, 'Ограничений нет');
+  await expect.poll(() => oldStarted).toBeGreaterThan(0);
+  await closeHory(page);
+  await openStoreDetails(page);
+  await page.locator('#globus-store-address').selectOption('5014');
+  releaseOld();
+  await expect.poll(() => oldCompleted).toBeGreaterThan(0);
+  await openHory(page);
+  await expect(page.locator('#hori-shopping-results').getByRole('table')).toHaveCount(0);
+  await expect(page.locator('#basket-proposal-status')).not.toContainText('1,11');
+  await submit(page, 'Подобрать товары и цены');
+  const commerce = page.locator('#hori-shopping-results');
+  await expect(commerce.getByRole('table')).toBeVisible();
+  await expect(commerce).not.toContainText('1,11');
+  await page.locator('#basket-proposal-status').getByRole('button', { name: /Добавить (найденное|показанное)/u }).click();
+  await expect(page.locator('#basket-proposal-status')).toContainText('Корзина собрана');
+  const basket = await page.evaluate(() => JSON.parse(localStorage.getItem('checkni.surface.basket.v1')));
+  expect(basket.length).toBeGreaterThan(0);
+  expect(basket.every(row => row.id.startsWith('retail:globus:globus-store-5014:'))).toBe(true);
+});
+
 test('the user dialogue → intake → editable real-card table → honest comparison → confirmation → reload', async ({ page, context }) => {
   let aiCalls = 0;
   await context.route('**/*', route => ['127.0.0.1', 'localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort());
