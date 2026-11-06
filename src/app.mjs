@@ -908,6 +908,13 @@ function renderRetailStoreButtons() {
     logo.className = "retail-store-logo";
     logo.setAttribute("aria-hidden", "true");
     logo.textContent = definition.displayName;
+    if (publicRetailCatalogMode && retailerId === 'perekrestok') {
+      const image = document.createElement('img');
+      image.src = new URL('./img/logo-perekrestok.svg', import.meta.url).href;
+      image.alt = '';
+      image.addEventListener('error', () => { logo.textContent = definition.displayName; }, { once: true });
+      logo.replaceChildren(image);
+    }
 
     const copy = document.createElement("span");
     copy.className = "retail-store-copy";

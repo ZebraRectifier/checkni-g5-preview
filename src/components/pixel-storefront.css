@@ -334,7 +334,7 @@ body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='glob
 body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='vkusvill'] { --retailer-face: #007e45; --retailer-ink: #fff; }
 body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='lenta'] { --retailer-face: #0755a7; --retailer-ink: #fff; }
 body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='metro'] { --retailer-face: #073b7d; --retailer-ink: #fff; }
-body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='perekrestok'] { --retailer-face: #0c7445; --retailer-ink: #fff; }
+body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='perekrestok'] { --retailer-face: #005a28; --retailer-ink: #fff; }
 body.pixel-workspace #pixel-store-home .retail-store-copy { display: block; min-width: 0; padding: 8px 5px; }
 body.pixel-workspace #pixel-store-home .retail-store-copy strong { display: -webkit-box; margin: 0; color: var(--ink); font-size: 14px; line-height: 1.35; font-weight: 550; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 body.pixel-workspace #pixel-store-home :is(.retail-store-kicker,.retail-store-total,.retail-store-copy > span:last-child) { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
