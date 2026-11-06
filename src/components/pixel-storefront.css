@@ -746,3 +746,14 @@ body.pixel-workspace .pixel-directory-search > summary::after {
 }
 body.pixel-workspace .pixel-directory-search[open] > summary { margin-bottom: 8px; }
 body.pixel-workspace .pixel-directory-search[open] > summary::after { content: '⌃'; }
+
+@media (max-width: 620px) {
+  body.pixel-workspace .nearby-home .nearby-network-filters {
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow-x: auto;
+    padding-block-end: 4px;
+  }
+  body.pixel-workspace .nearby-home .nearby-network-filters > button { flex: none; }
+  body.pixel-workspace .nearby-home .nearby-store { gap: 6px; padding: 10px; }
+}

@@ -49,9 +49,10 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     chip.setAttribute('aria-pressed',String(id==='all'));networks.append(chip);
   }
   const filters=el('div');filters.className='nearby-actions';filters.append(radiusLabel,radius,connectedLabel);
+  const directoryDate=el('p');directoryDate.hidden=true;
   const note=el('details');const noteTitle=el('summary','Откуда магазины и что известно о ценах');
   const noteCopy=el('p','Это датированный справочник карты, а не полный список работающих магазинов. Расстояния — по прямой. Совпадение адреса с каталогом не подтверждает свежесть цен, наличие или доставку. Геопозиция хранится только в памяти вкладки и исчезает после перезагрузки.');
-  const attribution=el('a','© OpenStreetMap contributors · ODbL');attribution.href='https://www.openstreetmap.org/copyright';attribution.target='_blank';attribution.rel='noopener noreferrer';note.append(noteTitle,noteCopy,attribution);
+  const attribution=el('a','© OpenStreetMap contributors · ODbL');attribution.href='https://www.openstreetmap.org/copyright';attribution.target='_blank';attribution.rel='noopener noreferrer';note.append(noteTitle,noteCopy,directoryDate,attribution);
   const mapPrivacy=el('small','При выборе места карта OpenStreetMap загружает соответствующий участок.');
   const addressRow=el('div');addressRow.className='nearby-address-row';addressRow.append(input,addressButton);
   const privacy=el('details');privacy.className='nearby-privacy';privacy.append(el('summary','Как используется адрес'),consent,mapPrivacy);
@@ -80,9 +81,10 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     try{
       const d=await directoryData();if(token!==version||current!==position)return;
       const rows=nearbyGroceryMatches(d.stores,position,Number(radius.value),{connectedOnly:connected.checked,regional:Boolean(region)}).filter(row=>network==='all'||row.retailerId===network);
-      status.textContent=`${pointName||'Выбранная точка'} · до ${radius.value} км по прямой. Найдено в справочнике: ${rows.length}. Карта от ${new Date(d.observedAt).toLocaleDateString('ru-RU')}.`
-        +(rows.length?' Выбери магазин, затем соберём корзину.':' Попробуй больший радиус или другую точку. Это не значит, что магазинов поблизости нет.')
-        +(connected.checked?' Чтобы увидеть остальные магазины, сними фильтр «Только с подключённым каталогом».':'');
+      directoryDate.textContent='Дата справочника: '+new Date(d.observedAt).toLocaleDateString('ru-RU')+'.';
+      directoryDate.hidden=false;
+      status.textContent=`${pointName||'Выбранная точка'} · до ${radius.value} км · найдено: ${rows.length}`
+        +(rows.length?'':connected.checked?' · Расширь радиус или покажи все магазины.':' · Расширь радиус или уточни адрес.');
       for(const row of rows.slice(0,limit)){
         const card=el('article');card.className='nearby-store';
         card.append(el('strong',row.name+' · '+(row.distanceMeters<1000?Math.round(row.distanceMeters)+' м':(row.distanceMeters/1000).toFixed(1)+' км')),
