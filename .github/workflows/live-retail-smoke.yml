@@ -73,7 +73,7 @@ jobs:
         run: |
           node --input-type=module - <<'NODE'
           import {readFile} from 'node:fs/promises';
-          const paths=['src/components/HoriCommerce.mjs','src/components/NearbyShopping.mjs','src/ports/nearbyShoppingPort.mjs','src/ports/addressRecovery.mjs'];
+          const paths=['index.html','prices.html','src/components/HoriCommerce.mjs','src/components/NearbyShopping.mjs','src/ports/nearbyShoppingPort.mjs','src/ports/addressRecovery.mjs'];
           const expected=await Promise.all(paths.map(path=>readFile(path)));
           for(let attempt=0;attempt<12;attempt++){
             const matched=await Promise.all(paths.map(async(path,i)=>{
