@@ -722,3 +722,7 @@ body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='pyat
 @media (min-width: 720px) {
   body.pixel-workspace #pixel-store-home .retail-store-logo { font-size: clamp(18px, 2.5vw, 30px); }
 }
+
+body.pixel-workspace .pixel-all-categories .pixel-category-fallback::before {
+  content: '▦';
+}
