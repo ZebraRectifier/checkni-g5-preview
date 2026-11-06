@@ -143,7 +143,9 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     else if(manual.parentElement!==actions)actions.insertBefore(manual,clear);
     version++;
     if(s.status==='loading'){status.textContent='Жду разрешение браузера на геолокацию…';return;}
-    if(s.position && s.status!=='loading' && s.status!=='denied' && s.status!=='error'){clearSelection();position=s.position;pointName=pendingPlaceLabel??(s.position.source==='manual'?'Точка на карте':`Моё место · точность ≈${Math.round(s.position.accuracyMeters)} м`);pendingPlaceLabel=null;limit=5;
+    if(s.position && s.status!=='loading' && s.status!=='denied' && s.status!=='error'){
+      if(s.position.source==='device'){region=null;pendingPlaceLabel=null;}
+      clearSelection();position=s.position;pointName=pendingPlaceLabel??(s.position.source==='manual'?'Точка на карте':`Моё место · точность ≈${Math.round(s.position.accuracyMeters)} м`);pendingPlaceLabel=null;limit=5;
       panel.hidden=false;openButton.setAttribute('aria-expanded','true');void renderResults();}
     else if(s.status==='idle'){position=null;pointName='';results.replaceChildren();}
     else if(s.status!=='idle'){status.textContent=s.status==='denied'?'Доступ к геолокации закрыт. Можно написать адрес или указать место на карте.':'Место не определилось. Напиши адрес или выбери точку на карте.';}
