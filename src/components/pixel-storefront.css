@@ -702,3 +702,23 @@ body.pixel-workspace .product-card .retail-photo-fallback {
   body.pixel-workspace[data-pixel-stage=stores] #pixel-store-home-title { margin-block-end: 8px; }
   body.pixel-workspace .nearby-home #nearby-address-search { background: var(--accent-strong); }
 }
+
+/* Match the reference’s strong retailer colours and legible wordmarks. */
+body.pixel-workspace #pixel-store-home .retail-store-logo {
+  font-size: clamp(12px, 3.5vw, 18px);
+  font-weight: 850;
+}
+body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='metro'] {
+  --retailer-ink: #ffe02b;
+}
+body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='okey'] {
+  --retailer-face: #fff;
+  --retailer-ink: #c81024;
+}
+body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='pyaterochka'] {
+  --retailer-face: #e31827;
+  --retailer-ink: #fff;
+}
+@media (min-width: 720px) {
+  body.pixel-workspace #pixel-store-home .retail-store-logo { font-size: clamp(18px, 2.5vw, 30px); }
+}
