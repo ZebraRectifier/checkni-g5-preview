@@ -9,6 +9,8 @@ export function initShoppingV17(document) {
   miniBasket.className = 'shopping-mini-basket';
   miniBasket.setAttribute('aria-label', 'Корзина');
   document.getElementById('pixel-storefront')?.append(miniBasket);
+  const basketTitle = document.getElementById('basket-title');
+  if (basketTitle) basketTitle.textContent = 'Корзина';
   function renderMiniBasket() {
     const heading = document.createElement('h2');
     heading.textContent = 'Корзина';

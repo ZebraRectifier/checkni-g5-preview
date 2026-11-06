@@ -1,4 +1,5 @@
 import {sourceScopedRetailListSelection} from './catalog/sourceScopedRetailList.mjs';
+import {rememberBasketPresentation} from './state/basketPresentationStore.mjs';
 import {prepareManualCatalogComparison} from './runtime/manualCatalogComparison.mjs';
 import {createGuidedComparisonStore,createGuidedComparisonRequest,GUIDED_BASKET_COMPARISON_KEY} from './state/guidedBasketComparison.mjs';
 import {loadSavedGuidedComparison,savedComparisonScopes} from './runtime/savedGuidedComparison.mjs';
@@ -1227,6 +1228,8 @@ function createCatalogProduct(product, live = true) {
       }
       invalidateHybridForManualTakeover();
       showToast(`${basketProduct.name} добавлено`);
+      rememberBasketPresentation(existing ?? basketProduct, product);
+      renderBasket();
     }
   };
   return (publicRetailCatalogMode ? createPixelProductCard : createProductCard)(product, options);

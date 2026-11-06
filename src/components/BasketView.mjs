@@ -1,3 +1,5 @@
+import { basketPresentation, retainBasketPresentations } from '../state/basketPresentationStore.mjs';
+import { formatRubMinor } from './ComparisonResult.mjs';
 import { MAX_QUANTITY, countBasketUnits } from "../state/basketStore.mjs";
 import { createAggregatorChecks } from "./AggregatorChecks.mjs";
 import {
@@ -92,6 +94,7 @@ export function basketHasWeightAmounts(items) {
 
 export function renderBasketView(container, items, actions) {
   container.replaceChildren();
+  retainBasketPresentations(items);
   const isObservedMode = actions?.comparisonMode === "observed";
   const removeRetargetGuard = removeRetargetGuardFor(container);
 
@@ -135,6 +138,51 @@ export function renderBasketView(container, items, actions) {
     const unit = document.createElement("p");
     unit.textContent = item.unit;
     info.append(title, unit);
+    const presentation = basketPresentation(item);
+    const visual = document.createElement('div');
+    visual.className = 'basket-product-visual';
+    visual.setAttribute('aria-hidden', 'true');
+    visual.textContent = 'Фото';
+    if (presentation?.imageUrl) {
+      const image = document.createElement('img');
+      image.src = presentation.imageUrl;
+      image.alt = '';
+      image.referrerPolicy = 'no-referrer';
+      image.addEventListener('error', () => image.remove(), {once: true});
+      visual.append(image);
+    }
+    const observation = document.createElement('div');
+    observation.className = 'basket-product-observation';
+    if (presentation?.priceMinor && presentation.observedAt) {
+      const price = document.createElement('strong');
+      price.textContent = formatRubMinor(presentation.priceMinor) + (presentation.catalogUnit ? ' / ' + presentation.catalogUnit : '');
+      const note = document.createElement('small');
+      note.textContent = 'При добавлении · цена от ' + new Date(presentation.observedAt).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'});
+      const details = document.createElement('details');
+      details.className = 'basket-price-details';
+      const summary = document.createElement('summary');
+      summary.textContent = 'О цене';
+      const timestamp = document.createElement('small');
+      timestamp.textContent = 'Наблюдение ' + new Date(presentation.observedAt).toLocaleString('ru-RU') + '. Текущая цена и наличие не подтверждены.';
+      details.append(summary, timestamp);
+      observation.append(price, note, details);
+      if (presentation.condition) {
+        const condition = document.createElement('small');
+        condition.textContent = presentation.condition;
+        details.append(condition);
+      }
+      if (presentation.sourceUrl) {
+        const source = document.createElement('a');
+        source.href = presentation.sourceUrl;
+        source.textContent = 'Источник цены';
+        source.target = '_blank';
+        source.rel = 'noopener noreferrer';
+        details.append(source);
+      }
+    } else {
+      observation.textContent = 'Цена не сохранена';
+    }
+    info.append(observation);
 
     const controls = document.createElement("div");
     controls.className = "basket-item-actions";
@@ -209,7 +257,7 @@ export function renderBasketView(container, items, actions) {
     });
 
     controls.append(stepper, remove);
-    row.append(info, controls);
+    row.append(visual, info, controls);
     list.append(row);
   });
 
