@@ -908,9 +908,9 @@ function renderRetailStoreButtons() {
     logo.className = "retail-store-logo";
     logo.setAttribute("aria-hidden", "true");
     logo.textContent = definition.displayName;
-    if (publicRetailCatalogMode && retailerId === 'perekrestok') {
+    if (publicRetailCatalogMode && ['perekrestok', 'vkusvill'].includes(retailerId)) {
       const image = document.createElement('img');
-      image.src = new URL('./img/logo-perekrestok.svg', import.meta.url).href;
+      image.src = new URL(`./img/logo-${retailerId}.svg`, import.meta.url).href;
       image.alt = '';
       image.addEventListener('error', () => { logo.textContent = definition.displayName; }, { once: true });
       logo.replaceChildren(image);
