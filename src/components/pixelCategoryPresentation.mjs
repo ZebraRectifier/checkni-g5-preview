@@ -51,9 +51,11 @@ export function sortPixelCategories(categories) {
 }
 
 export function pixelCategoryImage(category) {
-  // Ready meals and own brands have no suitable existing illustration. A
-  // grocery ingredient photo must not pretend to be a prepared-meal image.
-  return IMAGES[kindOf(category)] ?? null;
+  const kind = kindOf(category);
+  if (kind === 'brands' || kind === 'ready-food') {
+    return new URL(`../img/cat-${kind}.svg`, import.meta.url).href;
+  }
+  return IMAGES[kind] ?? null;
 }
 
 export function pixelCollectionCategories(categories) {
