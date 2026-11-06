@@ -4,11 +4,14 @@ const BRAND_NAME = /^(?:наши бренды|собственные(?: торг
 const READY_FOOD_NAME = /^(?:вся готовая еда|готовая еда|готовые блюда|кулинария)(?=$|[\s,;:/()—–-])/u;
 const READY_FOOD_OTHER = /ингредиент|рецепт|смеси для|посуда|животн|кошек|собак/u;
 const FAMILIES = [
-  ['dairy', /^(?:молоко|молочное|молочные продукты|молочная продукция|сыр|сыры|яйца)(?=$|[\s,;:/()—–-])/u],
+  ['dairy', /^(?:молоко|молочное|молочные продукты|молочный прилавок|молочная продукция|сыр|сыры|яйца)(?=$|[\s,;:/()—–-])/u],
   ['veg', /^(?:овощи|фрукты|ягоды|зелень)(?=$|[\s,;:/()—–-])/u],
   ['meat', /^(?:мясо|птица|рыба|морепродукты|мясные продукты|колбасы)(?=$|[\s,;:/()—–-])/u],
   ['bread', /^(?:хлеб|хлебцы|выпечка|хлебобулочные изделия)(?=$|[\s,;:/()—–-])/u],
   ['drinks', /^(?:напитки|вода|воды|соки|сок|чай|кофе)(?=$|[\s,;:/()—–-])/u],
+  ['cereal', /^крупы и сухие завтраки$/u],
+  ['care', /^гигиена и уход$/u],
+  ['kids', /^для детей$/u],
   ['grocery', /^(?:бакалея|крупы|макароны|макаронные изделия|мука|сахар|соль)(?=$|[\s,;:/()—–-])/u]
 ];
 const IMAGES = Object.freeze(Object.fromEntries(
@@ -52,7 +55,7 @@ export function sortPixelCategories(categories) {
 
 export function pixelCategoryImage(category) {
   const kind = kindOf(category);
-  if (kind === 'brands' || kind === 'ready-food') {
+  if (['brands', 'ready-food', 'cereal', 'care', 'kids'].includes(kind)) {
     return new URL(`../img/cat-${kind}.svg`, import.meta.url).href;
   }
   return IMAGES[kind] ?? null;
