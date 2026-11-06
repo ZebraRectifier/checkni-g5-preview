@@ -40,7 +40,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   const candidates=el('div');candidates.id='nearby-address-candidates';
   const selection=el('div');selection.id='nearby-selected-store';selection.hidden=true;
   const results=el('div');results.id='nearby-results';
-  const actions=el('div');actions.className='nearby-actions';actions.append(locate,manual,clear);
+  const actions=el('div');actions.className='nearby-actions';actions.append(clear);
   const networks=el('div');networks.hidden=true;networks.className='nearby-network-filters';networks.setAttribute('aria-label','Фильтр сети');
   let network='all';
   for(const [id,name] of [['all','Все'],['magnit','Магнит'],['globus','Глобус'],['metro','METRO'],['perekrestok','Перекрёсток'],['pyaterochka','Пятёрочка'],['okey','О’КЕЙ']]){
@@ -54,7 +54,8 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   const mapPrivacy=el('small','При выборе места карта OpenStreetMap загружает соответствующий участок.');
   const addressRow=el('div');addressRow.className='nearby-address-row';addressRow.append(input,addressButton);
   const privacy=el('details');privacy.className='nearby-privacy';privacy.append(el('summary','Как используется адрес'),consent,mapPrivacy);
-  panel.append(title,label,addressRow,locate,filters,networks,status,candidates,selection,results);
+  const locationActions=el('div');locationActions.className='nearby-actions nearby-location-actions';locationActions.append(locate,manual);
+  panel.append(title,label,addressRow,locationActions,filters,networks,status,candidates,selection,results);
   const extra=el('details');extra.className='nearby-extra';extra.append(el('summary','Другие способы и источники'),actions,privacy,note);panel.append(extra);root.append(openButton,panel);
   let position=null,pointName='',directory=null,version=0,limit=5,chosen=null,pendingPlaceLabel=null,region=null;
   function clearSelection(){chosen=null;selection.hidden=true;selection.replaceChildren();onInvalidate();}
@@ -140,7 +141,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   const locationChanged=s=>{
     const showMapRecovery=s.status==='denied'||s.status==='error';
     if(showMapRecovery)status.after(manual);
-    else if(manual.parentElement!==actions)actions.insertBefore(manual,clear);
+    else if(manual.parentElement!==locationActions)locationActions.append(manual);
     version++;
     if(s.status==='loading'){status.textContent='Жду разрешение браузера на геолокацию…';return;}
     if(s.position && s.status!=='loading' && s.status!=='denied' && s.status!=='error'){

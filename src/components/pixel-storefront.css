@@ -726,3 +726,7 @@ body.pixel-workspace #pixel-store-home .retail-store-card[data-retailer-id='pyat
 body.pixel-workspace .pixel-all-categories .pixel-category-fallback::before {
   content: '▦';
 }
+
+body.pixel-workspace .nearby-location-actions button {
+  flex: 0 1 auto;
+}
