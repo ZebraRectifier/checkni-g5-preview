@@ -908,9 +908,10 @@ function renderRetailStoreButtons() {
     logo.className = "retail-store-logo";
     logo.setAttribute("aria-hidden", "true");
     logo.textContent = definition.displayName;
-    if (publicRetailCatalogMode && ['perekrestok', 'vkusvill'].includes(retailerId)) {
+    if (publicRetailCatalogMode && ['magnit', 'perekrestok', 'vkusvill'].includes(retailerId)) {
       const image = document.createElement('img');
-      image.src = new URL(`./img/logo-${retailerId}.svg`, import.meta.url).href;
+      const extension = retailerId === 'magnit' ? 'png' : 'svg';
+      image.src = new URL(`./img/logo-${retailerId}.${extension}`, import.meta.url).href;
       image.alt = '';
       image.addEventListener('error', () => { logo.textContent = definition.displayName; }, { once: true });
       logo.replaceChildren(image);
