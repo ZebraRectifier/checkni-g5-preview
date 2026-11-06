@@ -45,6 +45,8 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Install pinned Chromium
         run: npx playwright install --with-deps chromium
+      - name: Verify the Pixel Character screenshots on both widths
+        run: npx playwright test --config=playwright.weekly.config.mjs hori-v13.spec.mjs --grep 'approved PixelCharacter'
       - name: Replay desktop and mobile grocery journeys without external services
         run: npx playwright test --config=playwright.weekly.config.mjs
       - name: Preserve failure diagnostics
