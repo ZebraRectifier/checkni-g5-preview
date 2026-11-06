@@ -1893,6 +1893,7 @@ function setupRetailBrowser() {
       onSelect: store => {
         selectedGlobusStore = store;
         comparedGlobusStore = resolveGlobusComparisonPeer(store.officialStoreId, comparedGlobusStore?.officialStoreId);
+        agreedNearbyStoreKey=JSON.stringify(['globus','globus-store-'+store.officialStoreId]);
         comparisonAddressChanged(); void selectRetailer("globus");
       },
       onCompareSelect: store => {

@@ -335,5 +335,13 @@ export function createGuidedShoppingFlow(options) {
     plan.requiresReview = true;
     return null;
   }
-  return { start, handle, confirm, hideReview: () => { if (plan) plan.requiresReview = true; }, getState: () => state, active: () => Boolean(plan) };
+  function scopeChanged() {
+    version++;
+    if (!plan) return null;
+    plan.rows = []; plan.drafts = []; plan.alternatives = []; plan.scope = null; plan.base = null;
+    quantityEdits = new Map();
+    plan.stage = 'intake';
+    return presentIntake();
+  }
+  return { start, handle, confirm, scopeChanged, hideReview: () => { if (plan) plan.requiresReview = true; }, getState: () => state, active: () => Boolean(plan) };
 }
