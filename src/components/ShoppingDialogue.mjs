@@ -96,7 +96,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
 
   const note = document.createElement("p");
   note.className = "shopping-dialogue-note";
-  note.textContent = "Переписка — до перезагрузки. Очистка не меняет корзину и предпочтения.";
+  note.textContent = "История — до перезагрузки. Корзина сохранится.";
   output.setAttribute("aria-atomic", "true");
   root.append(header, history, previousNote, user, speaker, output, fallback, note);
   form.prepend(root);
@@ -225,6 +225,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
     appendSources(output, state.presentation?.referenceKey);
     root.hidden = !active && !previous.length && !output.childElementCount;
     welcome.hidden = Boolean(active || previous.length || state.status !== 'idle');
+    if (help) help.hidden = Boolean(active || previous.length);
     clear.hidden = !active && !previous.length;
     speaker.hidden = !output.childElementCount;
     if (state.result?.guidedShopping) {

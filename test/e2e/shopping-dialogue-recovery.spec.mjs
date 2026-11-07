@@ -24,6 +24,8 @@ test('bare why continues the accepted shopping advice without losing context', a
   await expect(status(page)).toContainText('подойдёт филе рыбы');
   await expect(status(page).locator('.proposal-message')).toHaveCount(0);
   await expect(status(page).getByRole('button', {name:'Продолжить', exact:true})).toHaveCount(0);
+  await expect(page.locator('#basket-proposal-fallback')).toBeHidden();
+  await expect(page.locator('#basket-proposal-help')).toBeHidden();
   await expect(page.locator('#basket-proposal-input')).toBeEditable();
   await submit(page, 'почему');
   await expect(status(page)).toContainText('потому что его удобно порционировать');
@@ -38,6 +40,8 @@ test('bare why continues the accepted shopping advice without losing context', a
   expect(await savedBasket(page)).toBe(before);
   await expect(status(page)).not.toContainText('Не получилось разобрать');
   await page.screenshot({path:testInfo.outputPath('advice-followup.png')});
+  await page.locator('#shopping-dialogue-clear').click();
+  await expect(page.locator('#basket-proposal-help')).toBeVisible();
 });
 
 test.beforeEach(async ({ context }) => {

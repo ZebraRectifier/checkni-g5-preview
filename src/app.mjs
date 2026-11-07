@@ -2630,7 +2630,7 @@ function renderBasketProposalOutput() {
       );
     }
 
-    elements.proposalFallback.hidden = false;
+    elements.proposalFallback.hidden = plainAdvice;
     return;
   }
 
