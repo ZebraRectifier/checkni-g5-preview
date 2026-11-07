@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { expectedLentaRoots, pinnedRuntimePrefix } from '../tools/live-retail-smoke-contract.mjs';
+import { expectedLentaRoots, pinnedRuntimePrefix, pinnedLiveRuntimeProof } from '../tools/live-retail-smoke-contract.mjs';
 
 const row = (id, count = 2) => ({ retailer_id: 'lenta', store_id: 'lenta-public-web',
   category_id: id, root_id: id, parent_id: null, depth: 0, name: `Category ${id}`,
@@ -11,6 +11,30 @@ test('live root contract follows IDs/counts from the response, excluding seeded 
     { id: '7', name: 'Category 7', productCount: 2 },
     { id: '90', name: 'Category 90', productCount: 12 }
   ]);
+});
+
+test('live proof checks entry and pinned bytes and rejects stale or unavailable runtime', async () => {
+  const prefix = `releases/${'b'.repeat(64)}/`;
+  const local = new Map([
+    ['index.html', Buffer.from(`<script type="module" src="./${prefix}src/app.mjs"></script>`)],
+    [prefix + 'manifest.json', Buffer.from('{"version":1}')],
+    [prefix + 'src/app.mjs', Buffer.from('reviewed runtime')]
+  ]);
+  let failPath = null;
+  let unavailable = false;
+  const proof = await pinnedLiveRuntimeProof({ baseUrl: 'https://example.test/site/', files: ['src/app.mjs'],
+    readFile: async file => { assert(local.has(file)); return local.get(file); },
+    fetchImpl: async url => {
+      if (unavailable) return new Response('Unavailable', { status: 503 });
+      const file = url.pathname.slice('/site/'.length);
+      return new Response(file === failPath ? 'stale bytes' : local.get(file), { status: 200 });
+    }
+  });
+  assert.equal(proof.prefix, prefix);
+  assert.equal(await proof.matchesPublished(), true);
+  for (const file of local.keys()) { failPath = file; assert.equal(await proof.matchesPublished(), false, file); }
+  failPath = null; unavailable = true;
+  assert.equal(await proof.matchesPublished(), false);
 });
 
 test('root oracle fails on empty/foreign/duplicate/invalid provenance responses', () => {

@@ -4,17 +4,34 @@ on:
   push:
     branches: [main]
     paths:
+      - "index.html"
+      - "tools/live-retail-smoke-contract.mjs"
+      - "tests/live-retail-smoke-contract.test.mjs"
       - "src/ports/retailCatalogPort.mjs"
       - "deployment.json"
       - ".github/workflows/perekrestok-live-smoke.yml"
       - ".github/workflows/live-retail-smoke.yml"
+  pull_request:
+    paths:
+      - ".github/workflows/perekrestok-live-smoke.yml"
+      - "tools/live-retail-smoke-contract.mjs"
+      - "tests/live-retail-smoke-contract.test.mjs"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  smoke-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - run: node --test tests/live-retail-smoke-contract.test.mjs
   perekrestok-live:
+    if: github.event_name != 'pull_request'
+    needs: smoke-contract
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -35,26 +52,6 @@ jobs:
           set -euo pipefail
           node <<'NODE'
           const { chromium } = require("playwright-core");
-          const fs = require("node:fs");
-          const { createHash } = require("node:crypto");
-          const reviewedRuntime = ["reviewedRetailBasket.mjs", "perekrestokReviewedList.mjs"]
-            .map(name => ({ name, digest: createHash("sha256")
-              .update(fs.readFileSync("./src/catalog/" + name)).digest("hex") }));
-          async function publishedRuntimeMatches(attempt) {
-            for (const file of reviewedRuntime) {
-              const url = new URL("./src/catalog/" + file.name,
-                "https://zebrarectifier.github.io/checkni-g5-preview/");
-              url.searchParams.set("perekListRuntimeProbe", String(attempt));
-              try {
-                const response = await fetch(url, { cache:"no-store", signal:AbortSignal.timeout(5000) });
-                if (!response.ok) return false;
-                const body = Buffer.from(await response.arrayBuffer());
-                if (body.length > 32768 || createHash("sha256").update(body).digest("hex") !== file.digest) return false;
-              } catch { return false; }
-            }
-            return true;
-          }
-
           const base =
             "https://zebrarectifier.github.io/checkni-g5-preview/?comparison=observed&catalog=retail";
 
@@ -102,7 +99,13 @@ jobs:
           }
 
           (async () => {
-            const {createRetailCatalogClient,normalizeRetailCategory} = await import("./src/ports/retailCatalogPort.mjs");
+            const { pinnedLiveRuntimeProof } = await import("./tools/live-retail-smoke-contract.mjs");
+            const runtime = await pinnedLiveRuntimeProof({
+              baseUrl: "https://zebrarectifier.github.io/checkni-g5-preview/",
+              files: ["src/app.mjs", "src/components/ProductCard.mjs", "src/ports/retailCatalogPort.mjs", "src/catalog/reviewedRetailBasket.mjs", "src/catalog/perekrestokReviewedList.mjs", "src/catalog/sourceScopedRetailList.mjs", "src/catalog/sourceCatalogListAdmission.mjs", "src/data/metroMoscowRegionStores.mjs"]
+            });
+            const runtimePrefix = "./" + runtime.prefix;
+            const {createRetailCatalogClient,normalizeRetailCategory} = await import(runtimePrefix + "src/ports/retailCatalogPort.mjs");
             const definition = createRetailCatalogClient({retailerId:"perekrestok"}).definition;
             const browser = await chromium.launch({
               headless: true,
@@ -126,7 +129,7 @@ jobs:
                 text.includes("Перекрёсток · Москва · цены доставки Яндекс Еды")
                 && text.includes("Каталог выбранного адреса")
                 && text.includes("наличие неизвестно")
-                && await publishedRuntimeMatches(attempt)
+                && await runtime.matchesPublished(attempt)
               ) {
                 published = true;
                 break;
@@ -134,6 +137,8 @@ jobs:
               await page.waitForTimeout(2500);
             }
             assert(published, "Published Pages artifact does not expose mass Perekrestok");
+            assert(await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src")
+              === runtimePrefix + "src/app.mjs", "Browser Perekrestok runtime differs from byte-verified release");
 
             const store = page.locator("#retail-store-card-perekrestok");
             const rootResponse = page.waitForResponse(response => {
@@ -197,9 +202,10 @@ jobs:
               cardText.includes("Перекрёсток · Москва, Большой Овчинниковский пер. 16 · Яндекс Еда · источник"),
               "Perekrestok store/source provenance is missing"
             );
-            // Exact manually reviewed packs can enter a price-free list.
-            // Reuse the registry guard; every other observation stays disabled.
-            const { getReviewedRetailBasketProduct } = await import("./src/catalog/reviewedRetailBasket.mjs");
+            // Use the actual immutable manual-list contract. A source SKU is
+            // not a canonical equivalent and does not establish a cheaper store.
+            const { getReviewedRetailBasketProduct } = await import(runtimePrefix + "src/catalog/reviewedRetailBasket.mjs");
+            const { sourceCatalogListSelection, SOURCE_CATALOG_LIST_MAX_AGE_MS } = await import(runtimePrefix + "src/catalog/sourceCatalogListAdmission.mjs");
             const prefix = "retail:perekrestok:perekrestok-yandex-3186917:";
             const cardId = await card.getAttribute("data-product-id");
             assert(cardId?.startsWith(prefix), "Unexpected delivery context");
@@ -209,8 +215,34 @@ jobs:
             assert(item, "Exact saved catalogue card unavailable for manual-list verification");
             const identity = getReviewedRetailBasketProduct(item);
             const allowed = Boolean(identity && item.basketProductId === identity.id);
-            assert(await card.getByRole("button").isDisabled() === !allowed,
-              "Only exact reviewed delivery packs may enter the manual list");
+            const add = card.locator(".add-button");
+            assert(await add.isDisabled() === !allowed,
+              "Delivery add action must follow pinned identity/scope/freshness admission");
+            assert(await card.locator(".product-observed-at").getAttribute("datetime") === item.observedAt,
+              "Delivery card observation date differs from the exact source row");
+            if (item.sourceListOnly) {
+              assert(allowed && identity.id === cardId, "Source-scoped list item lost its original store/SKU identity");
+              assert(sourceCatalogListSelection(item, { nowMs: Date.parse(item.observedAt) + SOURCE_CATALOG_LIST_MAX_AGE_MS }) === null,
+                "Expired source observation must not grant manual-list admission");
+              assert(sourceCatalogListSelection(JSON.parse(JSON.stringify(item))) === null,
+                "Saved JSON must not recreate source admission or a comparison offer");
+            }
+            if (allowed) {
+              await add.click();
+              await page.waitForFunction(id => JSON.parse(localStorage.getItem("checkni.surface.basket.v1") ?? "[]")
+                .some(row => row.id === id && row.quantity === 1), identity.id, { timeout: 5000 });
+              const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("checkni.surface.basket.v1") ?? "[]"));
+              assert(saved.length === 1 && saved[0].id === identity.id && saved[0].name === identity.name,
+                "Manual list must keep the exact admitted item");
+              assert(Object.keys(saved[0]).sort().join(",") === "id,name,quantity,unit",
+                "Manual list must not persist an observation price as a comparison offer");
+              await page.locator('[data-pixel-action="basket"]').click();
+              await page.locator(".basket-row").filter({ hasText: identity.name }).waitFor({ state: "visible" });
+              await page.reload({ waitUntil: "domcontentloaded" });
+              await page.locator(".basket-row").filter({ hasText: identity.name }).waitFor({ state: "visible", timeout: 15000 });
+              assert(await page.evaluate(id => JSON.parse(localStorage.getItem("checkni.surface.basket.v1") ?? "[]")
+                .some(row => row.id === id && row.quantity === 1), identity.id), "Reload lost the source-scoped manual list");
+            }
             assert(pageErrors.length === 0, "Page errors: " + pageErrors.join(" | "));
 
             console.log("PEREKRESTOK_MASS_LIVE", JSON.stringify({

@@ -1,0 +1,177 @@
+{
+  "slug": "nizhny-novgorod",
+  "file": "E:\\CHECKNI-evidence\\regions-night-20261105\\nizhny-novgorod.osm.pbf",
+  "sha256": "a67fe39d47127b88c6bb7aea6201092062b651421c8fe3e757e06ae3b488e335",
+  "objects": {
+    "osm:way:154431959": {
+      "id": "osm:way:154431959",
+      "sourceUrl": "https://www.openstreetmap.org/way/154431959",
+      "version": 12,
+      "timestamp": "2026-05-30 12:40:17+00:00",
+      "tags": {
+        "addr:housenumber": "3А",
+        "addr:street": "Мещерский бульвар",
+        "branch": "Cash & Carry",
+        "brand": "METRO",
+        "brand:wikidata": "Q13610282",
+        "building": "yes",
+        "building:levels": "4",
+        "contact:email": "entry.store21@metro-cc.ru",
+        "contact:phone": "+7 800 7001077;+7 831 2780000",
+        "contact:website": "https://online.metro-cc.ru",
+        "name": "Metro",
+        "not:brand:wikidata": "Q13610282",
+        "opening_hours": "Mo-Su 07:00-23:00",
+        "payment:cards": "yes",
+        "payment:cash": "yes",
+        "shop": "wholesale"
+      },
+      "nodeRefs": [
+        1669776004,
+        1699970980,
+        5183554833,
+        1669775986,
+        1669776003,
+        1669776045,
+        1669776061,
+        1669776027,
+        1669776047,
+        1669776014,
+        1669775988,
+        1669775979,
+        1669776004
+      ],
+      "polygonCoordinates": [
+        [
+          43.9499162,
+          56.3342952
+        ],
+        [
+          43.950801,
+          56.333927
+        ],
+        [
+          43.951488,
+          56.3336411
+        ],
+        [
+          43.951701,
+          56.3335525
+        ],
+        [
+          43.9527289,
+          56.3343117
+        ],
+        [
+          43.9525197,
+          56.3343987
+        ],
+        [
+          43.9524766,
+          56.3343669
+        ],
+        [
+          43.9521297,
+          56.3345112
+        ],
+        [
+          43.9522099,
+          56.3345705
+        ],
+        [
+          43.9520035,
+          56.3346564
+        ],
+        [
+          43.9518972,
+          56.3345779
+        ],
+        [
+          43.950875,
+          56.3350032
+        ],
+        [
+          43.9499162,
+          56.3342952
+        ]
+      ]
+    },
+    "osm:way:158512896": {
+      "id": "osm:way:158512896",
+      "sourceUrl": "https://www.openstreetmap.org/way/158512896",
+      "version": 7,
+      "timestamp": "2022-07-04 14:42:33+00:00",
+      "tags": {
+        "addr:housenumber": "4А",
+        "addr:street": "улица Нартова",
+        "building": "yes",
+        "building:levels": "2",
+        "contact:email": "entry.store50@metro-cc.ru",
+        "contact:phone": "+7 800 7001077;+7 831 2201900",
+        "contact:website": "https://online.metro-cc.ru",
+        "name": "Metro",
+        "opening_hours": "Mo-Su 07:00-23:00",
+        "shop": "supermarket"
+      },
+      "nodeRefs": [
+        1706992923,
+        1706992852,
+        1706992578,
+        1706992515,
+        1706992491,
+        1706992496,
+        1706992533,
+        1706992627,
+        1915101326,
+        1706992693,
+        1706992923
+      ],
+      "polygonCoordinates": [
+        [
+          43.9971591,
+          56.2874974
+        ],
+        [
+          43.9987368,
+          56.2873502
+        ],
+        [
+          43.9985376,
+          56.2866925
+        ],
+        [
+          43.9984424,
+          56.2863783
+        ],
+        [
+          43.9984248,
+          56.2863201
+        ],
+        [
+          43.9982082,
+          56.2863403
+        ],
+        [
+          43.9968471,
+          56.2864673
+        ],
+        [
+          43.9969761,
+          56.2868952
+        ],
+        [
+          43.9969977,
+          56.2869649
+        ],
+        [
+          43.9970274,
+          56.2870605
+        ],
+        [
+          43.9971591,
+          56.2874974
+        ]
+      ]
+    }
+  }
+}

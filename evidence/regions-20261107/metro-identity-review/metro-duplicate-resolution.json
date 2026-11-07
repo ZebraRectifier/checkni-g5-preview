@@ -1,0 +1,2178 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-11-07T07:38:33.458Z",
+  "method": "Offline review of already saved official directory and exact OSM object tags. No network reads or new collection.",
+  "sourceAsOf": "Original directory observed2026-11-05; OSM object versions/timestamps recorded per object. Review date is not a freshness claim.",
+  "license": "OSM-derived excerpts: ODbL-1.0, © OpenStreetMap contributors, https://www.openstreetmap.org/copyright",
+  "status": "evidence-only-review-no-runtime-or-data-changes",
+  "summary": {
+    "baselineQueue": 742,
+    "candidates": 12,
+    "alreadyRepresented": 11,
+    "candidatesStillHeld": 1,
+    "otherLocalityItemHeld": 1,
+    "queueIfLedgerAccepted": 731,
+    "addedStores": 0,
+    "cataloguesAdded": 0,
+    "priceEvidenceAdded": 0,
+    "originalReviewRowsRetained": 742
+  },
+  "decisions": [
+    {
+      "slug": "saint-petersburg",
+      "reviewId": "osm:way:23406988",
+      "reviewAddress": "Санкт-Петербург, Комендантский проспект, 3",
+      "reviewSource": "https://www.openstreetmap.org/way/23406988",
+      "addressEvidenceUrl": null,
+      "existingId": "official:metro:15",
+      "existingAddress": "г. Санкт-Петербург, Комендантский проспект, д.3, лит. А",
+      "officialSource": "https://www.metro-cc.ru/torgovye-centry",
+      "officialObservedAt": "2026-11-05T16:06:56.418827+00:00",
+      "distanceMeters": 7,
+      "decision": "already-represented-in-cached-sources",
+      "reason": "Exact official store_id agrees with the store number in the mapped business contact mailbox; chain, city and building street/house agree. Coordinate proximity is supporting context only.",
+      "identityProof": {
+        "officialStoreId": "15",
+        "mapBusinessMailbox": "entry.store15@metro-cc.ru",
+        "mailboxStoreCode": "15",
+        "officialIdUnique": true,
+        "officialName": "Ул. Комендантский пр-т, д. 3, лит. А (м. Комендантский пр-т)",
+        "officialAddress": "197227, г. Санкт-Петербург, Комендантский проспект,  д.3, лит. А",
+        "officialCity": "Санкт-Петербург",
+        "osmStreet": "Комендантский проспект",
+        "osmHouse": "3",
+        "addressObjectId": "osm:way:23406988",
+        "postcode": "197227",
+        "manualNormalization": "Map house3 omits literaА; exact store15 business identity disambiguates. Published address remains unchanged."
+      },
+      "officialRow": {
+        "id": 35,
+        "officialId": 15,
+        "name": "Ул. Комендантский пр-т, д. 3, лит. А (м. Комендантский пр-т)",
+        "address": "197227, г. Санкт-Петербург, Комендантский проспект,  д.3, лит. А",
+        "city": "Санкт-Петербург",
+        "region": "Санкт-Петербург",
+        "lat": 60.002202,
+        "lon": 30.26868
+      },
+      "osmObject": {
+        "id": "osm:way:23406988",
+        "sourceUrl": "https://www.openstreetmap.org/way/23406988",
+        "version": 64,
+        "timestamp": "2026-05-27 21:07:03+00:00",
+        "tags": {
+          "addr:housenumber": "3",
+          "addr:postcode": "197227",
+          "addr:street": "Комендантский проспект",
+          "brand": "METRO",
+          "brand:wikidata": "Q13610282",
+          "brand:wikipedia": "en:Metro Cash & Carry",
+          "building": "store",
+          "building:levels": "2",
+          "contact:email": "entry.store15@metro-cc.ru",
+          "contact:phone": "+7 800 7001077;+7 812 4491500",
+          "contact:website": "https://online.metro-cc.ru",
+          "height": "6",
+          "internet_access": "wlan",
+          "name": "Metro",
+          "name:en": "Metro",
+          "name:ru": "Метро",
+          "opening_hours": "Mo-Su 06:00-23:30",
+          "operator": "МЕТРО Кэш энд Керри Россия",
+          "payment:cash": "yes",
+          "payment:maestro": "yes",
+          "payment:mastercard": "yes",
+          "payment:visa": "yes",
+          "payment:visa_electron": "yes",
+          "roof:shape": "flat",
+          "shop": "supermarket",
+          "source:height": "satellite image",
+          "wheelchair": "yes",
+          "wholesale": "yes"
+        },
+        "nodeRefs": [
+          1422865439,
+          1422865456,
+          253415975,
+          1422865465,
+          1422865468,
+          1422865602,
+          1422865586,
+          4131069722,
+          253416004,
+          1422865963,
+          4131069729,
+          1422865982,
+          253416030,
+          1422866093,
+          1422866039,
+          1422866041,
+          1422866083,
+          1422866143,
+          253416018,
+          1422866021,
+          1422865980,
+          1422865978,
+          9270528960,
+          1422865785,
+          1422865788,
+          1422865753,
+          1422865703,
+          1422865666,
+          1422865655,
+          1422865550,
+          1422865540,
+          1422865474,
+          1422865461,
+          1422865476,
+          1422865463,
+          1422865450,
+          1422865439
+        ],
+        "polygonCoordinates": [
+          [
+            30.2691408,
+            60.0015373
+          ],
+          [
+            30.2691839,
+            60.0016204
+          ],
+          [
+            30.2692993,
+            60.0016054
+          ],
+          [
+            30.2693461,
+            60.0016957
+          ],
+          [
+            30.2692306,
+            60.0017107
+          ],
+          [
+            30.2694421,
+            60.0021184
+          ],
+          [
+            30.2696157,
+            60.0020959
+          ],
+          [
+            30.26989,
+            60.0026248
+          ],
+          [
+            30.2699297,
+            60.0027014
+          ],
+          [
+            30.2697558,
+            60.0027239
+          ],
+          [
+            30.2695912,
+            60.0027452
+          ],
+          [
+            30.2694408,
+            60.0027647
+          ],
+          [
+            30.2694914,
+            60.0028622
+          ],
+          [
+            30.2684924,
+            60.0029918
+          ],
+          [
+            30.2684418,
+            60.0028941
+          ],
+          [
+            30.2683911,
+            60.0029007
+          ],
+          [
+            30.2684356,
+            60.0029865
+          ],
+          [
+            30.2680019,
+            60.0030427
+          ],
+          [
+            30.2679148,
+            60.0028748
+          ],
+          [
+            30.2678791,
+            60.0028794
+          ],
+          [
+            30.2678156,
+            60.0027569
+          ],
+          [
+            30.2679154,
+            60.002744
+          ],
+          [
+            30.2678889,
+            60.002693
+          ],
+          [
+            30.2677821,
+            60.0024871
+          ],
+          [
+            30.2676883,
+            60.0024993
+          ],
+          [
+            30.267648,
+            60.0024216
+          ],
+          [
+            30.2675831,
+            60.0022966
+          ],
+          [
+            30.2675439,
+            60.0022209
+          ],
+          [
+            30.2676406,
+            60.0022084
+          ],
+          [
+            30.2675433,
+            60.0020206
+          ],
+          [
+            30.2676413,
+            60.0020079
+          ],
+          [
+            30.2675071,
+            60.0017491
+          ],
+          [
+            30.2681645,
+            60.0016639
+          ],
+          [
+            30.2682106,
+            60.0017529
+          ],
+          [
+            30.2686947,
+            60.0016901
+          ],
+          [
+            30.2686485,
+            60.0016011
+          ],
+          [
+            30.2691408,
+            60.0015373
+          ]
+        ]
+      },
+      "sourceEvidence": {
+        "officialSnapshot": "source/metro-official.html.gz",
+        "officialSnapshotSha256": "f5e17f0de7892048abaf523217657d7082911487fb18dbd3e22ed1687f2400e2",
+        "officialParsed": "source/metro-parsed.json",
+        "officialParsedSha256": "a95cec796285fbfdbb14ed9455b3ded0886355bd55c4409356dbf411ee717013",
+        "osmSnapshot": "E:\\CHECKNI-evidence\\regions-night-20261105\\saint-petersburg.osm.pbf",
+        "osmSnapshotSha256": "7c94a68f9640497f97bd43df1f55d837bad8e782df83a7f751552d21b89f3cd1",
+        "extractedProof": "source/saint-petersburg-cached-osm-proof.json",
+        "extractedProofSha256": "421a8d8b589fe2982afd3c2ae4629a08e805bd2d9dae2f69b4a43327abc662c4",
+        "officialSnapshotEncoding": "gzip",
+        "officialSnapshotCompressedSha256": "ca788045760ba228ac6e416fc306249e9b39b6911028fba9e9ad4a2b1b7a81f3",
+        "trackedTextHashBasis": "UTF-8 with LF line endings; original raw source hashes retained separately",
+        "extractedProofTrackedSha256": "8b9ce808f2734cedb4b05541ce16f824380ead154253cc4921a5af1e1272c59a",
+        "officialParsedTrackedSha256": "2e820130eb9c66e7a20a7e9f8c58f5e53d6d889092ad96357a3809e7a661b4aa"
+      },
+      "runtimeAction": "none; preserve existing official ID and all current runtime rows",
+      "catalogueAction": "none; no price or availability assertion"
+    },
+    {
+      "slug": "saint-petersburg",
+      "reviewId": "osm:way:49900061",
+      "reviewAddress": "Санкт-Петербург, Пулковское шоссе, 23 литА",
+      "reviewSource": "https://www.openstreetmap.org/way/49900061",
+      "addressEvidenceUrl": null,
+      "existingId": "official:metro:20",
+      "existingAddress": "г. Санкт-Петербург, Пулковское шоссе, д.23, лит. A",
+      "officialSource": "https://www.metro-cc.ru/torgovye-centry",
+      "officialObservedAt": "2026-11-05T16:06:56.418827+00:00",
+      "distanceMeters": 16,
+      "decision": "already-represented-in-cached-sources",
+      "reason": "Exact official store_id agrees with the store number in the mapped business contact mailbox; chain, city and building street/house agree. Coordinate proximity is supporting context only.",
+      "identityProof": {
+        "officialStoreId": "20",
+        "mapBusinessMailbox": "Entry.Store20@metro-cc.ru",
+        "mailboxStoreCode": "20",
+        "officialIdUnique": true,
+        "officialName": "Ул. Пулковское шоссе, д. 23, лит. A (м. Звездная)",
+        "officialAddress": "196240, г. Санкт-Петербург, Пулковское шоссе, д.23, лит. A",
+        "officialCity": "Санкт-Петербург",
+        "osmStreet": "Пулковское шоссе",
+        "osmHouse": "23 литА",
+        "addressObjectId": "osm:way:49900061",
+        "postcode": "196240",
+        "manualNormalization": "Only street-type abbreviations, ё/е and Cyrillic/Latin А in a suffix were compared; building number preserved."
+      },
+      "officialRow": {
+        "id": 37,
+        "officialId": 20,
+        "name": "Ул. Пулковское шоссе, д. 23, лит. A (м. Звездная)",
+        "address": "196240, г. Санкт-Петербург, Пулковское шоссе, д.23, лит. A",
+        "city": "Санкт-Петербург",
+        "region": "Санкт-Петербург",
+        "lat": 59.822342579498375,
+        "lon": 30.316797347559262
+      },
+      "osmObject": {
+        "id": "osm:way:49900061",
+        "sourceUrl": "https://www.openstreetmap.org/way/49900061",
+        "version": 62,
+        "timestamp": "2026-06-30 17:45:11+00:00",
+        "tags": {
+          "addr:housenumber": "23 литА",
+          "addr:postcode": "196240",
+          "addr:street": "Пулковское шоссе",
+          "brand": "METRO",
+          "brand:wikidata": "Q13610282",
+          "brand:wikipedia": "en:Metro Cash & Carry",
+          "building": "store",
+          "building:levels": "1",
+          "contact:email": "Entry.Store20@metro-cc.ru",
+          "contact:phone": "+7 800 7001077;+7 812 4482000",
+          "contact:website": "https://online.metro-cc.ru",
+          "internet_access": "wlan",
+          "name": "Metro",
+          "name:en": "Metro",
+          "name:ru": "Метро",
+          "opening_hours": "Mo-Su 06:00-23:30",
+          "operator": "МЕТРО Кэш энд Керри Россия",
+          "payment:cash": "yes",
+          "payment:maestro": "yes",
+          "payment:mastercard": "yes",
+          "payment:visa": "yes",
+          "payment:visa_electron": "yes",
+          "roof:shape": "flat",
+          "shop": "wholesale",
+          "wheelchair": "yes",
+          "wholesale": "yes"
+        },
+        "nodeRefs": [
+          634171591,
+          634171592,
+          13967940561,
+          634171593,
+          4034724782,
+          634171594,
+          634171595,
+          634171596,
+          659739691,
+          634171598,
+          634171599,
+          4034724781,
+          634171600,
+          634171601,
+          634171603,
+          634171591
+        ],
+        "polygonCoordinates": [
+          [
+            30.3156981,
+            59.8230475
+          ],
+          [
+            30.3174605,
+            59.823069
+          ],
+          [
+            30.3174664,
+            59.8229475
+          ],
+          [
+            30.3174866,
+            59.8225276
+          ],
+          [
+            30.3176193,
+            59.8225292
+          ],
+          [
+            30.3177104,
+            59.8225303
+          ],
+          [
+            30.3176954,
+            59.8228397
+          ],
+          [
+            30.3181587,
+            59.8228453
+          ],
+          [
+            30.3182076,
+            59.8218323
+          ],
+          [
+            30.3177406,
+            59.8218266
+          ],
+          [
+            30.3177132,
+            59.8223924
+          ],
+          [
+            30.3176256,
+            59.8223913
+          ],
+          [
+            30.3175081,
+            59.8223899
+          ],
+          [
+            30.3175352,
+            59.8218291
+          ],
+          [
+            30.315758,
+            59.8218074
+          ],
+          [
+            30.3156981,
+            59.8230475
+          ]
+        ]
+      },
+      "sourceEvidence": {
+        "officialSnapshot": "source/metro-official.html.gz",
+        "officialSnapshotSha256": "f5e17f0de7892048abaf523217657d7082911487fb18dbd3e22ed1687f2400e2",
+        "officialParsed": "source/metro-parsed.json",
+        "officialParsedSha256": "a95cec796285fbfdbb14ed9455b3ded0886355bd55c4409356dbf411ee717013",
+        "osmSnapshot": "E:\\CHECKNI-evidence\\regions-night-20261105\\saint-petersburg.osm.pbf",
+        "osmSnapshotSha256": "7c94a68f9640497f97bd43df1f55d837bad8e782df83a7f751552d21b89f3cd1",
+        "extractedProof": "source/saint-petersburg-cached-osm-proof.json",
+        "extractedProofSha256": "421a8d8b589fe2982afd3c2ae4629a08e805bd2d9dae2f69b4a43327abc662c4",
+        "officialSnapshotEncoding": "gzip",
+        "officialSnapshotCompressedSha256": "ca788045760ba228ac6e416fc306249e9b39b6911028fba9e9ad4a2b1b7a81f3",
+        "trackedTextHashBasis": "UTF-8 with LF line endings; original raw source hashes retained separately",
+        "extractedProofTrackedSha256": "8b9ce808f2734cedb4b05541ce16f824380ead154253cc4921a5af1e1272c59a",
+        "officialParsedTrackedSha256": "2e820130eb9c66e7a20a7e9f8c58f5e53d6d889092ad96357a3809e7a661b4aa"
+      },
+      "runtimeAction": "none; preserve existing official ID and all current runtime rows",
+      "catalogueAction": "none; no price or availability assertion"
+    },
+    {
+      "slug": "saint-petersburg",
+      "reviewId": "osm:way:54654879",
+      "reviewAddress": "Санкт-Петербург, проспект Косыгина, 4 литА",
+      "reviewSource": "https://www.openstreetmap.org/way/54654879",
+      "addressEvidenceUrl": null,
+      "existingId": "official:metro:16",
+      "existingAddress": "г. Санкт-Петербург, просп. Косыгина 4, лит. А",
+      "officialSource": "https://www.metro-cc.ru/torgovye-centry",
+      "officialObservedAt": "2026-11-05T16:06:56.418827+00:00",
+      "distanceMeters": 17,
+      "decision": "already-represented-in-cached-sources",
+      "reason": "Exact official store_id agrees with the store number in the mapped business contact mailbox; chain, city and building street/house agree. Coordinate proximity is supporting context only.",
+      "identityProof": {
+        "officialStoreId": "16",
+        "mapBusinessMailbox": "Entry.Store16@metro-cc.ru",
+        "mailboxStoreCode": "16",
+        "officialIdUnique": true,
+        "officialName": "Ул. Пр-т Косыгина, д. 4, лит. А (м. Ладожская)",
+        "officialAddress": "195298 г. Санкт-Петербург, просп. Косыгина 4, лит. А",
+        "officialCity": "Санкт-Петербург",
+        "osmStreet": "проспект Косыгина",
+        "osmHouse": "4 литА",
+        "addressObjectId": "osm:way:54654879",
+        "postcode": "195279",
+        "manualNormalization": "Only street-type abbreviations, ё/е and Cyrillic/Latin А in a suffix were compared; building number preserved."
+      },
+      "officialRow": {
+        "id": 36,
+        "officialId": 16,
+        "name": "Ул. Пр-т Косыгина, д. 4, лит. А (м. Ладожская)",
+        "address": "195298 г. Санкт-Петербург, просп. Косыгина 4, лит. А",
+        "city": "Санкт-Петербург",
+        "region": "Санкт-Петербург",
+        "lat": 59.94083006417833,
+        "lon": 30.45617599999998
+      },
+      "osmObject": {
+        "id": "osm:way:54654879",
+        "sourceUrl": "https://www.openstreetmap.org/way/54654879",
+        "version": 55,
+        "timestamp": "2026-05-27 21:07:03+00:00",
+        "tags": {
+          "addr:housenumber": "4 литА",
+          "addr:postcode": "195279",
+          "addr:street": "проспект Косыгина",
+          "brand": "METRO",
+          "brand:wikidata": "Q13610282",
+          "brand:wikipedia": "en:Metro Cash & Carry",
+          "building": "store",
+          "building:levels": "2",
+          "contact:email": "Entry.Store16@metro-cc.ru",
+          "contact:phone": "+7 800 7001077;+7 812 4491600",
+          "contact:website": "https://online.metro-cc.ru",
+          "internet_access": "wlan",
+          "name": "Metro",
+          "name:en": "Metro",
+          "name:ru": "Метро",
+          "opening_hours": "Mo-Su 06:00-23:30",
+          "operator": "МЕТРО Кэш энд Керри Россия",
+          "payment:cash": "yes",
+          "payment:maestro": "yes",
+          "payment:mastercard": "yes",
+          "payment:visa": "yes",
+          "payment:visa_electron": "yes",
+          "roof:shape": "flat",
+          "shop": "supermarket",
+          "wheelchair": "yes",
+          "wholesale": "yes"
+        },
+        "nodeRefs": [
+          687951487,
+          998660605,
+          998660919,
+          998660453,
+          998660764,
+          687951499,
+          998661236,
+          998660844,
+          687951472,
+          998660682,
+          998660987,
+          687951490,
+          998660331,
+          998661088,
+          10240294531,
+          998661336,
+          998660898,
+          998660714,
+          13889730756,
+          998660847,
+          998661267,
+          998660457,
+          998661114,
+          998661379,
+          998660536,
+          13889730757,
+          998661033,
+          998660282,
+          998660625,
+          10240294530,
+          998660241,
+          998660599,
+          687951487
+        ],
+        "polygonCoordinates": [
+          [
+            30.4550428,
+            59.9411954
+          ],
+          [
+            30.4556463,
+            59.9413564
+          ],
+          [
+            30.4557434,
+            59.9412652
+          ],
+          [
+            30.4561802,
+            59.9413817
+          ],
+          [
+            30.456088,
+            59.9414684
+          ],
+          [
+            30.4565444,
+            59.9415901
+          ],
+          [
+            30.4571185,
+            59.9410502
+          ],
+          [
+            30.4572589,
+            59.9410876
+          ],
+          [
+            30.4578397,
+            59.9405414
+          ],
+          [
+            30.457386,
+            59.9404204
+          ],
+          [
+            30.4574805,
+            59.9403316
+          ],
+          [
+            30.456128,
+            59.9399707
+          ],
+          [
+            30.4558359,
+            59.9402455
+          ],
+          [
+            30.4559087,
+            59.9402649
+          ],
+          [
+            30.4557536,
+            59.9404108
+          ],
+          [
+            30.4556755,
+            59.9404842
+          ],
+          [
+            30.4555777,
+            59.9404581
+          ],
+          [
+            30.4555117,
+            59.9405203
+          ],
+          [
+            30.4554573,
+            59.9405058
+          ],
+          [
+            30.4553897,
+            59.9404877
+          ],
+          [
+            30.4556864,
+            59.9402087
+          ],
+          [
+            30.4552785,
+            59.9400999
+          ],
+          [
+            30.454363,
+            59.9409609
+          ],
+          [
+            30.4547818,
+            59.9410726
+          ],
+          [
+            30.455266,
+            59.9406172
+          ],
+          [
+            30.4553259,
+            59.9406332
+          ],
+          [
+            30.4553839,
+            59.9406487
+          ],
+          [
+            30.4552987,
+            59.9407288
+          ],
+          [
+            30.4554021,
+            59.9407564
+          ],
+          [
+            30.4553279,
+            59.9408262
+          ],
+          [
+            30.4552185,
+            59.940929
+          ],
+          [
+            30.4553022,
+            59.9409514
+          ],
+          [
+            30.4550428,
+            59.9411954
+          ]
+        ]
+      },
+      "sourceEvidence": {
+        "officialSnapshot": "source/metro-official.html.gz",
+        "officialSnapshotSha256": "f5e17f0de7892048abaf523217657d7082911487fb18dbd3e22ed1687f2400e2",
+        "officialParsed": "source/metro-parsed.json",
+        "officialParsedSha256": "a95cec796285fbfdbb14ed9455b3ded0886355bd55c4409356dbf411ee717013",
+        "osmSnapshot": "E:\\CHECKNI-evidence\\regions-night-20261105\\saint-petersburg.osm.pbf",
+        "osmSnapshotSha256": "7c94a68f9640497f97bd43df1f55d837bad8e782df83a7f751552d21b89f3cd1",
+        "extractedProof": "source/saint-petersburg-cached-osm-proof.json",
+        "extractedProofSha256": "421a8d8b589fe2982afd3c2ae4629a08e805bd2d9dae2f69b4a43327abc662c4",
+        "officialSnapshotEncoding": "gzip",
+        "officialSnapshotCompressedSha256": "ca788045760ba228ac6e416fc306249e9b39b6911028fba9e9ad4a2b1b7a81f3",
+        "trackedTextHashBasis": "UTF-8 with LF line endings; original raw source hashes retained separately",
+        "extractedProofTrackedSha256": "8b9ce808f2734cedb4b05541ce16f824380ead154253cc4921a5af1e1272c59a",
+        "officialParsedTrackedSha256": "2e820130eb9c66e7a20a7e9f8c58f5e53d6d889092ad96357a3809e7a661b4aa"
+      },
+      "runtimeAction": "none; preserve existing official ID and all current runtime rows",
+      "catalogueAction": "none; no price or availability assertion"
+    },
+    {
+      "slug": "kazan",
+      "reviewId": "osm:way:61424370",
+      "reviewAddress": "Казань, улица Мулланура Вахитова, 4",
+      "reviewSource": "https://www.openstreetmap.org/way/61424370",
+      "addressEvidenceUrl": null,
+      "existingId": "official:metro:23",
+      "existingAddress": "республика Татарстан, Казань, 4, ул. Вахитова, 4",
+      "officialSource": "https://www.metro-cc.ru/torgovye-centry",
+      "officialObservedAt": "2026-11-05T16:06:56.418827+00:00",
+      "distanceMeters": 19,
+      "decision": "already-represented-in-cached-sources",
+      "reason": "Exact official store_id agrees with the store number in the mapped business contact mailbox; chain, city and building street/house agree. Coordinate proximity is supporting context only.",
+      "identityProof": {
+        "officialStoreId": "23",
+        "mapBusinessMailbox": "entry.store23@metro-cc.ru",
+        "mailboxStoreCode": "23",
+        "officialIdUnique": true,
+        "officialName": "Ул. Мулланура Вахитова, д. 4 (м. Козья слобода)",
+        "officialAddress": "420124, республика Татарстан, Казань, 4, ул. Вахитова, 4",
+        "officialCity": "Казань",
+        "osmStreet": "улица Мулланура Вахитова",
+        "osmHouse": "4",
+        "addressObjectId": "osm:way:61424370",
+        "postcode": null,
+        "manualNormalization": "Official name contains full Мулланура Вахитова; shortened address alone was not used."
+      },
+      "officialRow": {
+        "id": 29,
+        "officialId": 23,
+        "name": "Ул. Мулланура Вахитова, д. 4 (м. Козья слобода)",
+        "address": "420124, республика Татарстан, Казань, 4, ул. Вахитова, 4",
+        "city": "Казань",
+        "region": "Казань",
+        "lat": 55.812307,
+        "lon": 49.081917
+      },
+      "osmObject": {
+        "id": "osm:way:61424370",
+        "sourceUrl": "https://www.openstreetmap.org/way/61424370",
+        "version": 22,
+        "timestamp": "2025-04-06 20:01:29+00:00",
+        "tags": {
+          "addr:city": "Казань",
+          "addr:housenumber": "4",
+          "addr:street": "улица Мулланура Вахитова",
+          "branch": "Cash & Carry",
+          "brand": "METRO",
+          "brand:wikidata": "Q13610282",
+          "brand:wikipedia": "en:Metro Cash & Carry",
+          "building": "retail",
+          "building:colour": "blue",
+          "check_date": "2025-04-06",
+          "contact:email": "entry.store23@metro-cc.ru",
+          "contact:phone": "+7 800 7001077;+7 843 2100100",
+          "contact:website": "https://online.metro-cc.ru",
+          "height": "10",
+          "name": "METRO",
+          "opening_hours": "Mo-Su 07:00-23:00",
+          "operator": "ООО \"Метро кэш энд керри\"",
+          "shop": "wholesale",
+          "toilets:wheelchair": "yes",
+          "wheelchair": "yes"
+        },
+        "nodeRefs": [
+          766888900,
+          10066494221,
+          10066494222,
+          10066494223,
+          766889413,
+          10066494224,
+          10066494225,
+          766888161,
+          11952588580,
+          766888032,
+          11952588588,
+          11952588589,
+          766888900
+        ],
+        "polygonCoordinates": [
+          [
+            49.0807065,
+            55.8126154
+          ],
+          [
+            49.0811493,
+            55.8127262
+          ],
+          [
+            49.0815699,
+            55.8128315
+          ],
+          [
+            49.0820866,
+            55.8129608
+          ],
+          [
+            49.0822942,
+            55.8130127
+          ],
+          [
+            49.0823958,
+            55.8128846
+          ],
+          [
+            49.082742,
+            55.8124478
+          ],
+          [
+            49.0831847,
+            55.8118894
+          ],
+          [
+            49.0820765,
+            55.811612
+          ],
+          [
+            49.0817264,
+            55.8115243
+          ],
+          [
+            49.080938,
+            55.8125186
+          ],
+          [
+            49.0808088,
+            55.8124862
+          ],
+          [
+            49.0807065,
+            55.8126154
+          ]
+        ]
+      },
+      "sourceEvidence": {
+        "officialSnapshot": "source/metro-official.html.gz",
+        "officialSnapshotSha256": "f5e17f0de7892048abaf523217657d7082911487fb18dbd3e22ed1687f2400e2",
+        "officialParsed": "source/metro-parsed.json",
+        "officialParsedSha256": "a95cec796285fbfdbb14ed9455b3ded0886355bd55c4409356dbf411ee717013",
+        "osmSnapshot": "E:\\CHECKNI-evidence\\regions-night-20261105\\kazan.osm.pbf",
+        "osmSnapshotSha256": "e2dd4c2c15b6adddb34719421d52592d336dbf2aa3294d719471ec6770ec9aa8",
+        "extractedProof": "source/kazan-cached-osm-proof.json",
+        "extractedProofSha256": "dd8230c0a622cde9d263d386d5ef87e4beb87a575e0482fe33371aec98c73f5b",
+        "officialSnapshotEncoding": "gzip",
+        "officialSnapshotCompressedSha256": "ca788045760ba228ac6e416fc306249e9b39b6911028fba9e9ad4a2b1b7a81f3",
+        "trackedTextHashBasis": "UTF-8 with LF line endings; original raw source hashes retained separately",
+        "extractedProofTrackedSha256": "816af9b2d6cc33db1df16feba404046906363389fec172a0ccd64e42112973c3",
+        "officialParsedTrackedSha256": "2e820130eb9c66e7a20a7e9f8c58f5e53d6d889092ad96357a3809e7a661b4aa"
+      },
+      "runtimeAction": "none; preserve existing official ID and all current runtime rows",
+      "catalogueAction": "none; no price or availability assertion"
+    },
+    {
+      "slug": "kazan",
+      "reviewId": "osm:way:201741290",
+      "reviewAddress": "Казань, Тихорецкая улица, 4",
+      "reviewSource": "https://www.openstreetmap.org/way/201741290",
+      "addressEvidenceUrl": null,
+      "existingId": "official:metro:74",
+      "existingAddress": "Республика Татарстан, г. Казань, Приволжский район, ул. Тихорецкая, д. 4",
+      "officialSource": "https://www.metro-cc.ru/torgovye-centry",
+      "officialObservedAt": "2026-11-05T16:06:56.418827+00:00",
+      "distanceMeters": 4,
+      "decision": "already-represented-in-cached-sources",
+      "reason": "Exact official store_id agrees with the store number in the mapped business contact mailbox; chain, city and building street/house agree. Coordinate proximity is supporting context only.",
+      "identityProof": {
+        "officialStoreId": "74",
+        "mapBusinessMailbox": "entry.store74@metro-cc.ru",
+        "mailboxStoreCode": "74",
+        "officialIdUnique": true,
+        "officialName": "Ул. Тихорецкая, д. 4",
+        "officialAddress": "420054, Республика Татарстан, г. Казань, Приволжский район, ул. Тихорецкая, д. 4",
+        "officialCity": "Казань",
+        "osmStreet": "Тихорецкая улица",
+        "osmHouse": "4",
+        "addressObjectId": "osm:way:201741290",
+        "postcode": null,
+        "manualNormalization": "Only street-type abbreviations, ё/е and Cyrillic/Latin А in a suffix were compared; building number preserved."
+      },
+      "officialRow": {
+        "id": 34,
+        "officialId": 74,
+        "name": "Ул. Тихорецкая, д. 4",
+        "address": "420054, Республика Татарстан, г. Казань, Приволжский район, ул. Тихорецкая, д. 4",
+        "city": "Казань",
+        "region": "Казань",
+        "lat": 55.732235,
+        "lon": 49.131073
+      },
+      "osmObject": {
+        "id": "osm:way:201741290",
+        "sourceUrl": "https://www.openstreetmap.org/way/201741290",
+        "version": 9,
+        "timestamp": "2026-09-06 20:43:49+00:00",
+        "tags": {
+          "addr:city": "Казань",
+          "addr:housenumber": "4",
+          "addr:street": "Тихорецкая улица",
+          "building": "yes",
+          "check_date": "2024-09-14",
+          "contact:email": "entry.store74@metro-cc.ru",
+          "contact:phone": "+7 800 7001077;+7 843 5672400",
+          "contact:website": "https://online.metro-cc.ru",
+          "name": "Metro",
+          "opening_hours": "Mo-Su 07:00-22:00",
+          "operator": "ООО \"Метро кэш энд керри\"",
+          "shop": "supermarket",
+          "wheelchair": "yes"
+        },
+        "nodeRefs": [
+          2117561594,
+          12244987005,
+          12244987006,
+          2117561592,
+          12177966190,
+          12177966191,
+          2117561591,
+          12244987012,
+          12244987011,
+          2117561593,
+          12244987009,
+          12244987010,
+          12244987008,
+          12244987007,
+          2117561594
+        ],
+        "polygonCoordinates": [
+          [
+            49.1299569,
+            55.732784
+          ],
+          [
+            49.129955,
+            55.7326385
+          ],
+          [
+            49.1301055,
+            55.7326379
+          ],
+          [
+            49.1300952,
+            55.7318398
+          ],
+          [
+            49.1309452,
+            55.7318363
+          ],
+          [
+            49.1317231,
+            55.731833
+          ],
+          [
+            49.1319478,
+            55.7318321
+          ],
+          [
+            49.1319574,
+            55.7325715
+          ],
+          [
+            49.132098,
+            55.7325709
+          ],
+          [
+            49.1321004,
+            55.7327566
+          ],
+          [
+            49.1318446,
+            55.7327576
+          ],
+          [
+            49.1318438,
+            55.7326939
+          ],
+          [
+            49.1302451,
+            55.7327005
+          ],
+          [
+            49.1302462,
+            55.7327828
+          ],
+          [
+            49.1299569,
+            55.732784
+          ]
+        ]
+      },
+      "sourceEvidence": {
+        "officialSnapshot": "source/metro-official.html.gz",
+        "officialSnapshotSha256": "f5e17f0de7892048abaf523217657d7082911487fb18dbd3e22ed1687f2400e2",
+        "officialParsed": "source/metro-parsed.json",
+        "officialParsedSha256": "a95cec796285fbfdbb14ed9455b3ded0886355bd55c4409356dbf411ee717013",
+        "osmSnapshot": "E:\\CHECKNI-evidence\\regions-night-20261105\\kazan.osm.pbf",
+        "osmSnapshotSha256": "e2dd4c2c15b6adddb34719421d52592d336dbf2aa3294d719471ec6770ec9aa8",
+        "extractedProof": "source/kazan-cached-osm-proof.json",
+        "extractedProofSha256": "dd8230c0a622cde9d263d386d5ef87e4beb87a575e0482fe33371aec98c73f5b",
+        "officialSnapshotEncoding": "gzip",
+        "officialSnapshotCompressedSha256": "ca788045760ba228ac6e416fc306249e9b39b6911028fba9e9ad4a2b1b7a81f3",
+        "trackedTextHashBasis": "UTF-8 with LF line endings; original raw source hashes retained separately",
+        "extractedProofTrackedSha256": "816af9b2d6cc33db1df16feba404046906363389fec172a0ccd64e42112973c3",
+        "officialParsedTrackedSha256": "2e820130eb9c66e7a20a7e9f8c58f5e53d6d889092ad96357a3809e7a661b4aa"
+      },
+      "runtimeAction": "none; preserve existing official ID and all current runtime rows",
+      "catalogueAction": "none; no price or availability assertion"
+    },
+    {
+      "slug": "yekaterinburg",
+      "reviewId": "osm:node:1191420147",
+      "reviewAddress": "Екатеринбург, Дублёр Сибирского тракта, 21",
+      "reviewSource": "https://www.openstreetmap.org/node/1191420147",
+      "addressEvidenceUrl": "https://www.openstreetmap.org/way/18022967",
+      "existingId": "official:metro:29",
+      "existingAddress": "г. Екатеринбург, дублер Сибирского тракта, д.21",
+      "officialSource": "https://www.metro-cc.ru/torgovye-centry",
+      "officialObservedAt": "2026-11-05T16:06:56.418827+00:00",
+      "distanceMeters": 5,
+      "decision": "already-represented-in-cached-sources",
+      "reason": "Exact official store_id agrees with the store number in the mapped business contact mailbox; chain, city and building street/house agree. Coordinate proximity is supporting context only.",
+      "identityProof": {
+        "officialStoreId": "29",
+        "mapBusinessMailbox": "entry.store29@metro-cc.ru",
+        "mailboxStoreCode": "29",
+        "officialIdUnique": true,
+        "officialName": "Дублер Сибирского тракта, д. 21",
+        "officialAddress": "620072, г. Екатеринбург, дублер Сибирского тракта, д.21",
+        "officialCity": "Екатеринбург",
+        "osmStreet": "Дублёр Сибирского тракта",
+        "osmHouse": "21",
+        "addressObjectId": "osm:way:18022967",
+        "postcode": null,
+        "manualNormalization": "Only street-type abbreviations, ё/е and Cyrillic/Latin А in a suffix were compared; building number preserved."
+      },
+      "officialRow": {
+        "id": 44,
+        "officialId": 29,
+        "name": "Дублер Сибирского тракта, д. 21",
+        "address": "620072, г. Екатеринбург, дублер Сибирского тракта, д.21",
+        "city": "Екатеринбург",
+        "region": "Екатеринбург",
+        "lat": 56.823676,
+        "lon": 60.712899
+      },
+      "osmObject": {
+        "id": "osm:node:1191420147",
+        "sourceUrl": "https://www.openstreetmap.org/node/1191420147",
+        "version": 17,
+        "timestamp": "2023-10-24 04:11:39+00:00",
+        "tags": {
+          "contact:email": "entry.store29@metro-cc.ru",
+          "contact:phone": "+7 343 3792600;+7 800 7001077",
+          "contact:website": "https://online.metro-cc.ru",
+          "name": "Metro",
+          "name:en": "Metro",
+          "name:ru": "Метро Кэш энд Керри",
+          "opening_hours": "Mo-Su 07:00-22:00",
+          "shop": "supermarket"
+        },
+        "lat": 56.8236972,
+        "lon": 60.7129746
+      },
+      "addressObject": {
+        "id": "osm:way:18022967",
+        "sourceUrl": "https://www.openstreetmap.org/way/18022967",
+        "version": 11,
+        "timestamp": "2025-07-30 03:45:36+00:00",
+        "tags": {
+          "addr:city": "Екатеринбург",
+          "addr:housenumber": "21",
+          "addr:street": "Дублёр Сибирского тракта",
+          "building": "retail",
+          "building:levels": "2"
+        },
+        "nodeRefs": [
+          186413036,
+          186413038,
+          186413039,
+          186413040,
+          13036570761,
+          1191420148,
+          186413042,
+          186413043,
+          186413036
+        ],
+        "polygonCoordinates": [
+          [
+            60.7122377,
+            56.8243472
+          ],
+          [
+            60.7117056,
+            56.8235816
+          ],
+          [
+            60.7116112,
+            56.8236004
+          ],
+          [
+            60.7115597,
+            56.8235252
+          ],
+          [
+            60.7133227,
+            56.823146
+          ],
+          [
+            60.7135429,
+            56.8230987
+          ],
+          [
+            60.7137655,
+            56.8230508
+          ],
+          [
+            60.7143663,
+            56.8239244
+          ],
+          [
+            60.7122377,
+            56.8243472
+          ]
+        ]
+      },
+      "sourceEvidence": {
+        "officialSnapshot": "source/metro-official.html.gz",
+        "officialSnapshotSha256": "f5e17f0de7892048abaf523217657d7082911487fb18dbd3e22ed1687f2400e2",
+        "officialParsed": "source/metro-parsed.json",
+        "officialParsedSha256": "a95cec796285fbfdbb14ed9455b3ded0886355bd55c4409356dbf411ee717013",
+        "osmSnapshot": "E:\\CHECKNI-evidence\\regions-night-20261105\\yekaterinburg.osm.pbf",
+        "osmSnapshotSha256": "0778f33f698c7594721b62dad18235dd58e66746fa4b2043bfeedd4bed66b9bc",
+        "extractedProof": "source/yekaterinburg-cached-osm-proof.json",
+        "extractedProofSha256": "b6ccaaac3a0485e09d5213edac993b1b14f91201ff00b528aa732cf67bb74c12",
+        "officialSnapshotEncoding": "gzip",
+        "officialSnapshotCompressedSha256": "ca788045760ba228ac6e416fc306249e9b39b6911028fba9e9ad4a2b1b7a81f3",
+        "trackedTextHashBasis": "UTF-8 with LF line endings; original raw source hashes retained separately",
+        "extractedProofTrackedSha256": "bdc9f1615f2bf53d20b583309b79b3a01c43e5110c352493ca7f7707766abe8c",
+        "officialParsedTrackedSha256": "2e820130eb9c66e7a20a7e9f8c58f5e53d6d889092ad96357a3809e7a661b4aa"
+      },
+      "runtimeAction": "none; preserve existing official ID and all current runtime rows",
+      "catalogueAction": "none; no price or availability assertion"
+    },
+    {
+      "slug": "yekaterinburg",
+      "reviewId": "osm:node:1191426622",
+      "reviewAddress": "Екатеринбург, улица Металлургов, 85",
+      "reviewSource": "https://www.openstreetmap.org/node/1191426622",
+      "addressEvidenceUrl": "https://www.openstreetmap.org/way/45451984",
+      "existingId": "official:metro:30",
+      "existingAddress": "г. Екатеринбург, ул. Металлургов, д. 85",
+      "officialSource": "https://www.metro-cc.ru/torgovye-centry",
+      "officialObservedAt": "2026-11-05T16:06:56.418827+00:00",
+      "distanceMeters": 5,
+      "decision": "already-represented-in-cached-sources",
+      "reason": "Exact official store_id agrees with the store number in the mapped business contact mailbox; chain, city and building street/house agree. Coordinate proximity is supporting context only.",
+      "identityProof": {
+        "officialStoreId": "30",
+        "mapBusinessMailbox": "entry.store30@metro-cc.ru",
+        "mailboxStoreCode": "30",
+        "officialIdUnique": true,
+        "officialName": "Ул. Металлургов, д. 85",
+        "officialAddress": "620043, г. Екатеринбург, ул. Металлургов, д. 85",
+        "officialCity": "Екатеринбург",
+        "osmStreet": "улица Металлургов",
+        "osmHouse": "85",
+        "addressObjectId": "osm:way:45451984",
+        "postcode": null,
+        "manualNormalization": "Only street-type abbreviations, ё/е and Cyrillic/Latin А in a suffix were compared; building number preserved."
+      },
+      "officialRow": {
+        "id": 45,
+        "officialId": 30,
+        "name": "Ул. Металлургов, д. 85",
+        "address": "620043, г. Екатеринбург, ул. Металлургов, д. 85",
+        "city": "Екатеринбург",
+        "region": "Екатеринбург",
+        "lat": 56.82437,
+        "lon": 60.511236
+      },
+      "osmObject": {
+        "id": "osm:node:1191426622",
+        "sourceUrl": "https://www.openstreetmap.org/node/1191426622",
+        "version": 16,
+        "timestamp": "2023-10-24 04:11:39+00:00",
+        "tags": {
+          "contact:email": "entry.store30@metro-cc.ru",
+          "contact:phone": "+7 343 2530300;+7 800 7001077",
+          "contact:website": "https://online.metro-cc.ru",
+          "name": "Metro",
+          "name:en": "Metro",
+          "name:ru": "Метро Кэш энд Керри",
+          "opening_hours": "Mo-Su 07:00-22:00",
+          "shop": "supermarket"
+        },
+        "lat": 56.82441,
+        "lon": 60.5112659
+      },
+      "addressObject": {
+        "id": "osm:way:45451984",
+        "sourceUrl": "https://www.openstreetmap.org/way/45451984",
+        "version": 11,
+        "timestamp": "2025-04-22 05:26:24+00:00",
+        "tags": {
+          "addr:city": "Екатеринбург",
+          "addr:country": "RU",
+          "addr:housenumber": "85",
+          "addr:street": "улица Металлургов",
+          "building": "retail",
+          "building:levels": "2",
+          "roof:shape": "flat"
+        },
+        "nodeRefs": [
+          578343599,
+          1191426614,
+          995525979,
+          995525993,
+          578343600,
+          578343601,
+          12774356227,
+          12774356228,
+          12774356229,
+          12774356230,
+          12774356231,
+          12774356232,
+          12774356233,
+          12774356235,
+          12774356234,
+          12774356236,
+          12774356237,
+          12774356238,
+          12774356226,
+          12774356225,
+          12774356215,
+          12774356216,
+          12774356217,
+          12774356218,
+          12774356219,
+          12774356220,
+          12774356214,
+          578343602,
+          578343599
+        ],
+        "polygonCoordinates": [
+          [
+            60.5100126,
+            56.8247121
+          ],
+          [
+            60.5104251,
+            56.8247284
+          ],
+          [
+            60.5109667,
+            56.8247522
+          ],
+          [
+            60.511264,
+            56.824765
+          ],
+          [
+            60.5122681,
+            56.8247982
+          ],
+          [
+            60.5124135,
+            56.823922
+          ],
+          [
+            60.5115725,
+            56.8238878
+          ],
+          [
+            60.5115947,
+            56.8237665
+          ],
+          [
+            60.5115426,
+            56.8237367
+          ],
+          [
+            60.5114854,
+            56.823758
+          ],
+          [
+            60.5114457,
+            56.8237316
+          ],
+          [
+            60.5114057,
+            56.8237536
+          ],
+          [
+            60.5113464,
+            56.8237201
+          ],
+          [
+            60.5113545,
+            56.8236781
+          ],
+          [
+            60.511227,
+            56.8236732
+          ],
+          [
+            60.5111907,
+            56.8238351
+          ],
+          [
+            60.5112649,
+            56.8238391
+          ],
+          [
+            60.5112771,
+            56.8237759
+          ],
+          [
+            60.5113247,
+            56.8237782
+          ],
+          [
+            60.5113106,
+            56.8238772
+          ],
+          [
+            60.5111103,
+            56.8238691
+          ],
+          [
+            60.5111296,
+            56.82377
+          ],
+          [
+            60.510874,
+            56.8237569
+          ],
+          [
+            60.5108447,
+            56.8238282
+          ],
+          [
+            60.5104228,
+            56.8238175
+          ],
+          [
+            60.5104226,
+            56.8237767
+          ],
+          [
+            60.5101624,
+            56.8237611
+          ],
+          [
+            60.5101207,
+            56.8238289
+          ],
+          [
+            60.5100126,
+            56.8247121
+          ]
+        ]
+      },
+      "sourceEvidence": {
+        "officialSnapshot": "source/metro-official.html.gz",
+        "officialSnapshotSha256": "f5e17f0de7892048abaf523217657d7082911487fb18dbd3e22ed1687f2400e2",
+        "officialParsed": "source/metro-parsed.json",
+        "officialParsedSha256": "a95cec796285fbfdbb14ed9455b3ded0886355bd55c4409356dbf411ee717013",
+        "osmSnapshot": "E:\\CHECKNI-evidence\\regions-night-20261105\\yekaterinburg.osm.pbf",
+        "osmSnapshotSha256": "0778f33f698c7594721b62dad18235dd58e66746fa4b2043bfeedd4bed66b9bc",
+        "extractedProof": "source/yekaterinburg-cached-osm-proof.json",
+        "extractedProofSha256": "b6ccaaac3a0485e09d5213edac993b1b14f91201ff00b528aa732cf67bb74c12",
+        "officialSnapshotEncoding": "gzip",
+        "officialSnapshotCompressedSha256": "ca788045760ba228ac6e416fc306249e9b39b6911028fba9e9ad4a2b1b7a81f3",
+        "trackedTextHashBasis": "UTF-8 with LF line endings; original raw source hashes retained separately",
+        "extractedProofTrackedSha256": "bdc9f1615f2bf53d20b583309b79b3a01c43e5110c352493ca7f7707766abe8c",
+        "officialParsedTrackedSha256": "2e820130eb9c66e7a20a7e9f8c58f5e53d6d889092ad96357a3809e7a661b4aa"
+      },
+      "runtimeAction": "none; preserve existing official ID and all current runtime rows",
+      "catalogueAction": "none; no price or availability assertion"
+    },
+    {
+      "slug": "yekaterinburg",
+      "reviewId": "osm:way:119449878",
+      "reviewAddress": "Екатеринбург, проспект Космонавтов, 102А",
+      "reviewSource": "https://www.openstreetmap.org/way/119449878",
+      "addressEvidenceUrl": null,
+      "existingId": "official:metro:65",
+      "existingAddress": "Свердловская область, г. Екатеринбург, проспект Космонавтов, д.102а",
+      "officialSource": "https://www.metro-cc.ru/torgovye-centry",
+      "officialObservedAt": "2026-11-05T16:06:56.418827+00:00",
+      "distanceMeters": 14,
+      "decision": "already-represented-in-cached-sources",
+      "reason": "Exact official store_id agrees with the store number in the mapped business contact mailbox; chain, city and building street/house agree. Coordinate proximity is supporting context only.",
+      "identityProof": {
+        "officialStoreId": "65",
+        "mapBusinessMailbox": "entry.store65@metro-cc.ru",
+        "mailboxStoreCode": "65",
+        "officialIdUnique": true,
+        "officialName": "Ул. Пр-т Космонавтов, д. 102А (м. Проспект Космонавтов)",
+        "officialAddress": "620135, Свердловская область, г. Екатеринбург, проспект Космонавтов, д.102а",
+        "officialCity": "Екатеринбург",
+        "osmStreet": "проспект Космонавтов",
+        "osmHouse": "102А",
+        "addressObjectId": "osm:way:119449878",
+        "postcode": null,
+        "manualNormalization": "Only street-type abbreviations, ё/е and Cyrillic/Latin А in a suffix were compared; building number preserved."
+      },
+      "officialRow": {
+        "id": 50,
+        "officialId": 65,
+        "name": "Ул. Пр-т Космонавтов, д. 102А (м. Проспект Космонавтов)",
+        "address": "620135, Свердловская область, г. Екатеринбург, проспект Космонавтов, д.102а",
+        "city": "Екатеринбург",
+        "region": "Екатеринбург",
+        "lat": 56.9132,
+        "lon": 60.614587
+      },
+      "osmObject": {
+        "id": "osm:way:119449878",
+        "sourceUrl": "https://www.openstreetmap.org/way/119449878",
+        "version": 17,
+        "timestamp": "2024-04-28 07:58:10+00:00",
+        "tags": {
+          "addr:city": "Екатеринбург",
+          "addr:housenumber": "102А",
+          "addr:street": "проспект Космонавтов",
+          "brand": "METRO",
+          "brand:wikidata": "Q13610282",
+          "building": "retail",
+          "building:levels": "2",
+          "contact:email": "entry.store65@metro-cc.ru",
+          "contact:phone": "+7 343 338-90-00;+7 800 7001077",
+          "contact:website": "https://online.metro-cc.ru",
+          "name": "METRO",
+          "name:en": "Metro",
+          "name:ru": "Метро",
+          "opening_hours": "Mo-Su 07:00-22:00",
+          "payment:cash": "yes",
+          "payment:contactless": "yes",
+          "payment:credit_cards": "yes",
+          "payment:debit_cards": "yes",
+          "shop": "wholesale",
+          "wholesale": "supermarket"
+        },
+        "nodeRefs": [
+          1016399049,
+          1342210423,
+          1342210444,
+          1016399040,
+          1016399079,
+          1707055343,
+          1707055334,
+          1016398995,
+          1342210440,
+          1016399049
+        ],
+        "polygonCoordinates": [
+          [
+            60.613373,
+            56.9135749
+          ],
+          [
+            60.6138387,
+            56.9136188
+          ],
+          [
+            60.6140892,
+            56.9136425
+          ],
+          [
+            60.6150752,
+            56.9137354
+          ],
+          [
+            60.6153572,
+            56.9128438
+          ],
+          [
+            60.6146391,
+            56.9127761
+          ],
+          [
+            60.6139661,
+            56.912713
+          ],
+          [
+            60.6136551,
+            56.9126834
+          ],
+          [
+            60.613415,
+            56.9134424
+          ],
+          [
+            60.613373,
+            56.9135749
+          ]
+        ]
+      },
+      "sourceEvidence": {
+        "officialSnapshot": "source/metro-official.html.gz",
+        "officialSnapshotSha256": "f5e17f0de7892048abaf523217657d7082911487fb18dbd3e22ed1687f2400e2",
+        "officialParsed": "source/metro-parsed.json",
+        "officialParsedSha256": "a95cec796285fbfdbb14ed9455b3ded0886355bd55c4409356dbf411ee717013",
+        "osmSnapshot": "E:\\CHECKNI-evidence\\regions-night-20261105\\yekaterinburg.osm.pbf",
+        "osmSnapshotSha256": "0778f33f698c7594721b62dad18235dd58e66746fa4b2043bfeedd4bed66b9bc",
+        "extractedProof": "source/yekaterinburg-cached-osm-proof.json",
+        "extractedProofSha256": "b6ccaaac3a0485e09d5213edac993b1b14f91201ff00b528aa732cf67bb74c12",
+        "officialSnapshotEncoding": "gzip",
+        "officialSnapshotCompressedSha256": "ca788045760ba228ac6e416fc306249e9b39b6911028fba9e9ad4a2b1b7a81f3",
+        "trackedTextHashBasis": "UTF-8 with LF line endings; original raw source hashes retained separately",
+        "extractedProofTrackedSha256": "bdc9f1615f2bf53d20b583309b79b3a01c43e5110c352493ca7f7707766abe8c",
+        "officialParsedTrackedSha256": "2e820130eb9c66e7a20a7e9f8c58f5e53d6d889092ad96357a3809e7a661b4aa"
+      },
+      "runtimeAction": "none; preserve existing official ID and all current runtime rows",
+      "catalogueAction": "none; no price or availability assertion"
+    },
+    {
+      "slug": "novosibirsk",
+      "reviewId": "osm:way:87686116",
+      "reviewAddress": "Новосибирск, Северная улица, 11",
+      "reviewSource": "https://www.openstreetmap.org/way/87686116",
+      "addressEvidenceUrl": null,
+      "existingId": "official:metro:60",
+      "existingAddress": "Новосибирская область, г. Новосибирск, Заельцовский район, ул. Северная, 11",
+      "officialSource": "https://www.metro-cc.ru/torgovye-centry",
+      "officialObservedAt": "2026-11-05T16:06:56.418827+00:00",
+      "distanceMeters": 6,
+      "decision": "already-represented-in-cached-sources",
+      "reason": "Exact official store_id agrees with the store number in the mapped business contact mailbox; chain, city and building street/house agree. Coordinate proximity is supporting context only.",
+      "identityProof": {
+        "officialStoreId": "60",
+        "mapBusinessMailbox": "adminspecialist.store60@metro-cc.ru",
+        "mailboxStoreCode": "60",
+        "officialIdUnique": true,
+        "officialName": "Ул. Северная, д. 11 (м. Заельцовская)",
+        "officialAddress": "630049, Новосибирская область, г. Новосибирск, Заельцовский район, ул. Северная, 11",
+        "officialCity": "Новосибирск",
+        "osmStreet": "Северная улица",
+        "osmHouse": "11",
+        "addressObjectId": "osm:way:87686116",
+        "postcode": null,
+        "manualNormalization": "Only street-type abbreviations, ё/е and Cyrillic/Latin А in a suffix were compared; building number preserved."
+      },
+      "officialRow": {
+        "id": 57,
+        "officialId": 60,
+        "name": "Ул. Северная, д. 11 (м. Заельцовская)",
+        "address": "630049, Новосибирская область, г. Новосибирск, Заельцовский район, ул. Северная, 11",
+        "city": "Новосибирск",
+        "region": "Новосибирская область",
+        "lat": 55.070515,
+        "lon": 82.913252
+      },
+      "osmObject": {
+        "id": "osm:way:87686116",
+        "sourceUrl": "https://www.openstreetmap.org/way/87686116",
+        "version": 13,
+        "timestamp": "2025-01-26 11:59:45+00:00",
+        "tags": {
+          "addr:city": "Новосибирск",
+          "addr:housenumber": "11",
+          "addr:street": "Северная улица",
+          "building": "retail",
+          "contact:email": "adminspecialist.store60@metro-cc.ru",
+          "contact:phone": "+7 383 2167000;+7 800 7001077",
+          "contact:website": "https://online.metro-cc.ru",
+          "name": "Metro",
+          "opening_hours": "Mo-Su 07:00-23:00",
+          "shop": "supermarket",
+          "start_date": "2009"
+        },
+        "nodeRefs": [
+          1019731509,
+          11983679788,
+          1825069736,
+          9413126605,
+          1019731505,
+          1825069731,
+          1019731504,
+          1019731507,
+          1019731509
+        ],
+        "polygonCoordinates": [
+          [
+            82.9121854,
+            55.0708548
+          ],
+          [
+            82.9131837,
+            55.0709453
+          ],
+          [
+            82.9136388,
+            55.0709866
+          ],
+          [
+            82.9139783,
+            55.0710174
+          ],
+          [
+            82.9142674,
+            55.0710436
+          ],
+          [
+            82.9142948,
+            55.0709445
+          ],
+          [
+            82.9145096,
+            55.070168
+          ],
+          [
+            82.9124276,
+            55.0699792
+          ],
+          [
+            82.9121854,
+            55.0708548
+          ]
+        ]
+      },
+      "sourceEvidence": {
+        "officialSnapshot": "source/metro-official.html.gz",
+        "officialSnapshotSha256": "f5e17f0de7892048abaf523217657d7082911487fb18dbd3e22ed1687f2400e2",
+        "officialParsed": "source/metro-parsed.json",
+        "officialParsedSha256": "a95cec796285fbfdbb14ed9455b3ded0886355bd55c4409356dbf411ee717013",
+        "osmSnapshot": "E:\\CHECKNI-evidence\\regions-night-20261105\\novosibirsk.osm.pbf",
+        "osmSnapshotSha256": "51fe6aedcf194d112961e590864ea916235a9565e85505150db29c47c9194e38",
+        "extractedProof": "source/novosibirsk-cached-osm-proof.json",
+        "extractedProofSha256": "310d0ba7a8f9606d259505550cb570ea58d625b4681cbe22e3a2df6b742c7b72",
+        "officialSnapshotEncoding": "gzip",
+        "officialSnapshotCompressedSha256": "ca788045760ba228ac6e416fc306249e9b39b6911028fba9e9ad4a2b1b7a81f3",
+        "trackedTextHashBasis": "UTF-8 with LF line endings; original raw source hashes retained separately",
+        "extractedProofTrackedSha256": "8987caa624146f5b45802a1385f60466094de12437a602d8ecf540c36c8d02c9",
+        "officialParsedTrackedSha256": "2e820130eb9c66e7a20a7e9f8c58f5e53d6d889092ad96357a3809e7a661b4aa"
+      },
+      "runtimeAction": "none; preserve existing official ID and all current runtime rows",
+      "catalogueAction": "none; no price or availability assertion"
+    },
+    {
+      "slug": "novosibirsk",
+      "reviewId": "osm:way:89343327",
+      "reviewAddress": "Новосибирск, Большевистская улица, 290",
+      "reviewSource": "https://www.openstreetmap.org/way/89343327",
+      "addressEvidenceUrl": null,
+      "existingId": "official:metro:44",
+      "existingAddress": "г. Новосибирск, ул. Большевистская, 290",
+      "officialSource": "https://www.metro-cc.ru/torgovye-centry",
+      "officialObservedAt": "2026-11-05T16:06:56.418827+00:00",
+      "distanceMeters": 19,
+      "decision": "already-represented-in-cached-sources",
+      "reason": "Exact official store_id agrees with the store number in the mapped business contact mailbox; chain, city and building street/house agree. Coordinate proximity is supporting context only.",
+      "identityProof": {
+        "officialStoreId": "44",
+        "mapBusinessMailbox": "Entry.Store44@metro-cc.ru",
+        "mailboxStoreCode": "44",
+        "officialIdUnique": true,
+        "officialName": "Ул. Большевистская, д .290 ",
+        "officialAddress": "630028, г. Новосибирск, ул. Большевистская, 290",
+        "officialCity": "Новосибирск",
+        "osmStreet": "Большевистская улица",
+        "osmHouse": "290",
+        "addressObjectId": "osm:way:89343327",
+        "postcode": "630028",
+        "manualNormalization": "Only street-type abbreviations, ё/е and Cyrillic/Latin А in a suffix were compared; building number preserved."
+      },
+      "officialRow": {
+        "id": 52,
+        "officialId": 44,
+        "name": "Ул. Большевистская, д .290 ",
+        "address": "630028, г. Новосибирск, ул. Большевистская, 290",
+        "city": "Новосибирск",
+        "region": "Новосибирская область",
+        "lat": 54.9764,
+        "lon": 83.024104
+      },
+      "osmObject": {
+        "id": "osm:way:89343327",
+        "sourceUrl": "https://www.openstreetmap.org/way/89343327",
+        "version": 20,
+        "timestamp": "2023-03-26 09:22:11+00:00",
+        "tags": {
+          "addr:city": "Новосибирск",
+          "addr:housenumber": "290",
+          "addr:postcode": "630028",
+          "addr:street": "Большевистская улица",
+          "brand": "METRO",
+          "brand:wikidata": "Q13610282",
+          "brand:wikipedia": "en:Metro Cash & Carry",
+          "building": "yes",
+          "contact:email": "Entry.Store44@metro-cc.ru",
+          "contact:phone": "8 800 7001077, +7 383 2302400",
+          "contact:website": "https://online.metro-cc.ru",
+          "delivery": "yes",
+          "internet_access": "wlan",
+          "name": "METRO",
+          "name:ru": "Метро Кэш энд Кэрри",
+          "opening_hours": "Mo-Su 07:00-23:00",
+          "operator": "ООО \"МЕТРО Кэш энд Керри\"",
+          "payment:cash": "yes",
+          "payment:cashless": "yes",
+          "shop": "wholesale",
+          "wheelchair": "yes",
+          "wholesale": "supermarket"
+        },
+        "nodeRefs": [
+          1036380811,
+          9082064090,
+          1036380842,
+          9082064096,
+          7911718134,
+          1036380708,
+          9028281447,
+          9028281448,
+          9028281449,
+          9028281450,
+          9028281451,
+          9028281452,
+          9028281453,
+          9028281454,
+          9028281455,
+          1036380722,
+          1036380667,
+          1036380549,
+          1036380785,
+          1036380700,
+          1036380644,
+          1036380825,
+          1036380759,
+          1036380811
+        ],
+        "polygonCoordinates": [
+          [
+            83.0231115,
+            54.9769034
+          ],
+          [
+            83.0240821,
+            54.9768577
+          ],
+          [
+            83.0242459,
+            54.976849
+          ],
+          [
+            83.0243669,
+            54.9768463
+          ],
+          [
+            83.025006,
+            54.9768127
+          ],
+          [
+            83.0252705,
+            54.9768
+          ],
+          [
+            83.0252007,
+            54.9763374
+          ],
+          [
+            83.0254964,
+            54.9763273
+          ],
+          [
+            83.0254857,
+            54.9762469
+          ],
+          [
+            83.0254486,
+            54.976227
+          ],
+          [
+            83.0254831,
+            54.9761947
+          ],
+          [
+            83.0254381,
+            54.9761681
+          ],
+          [
+            83.0254787,
+            54.9761427
+          ],
+          [
+            83.0254061,
+            54.9761079
+          ],
+          [
+            83.0251698,
+            54.976124
+          ],
+          [
+            83.0251424,
+            54.9759187
+          ],
+          [
+            83.024466,
+            54.9759511
+          ],
+          [
+            83.0244509,
+            54.9758473
+          ],
+          [
+            83.0242355,
+            54.9758576
+          ],
+          [
+            83.0242496,
+            54.9759547
+          ],
+          [
+            83.023036,
+            54.9760128
+          ],
+          [
+            83.0231507,
+            54.9768017
+          ],
+          [
+            83.0230971,
+            54.9768042
+          ],
+          [
+            83.0231115,
+            54.9769034
+          ]
+        ]
+      },
+      "sourceEvidence": {
+        "officialSnapshot": "source/metro-official.html.gz",
+        "officialSnapshotSha256": "f5e17f0de7892048abaf523217657d7082911487fb18dbd3e22ed1687f2400e2",
+        "officialParsed": "source/metro-parsed.json",
+        "officialParsedSha256": "a95cec796285fbfdbb14ed9455b3ded0886355bd55c4409356dbf411ee717013",
+        "osmSnapshot": "E:\\CHECKNI-evidence\\regions-night-20261105\\novosibirsk.osm.pbf",
+        "osmSnapshotSha256": "51fe6aedcf194d112961e590864ea916235a9565e85505150db29c47c9194e38",
+        "extractedProof": "source/novosibirsk-cached-osm-proof.json",
+        "extractedProofSha256": "310d0ba7a8f9606d259505550cb570ea58d625b4681cbe22e3a2df6b742c7b72",
+        "officialSnapshotEncoding": "gzip",
+        "officialSnapshotCompressedSha256": "ca788045760ba228ac6e416fc306249e9b39b6911028fba9e9ad4a2b1b7a81f3",
+        "trackedTextHashBasis": "UTF-8 with LF line endings; original raw source hashes retained separately",
+        "extractedProofTrackedSha256": "8987caa624146f5b45802a1385f60466094de12437a602d8ecf540c36c8d02c9",
+        "officialParsedTrackedSha256": "2e820130eb9c66e7a20a7e9f8c58f5e53d6d889092ad96357a3809e7a661b4aa"
+      },
+      "runtimeAction": "none; preserve existing official ID and all current runtime rows",
+      "catalogueAction": "none; no price or availability assertion"
+    },
+    {
+      "slug": "nizhny-novgorod",
+      "reviewId": "osm:way:154431959",
+      "reviewAddress": "Нижний Новгород, Мещерский бульвар, 3А",
+      "reviewSource": "https://www.openstreetmap.org/way/154431959",
+      "addressEvidenceUrl": null,
+      "existingId": "official:metro:21",
+      "existingAddress": "г. Нижний Новгород, Мещерский бульвар, д.3А",
+      "officialSource": "https://www.metro-cc.ru/torgovye-centry",
+      "officialObservedAt": "2026-11-05T16:06:56.418827+00:00",
+      "distanceMeters": 23,
+      "decision": "held-conflicting-map-identity-tags",
+      "reason": "The map simultaneously asserts brand:wikidata and not:brand:wikidata=Q13610282. Despite matching store-code and building address, retain this item for manual review.",
+      "identityProof": {
+        "officialStoreId": "21",
+        "mapBusinessMailbox": "entry.store21@metro-cc.ru",
+        "mailboxStoreCode": "21",
+        "officialIdUnique": true,
+        "officialName": "Ул. Мещерский б-р, д. 3А (м. Стрелка)",
+        "officialAddress": "603070,  г. Нижний Новгород, Мещерский бульвар,  д.3А",
+        "officialCity": "Нижний Новгород",
+        "osmStreet": "Мещерский бульвар",
+        "osmHouse": "3А",
+        "addressObjectId": "osm:way:154431959",
+        "postcode": null,
+        "manualNormalization": "Only street-type abbreviations, ё/е and Cyrillic/Latin А in a suffix were compared; building number preserved."
+      },
+      "officialRow": {
+        "id": 9,
+        "officialId": 21,
+        "name": "Ул. Мещерский б-р, д. 3А (м. Стрелка)",
+        "address": "603070,  г. Нижний Новгород, Мещерский бульвар,  д.3А",
+        "city": "Нижний Новгород",
+        "region": "Нижегородская область",
+        "lat": 56.334292568400315,
+        "lon": 43.951233999999985
+      },
+      "osmObject": {
+        "id": "osm:way:154431959",
+        "sourceUrl": "https://www.openstreetmap.org/way/154431959",
+        "version": 12,
+        "timestamp": "2026-05-30 12:40:17+00:00",
+        "tags": {
+          "addr:housenumber": "3А",
+          "addr:street": "Мещерский бульвар",
+          "branch": "Cash & Carry",
+          "brand": "METRO",
+          "brand:wikidata": "Q13610282",
+          "building": "yes",
+          "building:levels": "4",
+          "contact:email": "entry.store21@metro-cc.ru",
+          "contact:phone": "+7 800 7001077;+7 831 2780000",
+          "contact:website": "https://online.metro-cc.ru",
+          "name": "Metro",
+          "not:brand:wikidata": "Q13610282",
+          "opening_hours": "Mo-Su 07:00-23:00",
+          "payment:cards": "yes",
+          "payment:cash": "yes",
+          "shop": "wholesale"
+        },
+        "nodeRefs": [
+          1669776004,
+          1699970980,
+          5183554833,
+          1669775986,
+          1669776003,
+          1669776045,
+          1669776061,
+          1669776027,
+          1669776047,
+          1669776014,
+          1669775988,
+          1669775979,
+          1669776004
+        ],
+        "polygonCoordinates": [
+          [
+            43.9499162,
+            56.3342952
+          ],
+          [
+            43.950801,
+            56.333927
+          ],
+          [
+            43.951488,
+            56.3336411
+          ],
+          [
+            43.951701,
+            56.3335525
+          ],
+          [
+            43.9527289,
+            56.3343117
+          ],
+          [
+            43.9525197,
+            56.3343987
+          ],
+          [
+            43.9524766,
+            56.3343669
+          ],
+          [
+            43.9521297,
+            56.3345112
+          ],
+          [
+            43.9522099,
+            56.3345705
+          ],
+          [
+            43.9520035,
+            56.3346564
+          ],
+          [
+            43.9518972,
+            56.3345779
+          ],
+          [
+            43.950875,
+            56.3350032
+          ],
+          [
+            43.9499162,
+            56.3342952
+          ]
+        ]
+      },
+      "sourceEvidence": {
+        "officialSnapshot": "source/metro-official.html.gz",
+        "officialSnapshotSha256": "f5e17f0de7892048abaf523217657d7082911487fb18dbd3e22ed1687f2400e2",
+        "officialParsed": "source/metro-parsed.json",
+        "officialParsedSha256": "a95cec796285fbfdbb14ed9455b3ded0886355bd55c4409356dbf411ee717013",
+        "osmSnapshot": "E:\\CHECKNI-evidence\\regions-night-20261105\\nizhny-novgorod.osm.pbf",
+        "osmSnapshotSha256": "a67fe39d47127b88c6bb7aea6201092062b651421c8fe3e757e06ae3b488e335",
+        "extractedProof": "source/nizhny-novgorod-cached-osm-proof.json",
+        "extractedProofSha256": "4c0b3ef5e8f607dbe376e7df61e84e6831c89fe7b2b56280c7e565a8f25a1ff9",
+        "officialSnapshotEncoding": "gzip",
+        "officialSnapshotCompressedSha256": "ca788045760ba228ac6e416fc306249e9b39b6911028fba9e9ad4a2b1b7a81f3",
+        "trackedTextHashBasis": "UTF-8 with LF line endings; original raw source hashes retained separately",
+        "extractedProofTrackedSha256": "d713e2ca1d415a0eee722cbc1357a3103ae254d92f21026961ddbee830f9e96f",
+        "officialParsedTrackedSha256": "2e820130eb9c66e7a20a7e9f8c58f5e53d6d889092ad96357a3809e7a661b4aa"
+      },
+      "runtimeAction": "none; preserve existing official ID and all current runtime rows",
+      "catalogueAction": "none; no price or availability assertion"
+    },
+    {
+      "slug": "nizhny-novgorod",
+      "reviewId": "osm:way:158512896",
+      "reviewAddress": "Нижний Новгород, улица Нартова, 4А",
+      "reviewSource": "https://www.openstreetmap.org/way/158512896",
+      "addressEvidenceUrl": null,
+      "existingId": "official:metro:50",
+      "existingAddress": "г. Нижний Новгород, ул. Нартова, 4А",
+      "officialSource": "https://www.metro-cc.ru/torgovye-centry",
+      "officialObservedAt": "2026-11-05T16:06:56.418827+00:00",
+      "distanceMeters": 0,
+      "decision": "already-represented-in-cached-sources",
+      "reason": "Exact official store_id agrees with the store number in the mapped business contact mailbox; chain, city and building street/house agree. Coordinate proximity is supporting context only.",
+      "identityProof": {
+        "officialStoreId": "50",
+        "mapBusinessMailbox": "entry.store50@metro-cc.ru",
+        "mailboxStoreCode": "50",
+        "officialIdUnique": true,
+        "officialName": "Ул. Нартова, д. 4А (м. Горьковская)",
+        "officialAddress": "603057, г. Нижний Новгород, ул. Нартова, 4А",
+        "officialCity": "Нижний Новгород",
+        "osmStreet": "улица Нартова",
+        "osmHouse": "4А",
+        "addressObjectId": "osm:way:158512896",
+        "postcode": null,
+        "manualNormalization": "Only street-type abbreviations, ё/е and Cyrillic/Latin А in a suffix were compared; building number preserved."
+      },
+      "officialRow": {
+        "id": 14,
+        "officialId": 50,
+        "name": "Ул. Нартова, д. 4А (м. Горьковская)",
+        "address": "603057, г. Нижний Новгород, ул. Нартова, 4А",
+        "city": "Нижний Новгород",
+        "region": "Нижегородская область",
+        "lat": 56.28693206842856,
+        "lon": 43.99780249999996
+      },
+      "osmObject": {
+        "id": "osm:way:158512896",
+        "sourceUrl": "https://www.openstreetmap.org/way/158512896",
+        "version": 7,
+        "timestamp": "2022-07-04 14:42:33+00:00",
+        "tags": {
+          "addr:housenumber": "4А",
+          "addr:street": "улица Нартова",
+          "building": "yes",
+          "building:levels": "2",
+          "contact:email": "entry.store50@metro-cc.ru",
+          "contact:phone": "+7 800 7001077;+7 831 2201900",
+          "contact:website": "https://online.metro-cc.ru",
+          "name": "Metro",
+          "opening_hours": "Mo-Su 07:00-23:00",
+          "shop": "supermarket"
+        },
+        "nodeRefs": [
+          1706992923,
+          1706992852,
+          1706992578,
+          1706992515,
+          1706992491,
+          1706992496,
+          1706992533,
+          1706992627,
+          1915101326,
+          1706992693,
+          1706992923
+        ],
+        "polygonCoordinates": [
+          [
+            43.9971591,
+            56.2874974
+          ],
+          [
+            43.9987368,
+            56.2873502
+          ],
+          [
+            43.9985376,
+            56.2866925
+          ],
+          [
+            43.9984424,
+            56.2863783
+          ],
+          [
+            43.9984248,
+            56.2863201
+          ],
+          [
+            43.9982082,
+            56.2863403
+          ],
+          [
+            43.9968471,
+            56.2864673
+          ],
+          [
+            43.9969761,
+            56.2868952
+          ],
+          [
+            43.9969977,
+            56.2869649
+          ],
+          [
+            43.9970274,
+            56.2870605
+          ],
+          [
+            43.9971591,
+            56.2874974
+          ]
+        ]
+      },
+      "sourceEvidence": {
+        "officialSnapshot": "source/metro-official.html.gz",
+        "officialSnapshotSha256": "f5e17f0de7892048abaf523217657d7082911487fb18dbd3e22ed1687f2400e2",
+        "officialParsed": "source/metro-parsed.json",
+        "officialParsedSha256": "a95cec796285fbfdbb14ed9455b3ded0886355bd55c4409356dbf411ee717013",
+        "osmSnapshot": "E:\\CHECKNI-evidence\\regions-night-20261105\\nizhny-novgorod.osm.pbf",
+        "osmSnapshotSha256": "a67fe39d47127b88c6bb7aea6201092062b651421c8fe3e757e06ae3b488e335",
+        "extractedProof": "source/nizhny-novgorod-cached-osm-proof.json",
+        "extractedProofSha256": "4c0b3ef5e8f607dbe376e7df61e84e6831c89fe7b2b56280c7e565a8f25a1ff9",
+        "officialSnapshotEncoding": "gzip",
+        "officialSnapshotCompressedSha256": "ca788045760ba228ac6e416fc306249e9b39b6911028fba9e9ad4a2b1b7a81f3",
+        "trackedTextHashBasis": "UTF-8 with LF line endings; original raw source hashes retained separately",
+        "extractedProofTrackedSha256": "d713e2ca1d415a0eee722cbc1357a3103ae254d92f21026961ddbee830f9e96f",
+        "officialParsedTrackedSha256": "2e820130eb9c66e7a20a7e9f8c58f5e53d6d889092ad96357a3809e7a661b4aa"
+      },
+      "runtimeAction": "none; preserve existing official ID and all current runtime rows",
+      "catalogueAction": "none; no price or availability assertion"
+    }
+  ],
+  "otherHeld": [
+    {
+      "slug": "saint-petersburg",
+      "city": "Санкт-Петербург",
+      "retailerId": "metro",
+      "sourceId": 900015,
+      "address": "Комендантский пр",
+      "reason": "Official darkstore900015 has incomplete street-only address and coordinates55.685853,37.43181 outside Saint Petersburg. Do not merge with public store15 based on similar name/code suffix.",
+      "sourceUrl": "https://www.metro-cc.ru/torgovye-centry",
+      "decision": "held-locality-mismatch"
+    }
+  ],
+  "unchangedGuarantees": [
+    "All5regional runtime JSON files and published IDs unchanged.",
+    "Original review742 records retained. This ledger classifies identity, not new coverage.",
+    "No current-opening, product-stock, catalogue-binding or fresh-price evidence inferred."
+  ]
+}
