@@ -104,7 +104,8 @@ test('the shared publisher packages releases, validates activation and rechecks 
   assert.match(workflow, /group: pages-.*'production'/);
   assert.match(workflow, /cancel-in-progress: false/);
   assert.match(workflow, /git archive .* HEAD -- .* src releases release artifacts/);
-  assert.match(workflow, /await activationState\('_site'\)/);
+  assert.match(workflow, /if \(!await activationState\('_site'\)\) throw Error\('active_release_required'\)/);
+  assert.equal((workflow.match(/inputs\.site_commit \|\| github\.event\.pull_request\.head\.sha \|\| github\.sha/g) || []).length, 2);
   assert.equal((workflow.match(/publication-guard\.mjs --current/g) || []).length, 2);
   const deploy = workflow.slice(workflow.indexOf('  deploy:'));
   assert.ok(deploy.indexOf('--current') < deploy.indexOf('uses: actions/deploy-pages'));
