@@ -50,20 +50,18 @@ jobs:
         with:
           persist-credentials: false
       - name: Verify history and freshness safeguards without source requests
-        run: node --test tests/addressPriceHistory.test.mjs tests/okeyRefreshVerification.test.mjs tests/okeyOfficialPromotions.test.mjs tests/okeyPublishedPromotions.test.mjs
+        run: node --test tests/dataPublication.test.mjs tests/addressPriceHistory.test.mjs tests/okeyRefreshVerification.test.mjs tests/okeyOfficialPromotions.test.mjs tests/okeyPublishedPromotions.test.mjs
   publish:
     if: github.event_name != 'pull_request'
     needs: verify
     runs-on: ubuntu-latest
     # Collector is bounded to twelve minutes; leave time for validation and Pages.
     timeout-minutes: 25
+    outputs:
+      site_commit: ${{ steps.publication.outputs.site_commit }}
+      base_commit: ${{ steps.publication.outputs.base_commit }}
     permissions:
       contents: write
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
@@ -94,6 +92,7 @@ jobs:
       - name: Validate measured history
         run: node --test tests/addressPriceHistory.test.mjs
       - name: Commit changed observations only
+        id: publication
         run: |
           set -euo pipefail
           expected_base="$(git rev-parse HEAD)"
@@ -102,28 +101,47 @@ jobs:
             git config user.name "CHECKNI Price History"
             git config user.email "actions@users.noreply.github.com"
             git commit -m "DATA: publish OKEY collection result"
+            PAGES_COMMIT="$(git rev-parse HEAD)" PAGES_BASE_COMMIT="$expected_base" PAGES_FEED=okey node tools/browser-release/publication-guard.mjs --data-delta
             read -r remote_base _ <<< "$(git ls-remote origin refs/heads/main)"
             test "$remote_base" = "$expected_base"
             git push origin HEAD:main
+            echo "site_commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            echo "base_commit=$expected_base" >> "$GITHUB_OUTPUT"
           fi
-      - name: Package static browser artifact
-        run: |
-          set -euo pipefail
-          mkdir -p _site
-          cp index.html prices.html deployment.json _site/
-          cp -a src _site/src
-          touch _site/.nojekyll
-          if grep -RIE --exclude='*.map' '(OPENROUTER_API_KEY|service[_-]?role[^a-z]|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})' _site; then
-            exit 1
-          fi
-      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b
-        with:
-          path: _site
-      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
-      - id: deploy
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
       - name: Require fresh prices for a successful update
         if: always() && steps.freshness.outcome != 'success' && steps.official_freshness.outcome != 'success' && steps.published_freshness.outcome != 'success'
         run: |
           echo 'No verified fresh OKEY prices. Inspect the freshness summary; source protection remains enabled.'
           exit 1
+  pages:
+    if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.publish.outputs.site_commit != ''
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      actions: write
+    env:
+      PAGES_COMMIT: ${{ needs.publish.outputs.site_commit }}
+      PAGES_BASE_COMMIT: ${{ needs.publish.outputs.base_commit }}
+      PAGES_FEED: okey
+    steps:
+      - name: Reject non-SHA dispatch inputs before checkout
+        shell: bash
+        run: |
+          [[ "$PAGES_COMMIT" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$PAGES_BASE_COMMIT" =~ ^[a-f0-9]{40}$ ]]
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: ZebraRectifier/checkni-g5-preview
+          ref: ${{ needs.publish.outputs.site_commit }}
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Queue exact-commit Pages publication (completion is verified in its own run)
+        env:
+          PAGES_DISPATCH_TOKEN: ${{ github.token }}
+        run: node tools/browser-release/publication-guard.mjs --dispatch

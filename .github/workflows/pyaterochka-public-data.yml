@@ -26,19 +26,18 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
-      - run: node --test tests/pyaterochkaPublishedPromotions.test.mjs tests/pyaterochkaShopping.test.mjs
+      - run: node --test tests/dataPublication.test.mjs tests/pyaterochkaPublishedPromotions.test.mjs tests/pyaterochkaShopping.test.mjs
   publish:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: verify
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    # Full current-runtime browser verification precedes every source reservation.
+    timeout-minutes: 30
+    outputs:
+      site_commit: ${{ steps.publication.outputs.site_commit }}
+      base_commit: ${{ steps.publication.outputs.base_commit }}
     permissions:
       contents: write
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     env:
       PYAT_STATE_DIR: _pyat_state/src/data
       PYAT_RESERVATION_OWNER: ${{ github.run_id }}-${{ github.run_attempt }}
@@ -51,16 +50,28 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
+      - name: Verify isolated active-runtime test preparation
+        run: node --test tests/activeRuntimeSandbox.test.mjs tests/immutableReleaseManifest.test.mjs
+      - name: Prepare the exact active runtime for full verification
+        id: prepare
+        run: node tools/browser-release/prepare-ci-runtime.mjs --ci-only
       - name: Install locked browser checks
+        working-directory: ${{ steps.prepare.outputs.workspace }}
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npx playwright install --with-deps chromium
       - name: Verify actual checkout before any source reservation
+        working-directory: ${{ steps.prepare.outputs.workspace }}
         run: |
           node --test tests/*.test.mjs
           node tools/security/scan-public-secrets.mjs src index.html prices.html deployment.json release
           npx playwright test --config=playwright.weekly.config.mjs
+      - name: Record the reviewed source checkout
+        run: |
           echo "PYAT_MAIN_BASE=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Install the separately checked collector dependencies
+        if: steps.prepare.outputs.mode == 'verified-active-runtime'
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Open the independent feed checkpoint
         id: state
         shell: bash
@@ -130,6 +141,7 @@ jobs:
         continue-on-error: true
         run: node tools/pyaterochka-public-catalog/verify-refresh.mjs
       - name: Publish only the two feed files to unchanged reviewed main
+        id: publication
         if: always() && steps.result_checkpoint.outcome == 'success'
         shell: bash
         run: |
@@ -141,20 +153,11 @@ jobs:
           git add src/data/pyaterochkaPublishedPromotions.json src/data/pyaterochkaPublishedRefresh.json
           if ! git diff --cached --quiet; then
             git -c user.name='CHECKNI Price History' -c user.email='actions@users.noreply.github.com' commit -m 'DATA: publish Pyaterochka city collection result'
+            PAGES_COMMIT="$(git rev-parse HEAD)" PAGES_BASE_COMMIT="$PYAT_MAIN_BASE" PAGES_FEED=pyaterochka node tools/browser-release/publication-guard.mjs --data-delta
             git push origin HEAD:main
+            echo "site_commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            echo "base_commit=$PYAT_MAIN_BASE" >> "$GITHUB_OUTPUT"
           fi
-      - name: Package the complete browser artifact
-        run: |
-          mkdir -p _site
-          cp index.html prices.html deployment.json _site/
-          cp -a src _site/src
-          touch _site/.nojekyll
-      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b
-        with:
-          path: _site
-      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
-      - id: deploy
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
       - name: Keep checkpoint diagnostics on failure
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -162,8 +165,9 @@ jobs:
           name: pyaterochka-published-${{ github.run_id }}
           path: |
             _pyat_state/src/data/pyaterochkaPublished*.json
-            playwright-report/
-            test-results/
+            ${{ steps.prepare.outputs.workspace || github.workspace }}/playwright-report/
+            ${{ steps.prepare.outputs.workspace || github.workspace }}/test-results/
+            ${{ steps.prepare.outputs.workspace || github.workspace }}/ci-runtime-evidence.json
           if-no-files-found: ignore
           retention-days: 7
       - name: Require a verified current automated source result
@@ -171,3 +175,35 @@ jobs:
         run: |
           echo 'No verified current Pyaterochka city observation; source pauses and unresolved reservations remain preserved.'
           exit 1
+  pages:
+    if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.publish.outputs.site_commit != ''
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      actions: write
+    env:
+      PAGES_COMMIT: ${{ needs.publish.outputs.site_commit }}
+      PAGES_BASE_COMMIT: ${{ needs.publish.outputs.base_commit }}
+      PAGES_FEED: pyaterochka
+    steps:
+      - name: Reject non-SHA dispatch inputs before checkout
+        shell: bash
+        run: |
+          [[ "$PAGES_COMMIT" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$PAGES_BASE_COMMIT" =~ ^[a-f0-9]{40}$ ]]
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: ZebraRectifier/checkni-g5-preview
+          ref: ${{ needs.publish.outputs.site_commit }}
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Queue exact-commit Pages publication (completion is verified in its own run)
+        env:
+          PAGES_DISPATCH_TOKEN: ${{ github.token }}
+        run: node tools/browser-release/publication-guard.mjs --dispatch
