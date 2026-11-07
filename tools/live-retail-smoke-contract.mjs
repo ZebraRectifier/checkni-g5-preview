@@ -1,4 +1,26 @@
 import assert from 'node:assert/strict';
+import { readFile as readLocalFile } from 'node:fs/promises';
+
+export async function pinnedLiveRuntimeProof({ baseUrl, files, readFile = readLocalFile, fetchImpl = globalThis.fetch }) {
+  const entry = await readFile('index.html');
+  const prefix = pinnedRuntimePrefix(entry.toString('utf8'));
+  assert(files.every(file => /^src\/[a-zA-Z0-9_./-]+\.mjs$/u.test(file) && !file.includes('..')), 'Unsafe runtime proof path');
+  const paths = ['index.html', prefix + 'manifest.json', ...files.map(file => prefix + file)];
+  const expected = await Promise.all(paths.map(file => file === 'index.html' ? entry : readFile(file)));
+  return {
+    prefix,
+    async matchesPublished(attempt = 0) {
+      const checks = await Promise.all(paths.map(async (file, index) => {
+        try {
+          const url = new URL(file, baseUrl); url.searchParams.set('runtimeProof', String(attempt));
+          const response = await fetchImpl(url, { signal: AbortSignal.timeout(8000) });
+          return response.ok && Buffer.from(await response.arrayBuffer()).equals(expected[index]);
+        } catch { return false; }
+      }));
+      return checks.every(Boolean);
+    }
+  };
+}
 
 export function pinnedRuntimePrefix(html, entry = 'app') {
   assert(['app', 'priceCapture'].includes(entry), 'Unsupported entry point');
