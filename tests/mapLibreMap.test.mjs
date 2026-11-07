@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 import {createInteractiveStoreMap,storeMapFeatures,STORE_MAP_STYLE} from '../src/runtime/mapLibreMap.mjs';
+
+test('vendored map runtime, worker, stylesheet and license match the verified npm package bytes',async()=>{
+  const root=new URL('../src/vendor/maplibre-gl-6.16.0/',import.meta.url);
+  const provenance=JSON.parse(await readFile(new URL('PROVENANCE.json',root),'utf8'));
+  assert.equal(provenance.version,'6.16.0');
+  for(const entry of provenance.files){const bytes=await readFile(new URL(entry.path,root));
+    assert.equal(bytes.length,entry.bytes,entry.path);assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.sha256,entry.path);}
+});
 
 test('map features keep only valid distinct geography IDs; addresses, catalogues and prices never enter the basemap source',()=>{
   const data=storeMapFeatures([{id:'one',lat:55.7,lon:37.6,address:'Private home',catalog:{price:100}},
