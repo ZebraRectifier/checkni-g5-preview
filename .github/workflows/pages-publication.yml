@@ -4,8 +4,19 @@ on:
   push:
     branches: [main]
   pull_request:
-    paths: ['.github/workflows/pages-publication.yml']
+    paths: ['.github/workflows/pages-publication.yml', '.github/workflows/okey-public-data.yml', '.github/workflows/pyaterochka-public-data.yml', 'tools/browser-release/publication-guard.mjs', 'tests/dataPublication.test.mjs']
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      site_commit:
+        required: true
+        type: string
+      base_commit:
+        required: true
+        type: string
+      feed:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -18,14 +29,39 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      site_commit: ${{ steps.scope.outputs.commit }}
+    env:
+      PAGES_COMMIT: ${{ inputs.site_commit || github.event.pull_request.head.sha || github.sha }}
+      PAGES_BASE_COMMIT: ${{ inputs.base_commit }}
+      PAGES_FEED: ${{ inputs.feed }}
     steps:
+      - name: Reject non-SHA publication inputs before checkout
+        shell: bash
+        run: |
+          [[ "$PAGES_COMMIT" =~ ^[a-f0-9]{40}$ ]]
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
+          repository: ZebraRectifier/checkni-g5-preview
+          ref: ${{ inputs.site_commit || github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: '22'
           package-manager-cache: false
+      - name: Verify publication guard regressions
+        run: node --test tests/dataPublication.test.mjs
+      - name: Verify the exact checkout and data-only boundary
+        id: scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/browser-release/publication-guard.mjs --checkout
+          echo "commit=$PAGES_COMMIT" >> "$GITHUB_OUTPUT"
+      - name: Refuse a stale main tree before packaging
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: node tools/browser-release/publication-guard.mjs --current
       - name: Package tracked website files without build and test tooling
         shell: bash
         run: |
@@ -39,11 +75,14 @@ jobs:
         run: |
           node --input-type=module - <<'NODE'
           import {readdir} from 'node:fs/promises';
-          import {verifyLocal} from './tools/browser-release/verify.mjs';
+          import {verifyLocal,activationState} from './tools/browser-release/verify.mjs';
           const ids=await readdir('_site/releases');
           for(const id of ids) await verifyLocal('_site',id);
+          if (!await activationState('_site')) throw Error('active_release_required');
           console.log('Verified packaged releases:',ids.length);
           NODE
+      - name: Scan the complete packaged browser tree
+        run: node tools/security/scan-public-secrets.mjs _site
       - uses: actions/upload-pages-artifact@v4
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         with:
@@ -55,12 +94,29 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
+      contents: read
       pages: write
       id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: ZebraRectifier/checkni-g5-preview
+          ref: ${{ needs.build.outputs.site_commit }}
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Recheck main after the deployment queue
+        env:
+          PAGES_COMMIT: ${{ needs.build.outputs.site_commit }}
+          PAGES_BASE_COMMIT: ${{ inputs.base_commit }}
+          PAGES_FEED: ${{ inputs.feed }}
+        run: node tools/browser-release/publication-guard.mjs --current
       - name: Publish verified tree
         id: deployment
         uses: actions/deploy-pages@v5
