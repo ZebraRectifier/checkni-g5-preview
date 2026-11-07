@@ -6,7 +6,8 @@ export const savedComparisonStoreLabel = scope => scope.retailerId==='magnit'?'�
 function describeGaps(quote) {
   const reasons = [
     ['Товар не подтверждён', line => !line.card],
-    ['Уточнить вес, фасовку или количество', line => line.card && (line.quantityReview || !line.unit || line.unit.approximate)],
+    ['Уточнить вес, фасовку или количество', line => line.card && (line.quantityReview || !line.unit)],
+    ['Весовые количества примерные', line => line.card && line.unit?.approximate && !line.quantityReview],
     ['Нужны свежие цены', line => line.card && line.freshness !== 'recent']
   ];
   return reasons.flatMap(([label, isGap]) => {
@@ -33,27 +34,37 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
   }
   const quotes=result.drafts.map(draft=>quoteCatalogDraft(draft.rows,{nowMs}));
   const comparison=compareCatalogDraftAlternatives(result.drafts,{nowMs});
-  const exact=quotes.every(quote=>quote.complete&&quote.allRecent&&!quote.hasEstimates);
+  // Core already distinguishes a usable estimate from an unresolved quantity.
+  // Estimated weights must not turn a fresh comparison into a review request.
   const status=el('p');status.setAttribute('role','status');
   const messages=[];
   const pendingCount=result.request?.unresolvedGroupKeys?.length??0;
+  const lowerScope=result.drafts.find(draft=>draft.scope.storeId===comparison.lowerStoreId)?.scope;
   if(pendingCount)messages.push('Подбор ещё неполный. Выгоду всего подбора пока не определяем.');
-  if(!pendingCount&&exact&&comparison.kind==='fresh')messages.push(comparison.differenceMinor===0
-    ?'По наблюдаемым ценам суммы товаров в этих вариантах совпали.'
-    :'По наблюдаемым ценам подытог товаров в '+comparison.lowerStoreName+' ниже на '+formatRubMinor(comparison.differenceMinor)+'.');
+  if(!pendingCount&&comparison.kind==='fresh')messages.push((comparison.estimated?'Ориентировочно: ':'По наблюдаемым ценам ')+(comparison.differenceMinor===0
+    ?'суммы товаров в этих вариантах совпали.'
+    :'сумма товаров в '+(lowerScope?savedComparisonStoreLabel(lowerScope):comparison.lowerStoreName)+' ниже на '+formatRubMinor(comparison.differenceMinor)+'.'));
   else {
-    if (exact && comparison.kind === 'incompatible') {
+    if (comparison.kind === 'incompatible') {
       messages.push('Не удалось сопоставить выбранные позиции. Проверь товары и количество.');
     }
     if(quotes.some(quote=>!quote.complete))messages.push('Список неполный. Выгоду пока не определяем.');
     if(quotes.some(quote=>!quote.allRecent))messages.push('Есть старые или неизвестные цены.');
-    if(quotes.some(quote=>quote.hasEstimates)||result.drafts.some(draft=>draft.rows.some(row=>row.quantityReview)))
+    if(quotes.some(quote=>quote.lines.some(line=>line.quantityReview || (line.card && !line.unit))))
       messages.push('Количество весовых товаров или упаковку нужно уточнить.');
   }
   status.textContent=messages.join(' ');
   if(result.request?.unresolvedGroupKeys?.length)parent.append(el('p','Сравниваем только выбранные позиции. В исходном подборе ещё '+result.request.unresolvedGroupKeys.length+' поз. без подтверждённых товаров.'));
-  parent.append(status,el('p','Марки и фасовки могут отличаться. Условия карт и акций проверяй по источнику. Доставка и сборы не включены; наличие неизвестно.'));
-  if(result.drafts.some(draft=>draft.scope.retailerId==='perekrestok'))parent.append(el('p','Перекрёсток — подключённый каталог доставки в Москве. Доставка по твоему адресу не подтверждена.'));
+  parent.append(status,el('p','По количествам из списка. Марки и фасовки различаются. Доставка и сборы не включены; наличие неизвестно.'));
+  const calculation=el('details');calculation.className='future-step';
+  calculation.append(el('summary','Как рассчитана сумма'),el('p','Сравниваем количества в сохранённом списке. Для фасованных товаров учитываем целые упаковки, поэтому сумма может отличаться от первоначального подбора на людей и дни.'));
+  if(quotes.some(quote=>quote.hasEstimates))calculation.append(el('p','Весовые количества примерные: окончательная сумма зависит от взвешивания.'));
+  calculation.append(el('p','Условия карт и акций проверяй по источнику.'));
+  if(result.drafts.some(draft=>draft.scope.retailerId==='perekrestok')){
+    parent.append(el('p','Доставка по твоему адресу не подтверждена.'));
+    calculation.append(el('p','Перекрёсток — подключённый каталог доставки в Москве. Цены физического магазина могут отличаться.'));
+  }
+  parent.append(calculation);
   const groups = new Map();
   for (const complete of [true, false]) {
     if (!quotes.some(quote => quote.complete === complete)) continue;
