@@ -237,3 +237,11 @@ body.pixel-workspace #basket-view .aggregator-checks > :not(summary) { margin:12
 /* One recoverable empty state for every storefront. */
 .catalog-empty-actions { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:16px; }
 .catalog-empty-actions button { min-height:44px; }
+body.pixel-workspace .catalog-empty-actions button {
+  padding: 10px 16px; border: 1px solid var(--line); border-radius: 6px;
+  color: var(--ink); background: var(--surface-soft); font: inherit; cursor: pointer;
+}
+body.pixel-workspace .catalog-empty-actions button:hover { border-color: var(--accent); }
+body.pixel-workspace .catalog-empty-actions .text-button { color: var(--accent); }
+body.pixel-workspace #retail-browser:has(#retail-category-grid:empty) { display: none; }
+body.pixel-workspace #pixel-storefront:has(#retail-category-grid:empty) > .catalog-section { grid-column: 1 / 3; }

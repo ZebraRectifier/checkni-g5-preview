@@ -8,7 +8,10 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   const el=(tag,text)=>{const e=document.createElement(tag);if(text)e.textContent=text;return e;};
   const button=(text,fn)=>{const b=el('button',text);b.type='button';b.addEventListener('click',fn);return b;};
   const root=el('section');root.id='nearby-shopping';root.className='nearby-shopping';root.setAttribute('aria-label','Магазины рядом и выбор места покупок');
-  const css=el('link');css.rel='stylesheet';css.href=new URL('./nearby-shopping.css',import.meta.url).href;document.head.append(css);
+  const stylesheet=new URL('./nearby-shopping.css',import.meta.url).href;
+  if(![...document.querySelectorAll('link[rel="stylesheet"]')].some(link=>link.href===stylesheet)){
+    const css=el('link');css.rel='stylesheet';css.href=stylesheet;document.head.append(css);
+  }
   const openButton=button('📍 Найти магазины рядом',()=>open());openButton.setAttribute('aria-expanded','false');
   const panel=el('div');panel.hidden=true;panel.id='nearby-shopping-panel';openButton.setAttribute('aria-controls',panel.id);
   const title=el('h3','Где ищем продукты?');
