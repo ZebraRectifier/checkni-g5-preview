@@ -6,16 +6,21 @@ on:
   pull_request:
     paths: ['.github/workflows/pages-publication.yml', '.github/workflows/okey-public-data.yml', '.github/workflows/pyaterochka-public-data.yml', 'tools/browser-release/publication-guard.mjs', 'tests/dataPublication.test.mjs']
   workflow_dispatch:
-  workflow_call:
     inputs:
       site_commit:
-        required: true
+        description: Exact current main commit; empty for a manual current-main publication
+        required: false
+        default: ''
         type: string
       base_commit:
-        required: true
+        description: Reviewed parent for a data-only feed commit
+        required: false
+        default: ''
         type: string
       feed:
-        required: true
+        description: Data-only feed identifier (okey or pyaterochka)
+        required: false
+        default: ''
         type: string
 
 permissions:
@@ -59,9 +64,9 @@ jobs:
           set -euo pipefail
           node tools/browser-release/publication-guard.mjs --checkout
           echo "commit=$PAGES_COMMIT" >> "$GITHUB_OUTPUT"
-      - name: Refuse a stale main tree before packaging
+      - name: Require the exact event SHA and current main before packaging
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        run: node tools/browser-release/publication-guard.mjs --current
+        run: node tools/browser-release/publication-guard.mjs --deployment
       - name: Package tracked website files without build and test tooling
         shell: bash
         run: |
@@ -111,12 +116,12 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
-      - name: Recheck main after the deployment queue
+      - name: Recheck the event SHA and main after the deployment queue
         env:
           PAGES_COMMIT: ${{ needs.build.outputs.site_commit }}
           PAGES_BASE_COMMIT: ${{ inputs.base_commit }}
           PAGES_FEED: ${{ inputs.feed }}
-        run: node tools/browser-release/publication-guard.mjs --current
+        run: node tools/browser-release/publication-guard.mjs --deployment
       - name: Publish verified tree
         id: deployment
         uses: actions/deploy-pages@v5
