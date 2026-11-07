@@ -169,6 +169,14 @@ test('selected map card keeps route and catalogue action reachable above the mob
   await expect(card.getByRole('link',{name:'Маршрут'})).toBeInViewport();
   // A geometric visibility check also detects sticky dock occlusion.
   expect(await action.evaluate(node=>{const box=node.getBoundingClientRect(),hit=document.elementFromPoint(box.x+box.width/2,box.y+box.height/2);return node===hit||node.contains(hit);})).toBe(true);
+  // A hovered SDK marker/label previously painted above the card although its
+  // CTA remained reachable. Sample its title, address and centre separately.
+  expect(await card.evaluate(node=>{
+    const boxes=[node.querySelector('strong'),node.querySelector('p')].map(part=>part.getBoundingClientRect());
+    const rect=node.getBoundingClientRect(),points=[[rect.x+rect.width/2,rect.y+rect.height/2]];
+    for(const box of boxes)for(let x=box.left+4;x<box.right-4;x+=16)points.push([x,box.top+box.height/2]);
+    return points.map(([x,y])=>document.elementFromPoint(x,y)).every(hit=>hit&&node.contains(hit)&&!hit.closest('.stores-pin'));
+  })).toBe(true);
   const box=await card.boundingBox(),mapBox=await page.locator('.stores-map').boundingBox();
   if(testInfo.project.name.includes('mobile'))expect(box.y+box.height).toBeLessThan(mapBox.y+mapBox.height-24);
   await expect(page.locator('.maplibregl-ctrl-attrib')).toBeVisible();
