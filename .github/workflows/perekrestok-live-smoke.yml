@@ -129,6 +129,7 @@ jobs:
                 text.includes("Перекрёсток · Москва · цены доставки Яндекс Еды")
                 && text.includes("Каталог выбранного адреса")
                 && text.includes("наличие неизвестно")
+                && await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src") === runtimePrefix + "src/app.mjs"
                 && await runtime.matchesPublished(attempt)
               ) {
                 published = true;

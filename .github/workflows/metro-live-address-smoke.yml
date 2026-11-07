@@ -179,6 +179,7 @@ jobs:
                   && /\d+ категор/u.test(text)
                   && /\d+ товар/u.test(text)
                   && await page.locator('#metro-store-address option[value="49"]').count()
+                  && await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src") === runtimePrefix + "src/app.mjs"
                   && await runtime.matchesPublished(attempt)) {
                 ready = true;
                 break;
