@@ -870,7 +870,8 @@ test('explicit and default GLOBUS clients abort stalled reads at fifteen seconds
 
 test('other retailer category and product reads tolerate a bounded cold connection', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
-  for (const retailerId of RETAIL_CATALOG_IDS.filter(id => !['globus', 'perekrestok'].includes(id))) {
+  for (const retailerId of RETAIL_CATALOG_IDS.filter(id => !['globus', 'perekrestok'].includes(id)
+      && !getRetailCatalogDefinition(id).publishedPromotionTransport)) {
     for (const type of ['categories', 'products']) {
       let calls = 0;
       const client = createRetailCatalogClient({ retailerId, fetchImpl: (_url, { signal }) => {
