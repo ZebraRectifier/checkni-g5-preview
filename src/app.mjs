@@ -2526,8 +2526,15 @@ function renderBasketProposalOutput() {
 
   if (state.status === HYBRID_BASKET_FLOW_STATUS.CLARIFICATION) {
     const view = state.presentation;
+    // A plain advice reply already says what matters. Its generic introduction
+    // and focus-only button duplicate the persistent message field below it.
+    // Product selection, conditions and basket confirmations keep their controls.
+    const plainAdvice = state.result?.triggerReason === "smalltalk"
+      && view?.headline === "Давай разберёмся."
+      && typeof view.message === "string" && view.message.trim()
+      && !view.items?.length;
     message.textContent = view?.headline || "Нужно уточнение.";
-    elements.proposalStatus.append(message);
+    if (!plainAdvice) elements.proposalStatus.append(message);
 
     if (view?.message) {
       const detail = document.createElement("p");
@@ -2584,7 +2591,7 @@ function renderBasketProposalOutput() {
         focusProposalInput
       );
     } else if (triggerReason === "smalltalk" || triggerReason === 'needs_list') {
-      appendProposalAction(
+      if (!plainAdvice) appendProposalAction(
         view?.primaryAction || "Написать покупки",
         focusProposalInput
       );

@@ -39,7 +39,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
   const root = document.createElement("section");
   root.id = "shopping-dialogue";
   root.className = "shopping-dialogue";
-  root.setAttribute("aria-label", "Переписка с помощником CHECKNI о покупках");
+  root.setAttribute("aria-label", "Переписка с Хорей о покупках");
   root.hidden = true;
 
   const header = document.createElement("div");
@@ -82,7 +82,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
 
   const previousNote = document.createElement("p");
   previousNote.className = "shopping-dialogue-note";
-  previousNote.textContent = "Это прошлые ответы. Цены и изменения корзины проверяй новым запросом.";
+  previousNote.textContent = "Цены в истории не обновляются.";
   previousNote.hidden = true;
 
   const user = document.createElement("p");
@@ -91,7 +91,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
   user.hidden = true;
   const speaker = document.createElement("span");
   speaker.className = "shopping-dialogue-speaker";
-  speaker.textContent = "Помощник CHECKNI";
+  speaker.textContent = "Хоря";
   speaker.hidden = true;
 
   const note = document.createElement("p");
@@ -143,7 +143,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
       answer.className = "shopping-dialogue-answer";
       const label = document.createElement("span");
       label.className = "shopping-dialogue-speaker";
-      label.textContent = "Помощник CHECKNI · прежний ответ";
+      label.textContent = "Хоря · ранее";
       answer.append(label);
       for (const text of turn.reply) {
         const paragraph = document.createElement("p");

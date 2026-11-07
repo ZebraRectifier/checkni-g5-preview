@@ -8,7 +8,7 @@ const submit = async (page, text) => {
 const status = page => page.locator('#basket-proposal-status');
 const savedBasket = page => page.evaluate(() => localStorage.getItem('checkni.surface.basket.v1'));
 
-test('bare why continues the accepted shopping advice without losing context', async ({page}) => {
+test('bare why continues the accepted shopping advice without losing context', async ({page}, testInfo) => {
   const requests = [];
   await page.route('**/functions/v1/ai-basket-proposal', route => {
     requests.push(route.request().postDataJSON());
@@ -22,8 +22,14 @@ test('bare why continues the accepted shopping advice without losing context', a
   const first = 'Посоветуй рыбу на ужин, чтобы быстро приготовить.';
   await submit(page, first);
   await expect(status(page)).toContainText('подойдёт филе рыбы');
+  await expect(status(page).locator('.proposal-message')).toHaveCount(0);
+  await expect(status(page).getByRole('button', {name:'Продолжить', exact:true})).toHaveCount(0);
+  await expect(page.locator('#basket-proposal-input')).toBeEditable();
   await submit(page, 'почему');
   await expect(status(page)).toContainText('потому что его удобно порционировать');
+  await expect(page.locator('#shopping-dialogue-history')).toContainText('Для быстрого ужина подойдёт филе рыбы.');
+  await expect(page.locator('#shopping-dialogue-history')).not.toContainText('Давай разберёмся.');
+  await expect(page.locator('#shopping-dialogue-history .shopping-dialogue-speaker')).toHaveText('Хоря · ранее');
   expect(requests).toHaveLength(2);
   expect(requests.every(request => request.mode === 'advice')).toBe(true);
   expect(requests[1].history).toHaveLength(2);
@@ -31,6 +37,7 @@ test('bare why continues the accepted shopping advice without losing context', a
   expect(requests[1].history[1].text).toContain('филе рыбы');
   expect(await savedBasket(page)).toBe(before);
   await expect(status(page)).not.toContainText('Не получилось разобрать');
+  await page.screenshot({path:testInfo.outputPath('advice-followup.png')});
 });
 
 test.beforeEach(async ({ context }) => {
