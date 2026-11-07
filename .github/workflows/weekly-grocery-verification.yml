@@ -49,7 +49,7 @@ jobs:
         run: node --test tests/publishedPromotionCatalog.test.mjs tests/nearbyRegions.test.mjs
       - name: Verify interactive map and source-specific list admission
         working-directory: ${{ steps.prepare.outputs.workspace }}
-        run: node --test tests/sourceCatalogListAdmission.test.mjs tests/mapLibreMap.test.mjs tests/storeGeolocation.test.mjs
+        run: node --test tests/sourceCatalogListAdmission.test.mjs tests/mapLibreMap.test.mjs tests/storeGeolocation.test.mjs tests/magnitRegisteredCoordinates.test.mjs tests/metroCategoryRoots.test.mjs
       - name: Verify saved METRO lifetime and dynamic DA catalogue policy without network
         working-directory: ${{ steps.prepare.outputs.workspace }}
         run: node --test tests/retailCatalogFreshnessPolicy.test.mjs tests/selectedRetailCatalogOffersPort.test.mjs tests/observedComparisonExpiry.test.mjs tests/currentComparisonExplanation.test.mjs tests/comparisonResult.test.mjs tests/retailCatalogPort.test.mjs tests/globusStoreLatestObservationPort.test.mjs
