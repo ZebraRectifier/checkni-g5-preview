@@ -1,4 +1,5 @@
 import {sourceScopedRetailListSelection} from '../catalog/sourceScopedRetailList.mjs';
+import {admitSourceCatalogListCard} from '../catalog/sourceCatalogListAdmission.mjs';
 import {
   CATALOG_SEARCH_PUBLISHABLE_KEY
 } from "./catalogGatewayPort.mjs";
@@ -771,6 +772,10 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
   };
   const scoped = !basketProduct && sourceScopedRetailListSelection(normalized);
   // Keep source units intact for the delivery identity gate. The list has its own unit.
+  if (!basketProduct && !scoped) {
+    const admitted = admitSourceCatalogListCard(normalized, {row, definition, nowMs});
+    if (admitted) return admitted;
+  }
   return Object.freeze(scoped ? {...normalized,basketProductId:scoped.product.id,
     priceConditionLabel:scoped.card.priceConditionLabel
       +(scoped.card.retailerId==='perekrestok'&&scoped.card.catalogPurchaseBasis==='weighed-portion'
