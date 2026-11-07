@@ -3,7 +3,8 @@ test('comparison presentation separates complete and partial quotes without inve
  await page.goto('/?comparison=observed&catalog=retail#shop');
  await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready');
  await page.evaluate(async()=>{
- const {renderSavedGuidedComparison}=await import('/src/components/SavedGuidedComparison.mjs');
+ const appUrl=document.querySelector('script[type="module"][src$="/app.mjs"]').src;
+ const {renderSavedGuidedComparison}=await import(new URL('components/SavedGuidedComparison.mjs',appUrl).href);
  const at='2026-11-07T10:00:00Z';
  const row=(key,name,price,date)=>({group:{key,label:name,dimension:'ml',dailyAmount:100},quantity:1,product:{id:key,name,unit:'1 л'},card:price?{name,unit:'1 л',priceMinor:price,currency:'RUB',observedAt:date,sourceUrl:'https://example.com',priceConditionLabel:'Без карты'}:null});
  const result={kind:'catalog_comparison',drafts:[{scope:{retailerId:'magnit',storeId:'m',storeAddress:'Тестовый адрес'},rows:[row('milk','Молоко',8999,'2026-11-06T10:00:00Z'),row('oil','Масло',9999,'2026-11-06T10:00:00Z')]},{scope:{retailerId:'perekrestok',storeId:'p'},rows:[row('milk','Молоко',7999,at),row('oil','Масло',null,null)]}]};
