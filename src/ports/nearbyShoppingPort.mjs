@@ -11,7 +11,7 @@ export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
   const address=createAddressRecovery({request:async query=>{
     try{
       const r=await fetchImpl(NEARBY_ADDRESS_ENDPOINT,{method:'POST',credentials:'omit',headers:{'content-type':'application/json',
-        apikey:CATALOG_SEARCH_PUBLISHABLE_KEY},body:JSON.stringify({query,consent:true}),signal:AbortSignal.timeout(10000)});
+        apikey:CATALOG_SEARCH_PUBLISHABLE_KEY},body:JSON.stringify({query,consent:true}),signal:AbortSignal.timeout(15000)});
       if(r.status===429){
         const rejection=await readBoundedJsonResponse(r,1024);
         return{kind:'limited',candidates:[],retryable:rejection?.version===1&&rejection.error==='busy'};
