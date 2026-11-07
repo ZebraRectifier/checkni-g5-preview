@@ -1,1 +1,2 @@
 releases/** -text
+src/vendor/maplibre-gl-6.16.0/** -text

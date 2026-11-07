@@ -1,4 +1,5 @@
 import {sourceScopedRetailListSelection} from './sourceScopedRetailList.mjs';
+import {sourceCatalogListSelection} from './sourceCatalogListAdmission.mjs';
 import {
   BETA_EVERYDAY_BINDINGS,
   BETA_EVERYDAY_PROOF_PRODUCTS,
@@ -150,6 +151,7 @@ function canonicalReviewedRetailBasketProduct(product) {
 }
 
 // Source-scoped list selections remain distinct from all legacy canonical IDs.
-export function getReviewedRetailBasketProduct(product) {
-  return canonicalReviewedRetailBasketProduct(product) ?? sourceScopedRetailListSelection(product)?.product ?? null;
+export function getReviewedRetailBasketProduct(product, options = {}) {
+  return canonicalReviewedRetailBasketProduct(product) ?? sourceScopedRetailListSelection(product)?.product
+    ?? sourceCatalogListSelection(product, options)?.product ?? null;
 }

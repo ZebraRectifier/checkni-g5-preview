@@ -38,6 +38,7 @@ test('429 never retries the server; matching directory shop is an explicit fallb
  let requests=0;
  const port=createNearbyShoppingPort({fetchImpl:async url=>{
   if(String(url).endsWith('nearbyGroceryStores.json'))return Response.json({schemaVersion:1,region:'moscow-and-oblast',exhaustive:false,priceEvidence:false,observedAt:'2026-11-01T00:00:00Z',stores:[{name:'Глобус Красногорск',address:'Москва Новорижское шоссе',lat:55.8,lon:37.3}]});
+  if(String(url).endsWith('magnitRegisteredCoordinates.json'))return new Response('',{status:404});
   requests++;return new Response('',{status:429});
  }});
  const value=await port.address('Глобус Красногорск');assert.equal(value.kind,'directory');assert.equal(requests,1);

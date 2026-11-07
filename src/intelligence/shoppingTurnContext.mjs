@@ -8,7 +8,10 @@ import { shoppingReferenceSubject } from "./shoppingProductReference.mjs";
 // The separate volatile advice history retains the actual displayed exchange.
 export function shoppingAdviceFocus(text) {
   const value = normalizeShoppingText(stripAssistantGreetingPrefix(text));
-  const targets = shoppingTargets(value).slice(0, 2);
+  // A restriction is context for the advice, not its positive subject. Reusing
+  // "без мяса" as "Про мясо" in the next turn contradicts the saved refusal.
+  const excluded = new Set(extractShoppingDelta(value).reject);
+  const targets = shoppingTargets(value).filter(target => !excluded.has(target)).slice(0, 2);
   const genericSubject = /^(?:а\s+)?(?:как\s+(?:правильно\s+)?выбрать|како[йея]\s+выбрать|какие\s+выбрать)\s+([^?!.;]{1,80})/u.exec(value)?.[1]
     ?.replace(/\s+(?:для|на|к)\s+.+$/u, "").trim();
   const subject = shoppingReferenceSubject(value) ?? (!targets.length ? genericSubject : null) ?? null;

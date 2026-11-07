@@ -1,4 +1,6 @@
 import {sourceScopedRetailListSelection} from './catalog/sourceScopedRetailList.mjs';
+import {publishedCatalogProductExpiry} from './ports/publishedPromotionCatalog.mjs';
+import {rememberBasketPresentation} from './state/basketPresentationStore.mjs';
 import {prepareManualCatalogComparison} from './runtime/manualCatalogComparison.mjs';
 import {createGuidedComparisonStore,createGuidedComparisonRequest,GUIDED_BASKET_COMPARISON_KEY} from './state/guidedBasketComparison.mjs';
 import {loadSavedGuidedComparison,savedComparisonScopes} from './runtime/savedGuidedComparison.mjs';
@@ -34,13 +36,11 @@ import { revealWinningBasketList } from "./runtime/listInspection.mjs";
 import { createProductPhotoLoader } from "./runtime/productPhotos.mjs";
 import { requestCatalogPhotos } from "./ports/catalogPhotosPort.mjs";
 import { createStoresSection } from "./components/StoresMap.mjs";
-import { createOkeyStoreDirectory } from "./components/OkeyStoreDirectory.mjs";
 import { createMagnitStorePicker } from "./components/MagnitStorePicker.mjs";
 import { createMetroStorePicker } from "./components/MetroStorePicker.mjs";
 import { resolveRegisteredMagnitStore as resolveMagnitMoscowStore } from "./data/registeredMagnitStores.mjs";
 import { createNearbyShopping } from './components/NearbyShopping.mjs';
 import { createNearbyShoppingPort } from './ports/nearbyShoppingPort.mjs';
-import {createPyaterochkaPublishedCatalog} from './components/PyaterochkaPublishedCatalog.mjs';
 import { nearbyShoppingIntent, nearbyCatalogBinding, boundMagnitMapLocations } from './intelligence/nearbyShopping.mjs';
 import { isGuidedEntryRequest } from './intelligence/guidedShoppingPlan.mjs';
 import { createStoreGeolocation } from './runtime/storeGeolocation.mjs';
@@ -50,7 +50,6 @@ import { nearbyShoppingStores } from "./data/shoppingLocations.mjs";
 import { createGlobusStorePicker, resolveGlobusComparisonPeer } from "./components/GlobusStorePicker.mjs";
 import { createWeeklyRoute } from './components/WeeklyRoute.mjs';
 import { applyWeeklyBasket } from './runtime/weeklyBasketFlow.mjs';
-import { createOkeyDeliveryCatalog } from "./components/OkeyDeliveryCatalog.mjs";
 import { createSelectedComparisonStores } from "./components/SelectedComparisonStores.mjs";
 import { createSelectedStoreScope, createLiveExampleStoreScope } from "./observations/selectedStoreScope.mjs";
 import { getReviewedRetailBasketIdentity, getReviewedRetailBasketProduct, matchesReviewedRetailBasketIdentity } from "./catalog/reviewedRetailBasket.mjs";
@@ -428,6 +427,7 @@ function loadProductPhoto(product) {
   return productPhotoLoader.load({ name: product?.name });
 }
 let catalogRequestVersion = 0;
+let promotionExpiryTimer;
 let retailBrowserRequestVersion = 0;
 let pendingCatalogSearch = null;
 let catalogSearchState = {
@@ -583,14 +583,14 @@ elements.manualDivider.hidden = false;
 
 if (elements.comparisonModeBadge) {
   elements.comparisonModeBadge.textContent = comparisonMode === COMPARISON_MODE.OBSERVED
-    ? "OBSERVED · REAL"
-    : "DEMO · MOCK";
+    ? "Реальные цены"
+    : "Тестовые цены";
 }
 
 if (elements.basketModeCopy) {
   elements.basketModeCopy.textContent = comparisonMode === COMPARISON_MODE.OBSERVED
-    ? "Проверьте состав и запустите сравнение по доверенным наблюдениям реальных цен."
-    : "Проверьте состав и запустите сравнение по трём демонстрационным магазинам.";
+    ? "Измени количество и сравни цены."
+    : "Демонстрация: товары и цены вымышлены.";
 }
 
 function manualCatalogListProduct(product) {
@@ -781,7 +781,8 @@ function mascotStateForComparison(state) {
 function renderBetaLiveSection() {
   if (!elements.betaLiveSection) return;
   elements.betaLiveSection.hidden = !(
-    comparisonMode === COMPARISON_MODE.OBSERVED
+    !publicRetailCatalogMode
+    && comparisonMode === COMPARISON_MODE.OBSERVED
     && basket.getSnapshot().length === 0
   );
 }
@@ -881,7 +882,7 @@ function renderRetailStoreButtons() {
   if (!elements.retailStoreGrid) return;
 
   elements.retailStoreGrid.replaceChildren();
-  const order = ['magnit', 'globus', 'vkusvill', 'lenta', 'metro', 'perekrestok', 'auchan', 'da'];
+  const order = ['magnit', 'globus', 'vkusvill', 'lenta', 'metro', 'perekrestok', 'pyaterochka', 'okey', 'auchan', 'da'];
   for (const retailerId of [...RETAIL_CATALOG_IDS].sort((a, b) => order.indexOf(a) - order.indexOf(b))) {
     const definition = retailDefinitionFor(retailerId);
     if (!definition) continue;
@@ -896,6 +897,8 @@ function renderRetailStoreButtons() {
       ? "retail-store-card is-selected"
       : "retail-store-card";
     button.dataset.retailerId = retailerId;
+    if (definition.publishedPromotions) button.classList.add('pixel-published-store-card');
+    button.dataset.storeSearchAliases = definition.searchAliases ?? '';
     button.setAttribute("aria-pressed", selected && retailSurfaceStage === 'store' ? "true" : "false");
     const awaitsAddress = retailSurfaceStage === 'stores'
       && ['magnit', 'globus', 'metro'].includes(retailerId);
@@ -908,9 +911,9 @@ function renderRetailStoreButtons() {
     logo.className = "retail-store-logo";
     logo.setAttribute("aria-hidden", "true");
     logo.textContent = definition.displayName;
-    if (publicRetailCatalogMode && ['magnit', 'perekrestok', 'vkusvill'].includes(retailerId)) {
+    if (publicRetailCatalogMode && ['magnit', 'perekrestok', 'vkusvill', 'pyaterochka'].includes(retailerId)) {
       const image = document.createElement('img');
-      const extension = retailerId === 'magnit' ? 'png' : 'svg';
+      const extension = ['magnit', 'pyaterochka'].includes(retailerId) ? 'png' : 'svg';
       image.src = new URL(`./img/logo-${retailerId}.${extension}`, import.meta.url).href;
       image.alt = '';
       image.addEventListener('error', () => { logo.textContent = definition.displayName; }, { once: true });
@@ -921,7 +924,7 @@ function renderRetailStoreButtons() {
     copy.className = "retail-store-copy";
     const kicker = document.createElement("span");
     kicker.className = "retail-store-kicker";
-    kicker.textContent = "Магазин";
+    kicker.textContent = definition.publishedPromotions ? 'Акции Москвы' : 'Магазин';
     const name = document.createElement("strong");
     name.textContent = definition.displayName;
     const scope = document.createElement("span");
@@ -996,7 +999,7 @@ function renderRetailBrowser() {
       : retailBrowserState.status === "error"
         ? "Раздел временно не загрузился. Можно повторить."
         : retailBrowserState.categories.length > 0
-          ? "Выберите подкатегорию. Если раздел конечный — ниже сразу появятся товары."
+          ? "Выберите подкатегорию."
           : "Конечный раздел. Товары показаны ниже."
     : "Выберите раздел, затем подкатегорию — товары появятся ниже.";
   elements.retailCategoryBack.hidden = retailBrowserState.path.length === 0;
@@ -1227,6 +1230,8 @@ function createCatalogProduct(product, live = true) {
       }
       invalidateHybridForManualTakeover();
       showToast(`${basketProduct.name} добавлено`);
+      rememberBasketPresentation(existing ?? basketProduct, product);
+      renderBasket();
     }
   };
   return (publicRetailCatalogMode ? createPixelProductCard : createProductCard)(product, options);
@@ -1631,6 +1636,7 @@ async function loadRetailCategoryProducts(category, {
       discoveredCount: result.products.length,
       categoryName: category.name,
       categoryExpectedCount: expectedCount,
+      unavailableSources: result.unavailableSources ?? 0,
       nextOffset,
       canLoadMore: pageSize === pageLimit && nextOffset > 0 && (expectedCount <= 0 || nextOffset < expectedCount),
       loadingMore: false,
@@ -1729,6 +1735,7 @@ async function loadMoreRetailProducts() {
     products,
     retailCount: products.length,
     discoveredCount: products.length,
+    unavailableSources: result.unavailableSources ?? 0,
     nextOffset,
     hasPaged: true,
     canLoadMore: pageSize === pageLimit && nextOffset > offset && nextOffset <= 10_000
@@ -1890,6 +1897,7 @@ function setupRetailBrowser() {
       onSelect: store => {
         selectedGlobusStore = store;
         comparedGlobusStore = resolveGlobusComparisonPeer(store.officialStoreId, comparedGlobusStore?.officialStoreId);
+        agreedNearbyStoreKey=JSON.stringify(['globus','globus-store-'+store.officialStoreId]);
         comparisonAddressChanged(); void selectRetailer("globus");
       },
       onCompareSelect: store => {
@@ -1914,8 +1922,6 @@ function setupRetailBrowser() {
   renderRetailBrowser();
   if (!publicRetailCatalogMode) return;
 
-  elements.retailStoreGrid?.after(createOkeyStoreDirectory());
-  elements.retailStoreGrid?.after(createOkeyDeliveryCatalog());
   elements.retailCategoryBack?.addEventListener("click", () => {
     if (retailBrowserState.path.length === 0) return;
     history.back();
@@ -1981,9 +1987,34 @@ function setupManualSearchControls() {
   retry.hidden = true;
   retry.addEventListener("click", () => {
     if (elements.searchInput.value.trim()) elements.searchForm.requestSubmit();
-    else elements.clearSearch.click();
+    else if (publicRetailCatalogMode && retailBrowserState.path.length
+      && catalogSearchState.categoryName === retailBrowserState.path.at(-1).name) {
+      void loadRetailCategoryProducts(retailBrowserState.path.at(-1));
+    } else elements.clearSearch.click();
   });
-  elements.emptySearch.append(retry); elements.searchRetry = retry;
+  const otherStores = document.createElement('button');
+  otherStores.id = 'catalog-other-stores'; otherStores.type = 'button';
+  otherStores.className = 'secondary-button'; otherStores.textContent = 'Другие магазины';
+  otherStores.hidden = !publicRetailCatalogMode;
+  otherStores.addEventListener('click', () => document.dispatchEvent(new CustomEvent('checkni:shop-action', { detail: { action: 'stores' } })));
+  const actions = document.createElement('div'); actions.className = 'catalog-empty-actions';
+  actions.append(retry, otherStores); elements.emptySearch.append(actions); elements.searchRetry = retry;
+  const partialNotice = document.createElement('div');
+  partialNotice.id = 'catalog-partial-notice'; partialNotice.className = 'catalog-empty-actions field-help';
+  partialNotice.hidden = true; partialNotice.setAttribute('role', 'status');
+  const partialText = document.createElement('span');
+  partialText.textContent = 'Часть товаров не загрузилась.';
+  const partialRetry = document.createElement('button');
+  partialRetry.type = 'button'; partialRetry.className = 'text-button'; partialRetry.textContent = 'Повторить загрузку';
+  partialRetry.addEventListener('click', () => {
+    if (activeQuery.trim()) elements.searchForm.requestSubmit();
+    else if (retailBrowserState.path.length) void loadRetailCategoryProducts(retailBrowserState.path.at(-1));
+    else void loadInitialRetailCatalog();
+  });
+  partialNotice.append(partialText, partialRetry); elements.productGrid.before(partialNotice);
+  elements.partialCatalogNotice = partialNotice;
+  elements.partialCatalogText = partialText;
+  elements.partialCatalogRetry = partialRetry;
   const prompt = document.createElement("p");
   prompt.id = "catalog-search-prompt";
   prompt.className = "field-help catalog-search-prompt";
@@ -2005,6 +2036,15 @@ function setupManualSearchControls() {
 }
 
 function renderCatalog() {
+  clearTimeout(promotionExpiryTimer);
+  if (publicRetailCatalogMode && currentRetailDefinition()?.publishedPromotions && catalogSearchState.status === 'live') {
+    const now = Date.now();
+    const products = catalogSearchState.products.filter(product => Date.parse(product.observedAt) <= now
+      && publishedCatalogProductExpiry(product) > now);
+    catalogSearchState = { ...catalogSearchState, products, retailCount: products.length, discoveredCount: products.length };
+    const expiresAt = Math.min(...products.map(publishedCatalogProductExpiry));
+    if (Number.isFinite(expiresAt)) promotionExpiryTimer = setTimeout(renderCatalog, Math.min(2_147_483_647, expiresAt - now));
+  }
   stopCatalogMoreWatch?.();
   stopCatalogMoreWatch = undefined;
   document.querySelector("#retail-load-more, #retail-page-end")?.remove();
@@ -2031,7 +2071,16 @@ function renderCatalog() {
     catalogSearchState.status === "fallback"
     && catalogSearchState.query === normalizedQuery
   );
-  const categoryBrowsing = (
+  // Some sources assign products only to leaf categories. A successful empty
+  // parent response is still navigation, not an empty or failed product search.
+  const browsingSubcategories = publicRetailCatalogMode && live && !normalizedQuery
+    && catalogSearchState.products.length === 0
+    && !catalogSearchState.unavailableSources
+    && retailBrowserState.status === "ready"
+    && retailBrowserState.path.length > 0
+    && retailBrowserState.categories.length > 0
+    && retailBrowserState.path.at(-1)?.name === catalogSearchState.categoryName;
+  const categoryBrowsing = browsingSubcategories || (
     publicRetailCatalogMode
     && catalogSearchState.status === "category"
   );
@@ -2116,7 +2165,9 @@ function renderCatalog() {
           ? publicRetailCatalogMode ? `Живой каталог · ${retailName}` : `Живой каталог · ${retailName} + Open Food Facts`
           : `Живой каталог · ${retailName}`
         : publicRetailCatalogMode ? `Живой каталог · ${retailName}` : "Живой каталог · Open Food Facts";
-    elements.catalogNote.textContent = categoryResult
+    elements.catalogNote.textContent = browsingSubcategories
+      ? `${catalogSearchState.categoryName}: выберите подкатегорию.`
+      : categoryResult
       ? catalogSearchState.retailCount > 0
         ? `${catalogSearchState.categoryName}: реальные товары ${retailName} с наблюдаемыми ценами.`
         : `${catalogSearchState.categoryName}: в этом разделе сейчас нет товаров.`
@@ -2151,14 +2202,33 @@ function renderCatalog() {
 
   const hasResults = results.length > 0;
   const hasVisibleProducts = hasResults || featuredIds.size > 0;
+  const collectionRootPending = featuredIds.size > 0 && loading;
+  const collectionRootFailed = featuredIds.size > 0 && fallback;
+  if (elements.partialCatalogNotice) {
+    elements.partialCatalogNotice.hidden = !(collectionRootPending || collectionRootFailed
+      || publicRetailCatalogMode && live && hasVisibleProducts && catalogSearchState.unavailableSources > 0);
+    elements.partialCatalogText.textContent = collectionRootFailed
+      ? "Каталог загрузился не полностью. Подборка доступна."
+      : collectionRootPending ? "Загружаем остальные товары…" : "Часть товаров не загрузилась.";
+    elements.partialCatalogRetry.disabled = collectionRootPending;
+    // A failed main listing must be visible before the successful collection,
+    // including on mobile where the collection can fill several screens.
+    const collectionHost = document.getElementById('pixel-collections');
+    if ((collectionRootPending || collectionRootFailed) && collectionHost) collectionHost.before(elements.partialCatalogNotice);
+    else elements.productGrid.before(elements.partialCatalogNotice);
+  }
   elements.productGrid.hidden = !hasResults;
   elements.emptySearch.hidden = draft || loading || hasVisibleProducts || categoryBrowsing;
   if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = fallback
     ? "Не удалось загрузить товары" : "Ничего не нашли";
-  if (elements.searchRetry) elements.searchRetry.hidden = !fallback || draft || loading || hasVisibleProducts || categoryBrowsing;
+  if (elements.searchRetry) {
+    const unavailablePromotions = publicRetailCatalogMode && retailDefinition?.requiresPromoValidity && !normalizedQuery;
+    elements.searchRetry.hidden = !(fallback || unavailablePromotions) || draft || loading || hasVisibleProducts || categoryBrowsing;
+    elements.searchRetry.textContent = normalizedQuery ? 'Повторить поиск' : 'Повторить загрузку';
+  }
   if (publicRetailCatalogMode) {
     const heading = elements.productGrid.closest('.catalog-section').querySelector('.section-heading');
-    if (heading) heading.hidden = !hasResults && featuredIds.size > 0;
+    if (heading) heading.hidden = browsingSubcategories || (!hasResults && featuredIds.size > 0);
   }
   if (elements.searchPrompt) {
     elements.searchPrompt.hidden = !draft;
@@ -2184,22 +2254,23 @@ function renderCatalog() {
   }
 
   if (categoryBrowsing) {
-    elements.searchStatus.textContent = "Выберите конечную категорию";
+    elements.searchStatus.textContent = "Выберите подкатегорию";
     return;
   }
 
   if (live && !hasVisibleProducts) {
     if (publicRetailCatalogMode && !normalizedQuery && retailDefinition?.requiresPromoValidity
         && !catalogSearchState.canLoadMore) {
-      if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = "Действующих акций сейчас нет";
-      elements.emptySearchCopy.textContent = "Открой другой магазин или проверь этот каталог позже.";
+      if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = retailDefinition.publishedPromotions
+        ? 'Свежих цен пока нет' : 'Действующих акций сейчас нет';
+      elements.emptySearchCopy.textContent = "Можно повторить загрузку или выбрать другой магазин.";
       elements.searchStatus.textContent = "Действующих акций сейчас нет";
       return;
     }
     if (catalogSearchState.categoryName) {
       elements.emptySearchCopy.textContent =
-        `В этой категории ${retailName} сейчас нет товаров.`;
-      elements.searchStatus.textContent = "В категории нет товаров";
+        `В этой категории пока нет данных о товарах. Выбери другую категорию или повтори загрузку.`;
+      elements.searchStatus.textContent = "В категории пока нет данных";
       return;
     }
 
@@ -2213,7 +2284,8 @@ function renderCatalog() {
   elements.emptySearchCopy.textContent = fallback
     ? "Живой каталог сейчас не загрузился. Попробуйте ещё раз."
     : "Попробуйте более короткий запрос — например «сыр» или «хлеб».";
-  elements.searchStatus.textContent = hasVisibleProducts
+  elements.searchStatus.textContent = collectionRootFailed ? "Каталог загрузился не полностью"
+    : hasVisibleProducts
     ? (
         live
         && catalogSearchState.categoryName
@@ -2375,10 +2447,7 @@ if(publicRetailCatalogMode){
     onBuild:()=>{elements.proposalInput.value=nearbyBuildGoal;elements.proposalInput.dispatchEvent(new Event('input',{bubbles:true}));elements.proposalForm.requestSubmit();}
   });
   elements.proposalForm.querySelector('.shopping-welcome')?.after(nearbyShopping.element);
-  nearbyShopping.element.after(createPyaterochkaPublishedCatalog({onBuild:()=>{
-    elements.proposalInput.value='Собери недорогую корзину в Пятёрочке';
-    elements.proposalInput.dispatchEvent(new Event('input',{bubbles:true}));elements.proposalForm.requestSubmit();
-  }}));
+
 }
 
 function renderBasketProposalState() {
@@ -2457,8 +2526,15 @@ function renderBasketProposalOutput() {
 
   if (state.status === HYBRID_BASKET_FLOW_STATUS.CLARIFICATION) {
     const view = state.presentation;
+    // A plain advice reply already says what matters. Its generic introduction
+    // and focus-only button duplicate the persistent message field below it.
+    // Product selection, conditions and basket confirmations keep their controls.
+    const plainAdvice = state.result?.triggerReason === "smalltalk"
+      && view?.headline === "Давай разберёмся."
+      && typeof view.message === "string" && view.message.trim()
+      && !view.items?.length;
     message.textContent = view?.headline || "Нужно уточнение.";
-    elements.proposalStatus.append(message);
+    if (!plainAdvice) elements.proposalStatus.append(message);
 
     if (view?.message) {
       const detail = document.createElement("p");
@@ -2515,7 +2591,7 @@ function renderBasketProposalOutput() {
         focusProposalInput
       );
     } else if (triggerReason === "smalltalk" || triggerReason === 'needs_list') {
-      appendProposalAction(
+      if (!plainAdvice) appendProposalAction(
         view?.primaryAction || "Написать покупки",
         focusProposalInput
       );
@@ -2554,7 +2630,7 @@ function renderBasketProposalOutput() {
       );
     }
 
-    elements.proposalFallback.hidden = false;
+    elements.proposalFallback.hidden = plainAdvice;
     return;
   }
 
@@ -2595,7 +2671,11 @@ async function handleBasketProposal() {
   const submittedText = elements.proposalInput.value;
   const localGoal=submittedText.split(/[,.;]?\s+(?:я\s+живу|мой адрес)(?=[:\s])/iu)[0];
   if(isGuidedEntryRequest(localGoal))nearbyBuildGoal=localGoal;
-  const nearbyIntent=nearbyShopping&&nearbyShoppingIntent(submittedText,basketProposalFlow.getState().presentation?.locationRequested===true);
+  const expectsLocation=basketProposalFlow.getState().presentation?.locationRequested===true;
+  // A city-only intake answer is an approximate preference, not an agreed
+  // address. Preserve the conversation; require a chosen store before loading.
+  const cityIntake=expectsLocation&&/^(?:г\.?\s*|город\s+)?москва[.!?]?$/iu.test(submittedText.trim());
+  const nearbyIntent=!cityIntake&&nearbyShopping&&nearbyShoppingIntent(submittedText,expectsLocation);
   if(nearbyIntent){
     if(nearbyIntent.preferenceText){
       if(!basketProposalFlow.rememberLocationConstraint(nearbyIntent.preferenceText)){
@@ -2814,7 +2894,7 @@ function renderComparisonState({ focusResult = false } = {}) {
     const progress = document.createElement("p");
     progress.className = "comparison-progress";
     progress.textContent = comparisonMode === COMPARISON_MODE.OBSERVED
-      ? "Проверяем доверенные наблюдения цен без подстановки MOCK…"
+      ? "Проверяем цены для этой корзины…"
       : "Проверяем одну и ту же корзину по тестовым магазинам…";
     output.append(progress);
     return;
@@ -2837,7 +2917,7 @@ function renderComparisonState({ focusResult = false } = {}) {
     resultNode = comparisonMode === COMPARISON_MODE.OBSERVED
       ? createComparisonMessage(
           "Недостаточно реальных данных",
-          "Реальный результат не содержит авторитетного заключения Core. MOCK-данные сюда не подставляем."
+          "Не удалось подтвердить итог. Список сохранён — попробуй сравнить ещё раз."
         )
       : createComparisonMessage(
           "Полного варианта нет",
@@ -3017,8 +3097,13 @@ function renderBasket() {
     const addresses = createSelectedComparisonStores(currentComparisonStoreScope(), {
       onEdit: publicRetailCatalogMode ? retailerId => {
         comparisonAddressChanged();
-        navigate(VIEW.SHOP, { focusMode: FOCUS_MODE.HEADING });
-        void selectRetailer(retailerId, { replaceHistory: true });
+        // Enter the existing explicit-address flow. Opening a catalogue here
+        // would silently keep its default address instead of editing it.
+        document.dispatchEvent(new CustomEvent('checkni:shop-action', { detail: { action: 'stores' } }));
+        const card = document.getElementById(retailerId === DEFAULT_RETAILER_ID
+          ? 'retail-store-card' : `retail-store-card-${retailerId}`);
+        if (card) card.click();
+        else showToast('Выбор адреса временно недоступен. Корзина сохранена.');
       } : undefined
     });
     if (addresses) elements.basketContent.append(addresses);
@@ -3206,6 +3291,7 @@ function handleManualSearch() {
           query,
           products: [...retailProducts, ...canonicalProducts],
           retailCount: retailProducts.length,
+          unavailableSources: retailResult.unavailableSources ?? 0,
           discoveredCount:
             (catalogResult.products?.length ?? 0)
             + (catalogResult.rejectedCount ?? 0)
@@ -3268,6 +3354,7 @@ async function loadInitialRetailCatalog() {
       products: retailResult.products,
       retailCount: retailResult.products.length,
       discoveredCount: retailResult.products.length,
+      unavailableSources: retailResult.unavailableSources ?? 0,
       nextOffset: retailResult.nextOffset,
       canLoadMore: retailResult.pageSize === 24 && retailResult.nextOffset > 0
     };
@@ -3448,10 +3535,14 @@ document.querySelector('.skip-link[href="#main"]')?.addEventListener('click', ev
 // Background throttling, sleep and the back/forward cache can defer timers.
 // These checks clear expired commercial output without fetching or changing
 // basket/address state; the user's compare action remains the retry path.
-window.addEventListener("focus", () => comparisonFlow.checkExpiry());
-window.addEventListener("pageshow", () => comparisonFlow.checkExpiry());
+const checkVisiblePriceExpiry = () => {
+  comparisonFlow.checkExpiry();
+  if (publicRetailCatalogMode && currentRetailDefinition()?.publishedPromotions) renderCatalog();
+};
+window.addEventListener("focus", checkVisiblePriceExpiry);
+window.addEventListener("pageshow", checkVisiblePriceExpiry);
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) comparisonFlow.checkExpiry();
+  if (!document.hidden) checkVisiblePriceExpiry();
 });
 
 window.addEventListener("popstate", () => {
@@ -3572,10 +3663,10 @@ try {
         comparedGlobusStore = null;
         retailerId = "metro";
       } else if (point.retailerId === "magnit") {
-        if (point.selectionKind !== "registered-store" || point.coordinateKind !== "osm-exact-address-join") return;
+        if (point.selectionKind !== "registered-store" || !["osm-exact-address-join","official-registered-store-code"].includes(point.coordinateKind)) return;
         const binding = nearbyCatalogBinding(point);
         if (binding?.retailerId !== "magnit" || point.shopCode !== binding.store.shopCode) return;
-        const store = resolveMagnitMoscowStore({ shopCode: binding.store.shopCode, address: binding.store.address });
+        const store = resolveMagnitMoscowStore({ shopCode: binding.store.shopCode, address: binding.store.address }) ?? resolveMagnitMoscowOblastStore({ shopCode: binding.store.shopCode, address: binding.store.address });
         if (!store) return;
         selectedMagnitStore = store;
         comparedGlobusStore = null;
@@ -3598,3 +3689,11 @@ renderDock();
 renderBetaLiveSection();
 renderBasketProposalState();
 renderView({ scrollY: scrollYFromState(history.state) });
+
+// Reveal the composed surface only after initial routing and extra panels mount.
+if (document.documentElement.dataset.checkniBoot === 'loading') {
+  requestAnimationFrame(() => {
+    document.documentElement.dataset.checkniBoot = 'ready';
+    document.getElementById('checkni-boot')?.remove();
+  });
+}

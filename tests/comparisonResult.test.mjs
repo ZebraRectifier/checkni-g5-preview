@@ -335,7 +335,7 @@ test("insufficient observed result remains explicit and mock-free", () => {
     {
       kind: "insufficient-coverage",
       title: "Недостаточно данных для «дешевле»",
-      note: "Пока нет полного реального покрытия корзины. MOCK-цены сюда не подставляем.",
+      note: "Не хватает свежих цен для всей корзины. Полную сумму и экономию пока не показываем.",
       confirmedCandidates: []
     }
   );

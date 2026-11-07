@@ -62,8 +62,8 @@ async function setup(page, { now = '2026-10-18T02:00:00Z', items = [], instrumen
 }
 const openOkey = async page => {
   await page.locator('#retail-store-card-okey').click();
-  const root = page.locator('#okey-official-promotions');
-  await expect(root).toHaveJSProperty('open', true); return root;
+  const root = page.locator('#pixel-storefront');
+  await expect(root).toBeVisible();await expect(page.locator('#pixel-storefront-title')).toHaveText('О’КЕЙ');return root;
 };
 const basketValue = page => page.evaluate(() => localStorage.getItem('checkni.surface.basket.v1'));
 
@@ -77,7 +77,7 @@ test('cold stores include existing city catalogues and fold spelling without a d
   }
   if (await page.locator(".pixel-directory-search:not([open])").count()) await page.getByText("Поиск по сетям и адресам", {exact:true}).click();
   await page.locator('#pixel-store-search').fill('');
-  await expect(page.locator('#retail-store-card-okey')).toContainText('цена в конкретном магазине не подтверждена');
+  await expect(page.locator('#retail-store-card-okey')).toContainText('цена конкретного магазина и наличие не подтверждены');
   for (const id of ['okey', 'pyaterochka']) {
     const label = page.locator('#retail-store-card-' + id + ' .retail-store-kicker');
     await expect(label).toHaveText('Акции Москвы');
@@ -97,11 +97,12 @@ test('city catalogue entries preserve a confirmed basket, Hory draft and exact-s
   await page.locator('[data-pixel-action="hory"]').click(); await page.locator('#basket-proposal-input').fill('Что взять на ужин?');
   await page.keyboard.press('Escape'); await page.locator('[data-pixel-action="stores"]').click();
   const okey = await openOkey(page);
-  await expect(okey).toContainText('Свежих действующих наблюдений: 2');
-  await expect(okey).toContainText('Прямой сбор с официального сайта приостановлен источником');
+  await expect(page.locator('#product-grid .product-card')).toHaveCount(2);
+  await expect(page.locator('.okey-directory,#okey-official-promotions')).toHaveCount(0);
+  await expect(page.locator('#beta-live-section')).toBeHidden();
   await expect(page.locator('#magnit-store-address')).toHaveValue('777312'); expect(await basketValue(page)).toBe(before);
   await page.locator('[data-pixel-action="stores"]').click(); await page.locator('#retail-store-card-pyaterochka').click();
-  await expect(page.locator('#pyaterochka-published')).toContainText('Цена в конкретном магазине');
+  await expect(page.locator('#pixel-storefront-title')).toHaveText('Пятёрочка');await expect(page.locator('#pixel-storefront')).toContainText('цена конкретного магазина');
   await page.locator('[data-pixel-action="stores"]').click(); await selectStore(page, 'magnit');
   await page.locator('[data-pixel-action="stores"]').click();
   await expect(page.locator('#retail-store-card-okey')).toHaveCount(1); await expect(page.locator('#retail-store-card-pyaterochka')).toHaveCount(1);
@@ -120,13 +121,14 @@ test('one hung JSON request has a finite deadline, preserves the independent sou
   });
   try {
     const root = await openOkey(page); await expect.poll(() => attempt).toBe(1);
-    await expect(root.getByRole('button', { name: 'Обновить каталог', exact: true })).toBeDisabled();
-    await page.clock.fastForward(5100);
-    await expect(root).toHaveAttribute('aria-busy', 'false'); await expect(root.locator('article')).toHaveCount(1);
-    await expect(root).toContainText('Часть каталогов сейчас не обновилась'); await expect(root).toContainText('Свинина для проверки');
-    release(); await root.getByRole('button', { name: 'Обновить каталог', exact: true }).click();
-    await expect(root.locator('article')).toHaveCount(2); expect(attempt).toBe(2);
-    await expect(root).not.toContainText('Часть каталогов сейчас не обновилась');
+    await expect(page.locator('#product-grid .product-card')).toHaveCount(0);
+    await page.clock.fastForward(RETAIL_CATALOG_TIMEOUT_MS + 100);
+    await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
+    await expect(page.locator('#catalog-partial-notice')).toBeVisible();
+    await expect(root).toContainText('Свинина для проверки');
+    release(); await page.locator('#catalog-partial-notice button').click();
+    await expect(page.locator('#product-grid .product-card')).toHaveCount(2); expect(attempt).toBe(2);
+    await expect(page.locator('#catalog-partial-notice')).toBeHidden();
     expect(calls.ai).toBe(0); expect(calls.external).toEqual([]);
   } finally { release(); }
 });
@@ -155,10 +157,10 @@ test('an unavailable catalogue recovers explicitly without pretending missing pr
   const calls = await setup(page); let fail = true;
   await page.route('**/src/data/okey*.json', route => fail ? route.fulfill({ status: 503, json: {} })
     : route.fulfill({ json: files[new URL(route.request().url()).pathname.split('/').at(-1)] ?? {} }));
-  const root = await openOkey(page); await expect(root).toContainText('Каталоги сейчас недоступны');
-  await expect(root.locator('article')).toHaveCount(0); await expect(root).not.toContainText('0,00');
-  fail = false; await root.getByRole('button', { name: 'Обновить каталог', exact: true }).click();
-  await expect(root.locator('article')).toHaveCount(2); await expect(root).toContainText('Условия цены уточняйте');
+  const root = await openOkey(page); await expect(page.locator('#empty-search')).toContainText('Не удалось загрузить товары');
+  await expect(page.locator('#product-grid .product-card')).toHaveCount(0); await expect(root).not.toContainText('0,00');
+  fail = false; await root.getByRole('button', { name: 'Повторить загрузку', exact: true }).click();
+  await expect(page.locator('#product-grid .product-card')).toHaveCount(2); await expect(root).toContainText('не подтвержден');
   expect(calls.ai).toBe(0); expect(calls.external).toEqual([]);
 });
 
@@ -202,23 +204,27 @@ test('a successful empty address lookup keeps the search guidance instead of rep
 
 test('Moscow midnight hides expired promotions while the other source retains its own date and unknown conditions', async ({ page }) => {
   await setup(page, { now: '2026-10-18T20:59:30Z' }); const root = await openOkey(page);
-  await expect(root.locator('article')).toHaveCount(2); await page.clock.fastForward(61_000);
-  await expect(root.locator('article')).toHaveCount(1); await expect(root).not.toContainText('Молоко для проверки');
-  await expect(root).toContainText('Прошопер: проверено 18.10.2026');
-  await expect(root).toContainText('наличие и условия О’КАРТЫ / без карты не подтверждены');
+  await expect(page.locator('#product-grid .product-card')).toHaveCount(2); await page.clock.fastForward(61_000);
+  await expect(page.locator('#product-grid .product-card')).toHaveCount(1); await expect(root).not.toContainText('Молоко для проверки');
+  await expect(root).toContainText('Цена от 18.10');
+  await expect(root).toContainText('Акция Москвы · Прошопер · условия карты неизвестны');
 });
 
-test('the Okey address disclosure stays readable in both pixel themes and fits the viewport', async ({ page }) => {
+test('the unified Okey storefront replaces the address wall in both themes and fits the viewport', async ({ page }) => {
   await setup(page);
   await page.locator('[data-retailer-id="okey"]').click();
-  const directory = page.locator('.okey-directory'); await directory.scrollIntoViewIfNeeded();
+  const directory = page.locator('#pixel-storefront');
+  await expect(page.locator('#product-grid .product-card')).toHaveCount(2);
+  await expect(page.locator('.okey-directory,#okey-official-promotions,#pyaterochka-published')).toHaveCount(0);
+  await expect(page.locator('#beta-live-section')).toBeHidden();
   for (const theme of ['dark', 'light']) {
     if (await page.locator('body').getAttribute('data-hori-theme') !== theme) await page.locator('#hori-theme').click();
     const ratios = () => directory.evaluate(root => {
       const rgb = value => value.match(/[\d.]+/gu).slice(0, 3).map(Number);
       const luminance = value => rgb(value).map(v => { const x = v / 255; return x <= .04045 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4; }).reduce((n, v, i) => n + v * [.2126, .7152, .0722][i], 0);
-      const background = luminance(getComputedStyle(root).backgroundColor);
-      return [...root.querySelectorAll('summary strong,h3,li a,li span,.okey-directory-note')].map(node => {
+      return [...root.querySelectorAll('.product-name,.product-price,.product-unit')].filter(node=>node.checkVisibility()).map(node => {
+        let surface = node; while(surface.parentElement && getComputedStyle(surface).backgroundColor === 'rgba(0, 0, 0, 0)') surface = surface.parentElement;
+        const background = luminance(getComputedStyle(surface).backgroundColor);
         const foreground = luminance(getComputedStyle(node).color); return { text: node.textContent.slice(0, 35), color: getComputedStyle(node).color,
           background: getComputedStyle(root).backgroundColor, ratio: (Math.max(foreground, background) + .05) / (Math.min(foreground, background) + .05) };
       });

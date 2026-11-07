@@ -1,4 +1,5 @@
 import {sourceScopedRetailListSelection} from '../catalog/sourceScopedRetailList.mjs';
+import {admitSourceCatalogListCard} from '../catalog/sourceCatalogListAdmission.mjs';
 import {
   CATALOG_SEARCH_PUBLISHABLE_KEY
 } from "./catalogGatewayPort.mjs";
@@ -8,6 +9,7 @@ import { resolveMetroMoscowRegionStore } from "../data/metroMoscowRegionStores.m
 import { resolveGlobusMoscowRegionStore } from "../data/globusMoscowRegionStores.mjs";
 import { getReviewedRetailBasketProduct } from "../catalog/reviewedRetailBasket.mjs";
 import { hintRetailCatalogConnection } from "./retailCatalogConnectionHint.mjs";
+import { createPublishedPromotionCatalogClient } from './publishedPromotionCatalog.mjs';
 
 export const RETAIL_CATALOG_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/rest/v1/retail_catalog_items";
@@ -25,6 +27,30 @@ if (typeof globalThis.location?.search === "string"
 }
 
 const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
+  okey: Object.freeze({
+    retailerId: 'okey', storeId: 'okey-moscow-city-promotions', storeName: 'О’КЕЙ · акции Москвы',
+    localityId: 'city-moscow-promo', localityName: 'Москва', displayName: 'О’КЕЙ',
+    catalogLabel: 'О’КЕЙ · акции Москвы', scopeLabel: 'Акции Москвы · цена конкретного магазина и наличие не подтверждены',
+    logo: 'О', defaultProductCount: null, rootCategoryCount: null,
+    priceScope: 'city-promotion', physicalStoreId: null, publishedPromotionTransport: true,
+    publishedPromotions: true, requiresPromoValidity: true, searchAliases: "окей okey o'key",
+    productUrlRules: Object.freeze([{ host: 'www.okmarket.ru', prefix: '/product/' }, { host: 'mos.proshoper.ru', prefix: '/actions/okej/moskva/' }]),
+    categoryUrlRules: Object.freeze([{ host: 'www.okmarket.ru', prefix: '/catalogs/' }, { host: 'mos.proshoper.ru', prefix: '/actions/okej/moskva/' }]),
+    sourceUrlRules: Object.freeze([{ host: 'www.okmarket.ru', prefix: '/product/' }, { host: 'mos.proshoper.ru', prefix: '/actions/okej/moskva/' }]),
+    imageUrlRules: Object.freeze([]), priceConditionLabels: Object.freeze({})
+  }),
+  pyaterochka: Object.freeze({
+    retailerId: 'pyaterochka', storeId: 'pyaterochka-moscow-proshoper', storeName: 'Пятёрочка · акции Москвы',
+    localityId: 'city-moscow-promo', localityName: 'Москва', displayName: 'Пятёрочка',
+    catalogLabel: 'Пятёрочка · акции Москвы', scopeLabel: 'Акции Москвы · цена конкретного магазина и наличие не подтверждены',
+    logo: '5', defaultProductCount: null, rootCategoryCount: null,
+    priceScope: 'city-promotion', physicalStoreId: null, publishedPromotionTransport: true,
+    publishedPromotions: true, requiresPromoValidity: true, searchAliases: 'пятерочка',
+    productUrlRules: Object.freeze([{ host: 'mos.proshoper.ru', prefix: '/actions/pyaterochka/moskva/' }]),
+    categoryUrlRules: Object.freeze([{ host: 'mos.proshoper.ru', prefix: '/actions/pyaterochka/moskva/' }]),
+    sourceUrlRules: Object.freeze([{ host: 'mos.proshoper.ru', prefix: '/actions/pyaterochka/moskva/' }]),
+    imageUrlRules: Object.freeze([]), priceConditionLabels: Object.freeze({})
+  }),
   globus: Object.freeze({
     retailerId: "globus",
     storeId: "globus-pvz-2",
@@ -108,6 +134,7 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     logo: "M",
     defaultProductCount: 329,
     rootCategoryCount: 51,
+    rootCategoryReadLimit: 160,
     productUrlRules: Object.freeze([
       Object.freeze({ host: "online.metro-cc.ru", prefix: "/products/" })
     ]),
@@ -172,6 +199,9 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     logo: "Л",
     defaultProductCount: 64,
     rootCategoryCount: 22,
+    // This import counts descendant observations in parents. Seed-only zero
+    // categories have neither imported products nor a populated child route.
+    omitEmptyCategories: true,
     productUrlRules: Object.freeze([
       Object.freeze({ host: "lenta.com", prefix: "/product/" }),
       Object.freeze({ host: "www.lenta.com", prefix: "/product/" })
@@ -406,6 +436,8 @@ function resolveDefinition(value = "globus") {
   }
   const base = getRetailCatalogDefinition(value.retailerId);
   if (!base) return null;
+  if (base.publishedPromotionTransport && (value.store != null || value.physicalStoreId != null
+      || value.storeId != null && value.storeId !== base.storeId)) return null;
 
   if (value.retailerId === "globus" && (value.store || value.officialStoreId)) {
     const store = resolveGlobusMoscowRegionStore(value.store ?? value.officialStoreId);
@@ -598,6 +630,7 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
   const definition = resolveDefinition(retailer);
   if (
     !definition
+    || definition.publishedPromotionTransport === true
     || !row
     || typeof row !== "object"
     || Array.isArray(row)
@@ -743,6 +776,10 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
   };
   const scoped = !basketProduct && sourceScopedRetailListSelection(normalized);
   // Keep source units intact for the delivery identity gate. The list has its own unit.
+  if (!basketProduct && !scoped) {
+    const admitted = admitSourceCatalogListCard(normalized, {row, definition, nowMs});
+    if (admitted) return admitted;
+  }
   return Object.freeze(scoped ? {...normalized,basketProductId:scoped.product.id,
     priceConditionLabel:scoped.card.priceConditionLabel
       +(scoped.card.retailerId==='perekrestok'&&scoped.card.catalogPurchaseBasis==='weighed-portion'
@@ -801,6 +838,10 @@ export function createRetailCatalogClient(options = {}) {
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const definition = resolveDefinition({ ...options, retailerId: options.retailerId ?? "globus" });
   const timeoutMs = options.timeoutMs ?? RETAIL_CATALOG_TIMEOUT_MS;
+  if (definition?.publishedPromotionTransport) return createPublishedPromotionCatalogClient({
+    definition, fetchImpl, readJson: readBoundedJsonResponse, cleanQuery, timeoutMs,
+    now: typeof options.now === 'function' ? options.now : Number.isFinite(options.nowMs) ? () => options.nowMs : Date.now
+  });
   const normalizeOptions = Object.freeze({
     ...(Number.isFinite(options.nowMs) ? { nowMs: options.nowMs } : {}),
     includeComparisonEvidence: options.includeComparisonEvidence === true
@@ -989,6 +1030,7 @@ export function createRetailCatalogClient(options = {}) {
     } else if (parentId !== null) {
       url.searchParams.set("parent_id", `eq.${parentId}`);
     }
+    if (definition.omitEmptyCategories) url.searchParams.set("product_count", "gt.0");
     url.searchParams.set("order", "name.asc");
     url.searchParams.set("limit", String(limit));
 
@@ -1020,12 +1062,15 @@ export function createRetailCatalogClient(options = {}) {
         return result("error", { code: "malformed_transport_response" });
       }
 
-      const categories = payload
+      const normalizedCategories = payload
         .map((row) => normalizeRetailCategory(row, definition))
         .filter(Boolean);
+      const categories = definition.omitEmptyCategories
+        ? normalizedCategories.filter(category => category.productCount > 0)
+        : normalizedCategories;
       return result("categories", {
         categories: Object.freeze(categories),
-        partial: categories.length !== payload.length
+        partial: normalizedCategories.length !== payload.length
       });
     } catch {
       return result("unavailable", { code: "transport_unavailable" });

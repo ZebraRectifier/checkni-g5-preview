@@ -2,6 +2,53 @@
 import { test, expect } from "@playwright/test";
 const globusFixtureJson = value => JSON.stringify(value);
 
+test('DA historical category total is not a current offer count; failure, expired issue and recovery stay distinct', async ({page}) => {
+ await page.clock.setFixedTime(new Date('2026-11-07T06:00:00Z'));
+ let mode='failure';
+ const reads=[];
+ await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());
+ await page.route('**/rest/v1/**',route=>route.fulfill({json:[]}));
+ await page.route('**/rest/v1/retail_catalog_categories**',route=>{
+  const p=new URL(route.request().url()).searchParams;
+  return route.fulfill({json:p.get('retailer_id')==='eq.da'&&!p.has('parent_id')?[{retailer_id:'da',store_id:'da-public-promo',
+   category_id:940001,name:'Текущий промо-каталог',parent_id:null,root_id:940001,depth:0,product_count:94,
+   source_url:'https://market-da.ru/sale.html'}]:[]});
+ });
+ await page.route('**/rest/v1/retail_catalog_items**',route=>{
+  const p=new URL(route.request().url()).searchParams;reads.push(Object.fromEntries(p));
+  if(p.get('retailer_id')!=='eq.da')return route.fulfill({json:[]});
+  if(mode==='failure')return route.fulfill({status:503,json:{error:'offline fixture'}});
+  const current=mode==='current';
+  return route.fulfill({json:[{retailer_id:'da',store_id:'da-public-promo',store_name:'ДА! · публичный промо-каталог',
+   locality_id:'network-da-public-promo',locality_name:'Сеть ДА!',source_product_id:'test-current-oats',name:'Хлопья овсяные, 500 г',
+   price_minor:4495,currency:'RUB',price_condition:'public-promo',minimum_quantity:1,
+   quantity_semantics:{minimum_quantity:1,promo_valid_from:current?'2026-11-03':'2026-10-01',
+    promo_valid_to:current?'2026-11-09':'2026-10-14'},availability:'unknown',product_url:'https://market-da.ru/sale.html',
+   image_url:null,weight_text:'500 г',main_category_id:940001,source_url:'https://market-da.ru/sale.html',
+   observed_at:current?'2026-11-07T05:30:00Z':'2026-10-02T17:50:18.151Z'}]});
+ });
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ await page.locator('#retail-store-card-da').click();
+ const storefront=page.locator('#pixel-storefront');
+ await expect(storefront).toContainText('Не удалось загрузить товары');
+ await expect(storefront).not.toContainText('94 товара');
+ await expect(page.locator('#retail-category-grid')).toContainText('Проверить акции');
+ mode='expired';
+ await storefront.getByRole('button',{name:'Повторить загрузку',exact:true}).click();
+ await expect(page.locator('#search-status')).toHaveText('Действующих акций сейчас нет');
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(0);
+ await expect(storefront).not.toContainText('94 товара');
+ await expect(storefront).not.toContainText('44,95 ₽');
+ mode='current';
+ await storefront.getByRole('button',{name:'Повторить загрузку',exact:true}).click();
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
+ await expect(page.locator('#product-grid')).toContainText('Хлопья овсяные');
+ await expect(page.locator('#product-grid')).toContainText('44,95 ₽');
+ await expect(page.locator('#retail-load-more')).toHaveCount(0);
+ expect(reads.filter(p=>p.retailer_id==='eq.da').every(p=>p['quantity_semantics->>promo_valid_from']==='lte.2026-11-07'
+  &&p['quantity_semantics->>promo_valid_to']==='gte.2026-11-07')).toBe(true);
+});
+
 for (const issue of [
   { from: "2026-10-01", until: "2026-10-14", now: "2026-10-02T18:00:00Z", observedAt: "2026-10-02T17:50:18.151Z", count: 94, countText: "94 товара" },
   { from: "2026-10-22", until: "2026-11-04", now: "2026-10-23T09:00:00Z", observedAt: "2026-10-23T08:30:00Z", count: 71, countText: "71 товар" }

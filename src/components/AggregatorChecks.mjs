@@ -15,15 +15,11 @@ export function buildAggregatorChecksModel(sources = getExternalCheckSources()) 
 export function createAggregatorChecks(sources) {
   const model = buildAggregatorChecksModel(sources);
 
-  const section = document.createElement("section");
+  const section = document.createElement("details");
   section.className = "future-step aggregator-checks";
   section.setAttribute("aria-labelledby", "aggregator-checks-title");
 
-  const eyebrow = document.createElement("p");
-  eyebrow.className = "eyebrow";
-  eyebrow.textContent = "Внешняя проверка";
-
-  const heading = document.createElement("h2");
+  const heading = document.createElement("summary");
   heading.id = "aggregator-checks-title";
   heading.textContent = model.title;
 
@@ -53,6 +49,6 @@ export function createAggregatorChecks(sources) {
     links.append(link);
   });
 
-  section.append(eyebrow, heading, note, links);
+  section.append(heading, note, links);
   return section;
 }
