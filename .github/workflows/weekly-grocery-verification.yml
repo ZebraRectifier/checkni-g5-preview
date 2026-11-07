@@ -2,10 +2,10 @@ name: Weekly grocery artifact verification
 
 on:
   pull_request:
-    paths: ['src/**', 'index.html', 'prices.html', 'deployment.json', 'release/**', 'tests/**', 'test/**', 'tools/security/**', 'playwright.weekly.config.mjs', '.github/workflows/weekly-grocery-verification.yml', '.github/workflows/live-retail-smoke.yml']
+    paths: ['src/**', 'index.html', 'prices.html', 'deployment.json', 'release/**', 'tests/**', 'test/**', 'tools/security/**', 'tools/browser-release/**', 'playwright.weekly.config.mjs', '.github/workflows/weekly-grocery-verification.yml', '.github/workflows/live-retail-smoke.yml']
   push:
     branches: [main]
-    paths: ['src/**', 'index.html', 'prices.html', 'deployment.json', 'release/**', 'tests/**', 'test/**', 'tools/security/**', 'playwright.weekly.config.mjs', '.github/workflows/weekly-grocery-verification.yml', '.github/workflows/live-retail-smoke.yml']
+    paths: ['src/**', 'index.html', 'prices.html', 'deployment.json', 'release/**', 'tests/**', 'test/**', 'tools/security/**', 'tools/browser-release/**', 'playwright.weekly.config.mjs', '.github/workflows/weekly-grocery-verification.yml', '.github/workflows/live-retail-smoke.yml']
 
 permissions:
   contents: read
@@ -33,21 +33,37 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
+      - name: Verify isolated active-runtime test preparation
+        run: node --test tests/activeRuntimeSandbox.test.mjs tests/immutableReleaseManifest.test.mjs
+      - name: Prepare exact active runtime with its verified tests
+        id: prepare
+        run: node tools/browser-release/prepare-ci-runtime.mjs --ci-only
       - name: Verify grocery contracts and retained OKEY data
+        working-directory: ${{ steps.prepare.outputs.workspace }}
         run: node --test tests/weeklyBasketFlow.test.mjs tests/magnitCurrentCatalog.test.mjs tests/pyaterochkaPublishedPromotions.test.mjs tests/pyaterochkaShopping.test.mjs tests/nearbyShopping.test.mjs tests/magnitAddressJoin.test.mjs tests/storeGeolocation.test.mjs tests/guidedShoppingFlow.test.mjs tests/guidedBasketComparison.test.mjs tests/manualCatalogComparison.test.mjs tests/sourceScopedRetailList.test.mjs tests/magnitReviewedEggComparison.test.mjs tests/catalogDraftPriceAdmission.test.mjs tests/savedGuidedComparison.test.mjs tests/weeklyRetailBasket.test.mjs tests/weeklyGroceryCompletion.test.mjs tests/weeklyShoppingJourney.test.mjs tests/shoppingDialogueRecovery.test.mjs tests/shoppingSuitabilityQuestion.test.mjs tests/addressPriceHistory.test.mjs tests/okeyRefreshVerification.test.mjs tests/okeyOfficialPromotions.test.mjs tests/okeyPublishedPromotions.test.mjs tests/horiCubePhysics.test.mjs tests/horiCubes.test.mjs tests/pixelCategoryPresentation.test.mjs
       - name: Verify shopping need persistence and identity integrity
+        working-directory: ${{ steps.prepare.outputs.workspace }}
         run: node --test tests/shoppingNeeds.test.mjs tests/shoppingNeedsRefusalRouting.test.mjs tests/shoppingConversation.test.mjs tests/shoppingIntentIntegrity.test.mjs tests/retailProductSelection.test.mjs tests/shoppingNeedContext.test.mjs tests/householdContextReload.test.mjs tests/adviceContinuationIntake.test.mjs
+      - name: Verify common promotions and supported regional searches
+        working-directory: ${{ steps.prepare.outputs.workspace }}
+        run: node --test tests/publishedPromotionCatalog.test.mjs tests/nearbyRegions.test.mjs
       - name: Verify saved METRO lifetime and dynamic DA catalogue policy without network
+        working-directory: ${{ steps.prepare.outputs.workspace }}
         run: node --test tests/retailCatalogFreshnessPolicy.test.mjs tests/selectedRetailCatalogOffersPort.test.mjs tests/observedComparisonExpiry.test.mjs tests/currentComparisonExplanation.test.mjs tests/comparisonResult.test.mjs tests/retailCatalogPort.test.mjs tests/globusStoreLatestObservationPort.test.mjs
       - name: Scan complete browser artifact and release metadata
+        working-directory: ${{ steps.prepare.outputs.workspace }}
         run: node tools/security/scan-public-secrets.mjs src index.html prices.html deployment.json release
       - name: Install pinned browser test dependencies
+        working-directory: ${{ steps.prepare.outputs.workspace }}
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Install pinned Chromium
+        working-directory: ${{ steps.prepare.outputs.workspace }}
         run: npx playwright install --with-deps chromium
       - name: Verify the Pixel Character screenshots on both widths
+        working-directory: ${{ steps.prepare.outputs.workspace }}
         run: npx playwright test --config=playwright.weekly.config.mjs hori-v13.spec.mjs --grep 'approved PixelCharacter'
       - name: Replay desktop and mobile grocery journeys without external services
+        working-directory: ${{ steps.prepare.outputs.workspace }}
         run: npx playwright test --config=playwright.weekly.config.mjs
       - name: Preserve failure diagnostics
         if: failure()
@@ -55,7 +71,8 @@ jobs:
         with:
           name: weekly-grocery-failure-${{ github.run_id }}
           path: |
-            playwright-report/
-            test-results/
+            ${{ steps.prepare.outputs.workspace || github.workspace }}/playwright-report/
+            ${{ steps.prepare.outputs.workspace || github.workspace }}/test-results/
+            ${{ steps.prepare.outputs.workspace || github.workspace }}/ci-runtime-evidence.json
           if-no-files-found: ignore
           retention-days: 7
