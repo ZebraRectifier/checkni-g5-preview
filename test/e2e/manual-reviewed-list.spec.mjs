@@ -20,7 +20,8 @@ test('saved comparison distinguishes equal observed subtotals from a cheaper opt
  const output=page.locator('#comparison-contract-test');
  await render(10000);await expect(output.getByRole('status')).toHaveText('По наблюдаемым ценам суммы товаров в этих вариантах совпали.');
  await expect(output).not.toContainText('ниже на');await expect(output).toContainText('Условия карт и акций проверяй по источнику.');
- await render(12000);await expect(output.getByRole('status')).toContainText('По наблюдаемым ценам подытог товаров в Магнит ниже на');
+ await render(12000);await expect(output.getByRole('status')).toContainText('По наблюдаемым ценам сумма товаров в Магнит ниже на');
+ await expect(output.getByRole('status')).toContainText('20,00');
  await render(12000,0,['potatoes']);await expect(output.getByRole('status')).toContainText('Подбор ещё неполный');await expect(output.getByRole('status')).not.toContainText('ниже на');await expect(output).toContainText('В исходном подборе ещё 1 поз.');
  await render(12000,3600001);await expect(output.getByRole('status')).toContainText('Есть старые или неизвестные цены.');
  await expect(output.getByRole('status')).not.toContainText('ниже на');

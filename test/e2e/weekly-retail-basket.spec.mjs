@@ -27,7 +27,9 @@ test('weekly Magnit and OKEY selection shows real-unit fixtures, incomplete cove
   const commerce=page.locator('#hori-shopping-results');
   const table=commerce.getByRole('table');await expect(table).toBeVisible();await expect(table.getByRole('row')).toHaveCount(7);
   await expect(commerce).toContainText('Ещё нужно подобрать: 10 поз.');
-  await expect(commerce.getByLabel('Проверенные каталоги')).toContainText('акции города, условия карты неизвестны');
+  const cityConditions=commerce.getByLabel('Проверенные каталоги').locator('.guided-store-option').filter({hasText:'О’КЕЙ'}).locator('.guided-store-condition');
+  await expect(cityConditions).toBeVisible();await expect(cityConditions).toContainText('Акции города');
+  await expect(cityConditions).toContainText('условия карты неизвестны');
   await expect(commerce).toContainText('Сумма только найденной части');await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
   await commerce.getByRole('button',{name:'Показать О’КЕЙ',exact:true}).click();await expect(table).toContainText('459,00 ₽');
   await expect(table).toContainText('1 кг');await expect(table.locator('a[href*="mos.proshoper.ru"]')).toHaveCount(2);
