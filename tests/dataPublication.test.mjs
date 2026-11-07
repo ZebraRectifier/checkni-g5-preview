@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {verifyPublicationCheckout, FEED_FILES} from '../tools/browser-release/publication-guard.mjs';
+import {verifyPublicationCheckout, verifyPublicationEvent, dispatchFeedPublication, FEED_FILES} from '../tools/browser-release/publication-guard.mjs';
 
 const ORIGIN = 'https://github.com/ZebraRectifier/checkni-g5-preview.git';
 async function repository(t) {
@@ -76,21 +76,89 @@ test('source preview verification is separate from production-head acceptance', 
   assert.equal(verifyPublicationCheckout({root: repo.root, commit, git: readWithRemote(repo, commit)}).currentMainVerified, true);
 });
 
+const trustedEvent = {repository: 'ZebraRectifier/checkni-g5-preview', ref: 'refs/heads/main', eventName: 'workflow_dispatch'};
+test('deployment refuses the old collector event SHA even when its checked-out data commit is valid', () => {
+  const commit = 'b'.repeat(40), eventSha = 'a'.repeat(40);
+  assert.throws(() => verifyPublicationEvent({...trustedEvent, commit, eventSha}), /publication_event_commit_mismatch/);
+  assert.deepEqual(verifyPublicationEvent({...trustedEvent, commit, eventSha: commit}), {commit, eventCommitVerified: true});
+  assert.deepEqual(verifyPublicationEvent({...trustedEvent, eventName: 'push', commit, eventSha: commit}), {commit, eventCommitVerified: true});
+  for (const wrong of [{repository: 'fork/checkni-g5-preview'}, {ref: 'refs/heads/other'},
+    {eventName: 'pull_request'}, {eventName: 'workflow_call'}, {eventName: 'schedule'}]) {
+    assert.throws(() => verifyPublicationEvent({...trustedEvent, ...wrong, commit, eventSha: commit}), /untrusted_publication_event/);
+  }
+});
+
+test('feed dispatch uses only the trusted main workflow and reports queued, never published', async t => {
+  const repo = await repository(t);
+  await repo.write(FEED_FILES.okey[0], '{"new":"observation"}\n');
+  const commit = repo.commit(), calls = [];
+  const result = await dispatchFeedPublication({...repo, ...trustedEvent, commit, feed: 'okey',
+    token: 'offline-test-token', git: readWithRemote(repo, commit),
+    fetchImpl: async (url, options) => { calls.push({url, options}); return {status: 204}; }});
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, 'https://api.github.com/repos/ZebraRectifier/checkni-g5-preview/actions/workflows/pages-publication.yml/dispatches');
+  assert.equal(calls[0].options.method, 'POST');
+  assert.equal(calls[0].options.redirect, 'error');
+  assert.deepEqual(JSON.parse(calls[0].options.body), {ref: 'main', inputs: {site_commit: commit, base_commit: repo.baseCommit, feed: 'okey'}});
+  assert.equal(result.queued, true);
+  assert.equal(result.published, false);
+  assert.equal(result.commit, commit);
+  assert.doesNotMatch(JSON.stringify(result), /offline-test-token/);
+  // A race after dispatch must still be rejected by the receiving workflow.
+  assert.throws(() => verifyPublicationEvent({...trustedEvent, commit, eventSha: 'c'.repeat(40)}), /commit_mismatch/);
+});
+
+test('no dispatch is sent for a stale main, non-data change or foreign caller', async t => {
+  const repo = await repository(t);
+  await repo.write(FEED_FILES.pyaterochka[0], 'new\n');
+  const commit = repo.commit();
+  const options = {...repo, ...trustedEvent, commit, feed: 'pyaterochka', token: 'offline',
+    git: readWithRemote(repo, commit), fetchImpl: () => assert.fail('No network before acceptance')};
+  await assert.rejects(dispatchFeedPublication({...options, git: readWithRemote(repo, repo.baseCommit)}), /main_advanced/);
+  for (const wrong of [{repository: 'fork/checkni-g5-preview'}, {ref: 'refs/heads/other'}, {eventName: 'pull_request'}, {feed: ''}]) {
+    await assert.rejects(dispatchFeedPublication({...options, ...wrong}), /untrusted_publication_dispatch|invalid_feed_publication/);
+  }
+  const changed = await repository(t); await changed.write('index.html', 'unreviewed\n'); const runtimeCommit = changed.commit();
+  await assert.rejects(dispatchFeedPublication({...options, ...changed, commit: runtimeCommit,
+    git: readWithRemote(changed, runtimeCommit)}), /not_data_only/);
+  const unchanged = await repository(t);
+  await assert.rejects(dispatchFeedPublication({...options, ...unchanged, commit: unchanged.baseCommit,
+    git: readWithRemote(unchanged, unchanged.baseCommit)}), /dispatch_requires_data_commit/);
+});
+
+test('dispatch errors remain finite and do not disclose transport diagnostics or imply publication', async t => {
+  const repo = await repository(t);
+  await repo.write(FEED_FILES.okey[0], 'new\n'); const commit = repo.commit();
+  const options = {...repo, ...trustedEvent, commit, feed: 'okey', token: 'offline',
+    git: readWithRemote(repo, commit)};
+  await assert.rejects(dispatchFeedPublication({...options, fetchImpl: async () => ({status: 403})}),
+    error => error.message === 'publication_dispatch_rejected');
+  await assert.rejects(dispatchFeedPublication({...options, fetchImpl: async () => { throw Error('token and sensitive response'); }}),
+    error => error.message === 'publication_dispatch_unavailable');
+});
+
 test('both feeds have one data-only handoff and no incomplete Pages deployment path', async () => {
   for (const [name, feed] of [['okey-public-data', 'okey'], ['pyaterochka-public-data', 'pyaterochka']]) {
     const workflow = await fs.readFile(new URL(`../.github/workflows/${name}.yml`, import.meta.url), 'utf8');
     assert.doesNotMatch(workflow, /actions\/(?:deploy-pages|upload-pages-artifact|configure-pages)|cp .*_site|mkdir .*_site/);
-    assert.match(workflow, /uses: \.\/\.github\/workflows\/pages-publication\.yml/);
-    assert.match(workflow, /site_commit: \$\{\{ needs\.publish\.outputs\.site_commit \}\}/);
-    assert.match(workflow, /base_commit: \$\{\{ needs\.publish\.outputs\.base_commit \}\}/);
-    assert.match(workflow, new RegExp(`feed: ${feed}`));
+    assert.doesNotMatch(workflow, /uses: \.\/\.github\/workflows\/pages-publication\.yml/);
+    assert.match(workflow, /PAGES_COMMIT: \$\{\{ needs\.publish\.outputs\.site_commit \}\}/);
+    assert.match(workflow, /PAGES_BASE_COMMIT: \$\{\{ needs\.publish\.outputs\.base_commit \}\}/);
+    assert.match(workflow, new RegExp(`PAGES_FEED: ${feed}`));
+    assert.match(workflow, /publication-guard\.mjs --dispatch/);
     assert.match(workflow, /publication-guard\.mjs --data-delta/);
     assert.match(workflow, /Require (?:fresh prices|a verified current automated source result)/);
     for (const line of workflow.split('\n').filter(line => line.trim().startsWith('git add '))) {
       for (const file of line.trim().slice('git add '.length).split(' ')) assert.ok(FEED_FILES[feed].includes(file));
     }
     const sourceJob = workflow.slice(workflow.indexOf('  publish:'), workflow.indexOf('  pages:'));
-    assert.doesNotMatch(sourceJob, /pages: write|id-token: write|environment:/);
+    assert.doesNotMatch(sourceJob, /actions: write|pages: write|id-token: write|environment:/);
+    const dispatchJob = workflow.slice(workflow.indexOf('  pages:'));
+    assert.match(dispatchJob, /actions: write/);
+    assert.doesNotMatch(dispatchJob, /pages: write|id-token: write|environment:/);
+    assert.match(dispatchJob, /repository: ZebraRectifier\/checkni-g5-preview/);
+    assert.match(dispatchJob, /ref: \$\{\{ needs\.publish\.outputs\.site_commit \}\}/);
+    assert.equal((workflow.match(/actions: write/g) || []).length, 1);
   }
   const pyat = await fs.readFile(new URL('../.github/workflows/pyaterochka-public-data.yml', import.meta.url), 'utf8');
   assert.ok(pyat.indexOf('prepare-ci-runtime.mjs --ci-only') < pyat.indexOf('Verify actual checkout'));
@@ -100,15 +168,16 @@ test('both feeds have one data-only handoff and no incomplete Pages deployment p
 
 test('the shared publisher packages releases, validates activation and rechecks current main after the deployment queue', async () => {
   const workflow = await fs.readFile(new URL('../.github/workflows/pages-publication.yml', import.meta.url), 'utf8');
-  assert.match(workflow, /workflow_call:/);
+  assert.doesNotMatch(workflow, /workflow_call:/);
+  assert.match(workflow, /workflow_dispatch:\s+inputs:/);
   assert.match(workflow, /group: pages-.*'production'/);
   assert.match(workflow, /cancel-in-progress: false/);
   assert.match(workflow, /git archive .* HEAD -- .* src releases release artifacts/);
   assert.match(workflow, /if \(!await activationState\('_site'\)\) throw Error\('active_release_required'\)/);
   assert.equal((workflow.match(/inputs\.site_commit \|\| github\.event\.pull_request\.head\.sha \|\| github\.sha/g) || []).length, 2);
-  assert.equal((workflow.match(/publication-guard\.mjs --current/g) || []).length, 2);
+  assert.equal((workflow.match(/publication-guard\.mjs --deployment/g) || []).length, 2);
   const deploy = workflow.slice(workflow.indexOf('  deploy:'));
-  assert.ok(deploy.indexOf('--current') < deploy.indexOf('uses: actions/deploy-pages'));
+  assert.ok(deploy.indexOf('--deployment') < deploy.indexOf('uses: actions/deploy-pages'));
   assert.match(deploy, /ref: \$\{\{ needs\.build\.outputs\.site_commit \}\}/);
   assert.match(workflow, /repository: ZebraRectifier\/checkni-g5-preview/);
 });

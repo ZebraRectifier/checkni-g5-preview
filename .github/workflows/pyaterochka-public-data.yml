@@ -178,12 +178,32 @@ jobs:
   pages:
     if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.publish.outputs.site_commit != ''
     needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
     permissions:
       contents: read
-      pages: write
-      id-token: write
-    uses: ./.github/workflows/pages-publication.yml
-    with:
-      site_commit: ${{ needs.publish.outputs.site_commit }}
-      base_commit: ${{ needs.publish.outputs.base_commit }}
-      feed: pyaterochka
+      actions: write
+    env:
+      PAGES_COMMIT: ${{ needs.publish.outputs.site_commit }}
+      PAGES_BASE_COMMIT: ${{ needs.publish.outputs.base_commit }}
+      PAGES_FEED: pyaterochka
+    steps:
+      - name: Reject non-SHA dispatch inputs before checkout
+        shell: bash
+        run: |
+          [[ "$PAGES_COMMIT" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$PAGES_BASE_COMMIT" =~ ^[a-f0-9]{40}$ ]]
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: ZebraRectifier/checkni-g5-preview
+          ref: ${{ needs.publish.outputs.site_commit }}
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Queue exact-commit Pages publication (completion is verified in its own run)
+        env:
+          PAGES_DISPATCH_TOKEN: ${{ github.token }}
+        run: node tools/browser-release/publication-guard.mjs --dispatch
