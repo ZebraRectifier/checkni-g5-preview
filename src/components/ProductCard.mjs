@@ -219,7 +219,27 @@ export function createProductCard(product, {
   button.addEventListener("click", () => {
     if (displayOnly || atLimit) return;
 
-    onAdd(reviewedProduct ?? product);
+    // A page can stay open past a source observation's admission window.
+    // Recheck the original runtime card; a render-time selection is not a
+    // permanent permission to add. Existing reviewed list identities retain
+    // their own contract and are not assigned a new freshness policy here.
+    const currentProduct = retailObservation ? getReviewedRetailBasketProduct(product) : null;
+    if (product.catalogDisplayOnly === true
+        && (!currentProduct || product.basketProductId !== currentProduct.id)) {
+      button.disabled = true;
+      button.closest('.pixel-product-actions')?.classList.add('is-view-only');
+      button.textContent = product.sourceListOnly ? 'Цена устарела' : 'Пока только просмотр';
+      button.setAttribute('aria-label', `${product.name}: обнови каталог перед добавлением`);
+      const notice = document.createElement('p');
+      notice.className = 'product-unit';
+      notice.setAttribute('role', 'status');
+      notice.textContent = 'Обнови каталог, чтобы добавить товар. Список сохранён.';
+      // Keep the explanation above the controls so the fixed basket dock
+      // cannot cover a newly appended message below a tall mobile card.
+      body.insertBefore(notice, button.closest('.pixel-product-actions') ?? button);
+      return;
+    }
+    onAdd(currentProduct ?? product);
     focusByKey(document, focusKey);
   });
 
