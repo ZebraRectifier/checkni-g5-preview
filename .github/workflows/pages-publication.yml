@@ -1,0 +1,51 @@
+name: Publish verified Pages tree
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checkni-pages-publication
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Package exact tracked tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir _site
+          git archive --format=tar HEAD | tar -xf - -C _site
+          test -f _site/index.html
+          test -f _site/prices.html
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish without cancelling slow file synchronization
+        id: deployment
+        uses: actions/deploy-pages@v5
+        with:
+          timeout: 1800000
