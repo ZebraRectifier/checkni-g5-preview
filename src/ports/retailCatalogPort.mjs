@@ -134,6 +134,7 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     logo: "M",
     defaultProductCount: 329,
     rootCategoryCount: 51,
+    rootCategoryReadLimit: 160,
     productUrlRules: Object.freeze([
       Object.freeze({ host: "online.metro-cc.ru", prefix: "/products/" })
     ]),
@@ -198,6 +199,9 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     logo: "Л",
     defaultProductCount: 64,
     rootCategoryCount: 22,
+    // This import counts descendant observations in parents. Seed-only zero
+    // categories have neither imported products nor a populated child route.
+    omitEmptyCategories: true,
     productUrlRules: Object.freeze([
       Object.freeze({ host: "lenta.com", prefix: "/product/" }),
       Object.freeze({ host: "www.lenta.com", prefix: "/product/" })
@@ -1026,6 +1030,7 @@ export function createRetailCatalogClient(options = {}) {
     } else if (parentId !== null) {
       url.searchParams.set("parent_id", `eq.${parentId}`);
     }
+    if (definition.omitEmptyCategories) url.searchParams.set("product_count", "gt.0");
     url.searchParams.set("order", "name.asc");
     url.searchParams.set("limit", String(limit));
 
@@ -1057,12 +1062,15 @@ export function createRetailCatalogClient(options = {}) {
         return result("error", { code: "malformed_transport_response" });
       }
 
-      const categories = payload
+      const normalizedCategories = payload
         .map((row) => normalizeRetailCategory(row, definition))
         .filter(Boolean);
+      const categories = definition.omitEmptyCategories
+        ? normalizedCategories.filter(category => category.productCount > 0)
+        : normalizedCategories;
       return result("categories", {
         categories: Object.freeze(categories),
-        partial: categories.length !== payload.length
+        partial: normalizedCategories.length !== payload.length
       });
     } catch {
       return result("unavailable", { code: "transport_unavailable" });

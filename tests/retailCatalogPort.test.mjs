@@ -357,6 +357,57 @@ test("Lenta category reads use the selected retailer binding", async () => {
   assert.equal(requestedUrl.searchParams.get("depth"), "eq.0");
 });
 
+test('Lenta omits seed-only empty roots and children while retaining populated parents', async () => {
+  const requests = [];
+  const parent = lentaCategoryRow({ product_count: 9 });
+  const child = lentaCategoryRow({ category_id: 31, name: 'Макароны', parent_id: 25, root_id: 25, depth: 1, product_count: 6 });
+  const client = createRetailCatalogClient({ retailerId: 'lenta', fetchImpl: async value => {
+    const url = new URL(value); requests.push(url);
+    // Return an unfiltered response deliberately: the client must also filter
+    // known empty metadata, without treating it as a malformed source response.
+    return Response.json(url.searchParams.has('parent_id')
+      ? [child, {...child, category_id: 27, name: 'Крупы', product_count: 0}]
+      : [parent, lentaCategoryRow({ category_id: 136, name: 'Мясо', product_count: 0 })]);
+  }});
+  const roots = await client.rootCategories();
+  assert.equal(roots.kind, 'categories');
+  assert.equal(roots.partial, false);
+  assert.deepEqual(roots.categories.map(c => c.categoryId), [25]);
+  assert.equal(roots.categories[0].productCount, 9);
+  const children = await client.subcategories(25);
+  assert.equal(children.partial, false);
+  assert.deepEqual(children.categories.map(c => c.categoryId), [31]);
+  assert.ok(requests.every(url => url.searchParams.get('product_count') === 'gt.0'));
+  assert.ok(requests.every(url => url.searchParams.get('store_id') === 'eq.lenta-public-web'));
+});
+
+test('Lenta empty categories stay distinct from a failed read and retry normally', async () => {
+  let mode = 'failure';
+  const client = createRetailCatalogClient({ retailerId: 'lenta', fetchImpl: async () => mode === 'failure'
+    ? new Response('', {status: 503}) : Response.json([lentaCategoryRow({product_count: 0})]) });
+  assert.equal((await client.rootCategories()).kind, 'unavailable');
+  mode = 'empty';
+  const empty = await client.rootCategories();
+  assert.equal(empty.kind, 'categories');
+  assert.deepEqual(empty.categories, []);
+  assert.equal(empty.partial, false);
+});
+
+test('empty-category filtering is not inferred for other networks or current promotion totals', async () => {
+  for (const retailerId of ['globus', 'magnit', 'metro', 'vkusvill', 'perekrestok', 'auchan', 'da']) {
+    const definition = getRetailCatalogDefinition(retailerId), rule = definition.categoryUrlRules[0];
+    const client = createRetailCatalogClient({ retailerId, fetchImpl: async value => {
+      assert.equal(new URL(value).searchParams.has('product_count'), false);
+      return Response.json([{retailer_id: retailerId, store_id: definition.storeId, category_id: 1,
+        name: 'Раздел с неизвестным наполнением', parent_id: null, root_id: 1, depth: 0, product_count: 0,
+        source_url: `https://${rule.host}${rule.prefix}`}]);
+    }});
+    const roots = await client.rootCategories();
+    assert.equal(roots.categories.length, 1, retailerId);
+    assert.equal(roots.categories[0].productCount, 0, retailerId);
+  }
+});
+
 test("category product browse filters by source main category id", async () => {
   let requestedUrl;
   const client = createRetailCatalogClient({
