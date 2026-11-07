@@ -12,6 +12,10 @@ const SHA = /^[a-f0-9]{40}$/u;
 const MAX_BYTES = 128 * 1024 * 1024;
 const SUPPORT_PATHS = ['test', 'tests', 'tools', 'package.json', 'package-lock.json',
   'playwright.weekly.config.mjs', 'deployment.json', 'release',
+  // Publication-contract tests read these as fixtures from the same pinned
+  // test commit. Never substitute the current checkout's workflows.
+  '.github/workflows/okey-public-data.yml', '.github/workflows/pyaterochka-public-data.yml',
+  '.github/workflows/pages-publication.yml',
   'artifacts/nearby-shopping/catalog-geography-joins-20261024.json',
   'evidence/magnit-nearby-20261107'];
 export const MUTABLE_PUBLIC_DATA_FILES = Object.freeze([
