@@ -82,7 +82,17 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
       await createNearbyShoppingPort().directory();
     },id);
     expect(errors).toEqual([]);expect(rootModules).toEqual([]);expect(ai).toBe(0);
-    expect(dataPaths.length).toBeGreaterThan(0);expect(dataPaths.every(p=>p.startsWith('/src/data/'))).toBe(true);
+    const coordinateFile='src/data/magnitRegisteredCoordinates.json';
+    const pinnedCoordinates=manifest.entries.some(entry=>entry.file===coordinateFile)
+      ? `/releases/${id}/${coordinateFile}` : null;
+    expect(dataPaths.length).toBeGreaterThan(0);
+    // Prices and city directories stay mutable; validated coordinate joins are
+    // versioned with their admission code and checked in the HTTP closure above.
+    expect(dataPaths.every(p=>p===pinnedCoordinates||p.startsWith('/src/data/'))).toBe(true);
+    if(pinnedCoordinates){
+      expect(dataPaths).toContain(pinnedCoordinates);
+      expect(dataPaths).not.toContain('/'+coordinateFile);
+    }
     if(await activationState(root)===id){
       for(const entry of ['index.html','prices.html']){
         await page.goto(base+entry);await expect(page.locator('main').first()).toBeVisible();
