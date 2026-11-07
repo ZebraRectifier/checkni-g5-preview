@@ -1,6 +1,7 @@
 // Presentation only. The app owns navigation, selected addresses, catalogue
 // requests and every basket mutation; this shell only reuses their real nodes.
 import { findStoreSearchMatches } from './storeSearchIndex.mjs';
+import { nearbyRegionForPosition } from '../intelligence/nearbyRegions.mjs';
 
 export function createHoriCommerce({ document, main, shop, header, onOpenHory, onOpenAddress }) {
   const view = document.defaultView;
@@ -195,7 +196,13 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     openAddressChooser(event.detail.retailerId, event.detail.sourceButton);
   });
 
-  const location = node('button', 'hori-location pixel-location', '⌖ Москва и МО'); location.type = 'button';
+  const location = node('button', 'hori-location pixel-location', '⌖ Указать место'); location.type = 'button';
+  document.addEventListener('checkni:nearby-map-context', event => {
+    const region = nearbyRegionForPosition(event.detail?.position);
+    const label = region?.id === 'moscow-and-oblast' ? 'Москва и МО' : region?.label ?? 'Указать место';
+    location.textContent = `⌖ ${label}`;
+    location.setAttribute('aria-label', region ? `Изменить место поиска: ${label}` : 'Указать место поиска');
+  });
   const selected = node('button', 'hori-selected-store pixel-selected-store');
   selected.type = 'button'; selected.hidden = true; selected.addEventListener('click', () => action('root'));
   const headerControls = node('div', 'pixel-header-controls');

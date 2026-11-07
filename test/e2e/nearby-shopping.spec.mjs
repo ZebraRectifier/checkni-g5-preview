@@ -32,6 +32,7 @@ test('five regional cities: real address cards, directory recovery and no Moscow
     const candidate=page.locator('#nearby-address-candidates button');
     await expect(candidate).toContainText('центр');await candidate.click();
     await expect(page.locator('#nearby-results article').first()).toContainText(city);
+    await expect(page.locator('.pixel-location')).toHaveText(`⌖ ${city}`);
     await expect(page.locator('#nearby-results')).not.toContainText('Москва');
     await context.setGeolocation({latitude:point.lat,longitude:point.lon,accuracy:10});
     await page.locator('#nearby-locate').click();
@@ -56,6 +57,7 @@ test('five regional cities: real address cards, directory recovery and no Moscow
   await page.locator('#nearby-locate').click();
   await expect(page.locator('#nearby-status')).toContainText('Для этого места справочника пока нет');
   await expect(page.locator('#nearby-results')).toBeEmpty();
+  await expect(page.locator('.pixel-location')).toHaveText('⌖ Указать место');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
