@@ -430,6 +430,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     const displayName = typeof state.displayName === 'string' ? state.displayName : 'Магазин';
     selected.textContent = displayName; selected.setAttribute('aria-label', `Категории магазина ${displayName}`);
     title.textContent = displayName; address.textContent = state.storeAddress || 'Выбрать адрес';
+    address.hidden = !exactPickerIds[state.retailerId];
     const fullScope = typeof state.scopeLabel === 'string' ? state.scopeLabel : '';
     const storeAddress = typeof state.storeAddress === 'string' ? state.storeAddress : '';
     const repeatedPrefix = storeAddress && [' · ', ' — ', ' | '].map(separator => storeAddress + separator)
