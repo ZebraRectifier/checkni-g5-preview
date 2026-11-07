@@ -1,0 +1,1169 @@
+import {sourceScopedRetailListSelection} from '../catalog/sourceScopedRetailList.mjs';
+import {
+  CATALOG_SEARCH_PUBLISHABLE_KEY
+} from "./catalogGatewayPort.mjs";
+import { resolveMagnitMoscowStore } from "../data/magnitMoscowStores.mjs";
+import { resolveMagnitMoscowOblastStore } from "../data/magnitMoscowOblastBindings.mjs";
+import { resolveMetroMoscowRegionStore } from "../data/metroMoscowRegionStores.mjs";
+import { resolveGlobusMoscowRegionStore } from "../data/globusMoscowRegionStores.mjs";
+import { getReviewedRetailBasketProduct } from "../catalog/reviewedRetailBasket.mjs";
+import { hintRetailCatalogConnection } from "./retailCatalogConnectionHint.mjs";
+import { createPublishedPromotionCatalogClient } from './publishedPromotionCatalog.mjs';
+
+export const RETAIL_CATALOG_ENDPOINT =
+  "https://cxpneczhczashanbetgj.supabase.co/rest/v1/retail_catalog_items";
+export const RETAIL_CATEGORY_ENDPOINT =
+  "https://cxpneczhczashanbetgj.supabase.co/rest/v1/retail_catalog_categories";
+// A cold connection on some client networks can take longer than 2.5 seconds
+// even when the public catalogue returns HTTP 200. Keep one finite read window.
+export const RETAIL_CATALOG_TIMEOUT_MS = 15_000;
+export const MAX_RETAIL_CATALOG_RESPONSE_BYTES = 262_144;
+export const MAX_RETAIL_CATALOG_PRODUCTS = 40;
+
+if (typeof globalThis.location?.search === "string"
+    && new URLSearchParams(globalThis.location.search).get("catalog") === "retail") {
+  hintRetailCatalogConnection(globalThis.document, RETAIL_CATALOG_ENDPOINT);
+}
+
+const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
+  okey: Object.freeze({
+    retailerId: 'okey', storeId: 'okey-moscow-city-promotions', storeName: 'О’КЕЙ · акции Москвы',
+    localityId: 'city-moscow-promo', localityName: 'Москва', displayName: 'О’КЕЙ',
+    catalogLabel: 'О’КЕЙ · акции Москвы', scopeLabel: 'Акции Москвы · цена конкретного магазина и наличие не подтверждены',
+    logo: 'О', defaultProductCount: null, rootCategoryCount: null,
+    priceScope: 'city-promotion', physicalStoreId: null, publishedPromotionTransport: true,
+    publishedPromotions: true, requiresPromoValidity: true, searchAliases: "окей okey o'key",
+    productUrlRules: Object.freeze([{ host: 'www.okmarket.ru', prefix: '/product/' }, { host: 'mos.proshoper.ru', prefix: '/actions/okej/moskva/' }]),
+    categoryUrlRules: Object.freeze([{ host: 'www.okmarket.ru', prefix: '/catalogs/' }, { host: 'mos.proshoper.ru', prefix: '/actions/okej/moskva/' }]),
+    sourceUrlRules: Object.freeze([{ host: 'www.okmarket.ru', prefix: '/product/' }, { host: 'mos.proshoper.ru', prefix: '/actions/okej/moskva/' }]),
+    imageUrlRules: Object.freeze([]), priceConditionLabels: Object.freeze({})
+  }),
+  pyaterochka: Object.freeze({
+    retailerId: 'pyaterochka', storeId: 'pyaterochka-moscow-proshoper', storeName: 'Пятёрочка · акции Москвы',
+    localityId: 'city-moscow-promo', localityName: 'Москва', displayName: 'Пятёрочка',
+    catalogLabel: 'Пятёрочка · акции Москвы', scopeLabel: 'Акции Москвы · цена конкретного магазина и наличие не подтверждены',
+    logo: '5', defaultProductCount: null, rootCategoryCount: null,
+    priceScope: 'city-promotion', physicalStoreId: null, publishedPromotionTransport: true,
+    publishedPromotions: true, requiresPromoValidity: true, searchAliases: 'пятерочка',
+    productUrlRules: Object.freeze([{ host: 'mos.proshoper.ru', prefix: '/actions/pyaterochka/moskva/' }]),
+    categoryUrlRules: Object.freeze([{ host: 'mos.proshoper.ru', prefix: '/actions/pyaterochka/moskva/' }]),
+    sourceUrlRules: Object.freeze([{ host: 'mos.proshoper.ru', prefix: '/actions/pyaterochka/moskva/' }]),
+    imageUrlRules: Object.freeze([]), priceConditionLabels: Object.freeze({})
+  }),
+  globus: Object.freeze({
+    retailerId: "globus",
+    storeId: "globus-pvz-2",
+    storeName: "Глобус Красногорск",
+    localityId: "city-moscow",
+    localityName: "Москва",
+    displayName: "Глобус",
+    catalogLabel: "Глобус · Москва",
+    scopeLabel: "Москва · реальные наблюдаемые цены",
+    logo: "Г",
+    defaultProductCount: 3034,
+    rootCategoryUrlProductFallback: true,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "www.globus.ru", prefix: "/products/" }),
+      Object.freeze({ host: "globus.ru", prefix: "/products/" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "image.globus.ru", prefix: "/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "www.globus.ru", prefix: "/catalog/" }),
+      Object.freeze({ host: "online.globus.ru", prefix: "/catalog/" }),
+      Object.freeze({ host: "globus.ru", prefix: "/catalog/" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "www.globus.ru", prefix: "/products/" }),
+      Object.freeze({ host: "globus.ru", prefix: "/products/" }),
+      Object.freeze({ host: "www.globus.ru", prefix: "/catalog/" }),
+      Object.freeze({ host: "online.globus.ru", prefix: "/catalog/" }),
+      Object.freeze({ host: "globus.ru", prefix: "/catalog/" })
+    ]),
+    priceConditionLabels: Object.freeze({})
+  }),
+  magnit: Object.freeze({
+    retailerId: "magnit",
+    shopCode: "777312",
+    storeAddress: "г Москва, аллея Берёзовая, д 17 к 2",
+    storeId: "magnit-777312",
+    storeName: "Магнит · г Москва, аллея Берёзовая, д 17 к 2",
+    localityId: "city-moscow",
+    localityName: "Москва",
+    displayName: "Магнит",
+    catalogLabel: "Магнит · аллея Берёзовая, д 17 к 2",
+    scopeLabel: "г Москва, аллея Берёзовая, д 17 к 2 · публичная цена сайта · наличие неизвестно",
+    logo: "М",
+    defaultProductCount: 291,
+    rootCategoryCount: 17,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "magnit.ru", prefix: "/product/" }),
+      Object.freeze({ host: "www.magnit.ru", prefix: "/product/" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "images-foodtech.magnit.ru", prefix: "/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "magnit.ru", prefix: "/catalog" }),
+      Object.freeze({ host: "www.magnit.ru", prefix: "/catalog" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "magnit.ru", prefix: "/product/" }),
+      Object.freeze({ host: "www.magnit.ru", prefix: "/product/" }),
+      Object.freeze({ host: "magnit.ru", prefix: "/catalog" }),
+      Object.freeze({ host: "www.magnit.ru", prefix: "/catalog" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      "public-online": "Публичная онлайн-цена"
+    })
+  }),
+  metro: Object.freeze({
+    retailerId: "metro",
+    storeNumber: "10",
+    storeAddress: "125445, г. Москва, Ленинградское ш., д.71Г",
+    bindingId: "metro-address-c5gsqz",
+    storeId: "metro-address-c5gsqz",
+    storeName: "METRO · Москва, Ленинградское ш. 71Г",
+    localityId: "city-moscow",
+    localityName: "Москва",
+    displayName: "METRO",
+    catalogLabel: "METRO · Ленинградское ш. 71Г",
+    scopeLabel: "Ленинградское ш. 71Г · точная точка самовывоза · наличие неизвестно",
+    logo: "M",
+    defaultProductCount: 329,
+    rootCategoryCount: 51,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "online.metro-cc.ru", prefix: "/products/" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "cdn.metro-cc.ru", prefix: "/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "online.metro-cc.ru", prefix: "/dynamic/" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "online.metro-cc.ru", prefix: "/products/" }),
+      Object.freeze({ host: "online.metro-cc.ru", prefix: "/dynamic/" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      regular: "Обычная онлайн-цена",
+      promo: "Промо-цена",
+      unknown: "Условие цены не доказано"
+    })
+  }),
+  vkusvill: Object.freeze({
+    retailerId: "vkusvill",
+    storeId: "vkusvill-public-web",
+    storeName: "ВкусВилл · публичный каталог",
+    localityId: "country-ru-public-catalog",
+    localityName: "Россия",
+    displayName: "ВкусВилл",
+    catalogLabel: "ВкусВилл · публичный каталог",
+    scopeLabel: "Публичный каталог · цена может зависеть от региона · наличие неизвестно",
+    logo: "В",
+    defaultProductCount: 697,
+    rootCategoryCount: 17,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "vkusvill.ru", prefix: "/goods/" }),
+      Object.freeze({ host: "www.vkusvill.ru", prefix: "/goods/" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "img.vkusvill.ru", prefix: "/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "vkusvill.ru", prefix: "/goods/" }),
+      Object.freeze({ host: "www.vkusvill.ru", prefix: "/goods/" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "vkusvill.ru", prefix: "/goods/" }),
+      Object.freeze({ host: "www.vkusvill.ru", prefix: "/goods/" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      "public-online": "Публичная цена сайта",
+      "loyalty-vkusvill": "По карте ВкусВилл",
+      "promo": "Акционная цена сайта"
+    })
+  }),
+  lenta: Object.freeze({
+    retailerId: "lenta",
+    storeId: "lenta-public-web",
+    storeName: "Лента · публичный каталог",
+    localityId: "country-ru-public-catalog",
+    localityName: "Россия",
+    displayName: "Лента",
+    catalogLabel: "Лента · публичный каталог",
+    scopeLabel: "Публичный каталог · наличие неизвестно",
+    logo: "Л",
+    defaultProductCount: 64,
+    rootCategoryCount: 22,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "lenta.com", prefix: "/product/" }),
+      Object.freeze({ host: "www.lenta.com", prefix: "/product/" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "cdn.api.lenta.com", prefix: "/resample/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "lenta.com", prefix: "/catalog/" }),
+      Object.freeze({ host: "www.lenta.com", prefix: "/catalog/" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "lenta.com", prefix: "/product/" }),
+      Object.freeze({ host: "www.lenta.com", prefix: "/product/" }),
+      Object.freeze({ host: "lenta.com", prefix: "/catalog/" }),
+      Object.freeze({ host: "www.lenta.com", prefix: "/catalog/" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      "loyalty-card-1": "По Карте №1"
+    })
+  }),
+  perekrestok: Object.freeze({
+    retailerId: "perekrestok",
+    storeId: "perekrestok-yandex-3186917",
+    storeName:
+      "Перекрёсток · Москва, Большой Овчинниковский пер. 16 · Яндекс Еда",
+    localityId: "city-moscow",
+    localityName: "Москва",
+    displayName: "Перекрёсток",
+    catalogLabel: "Перекрёсток · Москва · Яндекс Еда",
+    scopeLabel: "Москва · цены доставки Яндекс Еды · наличие неизвестно",
+    logo: "П",
+    // The delivery snapshot changes at every refresh; counts come from live category rows.
+    defaultProductCount: null,
+    rootCategoryCount: null,
+    rootCategoryReadLimit: 160,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "eda.yandex.ru", prefix: "/retail/perekrestok" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "avatars.mds.yandex.net", prefix: "/get-eda/" }),
+      Object.freeze({ host: "eda.yandex", prefix: "/images/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "eda.yandex.ru", prefix: "/retail/perekrestok" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "eda.yandex.ru", prefix: "/retail/perekrestok" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      "yandex-eda-regular": "Цена доставки Яндекс Еды",
+      "yandex-eda-promo": "Промо-цена доставки Яндекс Еды"
+    })
+  }),
+  auchan: Object.freeze({
+    retailerId: "auchan",
+    storeId: "auchan-msk-public-promo",
+    storeName: "АШАН · Москва · публичный промо-каталог",
+    localityId: "city-moscow-promo",
+    localityName: "Москва",
+    displayName: "АШАН",
+    catalogLabel: "АШАН · Москва · текущий промо-каталог",
+    scopeLabel: "Москва · промо 1–14 октября · наличие зависит от гипермаркета",
+    logo: "А",
+    defaultProductCount: 312,
+    rootCategoryCount: 1,
+    catalogValidFrom: "2026-10-01",
+    catalogValidTo: "2026-10-14",
+    requiresPromoValidity: true,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "catalog.auchan.ru", prefix: "/60z9R061p97677" })
+    ]),
+    imageUrlRules: Object.freeze([]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "catalog.auchan.ru", prefix: "/60z9R061p97677" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "catalog.auchan.ru", prefix: "/60z9R061p97677" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      "public-promo": "Промо-цена каталога",
+      "auchan-card-promo": "По карте АШАН",
+      "auchan-multibuy": "Промо-цена каталога",
+      "auchan-card-multibuy": "По карте АШАН"
+    })
+  }),
+  da: Object.freeze({
+    retailerId: "da",
+    storeId: "da-public-promo",
+    storeName: "ДА! · публичный промо-каталог",
+    localityId: "network-da-public-promo",
+    localityName: "Сеть ДА!",
+    displayName: "ДА!",
+    catalogLabel: "ДА! · текущий промо-каталог",
+    scopeLabel: "Публичный промо-каталог · наличие зависит от магазина",
+    logo: "Д",
+    defaultProductCount: null,
+    rootCategoryCount: 1,
+    // Each observed row must prove its own current promo period below. The
+    // network entry is not permanently tied to a previously published issue.
+    requiresPromoValidity: true,
+    productUrlRules: Object.freeze([
+      Object.freeze({ host: "market-da.ru", prefix: "/sale.html" })
+    ]),
+    imageUrlRules: Object.freeze([
+      Object.freeze({ host: "market-da.ru", prefix: "/assets/" })
+    ]),
+    categoryUrlRules: Object.freeze([
+      Object.freeze({ host: "market-da.ru", prefix: "/sale.html" })
+    ]),
+    sourceUrlRules: Object.freeze([
+      Object.freeze({ host: "market-da.ru", prefix: "/sale.html" })
+    ]),
+    priceConditionLabels: Object.freeze({
+      "public-promo": "Промо-цена каталога"
+    })
+  })
+});
+
+function validDateKey(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/u.test(value)) {
+    return null;
+  }
+  const parsed = Date.parse(`${value}T00:00:00.000Z`);
+  if (!Number.isFinite(parsed)) return null;
+  return new Date(parsed).toISOString().slice(0, 10) === value ? value : null;
+}
+
+function moscowDateKey(nowMs = Date.now()) {
+  if (!Number.isFinite(nowMs)) return null;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Moscow",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date(nowMs));
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return values.year && values.month && values.day
+    ? `${values.year}-${values.month}-${values.day}`
+    : null;
+}
+
+function definitionIsCurrent(definition, nowMs = Date.now()) {
+  if (!definition?.catalogValidFrom && !definition?.catalogValidTo) return true;
+  const today = moscowDateKey(nowMs);
+  const validFrom = validDateKey(definition.catalogValidFrom);
+  const validTo = validDateKey(definition.catalogValidTo);
+  return Boolean(
+    today
+    && validFrom
+    && validTo
+    && validFrom <= validTo
+    && today >= validFrom
+    && today <= validTo
+  );
+}
+
+export const RETAIL_CATALOG_IDS = Object.freeze(
+  Object.keys(RETAIL_CATALOG_DEFINITIONS)
+    .filter((retailerId) => definitionIsCurrent(RETAIL_CATALOG_DEFINITIONS[retailerId]))
+);
+
+const SELECT_FIELDS = [
+  "retailer_id",
+  "store_id",
+  "store_name",
+  "locality_id",
+  "locality_name",
+  "source_product_id",
+  "name",
+  "price_minor",
+  "currency",
+  "price_condition",
+  "sales_channel",
+  "minimum_quantity",
+  "quantity_semantics",
+  "availability",
+  "product_url",
+  "image_url",
+  "weight_text",
+  "main_category_id",
+  "source_url",
+  "location_label",
+  "scope_binding",
+  "binding_id",
+  "scope_evidence_url",
+  "observed_at"
+].join(",");
+
+function result(kind, details = {}) {
+  return Object.freeze({ kind, ...details });
+}
+
+function cleanQuery(value) {
+  if (typeof value !== "string") return null;
+  const normalized = value
+    .normalize("NFKC")
+    .replace(/[\\,%*()"'\u0000-\u001f]+/gu, " ")
+    .replace(/\s+/gu, " ")
+    .trim();
+  return normalized && normalized.length <= 120 ? normalized : null;
+}
+
+function safeUrl(raw, rules) {
+  if (typeof raw !== "string" || !Array.isArray(rules)) return null;
+  try {
+    const url = new URL(raw);
+    const allowed = rules.some((rule) => (
+      url.protocol === "https:"
+      && url.hostname === rule.host
+      && url.pathname.startsWith(rule.prefix)
+    ));
+    if (!allowed) return null;
+    url.hash = "";
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+export function getRetailCatalogDefinition(retailerId) {
+  if (typeof retailerId !== "string") return null;
+  return RETAIL_CATALOG_DEFINITIONS[retailerId] ?? null;
+}
+
+function resolveDefinition(value = "globus") {
+  if (typeof value === "string") {
+    return getRetailCatalogDefinition(value);
+  }
+  if (!value || typeof value !== "object" || typeof value.retailerId !== "string") {
+    return null;
+  }
+  const base = getRetailCatalogDefinition(value.retailerId);
+  if (!base) return null;
+  if (base.publishedPromotionTransport && (value.store != null || value.physicalStoreId != null
+      || value.storeId != null && value.storeId !== base.storeId)) return null;
+
+  if (value.retailerId === "globus" && (value.store || value.officialStoreId)) {
+    const store = resolveGlobusMoscowRegionStore(value.store ?? value.officialStoreId);
+    if (!store || store.priceStatus !== "verified" || store.bindingId !== "store:" + store.officialStoreId) return null;
+    const city = store.scope === "moscow-city";
+    return Object.freeze({
+      ...base, officialStoreId: store.officialStoreId,
+      storeId: "globus-store-" + store.officialStoreId, bindingId: store.bindingId, storeAddress: store.address,
+      storeName: store.name, localityId: city ? "city-moscow" : "region-moscow-oblast",
+      localityName: city ? "Москва" : "Московская область",
+      catalogLabel: store.name + " · " + store.address,
+      scopeLabel: store.address + " · каталог гипермаркета · наличие неизвестно",
+      defaultProductCount: store.priceObservations, rootCategoryCount: store.rootCategoryCount,
+      priceConditionLabels: Object.freeze({ regular: "Обычная цена без карты" })
+    });
+  }
+
+  if (value.retailerId === "magnit") {
+    if (value.shopCode && value.storeId) return value;
+    if (!value.store) return base;
+    const cityStore = resolveMagnitMoscowStore(value.store);
+    const store = cityStore || resolveMagnitMoscowOblastStore(value.store);
+    if (!store) return null;
+    const storeId = "magnit-" + store.shopCode;
+    const storeName = "Магнит · " + store.address;
+    return Object.freeze({
+      ...base,
+      localityId: cityStore ? "city-moscow" : "region-moscow-oblast",
+      localityName: cityStore ? "Москва" : "Московская область",
+      shopCode: store.shopCode,
+      storeAddress: store.address,
+      storeId,
+      storeName,
+      catalogLabel: "Магнит · " + store.address,
+      scopeLabel: store.address + " · публичная цена сайта · наличие неизвестно"
+    });
+  }
+
+  if (value.retailerId === "metro") {
+    if (value.storeNumber && value.storeId && value.storeAddress) return value;
+    if (!value.store) return base;
+    const store = resolveMetroMoscowRegionStore(value.store);
+    if (
+      !store
+      || store.onlinePickupStatus !== "proven"
+      || typeof store.bindingId !== "string"
+      || !/^metro-address-[a-z0-9]+$/u.test(store.bindingId)
+    ) {
+      return null;
+    }
+    if (store.storeNumber === "10") {
+      return Object.freeze({
+        ...base,
+        pickupAddress: store.onlinePickupLabel,
+        acceptedLocationLabels: Object.freeze(
+          [base.storeAddress, store.address, store.onlinePickupLabel].filter(Boolean)
+        )
+      });
+    }
+    const isCity = store.scope === "moscow-city";
+    return Object.freeze({
+      ...base,
+      storeNumber: store.storeNumber,
+      storeAddress: store.address,
+      pickupAddress: store.onlinePickupLabel,
+      acceptedLocationLabels: Object.freeze(
+        [store.address, store.onlinePickupLabel].filter(Boolean)
+      ),
+      bindingId: store.bindingId,
+      storeId: store.bindingId,
+      storeName: "METRO · " + store.address,
+      localityId: isCity ? "city-moscow" : "region-moscow-oblast",
+      localityName: isCity ? "Москва" : "Московская область",
+      catalogLabel: "METRO · " + store.address,
+      scopeLabel: store.address + " · точная точка самовывоза · наличие неизвестно",
+      defaultProductCount: null,
+      rootCategoryCount: null
+    });
+  }
+
+  return base;
+}
+
+async function readBoundedJsonResponse(response, maxBytes) {
+  const declaredLength = response.headers?.get?.("Content-Length");
+  if (
+    declaredLength !== null
+    && declaredLength !== undefined
+    && (!/^\d+$/u.test(declaredLength) || Number(declaredLength) > maxBytes)
+  ) {
+    return null;
+  }
+  if (!response.body || typeof response.body.getReader !== "function") return null;
+
+  const reader = response.body.getReader();
+  const chunks = [];
+  let bytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > maxBytes) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+    const body = new Uint8Array(bytes);
+    let offset = 0;
+    for (const chunk of chunks) {
+      body.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(body));
+  } catch {
+    return null;
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+function promoTruth(row, definition, nowMs = Date.now()) {
+  if (!definition?.requiresPromoValidity) return Object.freeze({
+    conditionSuffixes: Object.freeze([])
+  });
+
+  const semantics = row?.quantity_semantics;
+  if (
+    !semantics
+    || typeof semantics !== "object"
+    || Array.isArray(semantics)
+  ) {
+    return null;
+  }
+
+  const validFrom = validDateKey(semantics.promo_valid_from);
+  const validTo = validDateKey(semantics.promo_valid_to);
+  const today = moscowDateKey(nowMs);
+  if (
+    !validFrom
+    || !validTo
+    || validFrom > validTo
+    || !today
+    || today < validFrom
+    || today > validTo
+  ) {
+    return null;
+  }
+
+  const minimumQuantity = row.minimum_quantity;
+  if (!Number.isSafeInteger(minimumQuantity) || minimumQuantity < 1) {
+    return null;
+  }
+
+  const suffixes = [];
+  if (semantics.kind === "multibuy") {
+    if (
+      minimumQuantity < 2
+      || semantics.minimum_quantity !== minimumQuantity
+    ) {
+      return null;
+    }
+    suffixes.push(`при покупке ${minimumQuantity} шт.`);
+  } else if (semantics.kind === "weight-basis") {
+    if (
+      minimumQuantity !== 1
+      || !Number.isSafeInteger(semantics.basis_grams)
+      || semantics.basis_grams < 1
+    ) {
+      return null;
+    }
+    suffixes.push(`за ${semantics.basis_grams} г`);
+  } else if (semantics.kind !== undefined) {
+    return null;
+  } else if (minimumQuantity !== 1) {
+    return null;
+  }
+
+  suffixes.push(`до ${validTo.slice(8, 10)}.${validTo.slice(5, 7)}`);
+  return Object.freeze({
+    validFrom,
+    validTo,
+    minimumQuantity,
+    conditionSuffixes: Object.freeze(suffixes)
+  });
+}
+
+function normalizeRetailRow(row, retailer = "globus", options = {}) {
+  const definition = resolveDefinition(retailer);
+  if (
+    !definition
+    || definition.publishedPromotionTransport === true
+    || !row
+    || typeof row !== "object"
+    || Array.isArray(row)
+    || row.retailer_id !== definition.retailerId
+    || row.store_id !== definition.storeId
+    || row.locality_id !== definition.localityId
+    || row.locality_name !== definition.localityName
+    || typeof row.source_product_id !== "string"
+    || !row.source_product_id
+    || typeof row.name !== "string"
+    || !row.name.trim()
+    || !Number.isSafeInteger(row.price_minor)
+    || row.price_minor <= 0
+    || row.currency !== "RUB"
+    || row.availability !== "unknown"
+  ) {
+    return null;
+  }
+
+  const productUrl = safeUrl(row.product_url, definition.productUrlRules);
+  const imageUrl = safeUrl(row.image_url, definition.imageUrlRules);
+  if (definition.retailerId === "magnit" && definition.shopCode) {
+    try {
+      if (new URL(productUrl).searchParams.get("shopCode") !== definition.shopCode) return null;
+    } catch {
+      return null;
+    }
+  }
+  const sourceUrl = safeUrl(row.source_url, definition.sourceUrlRules)
+    ?? productUrl;
+  if (definition.retailerId === "metro") {
+    const scopeEvidenceUrl = safeUrl(
+      row.scope_evidence_url,
+      definition.sourceUrlRules
+    );
+    if (
+      row.sales_channel !== "online"
+      || row.price_condition !== "regular"
+      || row.minimum_quantity !== 1
+      || row.scope_binding !== "same-source"
+      || typeof row.location_label !== "string"
+      || !(
+        Array.isArray(definition.acceptedLocationLabels)
+          ? definition.acceptedLocationLabels.includes(row.location_label)
+          : row.location_label === definition.storeAddress
+      )
+      || typeof row.binding_id !== "string"
+      || !/^metro-address-[a-z0-9]+$/u.test(row.binding_id)
+      || (definition.bindingId && row.binding_id !== definition.bindingId)
+      || !scopeEvidenceUrl
+      || scopeEvidenceUrl !== sourceUrl
+    ) {
+      return null;
+    }
+  }
+  if (definition.retailerId === "globus" && definition.officialStoreId) {
+    const evidenceUrl = safeUrl(row.scope_evidence_url, definition.categoryUrlRules);
+    if (row.sales_channel !== "store" || row.price_condition !== "regular"
+        || row.scope_binding !== "same-source" || row.binding_id !== definition.bindingId
+        || row.location_label !== definition.storeAddress || !evidenceUrl || evidenceUrl !== sourceUrl) return null;
+  }
+  const observedMs = Date.parse(row.observed_at);
+  const nowMs = Number.isFinite(options.nowMs) ? options.nowMs : Date.now();
+  const promo = promoTruth(row, definition, nowMs);
+  if (
+    !productUrl
+    || !sourceUrl
+    || !Number.isFinite(observedMs)
+    || !promo
+  ) {
+    return null;
+  }
+
+  const priceCondition = typeof row.price_condition === "string"
+    ? row.price_condition
+    : "unknown";
+  const basePriceConditionLabel =
+    definition.priceConditionLabels[priceCondition] ?? null;
+  const conditionParts = [
+    basePriceConditionLabel,
+    ...promo.conditionSuffixes
+  ].filter(Boolean);
+  const priceConditionLabel = conditionParts.length > 0
+    ? conditionParts.join(" · ")
+    : null;
+
+  const basketProduct = getReviewedRetailBasketProduct({
+    retailerId: definition.retailerId,
+    sourceProductId: row.source_product_id,
+    name: row.name,
+    unit: row.weight_text,
+    productUrl
+  });
+
+  const normalized = {
+    id: `retail:${definition.retailerId}:${row.store_id}:${row.source_product_id}`,
+    ...(basketProduct ? { basketProductId: basketProduct.id } : {}),
+    name: row.name.trim(),
+    unit: basketProduct?.unit ?? (definition.retailerId === "globus" && definition.officialStoreId
+      && row.quantity_semantics?.packageType !== "piece" && row.quantity_semantics?.unitPriceText
+        ? "Цена за " + row.quantity_semantics.unitPriceText
+        : typeof row.weight_text === "string" && row.weight_text.trim()
+          ? row.weight_text.trim()
+          : "упаковка"),
+    category: definition.catalogLabel,
+    catalogSource: definition.retailerId,
+    catalogDisplayOnly: true,
+    retailerId: definition.retailerId,
+    retailerDisplayName: definition.displayName,
+    storeName: typeof row.store_name === "string" && row.store_name.trim()
+      ? row.store_name.trim()
+      : definition.storeName,
+    sourceProductId: row.source_product_id,
+    priceMinor: row.price_minor,
+    currency: "RUB",
+    priceCondition,
+    priceConditionLabel,
+    // Descriptive purchase unit only. This does not admit a comparison offer
+    // or establish stock/checkout. Keep the upstream unit basis explicit.
+    ...(row.quantity_semantics?.packageType === "piece" && ["1 шт", "1 уп"].includes(row.quantity_semantics?.unitPriceText)
+      && row.minimum_quantity === 1 ? { catalogPurchaseBasis: "piece" } : {}),
+    availability: "unknown",
+    mainCategoryId: Number.isSafeInteger(row.main_category_id)
+      ? row.main_category_id
+      : null,
+    imageUrl,
+    sourceUrl,
+    productUrl,
+    ...(options.includeComparisonEvidence === true && (definition.retailerId === "metro"
+      || (definition.retailerId === "globus" && definition.officialStoreId)) ? {
+      comparisonEvidence: Object.freeze({
+        storeId: row.store_id,
+        locationLabel: row.location_label,
+        salesChannel: row.sales_channel,
+        minimumQuantity: row.minimum_quantity,
+        scopeBinding: row.scope_binding,
+        bindingId: row.binding_id,
+        scopeEvidenceUrl: row.scope_evidence_url,
+        quantitySemantics: row.quantity_semantics
+      })
+    } : {}),
+    observedAt: new Date(observedMs).toISOString()
+  };
+  const scoped = !basketProduct && sourceScopedRetailListSelection(normalized);
+  // Keep source units intact for the delivery identity gate. The list has its own unit.
+  return Object.freeze(scoped ? {...normalized,basketProductId:scoped.product.id,
+    priceConditionLabel:scoped.card.priceConditionLabel
+      +(scoped.card.retailerId==='perekrestok'&&scoped.card.catalogPurchaseBasis==='weighed-portion'
+        ? ' · весовая порция; стоимость зависит от фактической массы' : '')} : normalized);
+}
+
+function normalizeRetailCategory(row, retailer = "globus") {
+  const definition = resolveDefinition(retailer);
+  if (
+    !definition
+    || !row
+    || typeof row !== "object"
+    || Array.isArray(row)
+    || row.retailer_id !== definition.retailerId
+    || row.store_id !== definition.storeId
+    || !Number.isSafeInteger(row.category_id)
+    || row.category_id <= 0
+    || typeof row.name !== "string"
+    || !row.name.trim()
+    || !Number.isSafeInteger(row.root_id)
+    || row.root_id <= 0
+    || !Number.isSafeInteger(row.depth)
+    || row.depth < 0
+    || row.depth > 6
+    || !Number.isSafeInteger(row.product_count)
+    || row.product_count < 0
+  ) {
+    return null;
+  }
+
+  const sourceUrl = safeUrl(row.source_url, definition.categoryUrlRules);
+  if (!sourceUrl) return null;
+
+  const parentId = row.parent_id === null
+    ? null
+    : Number.isSafeInteger(row.parent_id) && row.parent_id > 0
+      ? row.parent_id
+      : null;
+
+  return Object.freeze({
+    categoryId: row.category_id,
+    name: row.name.trim(),
+    parentId,
+    rootId: row.root_id,
+    depth: row.depth,
+    productCount: row.product_count,
+    sourceUrl
+  });
+}
+
+export function createRetailCatalogClient(options = {}) {
+  const endpoint = options.endpoint ?? RETAIL_CATALOG_ENDPOINT;
+  const categoryEndpoint = options.categoryEndpoint ?? RETAIL_CATEGORY_ENDPOINT;
+  const publishableKey =
+    options.publishableKey ?? CATALOG_SEARCH_PUBLISHABLE_KEY;
+  const fetchImpl = options.fetchImpl ?? globalThis.fetch;
+  const definition = resolveDefinition({ ...options, retailerId: options.retailerId ?? "globus" });
+  const timeoutMs = options.timeoutMs ?? RETAIL_CATALOG_TIMEOUT_MS;
+  if (definition?.publishedPromotionTransport) return createPublishedPromotionCatalogClient({
+    definition, fetchImpl, readJson: readBoundedJsonResponse, cleanQuery, timeoutMs,
+    now: typeof options.now === 'function' ? options.now : Number.isFinite(options.nowMs) ? () => options.nowMs : Date.now
+  });
+  const normalizeOptions = Object.freeze({
+    ...(Number.isFinite(options.nowMs) ? { nowMs: options.nowMs } : {}),
+    includeComparisonEvidence: options.includeComparisonEvidence === true
+  });
+
+  async function requestRows({
+    query = null,
+    sourceProductIds = null,
+    categoryId = null,
+    categoryUrlPrefix = null,
+    limit = 24,
+    offset = 0
+  } = {}) {
+    if (
+      !definition
+      || (sourceProductIds !== null && (!Array.isArray(sourceProductIds)
+        || sourceProductIds.length < 1 || sourceProductIds.length > MAX_RETAIL_CATALOG_PRODUCTS
+        || sourceProductIds.some(id => typeof id !== "string" || !/^[a-zA-Z0-9_-]{1,80}$/u.test(id))))
+      || (query !== null && !query)
+      || (categoryId !== null && (
+        !Number.isSafeInteger(categoryId)
+        || categoryId <= 0
+      ))
+      || (categoryUrlPrefix !== null && (
+        typeof categoryUrlPrefix !== "string"
+        || categoryUrlPrefix.length === 0
+        || categoryUrlPrefix.length > 500
+      ))
+      || (categoryId !== null && categoryUrlPrefix !== null)
+      || !Number.isSafeInteger(limit)
+      || limit < 1
+      || limit > MAX_RETAIL_CATALOG_PRODUCTS
+      || !Number.isSafeInteger(offset)
+      || offset < 0
+      || offset > 10_000
+    ) {
+      return result("error", { code: "invalid_request" });
+    }
+    if (typeof fetchImpl !== "function") {
+      return result("unavailable", { code: "transport_unconfigured" });
+    }
+
+    let url;
+    try {
+      url = new URL(endpoint);
+    } catch {
+      return result("unavailable", { code: "transport_unconfigured" });
+    }
+    if (url.protocol !== "https:") {
+      return result("unavailable", { code: "transport_unconfigured" });
+    }
+
+    // Only the reproduced Perekrestok keyword path uses the bounded RPC.
+    // Browsing, category and exact-ID reads retain their existing transport.
+    const boundedSearch = query !== null && definition.retailerId === "perekrestok";
+    if (boundedSearch) {
+      url.pathname = url.pathname.replace(/\/retail_catalog_items$/u, "/rpc/retail_catalog_items_search");
+      if (!url.pathname.endsWith("/rpc/retail_catalog_items_search")) {
+        return result("unavailable", { code: "transport_unconfigured" });
+      }
+      url.searchParams.set("p_retailer_id", definition.retailerId);
+      url.searchParams.set("p_store_id", definition.storeId);
+      url.searchParams.set("p_locality_id", definition.localityId);
+      url.searchParams.set("p_query", query);
+      url.searchParams.set("p_limit", String(limit));
+    }
+    // PostgREST RPC ordering needs the ordered column in the projection.
+    // updated_at is transport ordering metadata, never price freshness.
+    url.searchParams.set("select", boundedSearch ? `${SELECT_FIELDS},updated_at` : SELECT_FIELDS);
+    url.searchParams.set("retailer_id", `eq.${definition.retailerId}`);
+    url.searchParams.set("store_id", `eq.${definition.storeId}`);
+    url.searchParams.set("locality_id", `eq.${definition.localityId}`);
+    url.searchParams.set("active", "eq.true");
+    if (definition.requiresPromoValidity && query === null && sourceProductIds === null) {
+      // Page only the active promo issue. The normalizer still validates the
+      // individual offer's dates and sale conditions from its own evidence.
+      const day = moscowDateKey(normalizeOptions.nowMs ?? Date.now());
+      url.searchParams.set("quantity_semantics->>promo_valid_from", `lte.${day}`);
+      url.searchParams.set("quantity_semantics->>promo_valid_to", `gte.${day}`);
+    }
+    if (sourceProductIds !== null) {
+      url.searchParams.set("source_product_id", `in.(${sourceProductIds.join(",")})`);
+    }
+    if (query !== null && !boundedSearch) {
+      url.searchParams.set("name", `ilike.*${query.replace(/\s+/gu, "*")}*`);
+    }
+    if (categoryId !== null) {
+      url.searchParams.set("main_category_id", `eq.${categoryId}`);
+    }
+    if (categoryUrlPrefix !== null) {
+      url.searchParams.set("category_url", `like.${categoryUrlPrefix}*`);
+    }
+    url.searchParams.set(
+      "order",
+      categoryId === null && categoryUrlPrefix === null
+        ? "updated_at.desc,source_product_id.asc"
+        : "name.asc,source_product_id.asc"
+    );
+    url.searchParams.set("limit", String(limit));
+    url.searchParams.set("offset", String(offset));
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetchImpl(url.href, {
+        headers: {
+          Accept: "application/json",
+          apikey: publishableKey
+        },
+        credentials: "omit",
+        cache: "no-store",
+        signal: controller.signal
+      });
+
+      if (response.status === 429 || response.status >= 500) {
+        return result("unavailable", { code: "transport_unavailable" });
+      }
+      if (!response.ok) {
+        return result("error", { code: "transport_rejected_request" });
+      }
+
+      const payload = await readBoundedJsonResponse(
+        response,
+        MAX_RETAIL_CATALOG_RESPONSE_BYTES
+      );
+      if (!Array.isArray(payload) || payload.length > limit) {
+        return result("error", { code: "malformed_transport_response" });
+      }
+
+      const products = payload
+        .map((row) => normalizeRetailRow(row, definition, normalizeOptions))
+        .filter(Boolean);
+      return result("catalog", {
+        products: Object.freeze(products),
+        partial: products.length !== payload.length,
+        nextOffset: offset + payload.length,
+        pageSize: payload.length
+      });
+    } catch {
+      return result("unavailable", { code: "transport_unavailable" });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function requestCategories({
+    parentId = null,
+    rootsOnly = false,
+    limit = 160
+  } = {}) {
+    if (
+      !definition
+      || !Number.isSafeInteger(limit)
+      || limit < 1
+      || limit > 200
+      || (parentId !== null && (
+        !Number.isSafeInteger(parentId)
+        || parentId <= 0
+      ))
+    ) {
+      return result("error", { code: "invalid_request" });
+    }
+    if (typeof fetchImpl !== "function") {
+      return result("unavailable", { code: "transport_unconfigured" });
+    }
+
+    let url;
+    try {
+      url = new URL(categoryEndpoint);
+    } catch {
+      return result("unavailable", { code: "transport_unconfigured" });
+    }
+    if (url.protocol !== "https:") {
+      return result("unavailable", { code: "transport_unconfigured" });
+    }
+
+    url.searchParams.set(
+      "select",
+      "retailer_id,store_id,category_id,name,parent_id,root_id,depth,source_url,product_count"
+    );
+    url.searchParams.set("retailer_id", `eq.${definition.retailerId}`);
+    url.searchParams.set("store_id", `eq.${definition.storeId}`);
+    url.searchParams.set("active", "eq.true");
+    if (rootsOnly) {
+      url.searchParams.set("depth", "eq.0");
+    } else if (parentId !== null) {
+      url.searchParams.set("parent_id", `eq.${parentId}`);
+    }
+    url.searchParams.set("order", "name.asc");
+    url.searchParams.set("limit", String(limit));
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetchImpl(url.href, {
+        headers: {
+          Accept: "application/json",
+          apikey: publishableKey
+        },
+        credentials: "omit",
+        cache: "no-store",
+        signal: controller.signal
+      });
+
+      if (response.status === 429 || response.status >= 500) {
+        return result("unavailable", { code: "transport_unavailable" });
+      }
+      if (!response.ok) {
+        return result("error", { code: "transport_rejected_request" });
+      }
+
+      const payload = await readBoundedJsonResponse(
+        response,
+        MAX_RETAIL_CATALOG_RESPONSE_BYTES
+      );
+      if (!Array.isArray(payload) || payload.length > limit) {
+        return result("error", { code: "malformed_transport_response" });
+      }
+
+      const categories = payload
+        .map((row) => normalizeRetailCategory(row, definition))
+        .filter(Boolean);
+      return result("categories", {
+        categories: Object.freeze(categories),
+        partial: categories.length !== payload.length
+      });
+    } catch {
+      return result("unavailable", { code: "transport_unavailable" });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  return Object.freeze({
+    definition,
+    async bySourceProductIds(sourceProductIds) {
+      if (!Array.isArray(sourceProductIds)) return result("error", { code: "invalid_request" });
+      return requestRows({ sourceProductIds, limit: sourceProductIds?.length });
+    },
+    async search(query, searchOptions = {}) {
+      const normalizedQuery = cleanQuery(query);
+      if (!normalizedQuery) {
+        return result("error", { code: "invalid_request" });
+      }
+      return requestRows({
+        query: normalizedQuery,
+        limit: searchOptions.limit ?? 24
+      });
+    },
+    async browse(browseOptions = {}) {
+      return requestRows({
+        query: null,
+        limit: browseOptions.limit ?? 24,
+        offset: browseOptions.offset ?? 0
+      });
+    },
+    async browseCategory(categoryRef, browseOptions = {}) {
+      const categoryId = Number.isSafeInteger(categoryRef)
+        ? categoryRef
+        : categoryRef?.categoryId;
+      const useRootSourceFallback = Boolean(
+        definition?.rootCategoryUrlProductFallback
+        && categoryRef
+        && typeof categoryRef === "object"
+        && categoryRef.depth === 0
+      );
+      let categoryUrlPrefix = null;
+      if (useRootSourceFallback) {
+        categoryUrlPrefix = safeUrl(
+          categoryRef.sourceUrl,
+          definition.categoryUrlRules
+        );
+        if (!categoryUrlPrefix) {
+          return result("error", { code: "invalid_request" });
+        }
+      }
+      return requestRows({
+        query: null,
+        categoryId: useRootSourceFallback ? null : categoryId,
+        categoryUrlPrefix,
+        limit: browseOptions.limit ?? 40,
+        offset: browseOptions.offset ?? 0
+      });
+    },
+    async rootCategories(categoryOptions = {}) {
+      const defaultRootLimit = Number.isSafeInteger(definition?.rootCategoryReadLimit)
+        ? definition.rootCategoryReadLimit
+        : Number.isSafeInteger(definition?.rootCategoryCount)
+          ? Math.min(160, Math.max(40, definition.rootCategoryCount))
+          : 40;
+      return requestCategories({
+        rootsOnly: true,
+        limit: categoryOptions.limit ?? defaultRootLimit
+      });
+    },
+    async subcategories(parentId, categoryOptions = {}) {
+      return requestCategories({
+        parentId,
+        limit: categoryOptions.limit ?? 160
+      });
+    }
+  });
+}
+
+const defaultClient = createRetailCatalogClient();
+
+export async function requestRetailCatalogSearch(query, options) {
+  return defaultClient.search(query, options);
+}
+
+export async function requestRetailCatalogBrowse(options) {
+  return defaultClient.browse(options);
+}
+
+export async function requestRetailCategoryProducts(categoryId, options) {
+  return defaultClient.browseCategory(categoryId, options);
+}
+
+export async function requestRetailRootCategories(options) {
+  return defaultClient.rootCategories(options);
+}
+
+export async function requestRetailSubcategories(parentId, options) {
+  return defaultClient.subcategories(parentId, options);
+}
+
+export {
+  cleanQuery,
+  normalizeRetailCategory,
+  normalizeRetailRow,
+  readBoundedJsonResponse
+};
+
+
