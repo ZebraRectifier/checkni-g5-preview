@@ -919,8 +919,11 @@ export function createShoppingConversationFlow(options) {
       }
       const reply = normalizeShoppingAdviceResponse(answer, input.context);
       const recovery = reply ? null : localShoppingAdvice(input);
+      const unavailableExplanation = adviceHistory.length
+        ? "Предыдущий совет и твои условия сохранены. Повтори вопрос или продолжим покупки."
+        : explanation;
       state = messageState(reply ? "Давай разберёмся." : recovery ? "Подскажу простой вариант." : "Сейчас могу опереться на твои условия.",
-        reply?.message ?? `Автоматический совет сейчас недоступен. ${recovery?.message ?? explanation}`);
+        reply?.message ?? `Автоматический совет сейчас недоступен. ${recovery?.message ?? unavailableExplanation}`);
       if ((reply || recovery) && normalizeShoppingAdviceResponse({ kind: "advice", message: state.presentation.message }, input.context)) {
         rememberAdvice(utterance, state.presentation.message);
       }

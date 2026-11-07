@@ -117,6 +117,26 @@ test('preferences before a store stay as intake and recipe follow-ups send the a
 });
 
 
+test('why keeps the accepted meat-free advice and recovers without asking known preferences',async({page})=>{
+ const calls=[],reply='Можно сделать пасту с томатным соусом или макароны с овощным рагу.';
+ await page.route('**/functions/v1/ai-basket-proposal',route=>{
+  calls.push(route.request().postDataJSON());
+  return calls.length===2?route.fulfill({status:503,json:{kind:'unavailable',code:'provider_advice_excluded_target'}})
+   :route.fulfill({json:{kind:'advice',message:calls.length===1?reply:'Макароны и овощи подходят для простого ужина, их удобно приготовить небольшой порцией.'}});
+ });
+ await setup(page);await send(page,'Нас четверо, покупки на десять дней');await send(page,'Не хочу готовить');await send(page,'Без мяса');
+ const question='Как выбрать макароны для быстрых ужинов без мяса? Предложи два простых блюда.';
+ await send(page,question);await expect(page.locator('#basket-proposal-status')).toContainText(reply);
+ await send(page,'Почему?');await expect(page.locator('#basket-proposal-status')).toContainText('Предыдущий совет и твои условия сохранены');
+ await expect(page.locator('#basket-proposal-status')).not.toContainText(/Скажи бюджет|хочется ли готовить/u);
+ expect(calls).toHaveLength(2);expect(calls[1].text).toBe('Про макароны: Почему?');
+ expect(calls[1].history).toEqual([{role:'user',text:question},{role:'assistant',text:reply}]);
+ expect(calls[1].context).toMatchObject({peopleCount:4,shoppingDays:10,cookingEffort:'minimal',excluded:['meat']});
+ await send(page,'Почему?');await expect(page.locator('#basket-proposal-status')).toContainText('Макароны и овощи подходят');
+ expect(calls).toHaveLength(3);expect(calls[2].history).toEqual(calls[1].history);
+ await closeHory(page);await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(0);await expectNoOverflow(page);
+});
+
 test('long advice opens at its beginning instead of skipping to the bottom', async ({ page }) => {
  const reply = 'Начало совета: сначала выбери простые блюда.\n' + Array.from({length:12},(_,i)=>`${i+1}. Овощи и крупы можно приготовить заранее небольшими порциями.`).join('\n');
  await page.route('**/functions/v1/ai-basket-proposal',route=>route.fulfill({json:{kind:'advice',message:reply}}));

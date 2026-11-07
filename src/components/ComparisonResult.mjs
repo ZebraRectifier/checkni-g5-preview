@@ -343,7 +343,8 @@ function createModeMeta(chipText, eyebrowText) {
   chip.className = "mock-chip";
   chip.textContent = chipText;
 
-  meta.append(eyebrow, chip);
+  meta.append(eyebrow);
+  if (chipText !== eyebrowText) meta.append(chip);
   return meta;
 }
 
