@@ -11,7 +11,8 @@ const TRUSTED_FETCH_URL = 'https://github.com/ZebraRectifier/checkni-g5-preview.
 const SHA = /^[a-f0-9]{40}$/u;
 const MAX_BYTES = 128 * 1024 * 1024;
 const SUPPORT_PATHS = ['test', 'tests', 'tools', 'package.json', 'package-lock.json',
-  'playwright.weekly.config.mjs', 'deployment.json', 'release'];
+  'playwright.weekly.config.mjs', 'deployment.json', 'release',
+  'artifacts/nearby-shopping/catalog-geography-joins-20261024.json'];
 export const MUTABLE_PUBLIC_DATA_FILES = Object.freeze([
   'nearbyGroceryStores.json',
   ...['saint-petersburg', 'kazan', 'yekaterinburg', 'novosibirsk', 'nizhny-novgorod'].map(city => `nearby-regions/${city}.json`),

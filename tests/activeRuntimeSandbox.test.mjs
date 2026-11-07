@@ -30,6 +30,7 @@ async function fixture(t, {active = true} = {}) {
   for (const file of ['package.json', 'package-lock.json', 'deployment.json', 'release/proof.json']) await write(file, '{}\n');
   for (const file of ['playwright.weekly.config.mjs', 'test/support/static-server.mjs', 'tests/retailCatalogPort.test.mjs', 'tools/example.mjs']) await write(file, '// pinned test support\n');
   await write('test/e2e/reference-v13/linux/fixture.png', Buffer.from([0, 1, 2, 255]));
+  await write('artifacts/nearby-shopping/catalog-geography-joins-20261024.json', '{"verifiedJoins":[]}\n');
   git('add', '.'); git('commit', '-m', 'fixture runtime and tests');
   const commit = git('rev-parse', 'HEAD');
   const files = ['index.html', 'prices.html', 'src/app.mjs', 'src/priceCapture.mjs', ...MUTABLE_PUBLIC_DATA_FILES.map(file => `src/data/${file}`)];
@@ -76,6 +77,7 @@ test('active sandbox uses exact release bytes and pinned tests while retaining o
   for (const absent of ['src/data/not-allowlisted.json', '.git', 'releases']) await assert.rejects(fs.stat(path.join(result.root, absent)), {code: 'ENOENT'});
   assert.ok(await fs.stat(path.join(result.root, 'deployment.json')));
   assert.ok(await fs.stat(path.join(result.root, 'release/proof.json')));
+  assert.equal(await fs.readFile(path.join(result.root, 'artifacts/nearby-shopping/catalog-geography-joins-20261024.json'), 'utf8'), '{"verifiedJoins":[]}\n');
   assert.equal(f.git('status', '--porcelain'), before);
   assert.equal(result.mutableData.length, 13);
 });
