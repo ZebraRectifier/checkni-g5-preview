@@ -9,6 +9,89 @@ async function isolateRegional(page){
   await page.route(/^https?:\/\/(?!(?:127\.0\.0\.1|localhost)(?::\d+)?\/)/u,r=>r.abort());
   await page.route('**/rest/v1/**',r=>r.fulfill({json:[]}));
 }
+
+test('five regional cities: real address cards, directory recovery and no Moscow or catalogue leakage', async ({page,context},testInfo) => {
+  test.setTimeout(120000);
+  await isolateRegional(page); await context.grantPermissions(['geolocation']);
+  const targets=[['kazan','010852'],['saint-petersburg','011601'],['yekaterinburg','021828'],['novosibirsk','020427'],['nizhny-novgorod','067036']].map(([slug,id])=>{
+    const directory=JSON.parse(fs.readFileSync(new URL(`../../src/data/nearby-regions/${slug}.json`,import.meta.url),'utf8'));
+    const point=directory.stores.find(row=>row.id===`official:magnit:${id}`)??directory.stores.find(row=>row.retailerId==='magnit');
+    return {slug,city:directory.city,point};
+  });
+  const requests=[];
+  await page.route('**/functions/v1/nearby-address',route=>{
+    requests.push(route.request().postDataJSON());
+    // Even an unrelated provider result must not displace the chosen city.
+    return route.fulfill({json:{version:1,candidates:[{lat:55.75,lon:37.61,label:'Москва, Тверская, 1',precision:'house'}]}});
+  });
+  await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
+  await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready',{timeout:20000});
+  for(const {slug,city,point} of targets){
+    expect(point,slug).toBeTruthy();
+    await page.locator('#nearby-address').fill(city);await page.locator('#nearby-address').press('Enter');
+    const candidate=page.locator('#nearby-address-candidates button');
+    await expect(candidate).toContainText('центр');await candidate.click();
+    await expect(page.locator('#nearby-results article').first()).toContainText(city);
+    await expect(page.locator('#nearby-results')).not.toContainText('Москва');
+    await context.setGeolocation({latitude:point.lat,longitude:point.lon,accuracy:10});
+    await page.locator('#nearby-locate').click();
+    const card=page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
+    await expect(card).toContainText('Цены неизвестны');
+    await expect(card.getByRole('link',{name:'Источник адреса'})).toHaveAttribute('href',point.sourceUrl);
+    await expect(page.locator('#nearby-results .nearby-open-catalog')).toHaveCount(0);
+    await expect(page.locator('#nearby-results')).not.toContainText('Москва');
+    const cityOffset=point.address.toLocaleLowerCase('ru').indexOf(city.toLocaleLowerCase('ru')+',');
+    expect(cityOffset).toBeGreaterThanOrEqual(0);
+    const street=point.address.slice(cityOffset+city.length).replace(/^[,\s]+/u,'');
+    await page.locator('#nearby-address').fill(street);await page.locator('#nearby-address').press('Enter');
+    const landmark=page.locator('#nearby-address-candidates button').filter({hasText:point.address});
+    await expect(landmark).toContainText('магазин-ориентир');
+    await expect(page.locator('#nearby-address-candidates')).not.toContainText('Москва');
+    expect(requests.at(-1)).toEqual({query:`${city}, ${street}`,consent:true});
+    await landmark.click();await expect(card).toBeVisible();
+    await testInfo.attach(`${slug}-address`,{body:JSON.stringify(point),contentType:'application/json'});
+    await page.screenshot({path:testInfo.outputPath(`${slug}-cards.png`),fullPage:false});
+  }
+  await context.setGeolocation({latitude:43.585,longitude:39.72,accuracy:10});
+  await page.locator('#nearby-locate').click();
+  await expect(page.locator('#nearby-status')).toContainText('Для этого места справочника пока нет');
+  await expect(page.locator('#nearby-results')).toBeEmpty();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('selected map card keeps route and catalogue action reachable above the mobile navigation',async({page,context},testInfo)=>{
+  await page.route(/^https?:\/\/(?!(?:127\.0\.0\.1|localhost)(?::\d+)?\/)/u,route=>{
+    const url=new URL(route.request().url());
+    if(url.hostname!=='tiles.openfreemap.org')return route.abort();
+    if(process.env.CHECKNI_LIVE_MAP_CHECK==='1')return route.continue();
+    // CI exercises the real vendored SDK without depending on external tiles.
+    if(url.pathname==='/styles/liberty')return route.fulfill({json:{version:8,
+      glyphs:new URL('/test/support/map-test-fonts/',page.url()).href+'{fontstack}/{range}.pbf',
+      sources:{fixture:{type:'geojson',data:{type:'FeatureCollection',features:[]},attribution:'CHECKNI offline map fixture'}},
+      layers:[{id:'background',type:'background',paint:{'background-color':'#e5e8de'}},{id:'fixture',type:'circle',source:'fixture'}]}});
+    return route.abort();
+  });
+  await page.route('**/rest/v1/**',route=>route.fulfill({json:[]}));
+  await context.grantPermissions(['geolocation']);await context.setGeolocation({latitude:55.928776,longitude:38.003613,accuracy:10});
+  await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
+  await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready',{timeout:20000});
+  await selectStore(page);await openStoreDetails(page);
+  await page.locator('#stores-section').scrollIntoViewIfNeeded();
+  await page.locator('#stores-locate').click();
+  const marker=page.locator('.stores-pin').filter({hasText:'Глобус Щелково'});
+  await expect(marker).toBeVisible({timeout:20000});await marker.click();
+  const card=page.locator('.stores-pin-card'),action=card.getByRole('button',{name:'Открыть товары',exact:true});
+  await expect(card).toContainText('Глобус Щелково');await expect(action).toBeInViewport();
+  await expect(card.getByRole('link',{name:'Маршрут'})).toBeInViewport();
+  // A geometric visibility check also detects sticky dock occlusion.
+  expect(await action.evaluate(node=>{const box=node.getBoundingClientRect(),hit=document.elementFromPoint(box.x+box.width/2,box.y+box.height/2);return node===hit||node.contains(hit);})).toBe(true);
+  const box=await card.boundingBox(),mapBox=await page.locator('.stores-map').boundingBox();
+  if(testInfo.project.name.includes('mobile'))expect(box.y+box.height).toBeLessThan(mapBox.y+mapBox.height-24);
+  await expect(page.locator('.maplibregl-ctrl-attrib')).toBeVisible();
+  await page.screenshot({path:testInfo.outputPath('selected-map-card.png')});
+  await card.getByRole('button',{name:'Закрыть карточку'}).click();await expect(card).toBeHidden();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
 test('regional device location uses Kazan and Petersburg directories; unsupported coordinates never fall back to Moscow', async ({page,context}) => {
   await isolateRegional(page); await context.grantPermissions(['geolocation']);
   const loaded=[];page.on('request',r=>{if(r.url().includes('/nearby-regions/'))loaded.push(r.url());});

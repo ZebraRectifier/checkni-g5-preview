@@ -9,7 +9,7 @@ body.pixel-workspace .stores-interactive .stores-map,
 .stores-interactive .stores-map-network-label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
 .stores-interactive .stores-map-network-filter { flex:1; min-width:0; max-width:240px; }
 .stores-interactive .stores-search-here { background:var(--accent,#7532c5); color:#fff; margin-left:auto; }
-.stores-interactive .stores-map-frame { display:grid; gap:12px; align-items:start; }
+.stores-interactive .stores-map-frame { position:relative; display:grid; gap:12px; align-items:start; }
 .stores-interactive .stores-list { margin:0; padding:0; }
 .stores-interactive .stores-list li { display:grid; grid-template-columns:1fr auto; gap:6px 12px; padding:12px; border:1px solid var(--line,#c9bfd6); border-radius:6px; }
 .stores-interactive .stores-list li > button:first-child { text-align:left; font-weight:700; padding:0; background:none; border:0; box-shadow:none; }
@@ -23,12 +23,15 @@ body.pixel-workspace .stores-interactive button.stores-pin::before,
 .stores-interactive .stores-pin:focus-visible { outline:3px solid var(--accent,#7532c5); outline-offset:0; }
 .stores-interactive .stores-pin-label { transform:none; top:-12px; left:22px; max-width:190px; text-overflow:ellipsis; overflow:hidden; font-size:12px; }
 .stores-interactive .stores-user-pin { width:18px; height:18px; border:3px solid #fff; border-radius:50%; background:#7532c5; box-shadow:0 0 0 6px #7532c533; }
-body.pixel-workspace .stores-interactive .stores-pin-card { border-radius:8px; padding:16px; }
+body.pixel-workspace .stores-interactive .stores-pin-card { position:relative; border-radius:8px; padding:16px; scroll-margin:16px 0 110px; }
 .stores-interactive .stores-pin-card:focus { outline:none; }
 .stores-interactive .stores-pin-card:focus-visible { outline:3px solid var(--accent,#7532c5); outline-offset:2px; }
-body.pixel-workspace .stores-interactive .stores-pin-card strong { font-size:18px; }
+body.pixel-workspace .stores-interactive .stores-pin-card strong { font-size:18px; padding-right:36px; }
 body.pixel-workspace .stores-interactive .stores-pin-card p { margin:8px 0; }
-body.pixel-workspace .stores-interactive .stores-pin-card .stores-pin-close { background:transparent; color:var(--ink,#2c203a); margin-top:8px; }
+body.pixel-workspace .stores-interactive .stores-pin-card .stores-pin-close { position:absolute; top:2px; right:2px; width:44px; min-width:44px; height:44px; min-height:44px; padding:0; margin:0; background:transparent; color:var(--ink,#2c203a); box-shadow:none; font-size:24px; }
+.stores-interactive .stores-pin-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+body.pixel-workspace .stores-interactive .stores-pin-actions > button { flex:1; width:auto; min-height:44px; margin:0; padding:8px 12px; }
+.stores-interactive .stores-pin-actions > a { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 10px; }
 .stores-interactive .stores-map-attribution { font-size:11px; }
 .stores-interactive .stores-status:empty { display:none; }
 .stores-interactive .maplibregl-ctrl-attrib { font:11px/1.35 system-ui,sans-serif; color:#212121; background:#fffffff0; }
@@ -37,12 +40,16 @@ body.pixel-workspace .stores-interactive .stores-pin-card .stores-pin-close { ba
 @media(min-width:900px) {
  .stores-interactive .stores-map-frame:has(.stores-pin-card:not([hidden])) { grid-template-columns:minmax(0,2fr) minmax(240px,1fr); }
 }
+@media(max-width:899px) {
+ body.pixel-workspace .stores-interactive .stores-pin-card { position:absolute; left:8px; right:8px; bottom:40px; z-index:3; margin:0; padding:12px; max-height:calc(100% - 64px); overflow:auto; overscroll-behavior:contain; }
+ body.pixel-workspace .stores-interactive .stores-pin-card p { font-size:14px; line-height:1.4; margin:6px 0; }
+ .stores-interactive .stores-pin-actions { margin-top:8px; }
+}
 @media(max-width:600px) {
  .stores-interactive .stores-controls { gap:6px; }
  .stores-interactive .stores-controls button { flex:1; font-size:14px; padding:8px; }
  .stores-interactive .stores-map-controls { gap:6px; }
  .stores-interactive .stores-map-network-filter { width:0; }
  body.pixel-workspace .stores-interactive .stores-map { height:48svh; min-height:300px; }
- body.pixel-workspace .stores-interactive .stores-pin-card { margin-top:-8px; z-index:1; }
 }
 @media(prefers-reduced-motion:reduce) { .stores-interactive * { scroll-behavior:auto; } }

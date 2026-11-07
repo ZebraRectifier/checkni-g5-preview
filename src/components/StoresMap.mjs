@@ -187,11 +187,20 @@ export function createStoresSection({
   }
   function showPin(pin, focus = false) {
     focusedPin = pin; pinCard.replaceChildren(textEl('strong',null,pin.name),textEl('p',null,pin.address || 'Адрес не указан'),
-      textEl('p','stores-list-note', (canSelect(pin) ? 'Каталог этого адреса подключён' : 'Каталог адреса пока не подключён') + distanceNote(geoState.position,pin)),
-      externalLink('Маршрут','https://yandex.ru/maps/?rtext=~'+encodeURIComponent(pin.lat+','+pin.lon)+'&rtt=auto'));
-    if (canSelect(pin)) pinCard.append(button('Открыть товары', () => chooseStore(pin)));
-    pinCard.append(button('Закрыть карточку', () => { focusedPin = null; pinCard.hidden = true; map.focus({ preventScroll: true }); }, 'stores-pin-close'));
-    pinCard.hidden = false; if (focus) pinCard.focus({ preventScroll: true });
+      textEl('p','stores-list-note', (canSelect(pin) ? 'Каталог этого адреса подключён' : 'Каталог адреса пока не подключён') + distanceNote(geoState.position,pin)));
+    const actions = textEl('div','stores-pin-actions','');
+    if (canSelect(pin)) actions.append(button('Открыть товары', () => chooseStore(pin)));
+    actions.append(externalLink('Маршрут','https://yandex.ru/maps/?rtext=~'+encodeURIComponent(pin.lat+','+pin.lon)+'&rtt=auto'));
+    const close = button('×', () => { focusedPin = null; pinCard.hidden = true; map.focus({ preventScroll: true }); }, 'stores-pin-close');
+    close.setAttribute('aria-label','Закрыть карточку');
+    pinCard.append(actions,close);
+    pinCard.hidden = false;
+    if (focus) {
+      pinCard.focus({ preventScroll: true });
+      if (window.matchMedia?.('(max-width:899px)').matches) requestAnimationFrame(() => {
+        if (!pinCard.hidden && focusedPin === pin) pinCard.scrollIntoView({block:'nearest'});
+      });
+    }
   }
   function createMarker(pin) {
     const marker = textEl('button','stores-pin',''); marker.type = 'button';
