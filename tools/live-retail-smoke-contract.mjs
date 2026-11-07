@@ -30,6 +30,15 @@ export function pinnedRuntimePrefix(html, entry = 'app') {
   return matches[0][1];
 }
 
+// Offline binding checks also run on source PRs before an immutable release
+// exists. Published/live checks must continue to require a pinned entry.
+export function bindingCheckRuntimePrefix(html, { sourceCandidate = false } = {}) {
+  if (!sourceCandidate) return pinnedRuntimePrefix(html);
+  const entries = [...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']*\/(?:app|priceCapture)\.mjs)["'][^>]*>/gu)];
+  assert.equal(entries.length, 1, 'Binding check requires one explicit app entry');
+  return entries[0][1] === './src/app.mjs' ? '' : pinnedRuntimePrefix(html);
+}
+
 // The live response is the oracle; seeded empty branches are not navigable.
 // Never replace this with a fixed UI count or accept arbitrary category IDs.
 export function expectedLentaRoots(rows) {

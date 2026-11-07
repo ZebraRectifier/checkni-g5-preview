@@ -45,8 +45,10 @@ jobs:
           node --input-type=module <<'NODE'
           import assert from "node:assert/strict";
           import {readFile} from "node:fs/promises";
-          import {pinnedRuntimePrefix} from "./tools/live-retail-smoke-contract.mjs";
-          const prefix = pinnedRuntimePrefix(await readFile("index.html", "utf8"));
+          import {bindingCheckRuntimePrefix} from "./tools/live-retail-smoke-contract.mjs";
+          const prefix = bindingCheckRuntimePrefix(await readFile("index.html", "utf8"), {
+            sourceCandidate: process.env.GITHUB_EVENT_NAME === "pull_request"
+          });
           const {METRO_MOSCOW_REGION_STORES: stores} = await import("./"+prefix+"src/data/metroMoscowRegionStores.mjs");
           assert.equal(stores.length,22);
           assert.equal(stores.filter(s=>s.scope==="moscow-city").length,12);
