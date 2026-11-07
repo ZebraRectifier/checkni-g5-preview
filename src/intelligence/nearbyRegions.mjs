@@ -38,6 +38,14 @@ export function nearbyCityQuery(query) {
   return null;
 }
 
+// City directories provide enough context for a street-only follow-up. The
+// Moscow/MO directory covers many towns: do not silently turn one into Moscow.
+export function nearbyAddressQueryInRegion(query, regionId) {
+  if (typeof query !== 'string' || nearbyCityQuery(query)) return query;
+  const region = NEARBY_REGIONS.find(row => row.id === regionId && row.id !== 'moscow-and-oblast');
+  return region ? `${region.label}, ${query.trim()}` : query;
+}
+
 export function nearbyGeocoderRegion(properties, point) {
   const region = nearbyRegionForPosition(point);
   if (!region || !region.states.some(state => normalize(state) === normalize(properties?.state))) return null;

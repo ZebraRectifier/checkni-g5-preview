@@ -34,7 +34,7 @@ test('regional home address without a comma uses geocoder; denial preserves addr
   await isolateRegional(page);let calls=0;
   await page.addInitScript(()=>Object.defineProperty(navigator,'geolocation',{value:{getCurrentPosition(s,f){f({code:1});}},configurable:true}));
   await page.route('**/functions/v1/nearby-address',route=>{
-    calls++;expect(route.request().postDataJSON()).toEqual({query:'Казань улица Баумана 7',consent:true});
+    calls++;expect(route.request().postDataJSON()).toEqual({query:calls===1?'Казань улица Баумана 7':'Казань, улица Баумана 7',consent:true});
     return route.fulfill({json:{version:1,candidates:[{lat:55.79,lon:49.12,label:'Казань, улица Баумана, 7',precision:'house'}]}});
   });
   await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
@@ -51,6 +51,9 @@ test('regional home address without a comma uses geocoder; denial preserves addr
   expect(await page.locator('#nearby-results').innerText()).toBe(before);
   await expect(page.locator('#nearby-shopping').getByRole('button',{name:'Выбрать точку на карте'})).toBeVisible();
   expect(calls).toBe(1);
+  await page.locator('#nearby-address').fill('улица Баумана 7');await page.locator('#nearby-address').press('Enter');
+  await expect(page.locator('#nearby-address-candidates')).toContainText('Казань');
+  await expect(page.locator('#nearby-address')).toHaveValue('улица Баумана 7');expect(calls).toBe(2);
   expect(await page.evaluate(()=>JSON.stringify({...localStorage}))).not.toContain('Баумана');
 });
 test('home address → nearest exact card → own catalogue; location remains voluntary and recoverable', async ({page}) => {
@@ -148,37 +151,29 @@ test('an explicitly chosen nearby address is remembered while its catalogue is s
   }finally{release();}
 });
 
-test('a bound Magnit map pin selects its exact address, while the legacy point stays nonselectable',async({page})=>{
-  await isolate(page);
+test('a bound Magnit map card selects its exact address offline, while the legacy point stays nonselectable',async({page})=>{
+  await isolateRegional(page);
   await page.goto('/?comparison=observed&catalog=retail#shop');
-  await selectStore(page);
-  await openStoreDetails(page);
+  await selectStore(page);await openStoreDetails(page);
   await page.locator('#stores-section').scrollIntoViewIfNeeded();
-  await expect.poll(async()=>Number((await page.locator('.stores-location-directory > summary').textContent())?.match(/\d+/u)?.[0]))
-    .toBeGreaterThanOrEqual(64);
-  const legacy=page.locator('.stores-pin[data-store-location-id="magnit-1812"]');
-  await expect(legacy).toHaveJSProperty('tagName','A');
-  await page.locator('.stores-map').scrollIntoViewIfNeeded();
-  const target=await page.locator('.stores-pin[data-store-location-id^="magnit-bound-"]').evaluateAll(nodes=>{
-    for(const node of nodes){
-      const rect=node.getBoundingClientRect(),x=rect.left+rect.width/2,y=rect.top+rect.height/2;
-      if(x<0||x>=innerWidth||y<0||y>=innerHeight)continue;
-      if(document.elementFromPoint(x,y)?.closest('.stores-pin')===node)return node.dataset.storeLocationId;
-    }
-    return null;
-  });
-  expect(target).not.toBeNull();
-  const pin=page.locator(`.stores-pin[data-store-location-id="${target}"]`);
-  await expect(pin).toHaveJSProperty('tagName','BUTTON');
-  await expect(pin).toHaveAttribute('aria-label',/Выбрать для корзины: Магнит,/u);
-  await pin.click();
+  await expect.poll(async()=>Number((await page.locator('.stores-location-directory > summary').textContent())?.match(/\d+/u)?.[0])).toBeGreaterThanOrEqual(64);
+  await page.locator('.stores-location-directory').evaluate(node=>{node.open=true;});
+  await page.locator('#stores-map-network').selectOption('magnit');
+  const legacy=page.locator('#stores-known-locations li[data-store-location-id="magnit-1812"]');
+  await expect(legacy.getByRole('button',{name:'Открыть товары',exact:true})).toHaveCount(0);
+  await legacy.getByRole('button',{name:'Магнит',exact:true}).click();
+  await expect(page.locator('.stores-pin-card')).toContainText('Каталог адреса пока не подключён');
+  const row=page.locator('#stores-known-locations li[data-store-location-id^="magnit-bound-"]').first();
+  const target=await row.getAttribute('data-store-location-id');
+  await row.getByRole('button',{name:'Магнит',exact:true}).click();
+  await page.locator('.stores-pin-card').getByRole('button',{name:'Открыть товары',exact:true}).click();
   await openStoreDetails(page);
   await expect(page.locator('#magnit-store-address')).toHaveValue(target.slice(-6));
-  await expect(page.locator('#stores-selected-addresses'))
-    .toContainText(await page.locator('#magnit-store-address option:checked').textContent());
-  await expect(pin).toHaveClass(/stores-pin-selected/u);
-  await expect(page.locator('#stores-selected-addresses')).toContainText('цена и наличие не подтверждены');
+  const point=joinedDirectory.stores.find(p=>p.catalogBinding?.shopCode===target.slice(-6));
+  await expect(page.locator('#stores-selected-addresses')).toContainText(point.catalogBinding.address);
+  await expect(page.locator('.stores-map-info')).toContainText('не подтверждает цены');
 });
+
 test('address consent → candidate → radius → agreed store → household intake preserves basket and forgets location on reload',async({page})=>{
   await isolate(page);let addressCalls=0,ai=0;
   await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});

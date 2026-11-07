@@ -1,7 +1,7 @@
 import{createStoreGeolocation}from'../runtime/storeGeolocation.mjs';
 import{NEARBY_RADIUS_KM,nearbyGroceryMatches}from'../intelligence/nearbyShopping.mjs';
 import{createNearbyShoppingPort}from'../ports/nearbyShoppingPort.mjs';
-import { nearbyCityQuery, nearbyRegionForPosition } from '../intelligence/nearbyRegions.mjs';
+import { nearbyCityQuery, nearbyRegionForPosition, nearbyAddressQueryInRegion } from '../intelligence/nearbyRegions.mjs';
 
 export function createNearbyShopping({document=globalThis.document,port=createNearbyShoppingPort(),onChoose,onBuild,onManualMap,
   onInvalidate=()=>{},geolocationOptions={},locationController}={}){
@@ -117,14 +117,16 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   async function searchAddress(){
     if(addressButton.disabled)return;
     const query=input.value.trim();if(query.length<3){status.textContent='Напиши город и улицу, адрес дома или название станции.';return;}
-    geo.clear();const token=++version;clearSelection();position=null;candidates.replaceChildren();results.replaceChildren();addressButton.disabled=true;
+    const searchRegion=region,requestQuery=nearbyAddressQueryInRegion(query,searchRegion);
+    if(requestQuery.length>160){status.textContent='Сократи адрес: вместе с городом он должен быть не длиннее 160 символов.';return;}
+    geo.clear();region=searchRegion;const token=++version;clearSelection();position=null;candidates.replaceChildren();results.replaceChildren();addressButton.disabled=true;
     status.textContent='Ищу адрес…';
     const cityQuery=nearbyCityQuery(query),city=cityQuery?.region;
     let response;
     try{
       if(city&&!cityQuery.address){
         response={kind:'results',candidates:[{...city,label:city.label+' · центр',precision:'city'}]};
-      }else response=await port.address(query);
+      }else response=await port.address(requestQuery);
     }catch{response={kind:'unavailable',candidates:[]};}
     if(token!==version){addressButton.disabled=false;return;}addressButton.disabled=false;
     if(input.value.trim()!==query){status.textContent='Адрес изменён. Нажми «Найти адрес», чтобы проверить новый.';return;}
@@ -151,7 +153,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
       region=nextRegion;lastRows=[];
       clearSelection();position=s.position;pointName=pendingPlaceLabel??(s.position.source==='manual'?'Точка на карте':`Моё место · точность ≈${Math.round(s.position.accuracyMeters)} м`);pendingPlaceLabel=null;limit=5;
       panel.hidden=false;openButton.setAttribute('aria-expanded','true');void renderResults();}
-    else if(s.status==='idle'){position=null;pointName='';lastRows=[];publishMapContext('idle');results.replaceChildren();}
+    else if(s.status==='idle'){position=null;region=null;pointName='';lastRows=[];publishMapContext('idle');results.replaceChildren();}
     else if(s.status!=='idle'){publishMapContext('ready',lastRows);status.textContent=s.status==='denied'?'Доступ к геолокации закрыт. Можно написать адрес или указать место на карте.':'Место не определилось. Напиши адрес или выбери точку на карте.';}
   };
   const geo=locationController??createStoreGeolocation({...geolocationOptions,onChange:locationChanged});

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { NEARBY_REGIONS, nearbyRegionForPosition, nearbyCityQuery } from '../src/intelligence/nearbyRegions.mjs';
+import { NEARBY_REGIONS, nearbyRegionForPosition, nearbyCityQuery, nearbyAddressQueryInRegion } from '../src/intelligence/nearbyRegions.mjs';
 import { normalizedAddressCandidate } from '../src/intelligence/nearbyAddressContract.mjs';
 import { createNearbyShoppingPort } from '../src/ports/nearbyShoppingPort.mjs';
 
@@ -29,6 +29,15 @@ test('device points resolve only covered directory envelopes, including all curr
   }
   for (const position of [{ lat: 43.585, lon: 39.72 }, { lat: 0, lon: 0 }, { lat: NaN, lon: 37 }, { lat: 55, lon: '49' }])
     assert.equal(nearbyRegionForPosition(position), null);
+});
+
+test('street-only follow-ups retain the selected city while explicit cities and multi-city Moscow region remain unchanged',()=>{
+  assert.equal(nearbyAddressQueryInRegion('улица Баумана 7','kazan'),'Казань, улица Баумана 7');
+  assert.equal(nearbyAddressQueryInRegion('Казанская улица 7','saint-petersburg'),'Санкт-Петербург, Казанская улица 7');
+  assert.equal(nearbyAddressQueryInRegion('СПб Невский проспект 10','kazan'),'СПб Невский проспект 10');
+  assert.equal(nearbyAddressQueryInRegion('Москва Тверская 7','kazan'),'Москва Тверская 7');
+  assert.equal(nearbyAddressQueryInRegion('Пушкино Красноармейское шоссе 105','moscow-and-oblast'),'Пушкино Красноармейское шоссе 105');
+  assert.equal(nearbyAddressQueryInRegion('Ленина 7',null),'Ленина 7');
 });
 
 test('regional geocoder requires RU, matching city/state and bounded coordinates', () => {
