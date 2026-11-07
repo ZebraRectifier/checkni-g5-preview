@@ -44,13 +44,26 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   const note=el('details');const noteTitle=el('summary','Откуда магазины и что известно о ценах');
   const noteCopy=el('p','Это датированный справочник карты, а не полный список работающих магазинов. Расстояния — по прямой. Совпадение адреса с каталогом не подтверждает свежесть цен, наличие или доставку. Геопозиция хранится только в памяти вкладки и исчезает после перезагрузки.');
   const attribution=el('a','© OpenStreetMap contributors · ODbL');attribution.href='https://www.openstreetmap.org/copyright';attribution.target='_blank';attribution.rel='noopener noreferrer';note.append(noteTitle,noteCopy,directoryDate,attribution);
-  const mapPrivacy=el('small','При выборе места карта OpenStreetMap загружает соответствующий участок.');
+  const mapPrivacy=el('small','При открытии карты OpenFreeMap загружает соответствующий участок.');
   const addressRow=el('div');addressRow.className='nearby-address-row';addressRow.append(input,addressButton);
   const privacy=el('details');privacy.className='nearby-privacy';privacy.append(el('summary','Как используется адрес'),consent,mapPrivacy);
   const locationActions=el('div');locationActions.className='nearby-actions nearby-location-actions';locationActions.append(locate,manual);
   panel.append(title,label,addressRow,locationActions,filters,networks,status,candidates,selection,results);
   const extra=el('details');extra.className='nearby-extra';extra.append(el('summary','Другие способы и источники'),actions,privacy,note);panel.append(extra);root.append(openButton,panel);
   let position=null,pointName='',directory=null,version=0,limit=5,chosen=null,pendingPlaceLabel=null,region=null;
+  let mapRevision=0,mapRows=[],lastRows=[];
+  function publishMapContext(state,rows=[]){
+    mapRows=rows;
+    document.dispatchEvent(new document.defaultView.CustomEvent('checkni:nearby-map-context',{detail:{
+      revision:++mapRevision,state,position:position?{lat:position.lat,lon:position.lon}:null,
+      radiusKm:Number(radius.value),stores:rows
+    }}));
+  }
+  document.addEventListener('checkni:nearby-map-select',event=>{
+    if(event.detail?.revision!==mapRevision)return;
+    const row=mapRows.find(row=>row.id===event.detail.id);
+    if(row?.catalog)void choose(row);
+  });
   function clearSelection(){chosen=null;selection.hidden=true;selection.replaceChildren();onInvalidate();}
   function open(query='',radiusKm=null){panel.hidden=false;openButton.setAttribute('aria-expanded','true');
     if(query)input.value=query.slice(0,160);
@@ -67,12 +80,13 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     return directory;
   }
   async function renderResults(){
-    const token=++version;results.replaceChildren();networks.hidden=!position;if(!position)return;const current=position;
-    if(!region){networks.hidden=true;status.textContent='Для этого места справочника пока нет. Выбери другой город или точку на карте.';return;}
+    const token=++version;results.replaceChildren();networks.hidden=!position;publishMapContext('loading');if(!position)return;const current=position;
+    if(!region){publishMapContext('unsupported');networks.hidden=true;status.textContent='Для этого места справочника пока нет. Выбери другой город или точку на карте.';return;}
     status.textContent='Ищу магазины в выбранном радиусе…';
     try{
       const d=await directoryData();if(token!==version||current!==position)return;
       const rows=nearbyGroceryMatches(d.stores,position,Number(radius.value),{connectedOnly:connected.checked,regional:region!=='moscow-and-oblast'}).filter(row=>network==='all'||row.retailerId===network);
+      lastRows=rows;publishMapContext('ready',rows);
       directoryDate.textContent='Дата справочника: '+new Date(d.observedAt).toLocaleDateString('ru-RU')+'.';
       directoryDate.hidden=false;
       status.textContent=`${pointName||'Выбранная точка'} · до ${radius.value} км · найдено: ${rows.length}`
@@ -88,7 +102,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
         const link=el('a','Источник адреса');link.href=row.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';card.append(link);results.append(card);
       }
       if(rows.length>limit)results.append(button('Показать ещё',()=>{limit+=5;void renderResults();}));
-    }catch{if(token===version)status.textContent='Справочник сейчас не загрузился. Место сохранилось; попробуй ещё раз или выбери магазин в каталоге.';}
+    }catch{if(token===version){publishMapContext('unavailable');status.textContent='Справочник сейчас не загрузился. Место сохранилось; попробуй ещё раз или выбери магазин в каталоге.';}}
   }
   async function choose(row){
     const token=++version;clearSelection();status.textContent='Выбираю адрес каталога…';
@@ -126,7 +140,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     if(showMapRecovery)status.after(manual);
     else if(manual.parentElement!==locationActions)locationActions.append(manual);
     version++;
-    if(s.status==='loading'){status.textContent='Жду разрешение браузера на геолокацию…';return;}
+    if(s.status==='loading'){publishMapContext('loading');status.textContent='Жду разрешение браузера на геолокацию…';return;}
     if(s.position && s.status!=='loading' && s.status!=='denied' && s.status!=='error'){
       if(s.position.source==='device')pendingPlaceLabel=null;
       const nextRegion=nearbyRegionForPosition(s.position)?.id??null;
@@ -134,11 +148,11 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
         if(nextRegion&&nextRegion!=='moscow-and-oblast')connected.checked=false;
         network='all';for(const chip of networks.children)chip.setAttribute('aria-pressed',String(chip===networks.firstElementChild));
       }
-      region=nextRegion;
+      region=nextRegion;lastRows=[];
       clearSelection();position=s.position;pointName=pendingPlaceLabel??(s.position.source==='manual'?'Точка на карте':`Моё место · точность ≈${Math.round(s.position.accuracyMeters)} м`);pendingPlaceLabel=null;limit=5;
       panel.hidden=false;openButton.setAttribute('aria-expanded','true');void renderResults();}
-    else if(s.status==='idle'){position=null;pointName='';results.replaceChildren();}
-    else if(s.status!=='idle'){status.textContent=s.status==='denied'?'Доступ к геолокации закрыт. Можно написать адрес или указать место на карте.':'Место не определилось. Напиши адрес или выбери точку на карте.';}
+    else if(s.status==='idle'){position=null;pointName='';lastRows=[];publishMapContext('idle');results.replaceChildren();}
+    else if(s.status!=='idle'){publishMapContext('ready',lastRows);status.textContent=s.status==='denied'?'Доступ к геолокации закрыт. Можно написать адрес или указать место на карте.':'Место не определилось. Напиши адрес или выбери точку на карте.';}
   };
   const geo=locationController??createStoreGeolocation({...geolocationOptions,onChange:locationChanged});
   if(locationController)geo.subscribe(locationChanged);
