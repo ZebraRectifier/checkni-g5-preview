@@ -45,9 +45,9 @@ test('weekly request retains supplied household and duration and asks only the n
   await selectStore(page);
   await send(page, 'Нужна недорогая еда на неделю для троих');
   const output = page.locator('#basket-proposal-status');
-  await expect(output).toContainText('Где закупаемся');
+  await expect(output).toContainText('для 3 человек, на 7 дн.');
+  await expect(output).not.toContainText('Где закупаемся');
   await expect(output).not.toContainText(/На сколько человек|На сколько дней/);
-  await output.getByRole('button', { name: 'Текущий магазин', exact: true }).click();
   await expect(output).toContainText('Какие продукты исключить');
   await output.getByRole('button', { name: 'Ограничений нет', exact: true }).click();
   await expect(page.locator('#hori-shopping-results').getByRole('table')).toBeVisible();
