@@ -28,6 +28,8 @@ body.pixel-workspace :is(#product-grid, #pixel-collections .pixel-collection-row
 body.pixel-workspace :is(#product-grid, #pixel-collections .pixel-collection-row) .product-price-unit { font-size: 12px; line-height: 1.4; display: block; }
 body.pixel-workspace :is(#product-grid, #pixel-collections .pixel-collection-row) .pixel-product-actions { position: static; display: flex; justify-content: stretch; width: 100%; margin-top: auto; }
 body.pixel-workspace :is(#product-grid, #pixel-collections .pixel-collection-row) .add-button { flex: 1; width: auto; min-height: 44px; border-radius: 4px; font-size: 16px; }
+body.pixel-workspace :is(#product-grid, #pixel-collections .pixel-collection-row) .add-button.is-dated-list { flex: 1 0 100%; padding: 8px; font-size: 14px; }
+body.pixel-workspace :is(#product-grid, #pixel-collections .pixel-collection-row) .add-button.is-dated-list::before { display: none; }
 body.pixel-workspace :is(#product-grid, #pixel-collections .pixel-collection-row) .pixel-product-details { font-size: 12px; }
 body.pixel-workspace #basket-view { max-width: 1100px; margin-inline: auto; }
 body.pixel-workspace #basket-view .basket-row { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 16px; }

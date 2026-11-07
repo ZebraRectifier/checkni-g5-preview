@@ -61,7 +61,9 @@ export function initShoppingV17(document) {
     const addButton = document.createElement('button');
     addButton.type = 'button';
     addButton.className = 'primary-button';
-    addButton.textContent = add?.disabled ? 'Пока только просмотр' : 'Добавить в корзину';
+    addButton.textContent = add?.disabled ? 'Пока только просмотр'
+      : add?.classList.contains('is-dated-list') ? 'В список без цены' : 'Добавить в корзину';
+    if (add?.classList.contains('is-dated-list')) addButton.setAttribute('aria-label', add.getAttribute('aria-label'));
     addButton.disabled = !add || add.disabled;
     addButton.addEventListener('click', () => {
       // The current real card owns all admission and basket updates.
