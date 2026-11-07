@@ -8,10 +8,14 @@ on:
       - "src/**"
       - "deployment.json"
       - ".github/workflows/live-retail-smoke.yml"
+      - "tools/live-retail-smoke-contract.mjs"
+      - "tests/live-retail-smoke-contract.test.mjs"
   pull_request:
     paths:
       - "src/components/WebSnapshotResult.mjs"
       - ".github/workflows/live-retail-smoke.yml"
+      - "tools/live-retail-smoke-contract.mjs"
+      - "tests/live-retail-smoke-contract.test.mjs"
   workflow_dispatch:
 
 permissions:
@@ -24,6 +28,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify live smoke source and immutable-runtime contracts
+        run: node --test tests/live-retail-smoke-contract.test.mjs
       - name: Verify archived basket references cannot recommend a winner
         run: |
           node --input-type=module - <<'NODE'
@@ -73,7 +79,14 @@ jobs:
         run: |
           node --input-type=module - <<'NODE'
           import {readFile} from 'node:fs/promises';
-          const paths=['index.html','prices.html','src/components/HoriCommerce.mjs','src/components/NearbyShopping.mjs','src/ports/nearbyShoppingPort.mjs','src/ports/addressRecovery.mjs'];
+          import {pinnedRuntimePrefix} from './tools/live-retail-smoke-contract.mjs';
+          const prefix=pinnedRuntimePrefix(await readFile('index.html','utf8'));
+          if(pinnedRuntimePrefix(await readFile('prices.html','utf8'),'priceCapture')!==prefix)
+            throw Error('Entry pages disagree on the reviewed immutable runtime');
+          const paths=['index.html','prices.html',prefix+'manifest.json',...[
+            'src/app.mjs','src/priceCapture.mjs','src/components/HoriCommerce.mjs','src/components/NearbyShopping.mjs',
+            'src/ports/nearbyShoppingPort.mjs','src/ports/addressRecovery.mjs','src/ports/retailCatalogPort.mjs'
+          ].map(path=>prefix+path)];
           const expected=await Promise.all(paths.map(path=>readFile(path)));
           for(let attempt=0;attempt<12;attempt++){
             const matched=await Promise.all(paths.map(async(path,i)=>{
@@ -81,7 +94,7 @@ jobs:
                 return response.ok&&Buffer.from(await response.arrayBuffer()).equals(expected[i]);
               }catch{return false;}
             }));
-            if(matched.every(Boolean)){console.log('PUBLISHED_ADDRESS_RUNTIME_MATCH',process.env.GITHUB_SHA);process.exit(0);}
+            if(matched.every(Boolean)){console.log('PUBLISHED_ADDRESS_RUNTIME_MATCH',process.env.GITHUB_SHA,prefix);process.exit(0);}
             await new Promise(resolve=>setTimeout(resolve,5000));
           }
           throw Error('Pages does not yet serve the reviewed address runtime');
@@ -127,6 +140,30 @@ jobs:
             ).length > 0, null, {timeout:15000});
             const all = page.locator("#retail-category-grid .pixel-all-categories");
             if (await all.isVisible()) await all.click();
+          }
+          async function liveLentaRoots(page) {
+            const response = await page.waitForResponse(response => {
+              const address = new URL(response.url());
+              return address.origin === "https://cxpneczhczashanbetgj.supabase.co"
+                && address.pathname === "/rest/v1/retail_catalog_categories"
+                && address.searchParams.get("retailer_id") === "eq.lenta"
+                && address.searchParams.get("store_id") === "eq.lenta-public-web"
+                && address.searchParams.get("depth") === "eq.0"
+                && response.request().method() === "GET";
+            }, { timeout: 15000 });
+            assert(response.ok(), "Live Lenta root request failed");
+            const { expectedLentaRoots } = await import("./tools/live-retail-smoke-contract.mjs");
+            return expectedLentaRoots(await response.json());
+          }
+          async function matchLentaRoots(page, roots) {
+            await page.waitForFunction(expected => {
+              const ids = [...document.querySelectorAll(
+                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
+              )].map(node => node.dataset.categoryId).sort();
+              return document.querySelector("#retail-store-card-lenta")
+                ?.getAttribute("aria-pressed") === "true"
+                && JSON.stringify(ids) === JSON.stringify(expected);
+            }, roots.map(root => root.id).sort(), { timeout: 15000 });
           }
           async function chooseAddressCard(page, retailer, value) {
             const select = page.locator(`#${retailer}-store-address`);
@@ -208,6 +245,14 @@ jobs:
           };
 
           (async () => {
+            const { readFileSync } = require("node:fs");
+            const { pinnedRuntimePrefix } = await import("./tools/live-retail-smoke-contract.mjs");
+            const runtimePrefix = pinnedRuntimePrefix(readFileSync("index.html", "utf8"));
+            async function assertPublishedRuntime(page) {
+              const entry = await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src");
+              assert(entry === "./" + runtimePrefix + "src/app.mjs",
+                "Browser loaded a different runtime from the byte-verified artifact");
+            }
             const browser = await chromium.launch({
               headless: true,
               executablePath: process.env.CHROME_BIN,
@@ -260,6 +305,7 @@ jobs:
               raceReady,
               "Published page never exposed the Lenta selector for the race gate"
             );
+            await assertPublishedRuntime(racePage);
             console.log("RACE_BEFORE_SELECT", await racePage.evaluate(() => ({
               homeHidden:document.querySelector("#pixel-store-home")?.hidden,
               selected:document.querySelector("#retail-store-card")?.getAttribute("aria-pressed"),
@@ -277,14 +323,10 @@ jobs:
               await racePage.waitForTimeout(100);
             }
             assert(globusRootHeld, "Did not capture the initial GLOBUS root request");
+            const raceRootResponse = liveLentaRoots(racePage);
             await chooseStore(racePage, "#retail-store-card-lenta");
-            await racePage.waitForFunction(() => (
-              document.querySelector("#retail-store-card-lenta")
-                ?.getAttribute("aria-pressed") === "true"
-              && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
-              ).length === 22
-            ), null, { timeout: 15000 });
+            const raceRoots = await raceRootResponse;
+            await matchLentaRoots(racePage, raceRoots);
             releaseGlobusRoot();
             await racePage.waitForTimeout(1500);
             assert(
@@ -292,12 +334,8 @@ jobs:
                 .getAttribute("aria-pressed") === "true",
               "Late GLOBUS response stole retailer selection from Lenta"
             );
-            assert(
-              await racePage.locator(
-                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
-              ).count() === 22,
-              "Late GLOBUS response repainted Lenta categories"
-            );
+            await matchLentaRoots(racePage, raceRoots);
+            console.log("LENTA_RACE_ROOT_IDS", raceRoots.map(root => root.id).join(","));
             await racePage.close();
             stage("race:ok");
 
@@ -326,6 +364,7 @@ jobs:
             }
 
             assert(ready, "Published page never exposed the Lenta store selector");
+            await assertPublishedRuntime(page);
 
             // GitHub Pages can lag a branch push briefly. Do not validate the
             // previous artifact by accident: bounded-reload until the exact
@@ -391,14 +430,10 @@ jobs:
             stage("lenta:start");
             // Address/category checks above scroll the independent commerce
             // pane. Return to its store row before switching retailers.
+            const lentaRootResponse = liveLentaRoots(page);
             await chooseStore(page, "#retail-store-card-lenta");
-            await page.waitForFunction(() => (
-              document.querySelector("#retail-store-card-lenta")
-                ?.getAttribute("aria-pressed") === "true"
-              && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
-              ).length === 22
-            ), null, { timeout: 15000 });
+            const lentaRoots = await lentaRootResponse;
+            await matchLentaRoots(page, lentaRoots);
 
             await page.goBack({ waitUntil: "domcontentloaded" });
             await page.locator("#pixel-store-home").waitFor({state:"visible"});
@@ -419,23 +454,11 @@ jobs:
             await page.locator("#pixel-store-home").waitFor({state:"visible"});
             await page.goForward({ waitUntil: "domcontentloaded" });
             await allCategories(page);
-            await page.waitForFunction(() => (
-              document.querySelector("#retail-store-card-lenta")
-                ?.getAttribute("aria-pressed") === "true"
-              && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
-              ).length === 22
-            ), null, { timeout: 15000 });
+            await matchLentaRoots(page, lentaRoots);
 
             await page.reload({ waitUntil: "domcontentloaded" });
             await allCategories(page);
-            await page.waitForFunction(() => (
-              document.querySelector("#retail-store-card-lenta")
-                ?.getAttribute("aria-pressed") === "true"
-              && document.querySelectorAll(
-                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
-              ).length === 22
-            ), null, { timeout: 15000 });
+            await matchLentaRoots(page, lentaRoots);
             assert(
               (await storeFacts(lenta)).includes("Лента · Публичный каталог"),
               "Lenta selector has the wrong store label"
@@ -456,26 +479,17 @@ jobs:
             const categoryButtons = page.locator(
               "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
             );
-            await page.waitForFunction(() => (
-              document.querySelectorAll(
-                "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
-              ).length === 22
-            ), null, { timeout: 15000 });
-            assert(
-              await categoryButtons.count() === 22,
-              "Published Lenta root must expose exactly 22 categories"
-            );
-
+            await matchLentaRoots(page, lentaRoots);
             const lentaStoreText = await storeFacts(lenta);
             const lentaStoreCountMatch = lentaStoreText.match(
-              /22 категории · ([\d\s]+) (?:товар|товара|товаров)/u
+              /([\d\s]+) категори[яий] · ([\d\s]+) (?:товар|товара|товаров)/u
             );
             assert(
               lentaStoreCountMatch,
               "Lenta selector must expose a live product count"
             );
             const lentaStoreProductCount = Number(
-              lentaStoreCountMatch[1].replace(/\s+/gu, "")
+              lentaStoreCountMatch[2].replace(/\s+/gu, "")
             );
             const lentaRootProductCount = (await categoryButtons.allTextContents())
               .reduce((sum, text) => {
@@ -487,18 +501,12 @@ jobs:
             assert(
               Number.isSafeInteger(lentaStoreProductCount)
                 && lentaStoreProductCount > 0
-                && lentaStoreProductCount === lentaRootProductCount,
+                && lentaStoreProductCount === lentaRootProductCount
+                && lentaRootProductCount === lentaRoots.reduce((sum, root) => sum + root.productCount, 0),
               "Lenta selector count must match the current root-category totals"
             );
 
-            for (const expectedRoot of [
-              "Молочные продукты, яйцо",
-              "Мясо и птица",
-              "Овощи, фрукты",
-              "Хлеб и выпечка",
-              "Напитки",
-              "Бытовая химия"
-            ]) {
+            for (const expectedRoot of lentaRoots.map(root => root.name)) {
               assert(
                 (await categoryButtons.allTextContents())
                   .some((text) => text.includes(expectedRoot)),
@@ -826,7 +834,7 @@ jobs:
             const rawDaRows = await response.json();
             assert(Array.isArray(rawDaRows) && rawDaRows.length <= 160,
               "DA category response exceeded the existing bounded catalogue contract");
-            const { normalizeRetailRow } = await import("./src/ports/retailCatalogPort.mjs");
+            const { normalizeRetailRow } = await import("./" + runtimePrefix + "src/ports/retailCatalogPort.mjs");
             const expectedDaRows = rawDaRows
               .map(row => normalizeRetailRow(row, "da", { nowMs: Date.now() }))
               .filter(Boolean);
