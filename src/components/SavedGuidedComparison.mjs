@@ -54,6 +54,15 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
   if(result.request?.unresolvedGroupKeys?.length)parent.append(el('p','Сравниваем только выбранные позиции. В исходном подборе ещё '+result.request.unresolvedGroupKeys.length+' поз. без подтверждённых товаров.'));
   parent.append(status,el('p','Марки и фасовки могут отличаться. Условия карт и акций проверяй по источнику. Доставка и сборы не включены; наличие неизвестно.'));
   if(result.drafts.some(draft=>draft.scope.retailerId==='perekrestok'))parent.append(el('p','Перекрёсток — подключённый каталог доставки в Москве. Доставка по твоему адресу не подтверждена.'));
+  const groups = new Map();
+  for (const complete of [true, false]) {
+    if (!quotes.some(quote => quote.complete === complete)) continue;
+    const group = el('section'); group.className = 'saved-comparison-group';
+    group.append(el('h3', complete ? 'Полные по составу' : 'Неполные корзины'));
+    const columns = el('div'); columns.className = 'saved-comparison-columns'; columns.setAttribute('aria-hidden', 'true');
+    for (const label of ['Магазин', 'Покрытие', 'Сумма товаров', 'Актуальность', '']) columns.append(el('span', label));
+    group.append(columns); parent.append(group); groups.set(complete, group);
+  }
   result.drafts.forEach((draft,index)=>{
     const quote=quotes[index],details=el('details');details.className='future-step saved-catalog-variant';
     const storeLabel = savedComparisonStoreLabel(draft.scope);
@@ -61,12 +70,27 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
     if (gaps.length) {
       const notice = el('p', storeLabel + '. ' + gaps.join('. ') + '.');
       notice.className = 'saved-comparison-gaps';
-      parent.append(notice);
+      details.append(notice);
     }
     const total=quote.knownSubtotalMinor==null?'сумма неизвестна':formatRubMinor(quote.knownSubtotalMinor);
-    const summary=el('summary',storeLabel+' · '+quote.basket.length+'/'+quote.lines.length+' поз. · '
-      +(quote.complete?'':'найденная часть: ')+total+(quote.hasEstimates?' · ориентировочно':''));
-    details.append(summary,el('p',draft.scope.storeAddress??''));
+    const summary=el('summary');
+    const name=el('strong',storeLabel); name.className='saved-quote-store';
+    const coverage=el('span',quote.basket.length+'/'+quote.lines.length+' поз.'); coverage.className='saved-quote-coverage';
+    const amount=el('span'); amount.className='saved-quote-amount';
+    amount.append(el('strong',total));
+    if(!quote.complete)amount.append(el('small','Найденная часть'));
+    if(quote.hasEstimates)amount.append(el('small','Ориентировочно'));
+    const freshness=el('span',quote.allRecent?'Свежие наблюдения':'Старые / неизвестные цены'); freshness.className='saved-quote-freshness';
+    const dates=quote.lines.map(line=>line.card?.observedAt).filter(value=>value&&Number.isFinite(Date.parse(value))).map(value=>Date.parse(value));
+    if(dates.length){
+      const format=value=>new Date(value).toLocaleDateString('ru-RU');
+      const first=Math.min(...dates),last=Math.max(...dates);
+      freshness.append(el('small',first===last?format(first):format(first)+' — '+format(last)));
+    }
+    const expand=el('span','Подробнее');expand.className='saved-quote-expand';
+    summary.append(name,coverage,amount,freshness,expand);
+    details.prepend(summary);
+    if(draft.scope.storeAddress)details.append(el('p',draft.scope.storeAddress));
     const scroll=el('div');scroll.className='guided-shopping-scroll';scroll.tabIndex=0;
     const table=el('table');table.className='guided-shopping-table';table.append(el('caption','Товары и цены · '+storeLabel));
     const head=el('thead'),headRow=el('tr');
@@ -80,12 +104,12 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
       price.append(el('strong',line.lineTotalMinor==null?'Сумма не подтверждена':formatRubMinor(line.lineTotalMinor)));
       if(line.card){
         price.append(el('p',(line.freshness==='recent'?'Наблюдение: ':'Старое/неизвестное наблюдение: ')
-          +new Date(line.card.observedAt).toLocaleString('ru-RU')));
+          +(line.card.observedAt&&Number.isFinite(Date.parse(line.card.observedAt))?new Date(line.card.observedAt).toLocaleString('ru-RU'):'дата неизвестна')));
         if(line.card.priceConditionLabel)price.append(el('p',line.card.priceConditionLabel));
         const link=el('a','Источник цены');link.href=line.card.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';price.append(link);
       }
       tr.append(item,price);body.append(tr);
     }
-    table.append(body);scroll.append(table);details.append(scroll);parent.append(details);
+    table.append(body);scroll.append(table);details.append(scroll);groups.get(quote.complete).append(details);
   });
 }
