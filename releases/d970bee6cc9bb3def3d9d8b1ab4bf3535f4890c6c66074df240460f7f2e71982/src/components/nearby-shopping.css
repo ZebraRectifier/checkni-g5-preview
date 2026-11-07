@@ -1,0 +1,12 @@
+.nearby-shopping{margin:12px 0}.nearby-shopping>button{min-height:44px}.nearby-shopping [hidden]{display:none!important}
+.nearby-shopping button{border:1px solid #5b4c79;border-radius:10px;padding:8px 12px;background:#29243c;color:inherit;cursor:pointer;scroll-margin-block:120px}
+.nearby-shopping button:disabled{opacity:.6;cursor:wait}.nearby-shopping input[type=search],.nearby-shopping select{background:#151522;color:inherit;border:1px solid #5b4c79;border-radius:8px;padding:10px}
+#nearby-selected-store button{background:#7538d4;font-weight:700}
+#nearby-shopping-panel{display:grid;gap:10px;padding:14px;border:1px solid var(--border,#49415f);border-radius:16px;background:var(--surface,#181827)}
+#nearby-shopping-panel h3,#nearby-shopping-panel p{margin:0}#nearby-shopping-panel input[type=search]{width:100%;min-height:44px;box-sizing:border-box}
+#nearby-shopping-panel button,#nearby-shopping-panel select{min-height:44px}#nearby-shopping-panel small{display:block;line-height:1.4;opacity:.8}
+.nearby-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.nearby-actions label{display:flex;gap:6px;align-items:center}
+#nearby-address-candidates{display:grid;gap:8px}#nearby-address-candidates button{text-align:left;white-space:normal}
+#nearby-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.nearby-store{display:grid;align-content:start;gap:8px;border:1px solid var(--border,#49415f);padding:12px;border-radius:12px;overflow-wrap:anywhere}
+#nearby-selected-store{display:grid;gap:8px;padding:12px;border:2px solid var(--accent,#9258f5);border-radius:12px}
+@media(max-width:620px){#nearby-results{grid-template-columns:1fr}.nearby-actions button{flex:1 1 160px}}
