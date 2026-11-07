@@ -89,12 +89,12 @@ test('active optional dialogue hides its fresh welcome and keeps the composer an
   await openHory(page);
   await page.locator('#basket-proposal-input').fill('Нужна недорогая еда на неделю для троих');
   await page.locator('#basket-proposal-submit').click();
-  await expect(page.locator('#basket-proposal-status')).toContainText('Где закупаемся');
+  await expect(page.locator('#basket-proposal-status')).toContainText('Какие продукты исключить');
   await expect(page.locator('.shopping-welcome')).toBeHidden();
   await expect(page.locator('#basket-proposal-input')).toBeInViewport();
   await expect(page.locator('#basket-proposal-status')).toBeInViewport();
   await closeHory(page);
   await expect(page.locator('#pixel-storefront')).toBeVisible();
   await openHory(page);
-  await expect(page.locator('#basket-proposal-status')).toContainText('Где закупаемся');
+  await expect(page.locator('#basket-proposal-status')).toContainText('Какие продукты исключить');
 });

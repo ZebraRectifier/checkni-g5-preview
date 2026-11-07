@@ -165,7 +165,7 @@ test('denied geolocation and an unavailable address service leave manual recover
   await isolate(page);await page.addInitScript(()=>Object.defineProperty(navigator,'geolocation',{value:{getCurrentPosition(s,f){f({code:1});}},configurable:true}));
   await page.route('**/functions/v1/nearby-address',r=>r.fulfill({status:503,json:{version:1,error:'source_unavailable'}}));
   await page.goto('/?comparison=observed&catalog=retail#shop');await selectStore(page);await openStoreDetails(page);await say(page,'Собери недорогую корзину на неделю для троих');
-  await expect(page.locator('#basket-proposal-status')).toContainText('Где закупаемся');
+  await expect(page.locator('#basket-proposal-status')).toContainText('Какие продукты исключить');
   await say(page,'Найти магазины рядом');await closeHory(page);await openStoreDetails(page);await page.locator('#nearby-locate').click();
   await expect(page.locator('#nearby-status')).toContainText('Доступ к геолокации закрыт');
   await page.locator('#nearby-address').fill('Москва, Тверская, 7');await page.locator('#nearby-address-search').click();
