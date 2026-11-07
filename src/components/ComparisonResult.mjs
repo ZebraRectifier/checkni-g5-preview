@@ -239,7 +239,7 @@ export function buildObservedResultModel(result, { nowMs = Date.now() } = {}) {
           ? "Есть полные суммы, но часть цен зависит от акции или программы лояльности. CHECKNI не называет один вариант дешевле, пока условия цены не сопоставимы."
           : conclusion.reason === "mixed_sales_channel"
             ? "Есть полные суммы, но часть цен относится к онлайн-заказу, а часть — к покупке в магазине. CHECKNI не сравнивает их как один ценовой режим."
-            : "Пока нет полного реального покрытия корзины. MOCK-цены сюда не подставляем.",
+            : "Не хватает свежих цен для всей корзины. Полную сумму и экономию пока не показываем.",
       confirmedCandidates: Object.freeze(confirmedCandidates)
     });
   }
@@ -356,7 +356,7 @@ export function createComparisonResult(result, { onInspectStore } = {}) {
   section.setAttribute("aria-label", "Лучший вариант покупки");
 
   const meta = createModeMeta(
-    model.isMock ? "DEMO · MOCK" : "CHECKNI",
+    model.isMock ? "Тестовые цены" : "CHECKNI",
     "Лучший вариант"
   );
 
@@ -412,7 +412,7 @@ export function createObservedComparisonResult(result) {
         ? "Наблюдаемая сумма"
         : "Реальные цены";
 
-  section.append(createModeMeta("OBSERVED · REAL", eyebrowText));
+  section.append(createModeMeta("Реальные цены", eyebrowText));
 
   const heading = document.createElement("h2");
   heading.textContent = model.title;

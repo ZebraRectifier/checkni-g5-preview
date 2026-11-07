@@ -583,14 +583,14 @@ elements.manualDivider.hidden = false;
 
 if (elements.comparisonModeBadge) {
   elements.comparisonModeBadge.textContent = comparisonMode === COMPARISON_MODE.OBSERVED
-    ? "OBSERVED · REAL"
-    : "DEMO · MOCK";
+    ? "Реальные цены"
+    : "Тестовые цены";
 }
 
 if (elements.basketModeCopy) {
   elements.basketModeCopy.textContent = comparisonMode === COMPARISON_MODE.OBSERVED
-    ? "Проверьте состав и запустите сравнение по доверенным наблюдениям реальных цен."
-    : "Проверьте состав и запустите сравнение по трём демонстрационным магазинам.";
+    ? "Измени количество и сравни цены."
+    : "Демонстрация: товары и цены вымышлены.";
 }
 
 function manualCatalogListProduct(product) {
@@ -2858,7 +2858,7 @@ function renderComparisonState({ focusResult = false } = {}) {
     const progress = document.createElement("p");
     progress.className = "comparison-progress";
     progress.textContent = comparisonMode === COMPARISON_MODE.OBSERVED
-      ? "Проверяем доверенные наблюдения цен без подстановки MOCK…"
+      ? "Проверяем цены для этой корзины…"
       : "Проверяем одну и ту же корзину по тестовым магазинам…";
     output.append(progress);
     return;
@@ -2881,7 +2881,7 @@ function renderComparisonState({ focusResult = false } = {}) {
     resultNode = comparisonMode === COMPARISON_MODE.OBSERVED
       ? createComparisonMessage(
           "Недостаточно реальных данных",
-          "Реальный результат не содержит авторитетного заключения Core. MOCK-данные сюда не подставляем."
+          "Не удалось подтвердить итог. Список сохранён — попробуй сравнить ещё раз."
         )
       : createComparisonMessage(
           "Полного варианта нет",
@@ -3061,8 +3061,13 @@ function renderBasket() {
     const addresses = createSelectedComparisonStores(currentComparisonStoreScope(), {
       onEdit: publicRetailCatalogMode ? retailerId => {
         comparisonAddressChanged();
-        navigate(VIEW.SHOP, { focusMode: FOCUS_MODE.HEADING });
-        void selectRetailer(retailerId, { replaceHistory: true });
+        // Enter the existing explicit-address flow. Opening a catalogue here
+        // would silently keep its default address instead of editing it.
+        document.dispatchEvent(new CustomEvent('checkni:shop-action', { detail: { action: 'stores' } }));
+        const card = document.getElementById(retailerId === DEFAULT_RETAILER_ID
+          ? 'retail-store-card' : `retail-store-card-${retailerId}`);
+        if (card) card.click();
+        else showToast('Выбор адреса временно недоступен. Корзина сохранена.');
       } : undefined
     });
     if (addresses) elements.basketContent.append(addresses);

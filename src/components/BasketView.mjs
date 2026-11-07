@@ -121,7 +121,7 @@ export function renderBasketView(container, items, actions) {
   summary.className = "basket-summary";
   summary.innerHTML = `
     <span>${basketSummaryText(items)}</span>
-    <span class="mock-chip">${isObservedMode ? "OBSERVED · REAL" : "Тестовые цены · MOCK"}</span>
+    ${isObservedMode ? "" : '<span class="mock-chip">Тестовые цены</span>'}
   `;
 
   const list = document.createElement("div");
@@ -157,7 +157,8 @@ export function renderBasketView(container, items, actions) {
       const price = document.createElement('strong');
       price.textContent = formatRubMinor(presentation.priceMinor) + (presentation.catalogUnit ? ' / ' + presentation.catalogUnit : '');
       const note = document.createElement('small');
-      note.textContent = 'При добавлении · цена от ' + new Date(presentation.observedAt).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'});
+      note.className = 'basket-price-status';
+      note.textContent = 'Цена от ' + new Date(presentation.observedAt).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'}) + ' · требует проверки';
       const details = document.createElement('details');
       details.className = 'basket-price-details';
       const summary = document.createElement('summary');
@@ -168,8 +169,9 @@ export function renderBasketView(container, items, actions) {
       observation.append(price, note, details);
       if (presentation.condition) {
         const condition = document.createElement('small');
+        condition.className = 'basket-price-condition';
         condition.textContent = presentation.condition;
-        details.append(condition);
+        observation.insertBefore(condition, note);
       }
       if (presentation.sourceUrl) {
         const source = document.createElement('a');
@@ -276,7 +278,7 @@ export function renderBasketView(container, items, actions) {
   const help = document.createElement("p");
   help.id = "compare-help";
   help.textContent = isObservedMode
-    ? "Используем только свежие доверенные наблюдения реальных цен. Если данных недостаточно, MOCK сюда не подставляется."
+    ? "Сравним свежие цены. Если данных не хватит, покажем, что ещё нужно проверить."
     : "Сравним эту же корзину по трём демонстрационным магазинам. Все цены и наличие здесь тестовые.";
 
   const compareButton = document.createElement("button");
@@ -302,8 +304,8 @@ export function renderBasketView(container, items, actions) {
   captureLink.className = "text-button";
   captureLink.href = "./prices.html";
   captureLink.textContent = isObservedMode
-    ? "Добавить реальные цены"
-    : "Проверить реальные цены · beta";
+    ? "Указать цену вручную"
+    : "Проверить реальные цены";
   captureLink.setAttribute(
     "aria-label",
     "Подтвердить свежие реальные цены для этой корзины"
@@ -342,7 +344,7 @@ export function renderBasketView(container, items, actions) {
     if (!actions.guidedComparison.saved) {
       const notice=document.createElement('p');notice.textContent='Выбор магазинов пока хранится только в этой вкладке: запись недоступна.';compareStep.append(notice);
     }
-  } else compareStep.append(eyebrow, heading, help, captureLink, compareButton);
+  } else compareStep.append(eyebrow, heading, help, compareButton, captureLink);
 
   const comparisonOutput = document.createElement("div");
   comparisonOutput.id = "comparison-output";
