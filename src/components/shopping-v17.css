@@ -243,5 +243,3 @@ body.pixel-workspace .catalog-empty-actions button {
 }
 body.pixel-workspace .catalog-empty-actions button:hover { border-color: var(--accent); }
 body.pixel-workspace .catalog-empty-actions .text-button { color: var(--accent); }
-body.pixel-workspace #retail-browser:has(#retail-category-grid:empty) { display: none; }
-body.pixel-workspace #pixel-storefront:has(#retail-category-grid:empty) > .catalog-section { grid-column: 1 / 3; }
