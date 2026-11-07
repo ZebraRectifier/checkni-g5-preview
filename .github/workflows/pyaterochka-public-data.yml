@@ -1,10 +1,10 @@
 name: Pyaterochka verified city promotions
 on:
   pull_request:
-    paths: ['tools/pyaterochka-public-catalog/**', 'src/observations/pyaterochkaPublishedPromotions.mjs', 'tests/pyaterochka*.test.mjs', 'tests/fixtures/pyaterochka-public/**', '.github/workflows/pyaterochka-public-data.yml']
+    paths: ['tools/pyaterochka-public-catalog/**', 'tools/browser-release/advance-feed-base.mjs', 'tests/feedBaseAdvance.test.mjs', 'src/observations/pyaterochkaPublishedPromotions.mjs', 'tests/pyaterochka*.test.mjs', 'tests/fixtures/pyaterochka-public/**', '.github/workflows/pyaterochka-public-data.yml']
   push:
     branches: [main]
-    paths: ['tools/pyaterochka-public-catalog/**', 'src/observations/pyaterochkaPublishedPromotions.mjs', '.github/workflows/pyaterochka-public-data.yml']
+    paths: ['tools/pyaterochka-public-catalog/**', 'tools/browser-release/advance-feed-base.mjs', 'src/observations/pyaterochkaPublishedPromotions.mjs', '.github/workflows/pyaterochka-public-data.yml']
   schedule:
     - cron: '15 1 * * *'
   workflow_dispatch:
@@ -26,7 +26,7 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
-      - run: node --test tests/dataPublication.test.mjs tests/pyaterochkaPublishedPromotions.test.mjs tests/pyaterochkaShopping.test.mjs
+      - run: node --test tests/dataPublication.test.mjs tests/feedBaseAdvance.test.mjs tests/pyaterochkaPublishedPromotions.test.mjs tests/pyaterochkaShopping.test.mjs
   publish:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: verify
@@ -87,6 +87,8 @@ jobs:
             git worktree add --detach _pyat_state HEAD
           fi
           echo "previous=$previous" >> "$GITHUB_OUTPUT"
+      - name: Accept only another feed's data-only advance after verification
+        run: node tools/browser-release/advance-feed-base.mjs
       - name: Reserve one attempt without contacting the source
         id: reserve
         run: |
@@ -112,8 +114,12 @@ jobs:
           test "$(git ls-remote origin "$state_ref" | cut -f1)" = "$actual"
           echo "acknowledged=true" >> "$GITHUB_OUTPUT"
           echo "commit=$actual" >> "$GITHUB_OUTPUT"
-      - name: Collect one ordinary visible catalogue
+      - name: Recheck the reviewed base before navigation
+        id: collection_base
         if: steps.reserve.outputs.source_allowed == 'true' && steps.reservation_checkpoint.outputs.acknowledged == 'true'
+        run: node tools/browser-release/advance-feed-base.mjs
+      - name: Collect one ordinary visible catalogue
+        if: steps.collection_base.outcome == 'success'
         run: |
           set -euo pipefail
           test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$PYAT_MAIN_BASE"
@@ -140,9 +146,13 @@ jobs:
         if: always() && steps.result_checkpoint.outcome == 'success'
         continue-on-error: true
         run: node tools/pyaterochka-public-catalog/verify-refresh.mjs
+      - name: Recheck the reviewed base before publishing checkpoint data
+        id: publication_base
+        if: always() && steps.result_checkpoint.outcome == 'success'
+        run: node tools/browser-release/advance-feed-base.mjs
       - name: Publish only the two feed files to unchanged reviewed main
         id: publication
-        if: always() && steps.result_checkpoint.outcome == 'success'
+        if: always() && steps.result_checkpoint.outcome == 'success' && steps.publication_base.outcome == 'success'
         shell: bash
         run: |
           set -euo pipefail
