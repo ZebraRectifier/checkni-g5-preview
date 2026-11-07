@@ -1,6 +1,6 @@
 import { createMagnitStoreDirectory } from "./MagnitStoreDirectory.mjs";
 import { createInteractiveStoreMap } from "../runtime/mapLibreMap.mjs";
-import { nearbyCatalogBinding } from "../intelligence/nearbyShopping.mjs";
+import { nearbyCatalogBinding, nearestStoreMapPins } from "../intelligence/nearbyShopping.mjs";
 import {
   APPROXIMATE_MAP_LOCATIONS, KNOWN_STORE_MAP_LOCATIONS, resolveStoreMapLocation
 } from "../data/storeMapLocations.mjs";
@@ -170,6 +170,10 @@ export function createStoresSection({
     externalLink('© OpenStreetMap','https://www.openstreetmap.org/copyright'));
   const magnitDirectory = createMagnitStoreDirectory();
   function availablePins() { return (contextPins ?? mapStores).filter(store => networkFilter.value === 'all' || store.retailerId === networkFilter.value); }
+  function visiblePins() {
+    const pins = availablePins();
+    return nearestStoreMapPins(pins,center,{selectedIds:[focusedPin?.id,...pins.filter(isSelected).map(pin=>pin.id)]});
+  }
   function matchesScopeRow(row, store) {
     return store.selectionKind === 'registered-store' && row.retailerId === 'magnit'
       ? row.shopCode === store.shopCode && row.address === store.catalogBinding?.address && row.storeIds.every(id => store.storeIds?.includes(id))
@@ -195,6 +199,7 @@ export function createStoresSection({
     close.setAttribute('aria-label','Закрыть карточку');
     pinCard.append(actions,close);
     pinCard.hidden = false;
+    renderMap();
     if (focus) {
       pinCard.focus({ preventScroll: true });
       if (window.matchMedia?.('(max-width:899px)').matches) requestAnimationFrame(() => {
@@ -223,10 +228,10 @@ export function createStoresSection({
     if (mapStarting) return mapStarting;
     tileStatus.textContent = 'Загружаю карту…'; retry.hidden = true;
     mapStarting = createMap({ element: canvas, center, zoom, createMarker, onStatus: mapStatus,
-      onMove: (point, level) => { center = point; zoom = level; renderControls(); },
+      onMove: (point, level) => { center = point; zoom = level; renderMap(); },
       onPoint: point => { if (manualPicking) geo.setManual(point); },
       onSelect: pin => { if (manualPicking) geo.setManual(pin); else showPin(pin,true); }
-    }).then(api => { mapApi = api; mapApi.setCamera(center,zoom); mapApi.setPins(availablePins(),geoState.position); return api; })
+    }).then(api => { mapApi = api; mapApi.setCamera(center,zoom); mapApi.setPins(visiblePins(),geoState.position); return api; })
       .catch(() => { mapStatus('unavailable'); return null; }).finally(() => { mapStarting = null; });
     return mapStarting;
   }
@@ -234,7 +239,7 @@ export function createStoresSection({
     zoomIn.disabled = zoom >= 16; zoomOut.disabled = zoom <= 3; ownCenter.disabled = !geoState.position;
     searchHere.disabled = Boolean(geoState.position && distanceMeters(center,geoState.position) < 5);
   }
-  function renderMap() { mapApi?.setPins(availablePins(),geoState.position); renderControls(); }
+  function renderMap() { mapApi?.setPins(visiblePins(),geoState.position); renderControls(); }
   function renderSelected() {
     selected.replaceChildren(); if (!currentScope?.valid) return;
     selected.append(textEl('h3',null,'Адреса для сравнения корзины'));

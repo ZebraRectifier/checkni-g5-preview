@@ -1,0 +1,1127 @@
+{
+  "sourceUrl": "https://magnit.ru/shops",
+  "exhaustive": false,
+  "priceEvidence": false,
+  "receipts": [
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 0,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:39.112Z",
+      "bytes": 118465,
+      "sha256": "cdfd0e97316e693d190e20c2c50d85d1a9906cb18e3ff9cd5ac1660eca7b36d9",
+      "file": "source-pages/moscow-0000.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 50,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:40.361Z",
+      "bytes": 131544,
+      "sha256": "6db467d9a1a03f9860093ea89a7838da3996638c80d15c6e0186b01851ecb864",
+      "file": "source-pages/moscow-0050.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 100,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:41.955Z",
+      "bytes": 155216,
+      "sha256": "431a3b4ceaa3d7469f0a47a2617e9ca44073635910868e17fa0eccf7b7960f25",
+      "file": "source-pages/moscow-0100.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 150,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:43.291Z",
+      "bytes": 159998,
+      "sha256": "b5c52132a8700c6f66ece5db7261013a1e6103fda35fb73894cb1391b234fd6c",
+      "file": "source-pages/moscow-0150.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 200,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:44.542Z",
+      "bytes": 160709,
+      "sha256": "fb1e6cebafab747d77a2c24ed773d8d5e7db80bca1ecc2e093f145944cca85a6",
+      "file": "source-pages/moscow-0200.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 250,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:45.973Z",
+      "bytes": 156244,
+      "sha256": "d7adebe1bc6f6b16349a38c3f0ea0c25f9b59d4f26f7961405851dae0ae51a6f",
+      "file": "source-pages/moscow-0250.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 300,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:47.240Z",
+      "bytes": 162458,
+      "sha256": "4739081ea17666044393ebfb7e90ccea15644fdb65580cd6c840fad7352800da",
+      "file": "source-pages/moscow-0300.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 350,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:48.483Z",
+      "bytes": 163868,
+      "sha256": "6be72cf30e83f37cf20dcf284fc4154db006e918b87703f5a325bf8e1e611506",
+      "file": "source-pages/moscow-0350.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 400,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:49.754Z",
+      "bytes": 163307,
+      "sha256": "15b66dfe247b79cc122751f9d48a80072cbb946d39870a3eb31c081b9ff3e998",
+      "file": "source-pages/moscow-0400.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 450,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:50.982Z",
+      "bytes": 160775,
+      "sha256": "ab3a5d86bb68a9254b6fb8aa5cfa71fe4a236bb9347b9f230a778fbb5de2ee1b",
+      "file": "source-pages/moscow-0450.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 500,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:52.236Z",
+      "bytes": 161412,
+      "sha256": "82d23cbac968c7713b4aab0f52f85245b1c6c86444b95a4bb33ea6594037d12a",
+      "file": "source-pages/moscow-0500.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 550,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:53.514Z",
+      "bytes": 155145,
+      "sha256": "c6cc0fc7a6d934a5816c4b2db0db9327a34fcf2fd2da6d049ed6e1c6ac16ef70",
+      "file": "source-pages/moscow-0550.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Москва",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 600,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:55.183Z",
+      "bytes": 51957,
+      "sha256": "cec47df6c904e670cbc96ff34bef24e8d77e36df4a207444a46475cdc3586cac",
+      "file": "source-pages/moscow-0600.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 0,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:56.536Z",
+      "bytes": 157211,
+      "sha256": "b8c7441f80c1d9e827ae13dd941d3754bb8deb43b338e4fa952c8e9ae195afa0",
+      "file": "source-pages/moscow-oblast-0000.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 50,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:57.781Z",
+      "bytes": 165510,
+      "sha256": "a460ecfbdbc4132c108005679738e3ccacd76db2b981cc50c871536f43506774",
+      "file": "source-pages/moscow-oblast-0050.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 100,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:11:59.103Z",
+      "bytes": 158927,
+      "sha256": "671d5645cb5b31f665cceca802d3c485edfbfde7cc6f348c24f2dc53814faa17",
+      "file": "source-pages/moscow-oblast-0100.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 150,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:00.308Z",
+      "bytes": 167231,
+      "sha256": "97587368e8e3bbb20585d831366434807ba25981be1eedbd22e53ddf77f0a09a",
+      "file": "source-pages/moscow-oblast-0150.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 200,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:01.574Z",
+      "bytes": 161754,
+      "sha256": "94eaa2e8be15e40c4a42ac48a43ae587a92d0dc5a81ec907145e980184d1dc91",
+      "file": "source-pages/moscow-oblast-0200.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 250,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:02.864Z",
+      "bytes": 163593,
+      "sha256": "3730500ac83314b59285ecf3c17bc3c758f4d2aa42e2502e5544da895bf29f3b",
+      "file": "source-pages/moscow-oblast-0250.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 300,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:04.141Z",
+      "bytes": 169009,
+      "sha256": "cb4131e74ef6cb2f91d4b540051b1c037d840d898cec817cd0e4f378a9b4967f",
+      "file": "source-pages/moscow-oblast-0300.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 350,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:05.423Z",
+      "bytes": 164260,
+      "sha256": "7fe618786b667df822586df72116dcd65652aab70cf8c50ae5bd46d5ad8e4593",
+      "file": "source-pages/moscow-oblast-0350.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 400,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:06.656Z",
+      "bytes": 163989,
+      "sha256": "c2620015fae4cdf25557b5ea43e632d21a3e309c07f45ac4d1f3480cf70dd78f",
+      "file": "source-pages/moscow-oblast-0400.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 450,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:07.907Z",
+      "bytes": 163215,
+      "sha256": "00ba38112703195aa5d958f30c113d0cfb76a2e48372c2c7ed336616227d7587",
+      "file": "source-pages/moscow-oblast-0450.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 500,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:09.170Z",
+      "bytes": 150791,
+      "sha256": "07dbd8e75a26ce218497b82ed7fdbef27d4bba8eaa0ac4fb090f5a8f9cbb2690",
+      "file": "source-pages/moscow-oblast-0500.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 550,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:10.396Z",
+      "bytes": 162299,
+      "sha256": "6b3b9bbf02d6a73f4fed3c7a1e35a71d7827bfd10ec83506255dac3f258b848e",
+      "file": "source-pages/moscow-oblast-0550.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 600,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:11.644Z",
+      "bytes": 164163,
+      "sha256": "499f9fe7a081108a6474762dcd7b24e022202929413329d95784f2b686d841ad",
+      "file": "source-pages/moscow-oblast-0600.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 650,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:12.904Z",
+      "bytes": 160021,
+      "sha256": "721d3566957230f918441dece8d7db53883023ae0388f6b9fe353c72e5d96792",
+      "file": "source-pages/moscow-oblast-0650.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 700,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:14.130Z",
+      "bytes": 163632,
+      "sha256": "3a01e07cd92ed21469100adb932758688cc86161aa48ec64fdbf13f3fe72516f",
+      "file": "source-pages/moscow-oblast-0700.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 750,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:15.400Z",
+      "bytes": 166154,
+      "sha256": "3c2c041becd892e644064dc7fa20c9a431afdf9570964ff49c0044344c41e661",
+      "file": "source-pages/moscow-oblast-0750.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 800,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:16.639Z",
+      "bytes": 159979,
+      "sha256": "181fdc16f08be6860713dfd4d37ab1694cc47c6178efa3a66be1207631864c2b",
+      "file": "source-pages/moscow-oblast-0800.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 850,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:17.899Z",
+      "bytes": 166375,
+      "sha256": "6849f80d7437652b281326b8afe4a7f676d116eba5c3a5da64b7b4563f82e00d",
+      "file": "source-pages/moscow-oblast-0850.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 900,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:19.133Z",
+      "bytes": 166415,
+      "sha256": "9cbdc07185bd50a170eb2310448333e3253ec47671c86d8d7a2b5568d9044548",
+      "file": "source-pages/moscow-oblast-0900.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 950,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:20.367Z",
+      "bytes": 163120,
+      "sha256": "356afd13464c3c5e8c4e9192b3168902f8d1e0c9cd21822a3672ec0c35a8a951",
+      "file": "source-pages/moscow-oblast-0950.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 1000,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:21.606Z",
+      "bytes": 161922,
+      "sha256": "0e3867931bf0534d540dec8bd29130576938ee733f59d433c9cf96b0a20dda6b",
+      "file": "source-pages/moscow-oblast-1000.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 1050,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:22.839Z",
+      "bytes": 166989,
+      "sha256": "257afaa2f3586355874fd67575327fe6ed19d357b36797c779ced25baa27befc",
+      "file": "source-pages/moscow-oblast-1050.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 1100,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:24.108Z",
+      "bytes": 168743,
+      "sha256": "ebfef6c4ba484f0a150e89a7d71ea0a1ac05aa4a181715076575aa3908a7092e",
+      "file": "source-pages/moscow-oblast-1100.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 1150,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:25.411Z",
+      "bytes": 163249,
+      "sha256": "437bccce3baccff7023398ce6c9b2642d52ebedeb9374e2f8c60f57025234e61",
+      "file": "source-pages/moscow-oblast-1150.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 1200,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:26.758Z",
+      "bytes": 169477,
+      "sha256": "0ee71052543c9d524236a5892bd9170a6722212d6bcb249641508e032252eb6c",
+      "file": "source-pages/moscow-oblast-1200.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 1250,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:28.025Z",
+      "bytes": 167344,
+      "sha256": "f4ad07e8584c2f054ccda222c7d6e8e9af33fda8e97eb2479ace550477a74abe",
+      "file": "source-pages/moscow-oblast-1250.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    },
+    {
+      "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+      "request": {
+        "filters": {
+          "query": "Московская обл",
+          "storeTypeListV2": [
+            "MM",
+            "MM_MINI",
+            "GM"
+          ]
+        },
+        "pagination": {
+          "offset": 1300,
+          "size": 50
+        },
+        "sorting": {
+          "sortBy": "SORT_BY_CITY",
+          "sortType": "SORT_TYPE_ASC"
+        }
+      },
+      "httpStatus": 200,
+      "observedAt": "2026-11-07T06:12:29.254Z",
+      "bytes": 111548,
+      "sha256": "83941f832fe7c4e16d723ae80c4fe3d58e7ff9746556e13bc235fc623791942d",
+      "file": "source-pages/moscow-oblast-1300.json.gz",
+      "encoding": "gzip",
+      "sha256Of": "uncompressed-response"
+    }
+  ]
+}

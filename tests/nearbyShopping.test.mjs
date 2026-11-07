@@ -113,8 +113,10 @@ test('distance filtering has no station dependency, never changes a price, and c
 });
 test('browser directory loading is shared, finite and does not send device coordinates or query a retailer',async()=>{
   const calls=[];const p=createNearbyShoppingPort({fetchImpl:async(u,o)=>{calls.push({u:String(u),o});return Response.json({schemaVersion:1,region:'moscow-and-oblast',exhaustive:false,priceEvidence:false,observedAt:new Date().toISOString(),stores:[]});}});
-  await Promise.all([p.directory(),p.directory()]);assert.equal(calls.length,1);assert.match(calls[0].u,/nearbyGroceryStores\.json$/u);
-  assert.equal(calls[0].o.body,undefined);assert.equal(calls[0].o.credentials,'omit');
+  await Promise.all([p.directory(),p.directory()]);assert.equal(calls.length,2);
+  assert.ok(calls.some(call=>/nearbyGroceryStores\.json$/u.test(call.u)));
+  assert.ok(calls.some(call=>/magnitRegisteredCoordinates\.json$/u.test(call.u)));
+  for(const call of calls){assert.equal(call.o.body,undefined);assert.equal(call.o.credentials,'omit');}
 });
 
 test('official regional Magnit addresses remain geography without a Moscow catalogue or price claim',()=>{

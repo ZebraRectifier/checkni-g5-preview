@@ -2,6 +2,7 @@ import { openHory, closeHory, selectStore, openStoreDetails } from './helpers/pi
 import{test,expect}from'@playwright/test';
 import fs from 'node:fs';
 const joinedDirectory = JSON.parse(fs.readFileSync(new URL('../../src/data/nearbyGroceryStores.json',import.meta.url),'utf8'));
+const registeredCoordinates = JSON.parse(fs.readFileSync(new URL('../../src/data/magnitRegisteredCoordinates.json',import.meta.url),'utf8'));
 test.setTimeout(60000);
 async function isolateRegional(page){
   // Let local modules load natively; intercept only external traffic. Hundreds
@@ -9,6 +10,87 @@ async function isolateRegional(page){
   await page.route(/^https?:\/\/(?!(?:127\.0\.0\.1|localhost)(?::\d+)?\/)/u,r=>r.abort());
   await page.route('**/rest/v1/**',r=>r.fulfill({json:[]}));
 }
+
+test('official Magnit coordinates: Moscow and oblast open their exact existing catalogues',async({page},testInfo)=>{
+  await isolateRegional(page);let point;const scopes=[];
+  await page.route('**/functions/v1/nearby-address',route=>route.fulfill({json:{version:1,candidates:[{
+    lat:point.lat,lon:point.lon,label:point.address,precision:'house'}]}}));
+  await page.route('**/rest/v1/**',route=>{scopes.push(new URL(route.request().url()).searchParams.get('store_id'));return route.fulfill({json:[]});});
+  for(const code of ['303857','548279']){
+    point=registeredCoordinates.stores.find(row=>row.shopCode===code);
+    await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
+    await selectStore(page);await openStoreDetails(page);
+    await page.locator('#nearby-shopping').getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
+    await page.locator('#nearby-address').fill(point.address);await page.locator('#nearby-address-search').click();
+    await page.locator('#nearby-address-candidates button').click();await page.locator('#nearby-radius').selectOption('1');
+    const row=page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
+    await expect(row).toContainText('Актуальность цен и возможность добавить товар указаны в каталоге');
+    await expect(row.getByRole('link',{name:'Источник адреса'})).toHaveAttribute('href','https://magnit.ru/shops');
+    await row.getByRole('button',{name:'Открыть товары'}).click();
+    await expect(page.locator('#magnit-store-address')).toHaveValue(code);
+    await expect.poll(()=>scopes.includes('eq.magnit-'+code)).toBe(true);
+    await expect(page.locator('#nearby-selected-store')).toContainText(point.address);
+    await page.screenshot({path:testInfo.outputPath(`official-magnit-${code}.png`)});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  }
+});
+
+test('official Magnit coordinates: map retains full paginated list and opens an oblast store with bounded markers',async({page,context},testInfo)=>{
+  await isolateRegional(page);
+  await page.route('https://tiles.openfreemap.org/**',route=>new URL(route.request().url()).pathname==='/styles/liberty'
+    ?route.fulfill({json:{version:8,sources:{},layers:[{id:'background',type:'background',paint:{'background-color':'#e5e8de'}}]}}):route.abort());
+  const point=registeredCoordinates.stores.find(row=>row.shopCode==='548279');
+  await context.grantPermissions(['geolocation']);await context.setGeolocation({latitude:point.lat,longitude:point.lon,accuracy:10});
+  await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
+  await selectStore(page);await openStoreDetails(page);await page.locator('#stores-section').scrollIntoViewIfNeeded();
+  await expect.poll(async()=>Number((await page.locator('.stores-location-directory > summary').textContent()).match(/\d+/u)?.[0])).toBeGreaterThanOrEqual(1409);
+  await page.locator('.stores-location-directory').evaluate(node=>{node.open=true;});
+  // Before choosing a position there is no nearby context: this exercises the
+  // general app callback and its oblast resolver, not the nearby event path.
+  const direct=page.locator('#stores-known-locations li[data-store-location-id="official:magnit:019945"]');
+  for(let step=0;step<8&&!await direct.count();step++)await page.getByRole('button',{name:'Показать ещё магазины',exact:true}).click();
+  await expect(direct).toBeVisible();await direct.getByRole('button',{name:'Открыть товары',exact:true}).click();
+  await expect(page.locator('#magnit-store-address')).toHaveValue('019945');
+  await selectStore(page);await openStoreDetails(page);await page.locator('#stores-section').scrollIntoViewIfNeeded();
+  await page.locator('#stores-locate').click();await page.locator('#stores-map-network').selectOption('magnit');
+  await expect(page.locator('#stores-known-locations li')).toHaveCount(5);
+  const row=page.locator('#stores-known-locations li[data-store-location-id="official:magnit:548279"]');
+  await expect(row).toContainText(point.address);
+  await row.getByRole('button',{name:'Магнит',exact:true}).click();
+  const card=page.locator('.stores-pin-card');await expect(card).toContainText(point.address);
+  await expect(card.getByRole('link',{name:'Маршрут'})).toHaveAttribute('href',/yandex\.ru\/maps/u);
+  await expect.poll(()=>page.locator('.stores-pin').count()).toBeGreaterThan(0);
+  expect(await page.locator('.stores-pin').count()).toBeLessThanOrEqual(200);
+  const total=Number((await page.locator('.stores-location-directory > summary').textContent()).match(/\d+/u)?.[0]);
+  await page.getByRole('button',{name:'Показать ещё магазины',exact:true}).click();
+  await expect(page.locator('#stores-known-locations li')).toHaveCount(Math.min(15,total));await expect(card).toContainText(point.address);
+  await card.scrollIntoViewIfNeeded();
+  await page.screenshot({path:testInfo.outputPath('official-magnit-map.png')});
+  await card.getByRole('button',{name:'Открыть товары',exact:true}).click();
+  await expect(page.locator('#magnit-store-address')).toHaveValue('548279');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('official Magnit coordinates: a registry-only address is absent from connected catalogues',async({page,context})=>{
+  await isolateRegional(page);
+  const packet=structuredClone(registeredCoordinates),point=packet.stores.find(row=>row.shopCode==='303857');point.catalog=null;
+  await page.route('**/magnitRegisteredCoordinates.json',route=>route.fulfill({json:packet}));
+  await context.grantPermissions(['geolocation']);await context.setGeolocation({latitude:point.lat,longitude:point.lon,accuracy:10});
+  await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
+  await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready',{timeout:20000});
+  await page.locator('#nearby-locate').click();await page.locator('#nearby-radius').selectOption('1');
+  await page.locator('#nearby-connected-only').uncheck();
+  const row=page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
+  await expect(row).toContainText('Каталог этого адреса пока не подключён');
+  await expect(row.getByRole('button',{name:'Открыть товары'})).toHaveCount(0);
+  await page.locator('#nearby-connected-only').check();await expect(row).toHaveCount(0);
+  await page.locator('#nearby-connected-only').uncheck();await expect(row).toContainText('Цены неизвестны');
+  await page.locator('#nearby-shopping').getByRole('button',{name:'Выбрать точку на карте',exact:true}).click();
+  await page.locator('#stores-known-locations li[data-store-location-id="official:magnit:303857"]').getByRole('button',{name:'Магнит',exact:true}).click();
+  const card=page.locator('.stores-pin-card');await expect(card).toContainText('Каталог адреса пока не подключён');
+  await expect(card.getByRole('button',{name:'Открыть товары',exact:true})).toHaveCount(0);
+  await expect(card.getByRole('link',{name:'Маршрут'})).toHaveAttribute('href',/yandex\.ru\/maps/u);
+});
 
 test('five regional cities: real address cards, directory recovery and no Moscow or catalogue leakage', async ({page,context},testInfo) => {
   test.setTimeout(120000);

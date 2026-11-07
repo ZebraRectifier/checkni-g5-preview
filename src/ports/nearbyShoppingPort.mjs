@@ -3,6 +3,7 @@ import{CATALOG_SEARCH_PUBLISHABLE_KEY}from'./catalogGatewayPort.mjs';
 import{readBoundedJsonResponse}from'./retailCatalogPort.mjs';
 import{createAddressRecovery,directoryAddressCandidates}from'./addressRecovery.mjs';
 import { nearbyCityQuery, nearbyRegionForPosition } from '../intelligence/nearbyRegions.mjs';
+import { withRegisteredMagnitCoordinates } from '../intelligence/nearbyShopping.mjs';
 export const NEARBY_ADDRESS_ENDPOINT='https://cxpneczhczashanbetgj.supabase.co/functions/v1/nearby-address';
 const regionalDirectories=new Set(['saint-petersburg','kazan','yekaterinburg','novosibirsk','nizhny-novgorod']);
 export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
@@ -44,11 +45,17 @@ export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
     async directory(){
       if(cached)return cached;
       if(!pending)pending=(async()=>{try{
+        const official=(async()=>{try{
+          // Coordinate/binding evidence travels with its reviewed code release;
+          // unlike price observations it is not a mutable publication feed.
+          const r=await fetchImpl(new URL('../data/magnitRegisteredCoordinates.json',import.meta.url),{credentials:'omit',signal:AbortSignal.timeout(5000)});
+          return r.ok?await readBoundedJsonResponse(r,2*1024*1024):null;
+        }catch{return null;}})();
         const r=await fetchImpl(publicDataUrl('nearbyGroceryStores.json'),{credentials:'omit',signal:AbortSignal.timeout(10000)});
         if(!r.ok)throw Error('directory_unavailable');const d=await readBoundedJsonResponse(r,8*1024*1024);
         if(d?.schemaVersion!==1||d.region!=='moscow-and-oblast'||d.exhaustive!==false||d.priceEvidence!==false
           ||!Array.isArray(d.stores)||d.stores.length>25000||!Number.isFinite(Date.parse(d.observedAt)))throw Error('directory_invalid');
-        cached=d;return d;
+        cached=withRegisteredMagnitCoordinates(d,await official);return cached;
       }finally{pending=null;}})();return pending;
     },
     async address(query){

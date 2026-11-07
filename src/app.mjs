@@ -3622,10 +3622,10 @@ try {
         comparedGlobusStore = null;
         retailerId = "metro";
       } else if (point.retailerId === "magnit") {
-        if (point.selectionKind !== "registered-store" || point.coordinateKind !== "osm-exact-address-join") return;
+        if (point.selectionKind !== "registered-store" || !["osm-exact-address-join","official-registered-store-code"].includes(point.coordinateKind)) return;
         const binding = nearbyCatalogBinding(point);
         if (binding?.retailerId !== "magnit" || point.shopCode !== binding.store.shopCode) return;
-        const store = resolveMagnitMoscowStore({ shopCode: binding.store.shopCode, address: binding.store.address });
+        const store = resolveMagnitMoscowStore({ shopCode: binding.store.shopCode, address: binding.store.address }) ?? resolveMagnitMoscowOblastStore({ shopCode: binding.store.shopCode, address: binding.store.address });
         if (!store) return;
         selectedMagnitStore = store;
         comparedGlobusStore = null;
