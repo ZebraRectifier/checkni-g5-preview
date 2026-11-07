@@ -999,7 +999,7 @@ function renderRetailBrowser() {
       : retailBrowserState.status === "error"
         ? "Раздел временно не загрузился. Можно повторить."
         : retailBrowserState.categories.length > 0
-          ? "Выберите подкатегорию. Если раздел конечный — ниже сразу появятся товары."
+          ? "Выберите подкатегорию."
           : "Конечный раздел. Товары показаны ниже."
     : "Выберите раздел, затем подкатегорию — товары появятся ниже.";
   elements.retailCategoryBack.hidden = retailBrowserState.path.length === 0;
@@ -1987,7 +1987,10 @@ function setupManualSearchControls() {
   retry.hidden = true;
   retry.addEventListener("click", () => {
     if (elements.searchInput.value.trim()) elements.searchForm.requestSubmit();
-    else elements.clearSearch.click();
+    else if (publicRetailCatalogMode && retailBrowserState.path.length
+      && catalogSearchState.categoryName === retailBrowserState.path.at(-1).name) {
+      void loadRetailCategoryProducts(retailBrowserState.path.at(-1));
+    } else elements.clearSearch.click();
   });
   const otherStores = document.createElement('button');
   otherStores.id = 'catalog-other-stores'; otherStores.type = 'button';
@@ -2066,7 +2069,16 @@ function renderCatalog() {
     catalogSearchState.status === "fallback"
     && catalogSearchState.query === normalizedQuery
   );
-  const categoryBrowsing = (
+  // Some sources assign products only to leaf categories. A successful empty
+  // parent response is still navigation, not an empty or failed product search.
+  const browsingSubcategories = publicRetailCatalogMode && live && !normalizedQuery
+    && catalogSearchState.products.length === 0
+    && !catalogSearchState.unavailableSources
+    && retailBrowserState.status === "ready"
+    && retailBrowserState.path.length > 0
+    && retailBrowserState.categories.length > 0
+    && retailBrowserState.path.at(-1)?.name === catalogSearchState.categoryName;
+  const categoryBrowsing = browsingSubcategories || (
     publicRetailCatalogMode
     && catalogSearchState.status === "category"
   );
@@ -2151,7 +2163,9 @@ function renderCatalog() {
           ? publicRetailCatalogMode ? `Живой каталог · ${retailName}` : `Живой каталог · ${retailName} + Open Food Facts`
           : `Живой каталог · ${retailName}`
         : publicRetailCatalogMode ? `Живой каталог · ${retailName}` : "Живой каталог · Open Food Facts";
-    elements.catalogNote.textContent = categoryResult
+    elements.catalogNote.textContent = browsingSubcategories
+      ? `${catalogSearchState.categoryName}: выберите подкатегорию.`
+      : categoryResult
       ? catalogSearchState.retailCount > 0
         ? `${catalogSearchState.categoryName}: реальные товары ${retailName} с наблюдаемыми ценами.`
         : `${catalogSearchState.categoryName}: в этом разделе сейчас нет товаров.`
@@ -2200,7 +2214,7 @@ function renderCatalog() {
   }
   if (publicRetailCatalogMode) {
     const heading = elements.productGrid.closest('.catalog-section').querySelector('.section-heading');
-    if (heading) heading.hidden = !hasResults && featuredIds.size > 0;
+    if (heading) heading.hidden = browsingSubcategories || (!hasResults && featuredIds.size > 0);
   }
   if (elements.searchPrompt) {
     elements.searchPrompt.hidden = !draft;
@@ -2226,7 +2240,7 @@ function renderCatalog() {
   }
 
   if (categoryBrowsing) {
-    elements.searchStatus.textContent = "Выберите конечную категорию";
+    elements.searchStatus.textContent = "Выберите подкатегорию";
     return;
   }
 

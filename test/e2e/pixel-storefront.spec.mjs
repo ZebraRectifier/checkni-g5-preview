@@ -121,6 +121,9 @@ test('Lenta populated categories remain usable beyond forty products and after a
  await page.locator('#retail-category-grid [data-category-id="25"]').click();
  await expect(buttons).toHaveCount(2);
  await expect(page.locator('#retail-category-grid')).not.toContainText('Пустые крупы');
+ await expect(page.locator('#search-status')).toHaveText('Выберите подкатегорию');
+ await expect(page.locator('#empty-search')).toBeHidden();
+ await expect(page.locator('#retail-category-note')).toHaveText('Выберите подкатегорию.');
  await page.locator('#retail-category-grid [data-category-id="31"]').click();
  await expect(page.locator('#product-grid .product-card')).toHaveCount(30);
  await expect(page.locator('#product-grid .product-card').first()).toContainText('По Карте №1');
@@ -130,6 +133,54 @@ test('Lenta populated categories remain usable beyond forty products and after a
  await expect(page.locator('#product-grid .product-card')).toHaveCount(30);
  expect(reads.filter(p=>p.depth||p.parent_id).every(p=>p.product_count==='gt.0')).toBe(true);
  expect(reads.every(p=>p.store_id==='eq.lenta-public-web')).toBe(true);
+ await expectNoOverflow(page);
+});
+
+test('parent category guidance keeps product failures, empty leaves and empty search results distinct', async ({page}, testInfo) => {
+ await setup(page);
+ const category=(id,name,parent=null)=>({retailer_id:'lenta',store_id:'lenta-public-web',category_id:id,name,
+  product_count:1,parent_id:parent,root_id:parent??id,depth:parent?1:0,source_url:`https://lenta.com/catalog/fixture-${id}/`});
+ let failParent=true;
+ await page.route('**/rest/v1/retail_catalog_categories**',route=>{
+  const p=new URL(route.request().url()).searchParams;
+  return route.fulfill({json:p.get('retailer_id')!=='eq.lenta'?[]:p.get('parent_id')==='eq.25'
+   ?[category(31,'Макароны',25)]:p.has('parent_id')?[]:[category(25,'Макароны, крупы, мука')]});
+ });
+ await page.route('**/rest/v1/retail_catalog_items**',route=>{
+  const p=new URL(route.request().url()).searchParams;
+  if(p.get('main_category_id')==='eq.25'&&failParent){failParent=false;return route.fulfill({status:503,json:{error:'temporary fixture'}});}
+  return route.fulfill({json:[]});
+ });
+ await page.locator('#retail-store-card-lenta').click();
+ // A successful empty root is not hidden merely because it has categories.
+ await expect(page.locator('#empty-search h3')).toHaveText('Ничего не нашли');
+ await expect(page.locator('#empty-search')).toBeVisible();
+ await page.locator('#retail-category-grid [data-category-id="25"]').click();
+ await expect(page.locator('#retail-category-grid [data-category-id="31"]')).toBeVisible();
+ // A failed products request remains explicit even when the children loaded.
+ await expect(page.locator('#empty-search h3')).toHaveText('Не удалось загрузить товары');
+ await expect(page.locator('#catalog-search-retry')).toBeVisible();
+ await page.locator('#catalog-search-retry').click();
+ await expect(page.locator('#search-status')).toHaveText('Выберите подкатегорию');
+ await expect(page.locator('#empty-search')).toBeHidden();
+ await expect(page.locator('.catalog-section .section-heading')).toBeHidden();
+ await expect(page.locator('#retail-category-note')).toHaveText('Выберите подкатегорию.');
+ await page.screenshot({path:testInfo.outputPath('parent-category.png')});
+ // The existing category buttons remain keyboard operable.
+ const leaf=page.locator('#retail-category-grid [data-category-id="31"]');
+ await leaf.focus(); await page.keyboard.press('Enter');
+ await expect(page.locator('#retail-breadcrumbs .is-current')).toHaveText('Макароны');
+ await expect(page.locator('#empty-search')).toBeVisible();
+ await expect(page.locator('#empty-search h3')).toHaveText('Ничего не нашли');
+ await expect(page.locator('#empty-search')).toContainText('В этой категории пока нет данных о товарах');
+ await expect(page.locator('.catalog-section .section-heading')).toBeVisible();
+ await expect(page.locator('#catalog-search-retry')).toBeHidden();
+ // Search is separate from category navigation, including with a saved path.
+ await page.locator('#product-search').fill('Нет такого товара');
+ await page.locator('.catalog-search-submit').click();
+ await expect(page.locator('#empty-search')).toBeVisible();
+ await expect(page.locator('#empty-search h3')).toHaveText('Ничего не нашли');
+ await expect(page.locator('#search-status')).not.toHaveText('Выберите подкатегорию');
  await expectNoOverflow(page);
 });
 
