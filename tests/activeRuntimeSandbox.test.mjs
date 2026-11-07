@@ -8,7 +8,7 @@ import {prepareCiRuntime, writeCiOutputs, TRUSTED_TEST_REPOSITORY,
   MUTABLE_PUBLIC_DATA_FILES} from '../tools/browser-release/prepare-ci-runtime.mjs';
 import {digest, mime} from '../tools/browser-release/verify.mjs';
 
-async function fixture(t, {active = true, coordinateEvidence = false} = {}) {
+async function fixture(t, {active = true, coordinateEvidence = false, workflowFixtures = false} = {}) {
   const base = await fs.mkdtemp(path.join(os.tmpdir(), 'checkni-ci-sandbox-tests-'));
   t.after(async () => {
     const resolved = await fs.realpath(base);
@@ -32,6 +32,19 @@ async function fixture(t, {active = true, coordinateEvidence = false} = {}) {
   await write('test/e2e/reference-v13/linux/fixture.png', Buffer.from([0, 1, 2, 255]));
   await write('artifacts/nearby-shopping/catalog-geography-joins-20261024.json', '{"verifiedJoins":[]}\n');
   if (coordinateEvidence) await write('evidence/magnit-nearby-20261107/source-manifest.json', '{"pinned":true}\n');
+  if (workflowFixtures) {
+    for (const name of ['okey-public-data', 'pyaterochka-public-data', 'pages-publication']) {
+      await write(`.github/workflows/${name}.yml`, `name: pinned ${name}\n`);
+    }
+    await write('.github/workflows/unrelated.yml', 'name: not a test dependency\n');
+    await write('.github/unrelated.json', '{"mustNotCopy":true}\n');
+    await write('tests/publicationFixture.test.mjs', `import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+for (const name of ['okey-public-data', 'pyaterochka-public-data', 'pages-publication']) {
+  assert.equal(await readFile(new URL('../.github/workflows/'+name+'.yml', import.meta.url), 'utf8'), 'name: pinned '+name+'\\n');
+}
+`);
+  }
   await write('evidence/unrelated.json', '{"excluded":true}\n');
   git('add', '.'); git('commit', '-m', 'fixture runtime and tests');
   const commit = git('rev-parse', 'HEAD');
@@ -90,6 +103,36 @@ test('coordinate evidence is pinned to the tested commit without exporting unrel
   const result = await prepareCiRuntime({...f, ciOnly: true});
   assert.equal(await fs.readFile(path.join(result.root, 'evidence/magnit-nearby-20261107/source-manifest.json'), 'utf8'), '{"pinned":true}\n');
   await assert.rejects(fs.stat(path.join(result.root, 'evidence/unrelated.json')), {code: 'ENOENT'});
+});
+
+test('publication contract tests can read only pinned workflow fixtures inside the active sandbox', async t => {
+  const f = await fixture(t, {workflowFixtures: true});
+  for (const name of ['okey-public-data', 'pyaterochka-public-data', 'pages-publication']) {
+    await f.write(`.github/workflows/${name}.yml`, `name: changed live ${name}\n`);
+  }
+  const before = f.git('status', '--porcelain');
+  const result = await prepareCiRuntime({...f, ciOnly: true});
+  const {NODE_TEST_CONTEXT, ...childEnv} = process.env;
+  const testResult = execFileSync(process.execPath, ['--test', 'tests/publicationFixture.test.mjs'],
+    {cwd: result.root, encoding: 'utf8', env: childEnv, stdio: ['ignore', 'pipe', 'pipe']});
+  assert.match(testResult, /# pass 1/u);
+  assert.match(testResult, /# fail 0/u);
+  for (const file of ['.github/workflows/unrelated.yml', '.github/unrelated.json']) {
+    await assert.rejects(fs.stat(path.join(result.root, file)), {code: 'ENOENT'});
+  }
+  assert.equal(f.git('status', '--porcelain'), before);
+  assert.equal(await fs.readFile(path.join(f.root, '.github/workflows/pages-publication.yml'), 'utf8'),
+    'name: changed live pages-publication\n');
+});
+
+test('a linked workflow fixture is rejected before any sandbox extraction', async t => {
+  const f = await fixture(t, {workflowFixtures: true});
+  const object = execFileSync('git', ['hash-object', '-w', '--stdin'], {cwd: f.root, input: '../../../outside'}).toString().trim();
+  f.git('update-index', '--add', '--cacheinfo', `120000,${object},.github/workflows/pages-publication.yml`);
+  f.git('commit', '-m', 'bad workflow fixture link');
+  await f.write(`release/verification/${f.id}.json`, JSON.stringify({...f.verification, testCommit: f.git('rev-parse', 'HEAD')}));
+  await assert.rejects(prepareCiRuntime({...f, ciOnly: true}), /unsafe_test_support_tree/u);
+  assert.deepEqual(await fs.readdir(f.runnerTemp), []);
 });
 
 test('invalid descriptors and mismatched activation or release content fail before sandbox creation', async t => {
