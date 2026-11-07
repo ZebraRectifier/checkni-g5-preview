@@ -2,9 +2,10 @@
 // transcripts, identity, commercial facts and inferred hypotheses stay out.
 export const CONVERSATION_LIMITS = Object.freeze({ facts: 16, rejected: 32, wishes: 16, exceptions: 8, bytes: 8192 });
 export const normalizeShoppingText = value => String(value ?? "").normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е").replace(/\s+/g, " ").trim();
-export const shoppingTargetLabel = key => ({ meat: "мясо и птица", chicken_mince: "куриный фарш", chicken: "курица", nuggets: "наггетсы", chebureki: "чебуреки", eggs: "яйца", rice: "рис", pasta: "макароны", oatmeal: "овсянка", potatoes: "картофель", onions: "лук", carrots: "морковь", cabbage: "капуста", milk: "молоко", kefir: "кефир", vegetables: "овощи", fruit: "фрукты", tomatoes: "томаты", bread: "хлеб", cheese: "сыр", apples: "яблоки", bananas: "бананы", pelmeni: "пельмени", beef_mince: "говяжий фарш" }[key] ?? key);
+export const shoppingTargetLabel = key => ({ pork: "свинина", meat: "мясо и птица", chicken_mince: "куриный фарш", chicken: "курица", nuggets: "наггетсы", chebureki: "чебуреки", eggs: "яйца", rice: "рис", pasta: "макароны", oatmeal: "овсянка", potatoes: "картофель", onions: "лук", carrots: "морковь", cabbage: "капуста", milk: "молоко", kefir: "кефир", vegetables: "овощи", fruit: "фрукты", tomatoes: "томаты", bread: "хлеб", cheese: "сыр", apples: "яблоки", bananas: "бананы", pelmeni: "пельмени", beef_mince: "говяжий фарш" }[key] ?? key);
 
 const TERMS = Object.freeze({
+  pork: /свинин[а-я]*|свин[а-я]*\s+фарш|фарш\s+свин[а-я]*/u,
   meat: /(?:^|[^а-я])мяс(?:о|а|у|ом|ные|ной|ная|ное|ных|ным|ную)(?=$|[^а-я])/u,
   chicken_mince: /курин\S*\s+фарш|фарш\s+(?:из\s+куриц\S*|курин\S*)/u,
   chicken: /куриц\S*|цыплен\S*|курин\S*\s+филе|филе\s+курин\S*/u,
@@ -164,7 +165,8 @@ export function extractShoppingDelta(text) {
         if (parts.length > 1) for (const part of parts) {
           // A closed conversational aside is not another excluded food. Do not
           // clear existing unresolved constraints or ignore unknown list members.
-          const noOtherRestrictions = /^(?:других|иных|остальных) ограничений нет$/u.test(part);
+          const noOtherRestrictions = /^(?:других|иных|остальных) ограничений нет$/u.test(part)
+            || /^(?:что|чем) (?:посоветуешь|порекомендуешь|заменить)(?: вместо (?:неё|нее|него|этого))?$/u.test(part);
           if (!shoppingTargets(part).length && !noOtherRestrictions && !/^(?:готовк[аиу]|пожалуйста|пж|плиз|спасибо)$/u.test(part)) {
             delta.unresolved.push(`без ${part.replace(/^без\s+/u, "")}`.slice(0, 80));
           }

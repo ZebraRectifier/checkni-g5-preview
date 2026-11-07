@@ -12,6 +12,9 @@ export const SHOPPING_LANDMARKS = Object.freeze([Object.freeze({
 
 export function shoppingLocationRequest(text) {
   const value = String(text ?? '').toLowerCase().replaceAll('ё', 'е');
+  if (/^(?:г\.?\s*|город\s+)?москва[.!?]?$/u.test(value.trim())) return {
+    city: 'Москва', approximate: true, coordinateKind: 'city', requiresStoreSelection: true
+  };
   const radius = value.match(/(?:до|радиус(?:е|ом)?|в пределах)\s*(\d{1,3})\s*км/u);
   const landmark = SHOPPING_LANDMARKS.find(row => row.id === 'zavety-ilyicha-station'
     && /завет(?:ы|ах|ов)\s+ильича/u.test(value));

@@ -1,3 +1,4 @@
+import { publicDataUrl } from '../ports/publicDataUrl.mjs';
 import { watchCatalogMore } from './catalogMoreOnScroll.mjs';
 import { historySnapshots, latestForAddress, observationTime } from '../observations/addressPriceHistory.mjs';
 import { readBoundedJsonResponse } from '../ports/retailCatalogPort.mjs';
@@ -21,12 +22,12 @@ export function createOkeyDeliveryCatalog({fetchImpl=globalThis.fetch}={}){
   details.addEventListener('toggle',async()=>{
     if(!details.open||started)return;started=true;status.textContent='Загружаем наблюдения…';
     try{
-      const response=await fetchImpl(new URL('../data/okeyDeliveryHistory.json',import.meta.url),{cache:'no-store'});
+      const response=await fetchImpl(publicDataUrl('okeyDeliveryHistory.json'),{cache:'no-store'});
       if(!response.ok)throw new Error('unavailable');
       let bundle=await readBoundedJsonResponse(response,8*1024*1024);
       let refreshStatus='manual';
       try{
-        const refreshResponse=await fetchImpl(new URL('../data/okeyDeliveryRefresh.json',import.meta.url),{cache:'no-store'});
+        const refreshResponse=await fetchImpl(publicDataUrl('okeyDeliveryRefresh.json'),{cache:'no-store'});
         if(refreshResponse.ok)refreshStatus=(await refreshResponse.json()).status;
       }catch{}
       const snapshots=historySnapshots(bundle).filter(s=>observationTime(s)<=Date.now());
@@ -82,7 +83,7 @@ export function createOkeyDeliveryCatalog({fetchImpl=globalThis.fetch}={}){
       setInterval(async()=>{
         if(!details.isConnected||!details.open||document.visibilityState==='hidden')return;
         try{
-          const nextResponse=await fetchImpl(new URL('../data/okeyDeliveryHistory.json',import.meta.url),{cache:'no-store'});
+          const nextResponse=await fetchImpl(publicDataUrl('okeyDeliveryHistory.json'),{cache:'no-store'});
           if(!nextResponse.ok)return;
           const next=await readBoundedJsonResponse(nextResponse,8*1024*1024);
           if(!latestForAddress(next,address.value))return;

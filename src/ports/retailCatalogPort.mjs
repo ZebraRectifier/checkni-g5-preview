@@ -8,6 +8,7 @@ import { resolveMetroMoscowRegionStore } from "../data/metroMoscowRegionStores.m
 import { resolveGlobusMoscowRegionStore } from "../data/globusMoscowRegionStores.mjs";
 import { getReviewedRetailBasketProduct } from "../catalog/reviewedRetailBasket.mjs";
 import { hintRetailCatalogConnection } from "./retailCatalogConnectionHint.mjs";
+import { createPublishedPromotionCatalogClient } from './publishedPromotionCatalog.mjs';
 
 export const RETAIL_CATALOG_ENDPOINT =
   "https://cxpneczhczashanbetgj.supabase.co/rest/v1/retail_catalog_items";
@@ -25,6 +26,30 @@ if (typeof globalThis.location?.search === "string"
 }
 
 const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
+  okey: Object.freeze({
+    retailerId: 'okey', storeId: 'okey-moscow-city-promotions', storeName: 'О’КЕЙ · акции Москвы',
+    localityId: 'city-moscow-promo', localityName: 'Москва', displayName: 'О’КЕЙ',
+    catalogLabel: 'О’КЕЙ · акции Москвы', scopeLabel: 'Акции Москвы · цена конкретного магазина и наличие не подтверждены',
+    logo: 'О', defaultProductCount: null, rootCategoryCount: null,
+    priceScope: 'city-promotion', physicalStoreId: null, publishedPromotionTransport: true,
+    publishedPromotions: true, requiresPromoValidity: true, searchAliases: "окей okey o'key",
+    productUrlRules: Object.freeze([{ host: 'www.okmarket.ru', prefix: '/product/' }, { host: 'mos.proshoper.ru', prefix: '/actions/okej/moskva/' }]),
+    categoryUrlRules: Object.freeze([{ host: 'www.okmarket.ru', prefix: '/catalogs/' }, { host: 'mos.proshoper.ru', prefix: '/actions/okej/moskva/' }]),
+    sourceUrlRules: Object.freeze([{ host: 'www.okmarket.ru', prefix: '/product/' }, { host: 'mos.proshoper.ru', prefix: '/actions/okej/moskva/' }]),
+    imageUrlRules: Object.freeze([]), priceConditionLabels: Object.freeze({})
+  }),
+  pyaterochka: Object.freeze({
+    retailerId: 'pyaterochka', storeId: 'pyaterochka-moscow-proshoper', storeName: 'Пятёрочка · акции Москвы',
+    localityId: 'city-moscow-promo', localityName: 'Москва', displayName: 'Пятёрочка',
+    catalogLabel: 'Пятёрочка · акции Москвы', scopeLabel: 'Акции Москвы · цена конкретного магазина и наличие не подтверждены',
+    logo: '5', defaultProductCount: null, rootCategoryCount: null,
+    priceScope: 'city-promotion', physicalStoreId: null, publishedPromotionTransport: true,
+    publishedPromotions: true, requiresPromoValidity: true, searchAliases: 'пятерочка',
+    productUrlRules: Object.freeze([{ host: 'mos.proshoper.ru', prefix: '/actions/pyaterochka/moskva/' }]),
+    categoryUrlRules: Object.freeze([{ host: 'mos.proshoper.ru', prefix: '/actions/pyaterochka/moskva/' }]),
+    sourceUrlRules: Object.freeze([{ host: 'mos.proshoper.ru', prefix: '/actions/pyaterochka/moskva/' }]),
+    imageUrlRules: Object.freeze([]), priceConditionLabels: Object.freeze({})
+  }),
   globus: Object.freeze({
     retailerId: "globus",
     storeId: "globus-pvz-2",
@@ -406,6 +431,8 @@ function resolveDefinition(value = "globus") {
   }
   const base = getRetailCatalogDefinition(value.retailerId);
   if (!base) return null;
+  if (base.publishedPromotionTransport && (value.store != null || value.physicalStoreId != null
+      || value.storeId != null && value.storeId !== base.storeId)) return null;
 
   if (value.retailerId === "globus" && (value.store || value.officialStoreId)) {
     const store = resolveGlobusMoscowRegionStore(value.store ?? value.officialStoreId);
@@ -598,6 +625,7 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
   const definition = resolveDefinition(retailer);
   if (
     !definition
+    || definition.publishedPromotionTransport === true
     || !row
     || typeof row !== "object"
     || Array.isArray(row)
@@ -801,6 +829,10 @@ export function createRetailCatalogClient(options = {}) {
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const definition = resolveDefinition({ ...options, retailerId: options.retailerId ?? "globus" });
   const timeoutMs = options.timeoutMs ?? RETAIL_CATALOG_TIMEOUT_MS;
+  if (definition?.publishedPromotionTransport) return createPublishedPromotionCatalogClient({
+    definition, fetchImpl, readJson: readBoundedJsonResponse, cleanQuery, timeoutMs,
+    now: typeof options.now === 'function' ? options.now : Number.isFinite(options.nowMs) ? () => options.nowMs : Date.now
+  });
   const normalizeOptions = Object.freeze({
     ...(Number.isFinite(options.nowMs) ? { nowMs: options.nowMs } : {}),
     includeComparisonEvidence: options.includeComparisonEvidence === true

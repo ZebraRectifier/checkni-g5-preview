@@ -3,6 +3,56 @@ import{test,expect}from'@playwright/test';
 import fs from 'node:fs';
 const joinedDirectory = JSON.parse(fs.readFileSync(new URL('../../src/data/nearbyGroceryStores.json',import.meta.url),'utf8'));
 test.setTimeout(60000);
+async function isolateRegional(page){
+  // Let local modules load natively; intercept only external traffic. Hundreds
+  // of local continue() callbacks obscure timing on resource-limited runners.
+  await page.route(/^https?:\/\/(?!(?:127\.0\.0\.1|localhost)(?::\d+)?\/)/u,r=>r.abort());
+  await page.route('**/rest/v1/**',r=>r.fulfill({json:[]}));
+}
+test('regional device location uses Kazan and Petersburg directories; unsupported coordinates never fall back to Moscow', async ({page,context}) => {
+  await isolateRegional(page); await context.grantPermissions(['geolocation']);
+  const loaded=[];page.on('request',r=>{if(r.url().includes('/nearby-regions/'))loaded.push(r.url());});
+  await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
+  await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready',{timeout:20000});
+  for(const [lat,lon,city,slug] of [[55.7961,49.1064,'Казань','kazan'],[59.9343,30.3351,'Санкт-Петербург','saint-petersburg']]){
+    await context.setGeolocation({latitude:lat,longitude:lon,accuracy:20});
+    await page.locator('#nearby-locate').click();
+    await expect(page.locator('#nearby-results article').first()).toContainText(city);
+    expect(loaded.some(url=>url.endsWith(`/${slug}.json`))).toBe(true);
+    await expect(page.locator('#nearby-results')).not.toContainText('Москва');
+    await expect(page.locator('#nearby-connected-only')).not.toBeChecked();
+    await expect(page.locator('#nearby-results .nearby-open-catalog')).toHaveCount(0);
+  }
+  await context.setGeolocation({latitude:43.585,longitude:39.72,accuracy:20});
+  await page.locator('#nearby-locate').click();
+  await expect(page.locator('#nearby-status')).toContainText('Для этого места справочника пока нет');
+  await expect(page.locator('#nearby-results')).toBeEmpty();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('regional home address without a comma uses geocoder; denial preserves address, radius and previous results',async({page})=>{
+  await isolateRegional(page);let calls=0;
+  await page.addInitScript(()=>Object.defineProperty(navigator,'geolocation',{value:{getCurrentPosition(s,f){f({code:1});}},configurable:true}));
+  await page.route('**/functions/v1/nearby-address',route=>{
+    calls++;expect(route.request().postDataJSON()).toEqual({query:'Казань улица Баумана 7',consent:true});
+    return route.fulfill({json:{version:1,candidates:[{lat:55.79,lon:49.12,label:'Казань, улица Баумана, 7',precision:'house'}]}});
+  });
+  await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
+  await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready',{timeout:20000});
+  await page.locator('#nearby-address').fill('Казань улица Баумана 7');await page.locator('#nearby-address').press('Enter');
+  await page.locator('#nearby-address-candidates button').click();
+  await page.locator('#nearby-radius').selectOption('10');
+  await expect(page.locator('#nearby-results article').first()).toContainText('Казань');
+  const before=await page.locator('#nearby-results').innerText();
+  await page.locator('#nearby-locate').click();
+  await expect(page.locator('#nearby-status')).toContainText('Доступ к геолокации закрыт');
+  await expect(page.locator('#nearby-address')).toHaveValue('Казань улица Баумана 7');
+  await expect(page.locator('#nearby-radius')).toHaveValue('10');
+  expect(await page.locator('#nearby-results').innerText()).toBe(before);
+  await expect(page.locator('#nearby-shopping').getByRole('button',{name:'Выбрать точку на карте'})).toBeVisible();
+  expect(calls).toBe(1);
+  expect(await page.evaluate(()=>JSON.stringify({...localStorage}))).not.toContain('Баумана');
+});
 test('home address → nearest exact card → own catalogue; location remains voluntary and recoverable', async ({page}) => {
   await isolate(page); let addressCalls = 0;
   const point = joinedDirectory.stores.find(p => p.catalogBinding?.shopCode === '699415');

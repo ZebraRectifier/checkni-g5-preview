@@ -1,3 +1,4 @@
+import { publicDataUrl } from './publicDataUrl.mjs';
 import { createRetailCatalogClient,readBoundedJsonResponse } from './retailCatalogPort.mjs';
 import {WEEKLY_PEREKRESTOK_IDENTITIES} from '../catalog/weeklyPerekrestokIdentities.mjs';
 import {weeklyMagnitCard} from '../catalog/reviewedMagnitCatalogCard.mjs';
@@ -59,7 +60,7 @@ export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,create
   async function pyat(){
     if(pyatChecked&&now()-pyatChecked<60000)return pyatCached?pyatWeeklyCards(pyatCached,now()):[];
     if(!pyatPending)pyatPending=(async()=>{try{
-      const r=await fetchImpl(new URL('../data/pyaterochkaPublishedPromotions.json',import.meta.url),{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(5000)});
+      const r=await fetchImpl(publicDataUrl('pyaterochkaPublishedPromotions.json'),{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(5000)});
       if(!r.ok)return[];const data=await readBoundedJsonResponse(r,262144);if(!validPyatSnapshot(data))return[];
       pyatCached=data;return pyatWeeklyCards(data,now());
     }catch{return[];}finally{pyatChecked=now();pyatPending=null;}})();return pyatPending;
@@ -68,7 +69,7 @@ export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,create
     if(checkedAt&&now()-checkedAt<60_000)return cached?weeklyOkeyCards(cached,now()):[];
     if(!inFlight)inFlight=(async()=>{
       try {
-        const response=await fetchImpl(new URL('../data/okeyPublishedPromotions.json',import.meta.url),
+        const response=await fetchImpl(publicDataUrl('okeyPublishedPromotions.json'),
           {cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(5000)});
         if(!response.ok)return [];
         const data=await readBoundedJsonResponse(response,262144);if(!validPublishedSnapshot(data))return [];

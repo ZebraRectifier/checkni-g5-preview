@@ -15,7 +15,10 @@ for(const failure of ['transient','persistent'])test(`address ${failure} failure
  await expect(page.locator('#nearby-address-candidates button').first()).toBeVisible();
  expect(requests).toBe(2);
  await expect(page.locator('#nearby-address')).toHaveValue('Глобус Красногорск');
- if(failure==='persistent')await expect(page.locator('#nearby-status')).toContainText('Это адрес магазина, не твоя геолокация');
+ if(failure==='persistent'){
+  await expect(page.locator('#nearby-status')).toContainText('магазин из справочника как ориентир');
+  await expect(page.locator('#nearby-address-candidates button').first()).toContainText('магазин-ориентир');
+ }
  await page.locator('#nearby-address-candidates button').first().click();
  const card=page.locator('#nearby-results article').filter({hasText:'Глобус Красногорск'});
  await card.getByRole('button',{name:'Открыть товары'}).click();

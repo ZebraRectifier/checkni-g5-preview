@@ -1,16 +1,7 @@
 import{createStoreGeolocation}from'../runtime/storeGeolocation.mjs';
 import{NEARBY_RADIUS_KM,nearbyGroceryMatches}from'../intelligence/nearbyShopping.mjs';
 import{createNearbyShoppingPort}from'../ports/nearbyShoppingPort.mjs';
-
-const cityCentres=new Map([
-  ['москва',{label:'Москва',lat:55.7558,lon:37.6176}],
-  ['санкт-петербург',{label:'Санкт-Петербург',lat:59.9343,lon:30.3351,region:'saint-petersburg'}],
-  ['казань',{label:'Казань',lat:55.7961,lon:49.1064,region:'kazan'}],
-  ['екатеринбург',{label:'Екатеринбург',lat:56.8389,lon:60.6057,region:'yekaterinburg'}],
-  ['новосибирск',{label:'Новосибирск',lat:55.0084,lon:82.9357,region:'novosibirsk'}],
-  ['нижний новгород',{label:'Нижний Новгород',lat:56.3269,lon:44.0059,region:'nizhny-novgorod'}]
-]);
-const addressWords=value=>value.toLowerCase().replaceAll('ё','е').match(/[\p{L}\p{N}]+/gu)??[];
+import { nearbyCityQuery, nearbyRegionForPosition } from '../intelligence/nearbyRegions.mjs';
 
 export function createNearbyShopping({document=globalThis.document,port=createNearbyShoppingPort(),onChoose,onBuild,onManualMap,
   onInvalidate=()=>{},geolocationOptions={},locationController}={}){
@@ -71,16 +62,17 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     input.focus({preventScroll:true});root.scrollIntoView({block:'start'});
   }
   async function directoryData(){
-    if(region)return port.regionalDirectory(region);
+    if(region!=='moscow-and-oblast')return port.regionalDirectory(region);
     if(!directory)directory=await port.directory();
     return directory;
   }
   async function renderResults(){
     const token=++version;results.replaceChildren();networks.hidden=!position;if(!position)return;const current=position;
+    if(!region){networks.hidden=true;status.textContent='Для этого места справочника пока нет. Выбери другой город или точку на карте.';return;}
     status.textContent='Ищу магазины в выбранном радиусе…';
     try{
       const d=await directoryData();if(token!==version||current!==position)return;
-      const rows=nearbyGroceryMatches(d.stores,position,Number(radius.value),{connectedOnly:connected.checked,regional:Boolean(region)}).filter(row=>network==='all'||row.retailerId===network);
+      const rows=nearbyGroceryMatches(d.stores,position,Number(radius.value),{connectedOnly:connected.checked,regional:region!=='moscow-and-oblast'}).filter(row=>network==='all'||row.retailerId===network);
       directoryDate.textContent='Дата справочника: '+new Date(d.observedAt).toLocaleDateString('ru-RU')+'.';
       directoryDate.hidden=false;
       status.textContent=`${pointName||'Выбранная точка'} · до ${radius.value} км · найдено: ${rows.length}`
@@ -113,42 +105,36 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     const query=input.value.trim();if(query.length<3){status.textContent='Напиши город и улицу, адрес дома или название станции.';return;}
     geo.clear();const token=++version;clearSelection();position=null;candidates.replaceChildren();results.replaceChildren();addressButton.disabled=true;
     status.textContent='Ищу адрес…';
-    const [cityName,...streetParts]=query.split(',');
-    const city=cityCentres.get(cityName.trim().toLowerCase().replace(/^г(?:\.\s*|\s+)/u,'').replace(/[.!]$/u,''));
-    const street=streetParts.join(',').trim();
+    const cityQuery=nearbyCityQuery(query),city=cityQuery?.region;
     let response;
     try{
-      if(city&&!street){
+      if(city&&!cityQuery.address){
         response={kind:'results',candidates:[{...city,label:city.label+' · центр',precision:'city'}]};
-      }else if(city?.region){
-        const words=addressWords(street);
-        const d=await port.regionalDirectory(city.region);
-        const matches=words.length?d.stores.filter(row=>{
-          const tokens=new Set(addressWords(row.address));
-          return words.every(word=>tokens.has(word));
-        }).slice(0,5):[];
-        response={kind:'results',candidates:matches.map(row=>({
-          label:row.address,lat:row.lat,lon:row.lon,region:city.region,precision:'house'
-        }))};
       }else response=await port.address(query);
     }catch{response={kind:'unavailable',candidates:[]};}
     if(token!==version){addressButton.disabled=false;return;}addressButton.disabled=false;
     if(input.value.trim()!==query){status.textContent='Адрес изменён. Нажми «Найти адрес», чтобы проверить новый.';return;}
     if(response.kind==='unavailable'){status.textContent='Сервис поиска адресов временно недоступен. Попробуй ещё раз или выбери точку на карте.';return;}
     if(!['results','directory'].includes(response.kind)||!response.candidates.length){status.textContent=response.kind==='limited'?'Слишком частые запросы. Подожди немного или выбери место на карте.':'Адрес не удалось найти. Добавь город и номер дома или укажи место на карте.';return;}
-    status.textContent=response.kind==='directory'?'Поиск адресов сейчас недоступен. Нашёл магазины в справочнике — выбери один как ориентир. Это адрес магазина, не твоя геолокация.':'Это нужное место? Выбери один из адресов.';
+    status.textContent=response.kind==='directory'?'Точный адрес не найден. Можно выбрать магазин из справочника как ориентир.':'Это нужное место? Выбери один из адресов.';
     for(const p of response.candidates){if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon)||typeof p.label!=='string'||p.label.length>500)continue;
-      candidates.append(button(p.label+(p.precision==='store'?' · магазин-ориентир':p.precision==='house'?'':' · приблизительный ориентир'),()=>{region=p.region??null;if(region){connected.checked=false;network="all";for(const chip of networks.children)chip.setAttribute("aria-pressed",String(chip===networks.firstElementChild));}pendingPlaceLabel=p.label;geo.setManual({lat:p.lat,lon:p.lon});candidates.replaceChildren();}));}
+      candidates.append(button(p.label+(p.precision==='store'?' · магазин-ориентир':p.precision==='house'?'':' · приблизительный ориентир'),()=>{pendingPlaceLabel=p.label;geo.setManual({lat:p.lat,lon:p.lon});candidates.replaceChildren();}));}
     candidates.scrollIntoView({block:'center'});
   }
   const locationChanged=s=>{
-    const showMapRecovery=s.status==='denied'||s.status==='error';
+    const showMapRecovery=['denied','error','unavailable','timeout'].includes(s.status);
     if(showMapRecovery)status.after(manual);
     else if(manual.parentElement!==locationActions)locationActions.append(manual);
     version++;
     if(s.status==='loading'){status.textContent='Жду разрешение браузера на геолокацию…';return;}
     if(s.position && s.status!=='loading' && s.status!=='denied' && s.status!=='error'){
-      if(s.position.source==='device'){region=null;pendingPlaceLabel=null;}
+      if(s.position.source==='device')pendingPlaceLabel=null;
+      const nextRegion=nearbyRegionForPosition(s.position)?.id??null;
+      if(nextRegion!==region){
+        if(nextRegion&&nextRegion!=='moscow-and-oblast')connected.checked=false;
+        network='all';for(const chip of networks.children)chip.setAttribute('aria-pressed',String(chip===networks.firstElementChild));
+      }
+      region=nextRegion;
       clearSelection();position=s.position;pointName=pendingPlaceLabel??(s.position.source==='manual'?'Точка на карте':`Моё место · точность ≈${Math.round(s.position.accuracyMeters)} м`);pendingPlaceLabel=null;limit=5;
       panel.hidden=false;openButton.setAttribute('aria-expanded','true');void renderResults();}
     else if(s.status==='idle'){position=null;pointName='';results.replaceChildren();}

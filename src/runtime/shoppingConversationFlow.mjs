@@ -1087,10 +1087,17 @@ export function createShoppingConversationFlow(options) {
   }
   function setRetailer(retailer) {
     if (typeof retailer !== "string" || !retailer.trim() || retailer.length > 80) return state;
+    const retainedGuided = guidedShopping;
     invalidate();
     const updated = updateShoppingConversation(memory, { ...extractShoppingDelta(""),
       facts: { retailer: { value: retailer.trim(), scope: "goal" } } });
     if (!updated.overflow) setMemory(updated.state);
+    // Keep the requested meal plan across an explicit store choice, but never
+    // carry product rows, confirmation receipts or price quotes into that scope.
+    if (retainedGuided?.active()) {
+      guidedShopping = retainedGuided;
+      state = guidedShopping.scopeChanged();
+    }
     return state;
   }
   const checkCurrentComparisonExplanation = () => {
