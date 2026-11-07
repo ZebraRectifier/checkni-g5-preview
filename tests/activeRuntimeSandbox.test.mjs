@@ -8,7 +8,7 @@ import {prepareCiRuntime, writeCiOutputs, TRUSTED_TEST_REPOSITORY,
   MUTABLE_PUBLIC_DATA_FILES} from '../tools/browser-release/prepare-ci-runtime.mjs';
 import {digest, mime} from '../tools/browser-release/verify.mjs';
 
-async function fixture(t, {active = true} = {}) {
+async function fixture(t, {active = true, coordinateEvidence = false} = {}) {
   const base = await fs.mkdtemp(path.join(os.tmpdir(), 'checkni-ci-sandbox-tests-'));
   t.after(async () => {
     const resolved = await fs.realpath(base);
@@ -31,6 +31,8 @@ async function fixture(t, {active = true} = {}) {
   for (const file of ['playwright.weekly.config.mjs', 'test/support/static-server.mjs', 'tests/retailCatalogPort.test.mjs', 'tools/example.mjs']) await write(file, '// pinned test support\n');
   await write('test/e2e/reference-v13/linux/fixture.png', Buffer.from([0, 1, 2, 255]));
   await write('artifacts/nearby-shopping/catalog-geography-joins-20261024.json', '{"verifiedJoins":[]}\n');
+  if (coordinateEvidence) await write('evidence/magnit-nearby-20261107/source-manifest.json', '{"pinned":true}\n');
+  await write('evidence/unrelated.json', '{"excluded":true}\n');
   git('add', '.'); git('commit', '-m', 'fixture runtime and tests');
   const commit = git('rev-parse', 'HEAD');
   const files = ['index.html', 'prices.html', 'src/app.mjs', 'src/priceCapture.mjs', ...MUTABLE_PUBLIC_DATA_FILES.map(file => `src/data/${file}`)];
@@ -80,6 +82,14 @@ test('active sandbox uses exact release bytes and pinned tests while retaining o
   assert.equal(await fs.readFile(path.join(result.root, 'artifacts/nearby-shopping/catalog-geography-joins-20261024.json'), 'utf8'), '{"verifiedJoins":[]}\n');
   assert.equal(f.git('status', '--porcelain'), before);
   assert.equal(result.mutableData.length, 13);
+});
+
+test('coordinate evidence is pinned to the tested commit without exporting unrelated evidence', async t => {
+  const f = await fixture(t, {coordinateEvidence: true});
+  await f.write('evidence/magnit-nearby-20261107/source-manifest.json', '{"pinned":false}\n');
+  const result = await prepareCiRuntime({...f, ciOnly: true});
+  assert.equal(await fs.readFile(path.join(result.root, 'evidence/magnit-nearby-20261107/source-manifest.json'), 'utf8'), '{"pinned":true}\n');
+  await assert.rejects(fs.stat(path.join(result.root, 'evidence/unrelated.json')), {code: 'ENOENT'});
 });
 
 test('invalid descriptors and mismatched activation or release content fail before sandbox creation', async t => {
