@@ -8,6 +8,31 @@ const submit = async (page, text) => {
 const status = page => page.locator('#basket-proposal-status');
 const savedBasket = page => page.evaluate(() => localStorage.getItem('checkni.surface.basket.v1'));
 
+test('bare why continues the accepted shopping advice without losing context', async ({page}) => {
+  const requests = [];
+  await page.route('**/functions/v1/ai-basket-proposal', route => {
+    requests.push(route.request().postDataJSON());
+    return route.fulfill({json:{kind:'advice',message:requests.length === 1
+      ? 'Для быстрого ужина подойдёт филе рыбы. Его можно запечь с овощами.'
+      : 'Я предложила филе, потому что его удобно порционировать и готовить вместе с овощами.'}});
+  });
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  await openHory(page);
+  const before = await savedBasket(page);
+  const first = 'Посоветуй рыбу на ужин, чтобы быстро приготовить.';
+  await submit(page, first);
+  await expect(status(page)).toContainText('подойдёт филе рыбы');
+  await submit(page, 'почему');
+  await expect(status(page)).toContainText('потому что его удобно порционировать');
+  expect(requests).toHaveLength(2);
+  expect(requests.every(request => request.mode === 'advice')).toBe(true);
+  expect(requests[1].history).toHaveLength(2);
+  expect(requests[1].history[0].text).toBe(first);
+  expect(requests[1].history[1].text).toContain('филе рыбы');
+  expect(await savedBasket(page)).toBe(before);
+  await expect(status(page)).not.toContainText('Не получилось разобрать');
+});
+
 test.beforeEach(async ({ context }) => {
   await context.route('**/*', route => ['127.0.0.1', 'localhost'].includes(new URL(route.request().url()).hostname)
     ? route.continue() : route.abort());
