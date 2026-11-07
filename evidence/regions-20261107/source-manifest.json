@@ -1,0 +1,1033 @@
+{
+  "sourcePage": "https://magnit.ru/shops",
+  "apiUrl": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+  "cities": {
+    "saint-petersburg": {
+      "receipts": [
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 0,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:25.315Z",
+          "bytes": 161739,
+          "sha256": "3d8898cd5725835d5300a3d9685711c80040b221c5dc916c1494b1b25cddc63e",
+          "file": "source/saint-petersburg/saint-petersburg-0000.json.gz",
+          "gzipSha256": "7d0baefcd84390897f70fbb7067bd48228fe719fd4fb6c2aee8bd675d170e8e5"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 50,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:26.556Z",
+          "bytes": 138044,
+          "sha256": "8c89e33440712aa40753568c2b9ca5901d6908ff1869449ea1fac927d9df6d9f",
+          "file": "source/saint-petersburg/saint-petersburg-0050.json.gz",
+          "gzipSha256": "24df49c4460fe615d2635f6d20a54a6fc1bea7fe7dfcb46a0e290c7a03e6f08f"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 100,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:27.945Z",
+          "bytes": 113231,
+          "sha256": "9982d54a6a05dae62da4456ca95da418eadd535cc164967851e66dc931b4f290",
+          "file": "source/saint-petersburg/saint-petersburg-0100.json.gz",
+          "gzipSha256": "52247123086b1cbc036422c8a18b667d8d5d30520c25038ed183af6ca0292012"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 150,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:29.203Z",
+          "bytes": 128489,
+          "sha256": "eb2fa1b0f06d87ad9d1c2a10a46c894942b325d553a99c716e28c2837115871b",
+          "file": "source/saint-petersburg/saint-petersburg-0150.json.gz",
+          "gzipSha256": "97d3de4c37b519b4583ff131b6f82a0ef07dd758fffbb8e9ccc43f805f2cd8a6"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 200,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:30.429Z",
+          "bytes": 154063,
+          "sha256": "b87978f7119600905bd079664ebb99d8fee7c2fdbed5def4131bc67c43c9dade",
+          "file": "source/saint-petersburg/saint-petersburg-0200.json.gz",
+          "gzipSha256": "326ee28164e6014686ed674399ae545af9b3d70cfb44312f0da107240988850e"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 250,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:31.655Z",
+          "bytes": 166271,
+          "sha256": "a3e460f82e7e357656b507cce1175a1efa67113c42b9e08645d4c06de85142ec",
+          "file": "source/saint-petersburg/saint-petersburg-0250.json.gz",
+          "gzipSha256": "5e178dd67fc9215319d8787db37c42697144f3f922082703476de347ea659202"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 300,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:33.206Z",
+          "bytes": 164222,
+          "sha256": "3ffa317bf9c6977595004ed4111213e1579fd388e20616c744d6a1632b3bf221",
+          "file": "source/saint-petersburg/saint-petersburg-0300.json.gz",
+          "gzipSha256": "32e4b44a936e12d4a28d7f6efa032eeab6d83ef8646cc302ea64e19da0553816"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 350,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:34.439Z",
+          "bytes": 164346,
+          "sha256": "051f2564fac1e5d322138401c9e9ad688de927e94c807cda74e0ea92e677c162",
+          "file": "source/saint-petersburg/saint-petersburg-0350.json.gz",
+          "gzipSha256": "bce53aa541864a9cc39f4daa132b9175ce825d4d6a39ffba34bd837219235af7"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 400,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:35.685Z",
+          "bytes": 161227,
+          "sha256": "010dcb186515237162e235f6b89ce1d50e7df52369450790ca34d0a3ae2fe374",
+          "file": "source/saint-petersburg/saint-petersburg-0400.json.gz",
+          "gzipSha256": "364b4e3c79ce370bb7b5959c0dd28015503e2d8012905fe26f69e82bbbfb97b4"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 450,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:36.932Z",
+          "bytes": 164606,
+          "sha256": "c2ad27ede65a91c813e7d14238137888f69f66aca5f5d5b2135eb40357dc21c2",
+          "file": "source/saint-petersburg/saint-petersburg-0450.json.gz",
+          "gzipSha256": "ad307f99f66a72f27c52aff6a2f679e085e11801c5dca1c80b1a35ced7123c1a"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 500,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:38.186Z",
+          "bytes": 163276,
+          "sha256": "f4108f0c66de76e47dfa4f69d199631882d6140f3b032b93cb321e749c91c456",
+          "file": "source/saint-petersburg/saint-petersburg-0500.json.gz",
+          "gzipSha256": "28c61f42aca6301ba8618d99b2b033d409c17ff70588befbd6dcbab728e01894"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 550,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:39.470Z",
+          "bytes": 165595,
+          "sha256": "da3c0fa6219281e816d0c9de99979cbe5b192ca67fbb66c4feadaa198276c63c",
+          "file": "source/saint-petersburg/saint-petersburg-0550.json.gz",
+          "gzipSha256": "d704fa7a0173b2143ab5f28b46c847d7a227927084be61621faf5f51886b2de5"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 600,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:40.766Z",
+          "bytes": 164128,
+          "sha256": "1afc5568f33ad72571073ce6e10a80d9a53205ac8fa6a7135ed4184a439e6f18",
+          "file": "source/saint-petersburg/saint-petersburg-0600.json.gz",
+          "gzipSha256": "384b0c3514ffd3da89e9b1f7ee851c562d5e0f6aa33ca4b5977e0c58934073d9"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Санкт-Петербург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 650,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:41.983Z",
+          "bytes": 134748,
+          "sha256": "eafa0442231e89877de40a9fd4906d560b9ef251a3e503012446ebf8b6355f83",
+          "file": "source/saint-petersburg/saint-petersburg-0650.json.gz",
+          "gzipSha256": "b9f3eb50d7eda453cc32831cb7dd88f2e1aff3ecb1ddaccc562e4180e5d95b8f"
+        }
+      ],
+      "boundary": {
+        "file": "source/saint-petersburg/boundary.geojson.gz",
+        "sha256": "800bcaca23343f059076ffa762f6934551f48dcc7d9e231f9b73e6fd7a51857d",
+        "sourceUrl": "https://www.openstreetmap.org/relation/337422",
+        "snapshotAt": "2026-11-05",
+        "license": "ODbL-1.0"
+      }
+    },
+    "kazan": {
+      "receipts": [
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Казань",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 0,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:43.630Z",
+          "bytes": 168122,
+          "sha256": "a5bee127cd0897d506a7fd5fe747417dbb4382b4285df73617f2cc7900345d57",
+          "file": "source/kazan/kazan-0000.json.gz",
+          "gzipSha256": "59fc79ee2ca57be0e1b92dd1dbe40fad27eef609df2c36c9be6a671f918649fe"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Казань",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 50,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:44.883Z",
+          "bytes": 168175,
+          "sha256": "44c9cab74ba9a1f092861fb303524207205461b7f8949394333d95ac5e237fea",
+          "file": "source/kazan/kazan-0050.json.gz",
+          "gzipSha256": "91640f8de64ab6de87f4c9c8e1ef5e5ece49a1652bb0a7ff8808661753afbb1b"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Казань",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 100,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:46.331Z",
+          "bytes": 169463,
+          "sha256": "a5c2fa25f8a62d9246dcc24af82fbfaa9cd707833d34a22e88f501f33c5f4968",
+          "file": "source/kazan/kazan-0100.json.gz",
+          "gzipSha256": "88926bcc7840f4dc709a38d801eed23e60379112a6418d37b69db26d2848c84f"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Казань",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 150,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:47.801Z",
+          "bytes": 166180,
+          "sha256": "09dd88ed6d2cff463d9d0a0eba471af4de4ccbc7b9254476d19a7d0558e184e4",
+          "file": "source/kazan/kazan-0150.json.gz",
+          "gzipSha256": "5177f06867a21119d8e7e7feb4a7716d37fb42cc3b094e9faaf125e50450bcec"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Казань",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 200,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:49.007Z",
+          "bytes": 155454,
+          "sha256": "b1ba1b856efbd5f63a2cfd3ede9d615ff5e95968e19184f195218ce86e10f43c",
+          "file": "source/kazan/kazan-0200.json.gz",
+          "gzipSha256": "2f7f18ca52a1b748f9176854105ea718987f004b31dd0050eb940a7669f74685"
+        }
+      ],
+      "boundary": {
+        "file": "source/kazan/boundary.geojson.gz",
+        "sha256": "c9dee286b7057c761d831ad1fdf6e0262ca6f34b288de2f201c022ae4c5eb8ed",
+        "sourceUrl": "https://www.openstreetmap.org/relation/367666",
+        "snapshotAt": "2026-11-05",
+        "license": "ODbL-1.0"
+      }
+    },
+    "yekaterinburg": {
+      "receipts": [
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Екатеринбург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 0,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:50.240Z",
+          "bytes": 159665,
+          "sha256": "a7c85e3165bd0f747f62f3126eb4188ea7b8d941e1aac6c88a53457a359524c4",
+          "file": "source/yekaterinburg/yekaterinburg-0000.json.gz",
+          "gzipSha256": "2ad2555aefa68da59971f5b2e8ebd902e50b466e74c6ddba1c5d55dd5d816159"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Екатеринбург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 50,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:51.457Z",
+          "bytes": 167731,
+          "sha256": "2e75b4c0d4849150b00fa3daf3994ac2a9fdd60d48ba7fa1d7768f0a289a356d",
+          "file": "source/yekaterinburg/yekaterinburg-0050.json.gz",
+          "gzipSha256": "6a17841b4d541723093364b28fcc1c7166074b04cd0599ed411ec3985eaaa07a"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Екатеринбург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 100,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:52.684Z",
+          "bytes": 159078,
+          "sha256": "1a82b2f9afe3d6ac0f36a59c1559c7447f33fa0e08ede8f066cab1b1307e4ca2",
+          "file": "source/yekaterinburg/yekaterinburg-0100.json.gz",
+          "gzipSha256": "5b174158712c5cbecb36df42d8a8ec39ab59bae2880fd7839c9a8c51dcd4522c"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Екатеринбург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 150,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:53.949Z",
+          "bytes": 162273,
+          "sha256": "3670929568a9fb5dccc31641ae1fe7b45b0667b4f37638a8b40fc01059f240eb",
+          "file": "source/yekaterinburg/yekaterinburg-0150.json.gz",
+          "gzipSha256": "62b1703167c393df485f35371b51c0b97ee1c3d1744dbc12e96b47553d1dffcf"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Екатеринбург",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 200,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:55.173Z",
+          "bytes": 159494,
+          "sha256": "42ce20d60746e124a216953c6722c1a07403e3d8bd6d5b99b4f4a61d3d789d27",
+          "file": "source/yekaterinburg/yekaterinburg-0200.json.gz",
+          "gzipSha256": "7a136de2f4f8067b0a65e077821cfa0f8ffc589e8d344b16dce668e040786d6e"
+        }
+      ],
+      "boundary": {
+        "file": "source/yekaterinburg/boundary.geojson.gz",
+        "sha256": "ae47de6cea3c7af2824f448c8289fdbe85d284f94debd517ee756365c0e86ad6",
+        "sourceUrl": "https://www.openstreetmap.org/relation/1104258",
+        "snapshotAt": "2026-11-05",
+        "license": "ODbL-1.0"
+      }
+    },
+    "novosibirsk": {
+      "receipts": [
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Новосибирск",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 0,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:56.438Z",
+          "bytes": 165475,
+          "sha256": "c609df346d371c7bd3dd90ce452be6924096cbf387da898b58b515908666ffb8",
+          "file": "source/novosibirsk/novosibirsk-0000.json.gz",
+          "gzipSha256": "ac1a334ac3e1744641e930ae046f2bb7ae44f79d610360bcd89f3c932986108f"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Новосибирск",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 50,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:57.671Z",
+          "bytes": 167407,
+          "sha256": "4c60776305f3f2c1c6fab41a1c3e04d4b459a4bc2f443fe783555549b3077e8d",
+          "file": "source/novosibirsk/novosibirsk-0050.json.gz",
+          "gzipSha256": "719eedbbe73307b02c3036fcff21bd00d05ce95d64b1cc89fa73f0e803c418a8"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Новосибирск",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 100,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:32:58.984Z",
+          "bytes": 159644,
+          "sha256": "a0aa9470d3e839f6a1c9a97d5771a28abd6d4d94ef5d01e55d4081fb49b1af56",
+          "file": "source/novosibirsk/novosibirsk-0100.json.gz",
+          "gzipSha256": "371606a38d06028511ab88b533b919581a0aac10e2e4e14b4c50bf24ca15b2b8"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Новосибирск",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 150,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:33:00.215Z",
+          "bytes": 162901,
+          "sha256": "fa7de2d8a7cd6fbb1156340602db35138d977d07b9678482c25cdce7fd71b3cc",
+          "file": "source/novosibirsk/novosibirsk-0150.json.gz",
+          "gzipSha256": "8b63d728c5f51e36c1719560f1ae2192e73121760a2e785ad148f7b10a79959a"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Новосибирск",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 200,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:33:01.613Z",
+          "bytes": 166907,
+          "sha256": "5da7f39e90494d3edf4b2598d7347095993c63ca98c29001b82b657de2f3ec67",
+          "file": "source/novosibirsk/novosibirsk-0200.json.gz",
+          "gzipSha256": "cdaeee92dbe96210f8a8d55144a1d68f0d95a46703b0a8384a3f4ed26214b29c"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Новосибирск",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 250,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:33:02.866Z",
+          "bytes": 166844,
+          "sha256": "ab7d40bc1703179e010ab73821fb0612c88ba0d271ca3e5be462cafd0c0557c2",
+          "file": "source/novosibirsk/novosibirsk-0250.json.gz",
+          "gzipSha256": "9819af13a292bd366b46a6c33415f4942b601933117147774a2ee8ca7bc48267"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Новосибирск",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 300,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:33:04.135Z",
+          "bytes": 161295,
+          "sha256": "26a687b9d91f7acb3b0b53a56b6e55959ae5516998e7636da024426013760306",
+          "file": "source/novosibirsk/novosibirsk-0300.json.gz",
+          "gzipSha256": "25bda8c60a35ca054126256d32d754d0e2ce4b23c381f1ba1167a18aa02a0de6"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Новосибирск",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 350,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:33:05.363Z",
+          "bytes": 57072,
+          "sha256": "0b6eb7818128f8bb24f2a11a0789d1fa526b4a362941ef50b0191f9dcf13d7ed",
+          "file": "source/novosibirsk/novosibirsk-0350.json.gz",
+          "gzipSha256": "bbb921e82211306359598791c964861a2ca2b3d9555f1871e55b97f1b9dbbef1"
+        }
+      ],
+      "boundary": {
+        "file": "source/novosibirsk/boundary.geojson.gz",
+        "sha256": "84ada30017c4ddc95723e3faa51a15e45980065144eccd905c456f528bcdc185",
+        "sourceUrl": "https://www.openstreetmap.org/relation/1751445",
+        "snapshotAt": "2026-11-05",
+        "license": "ODbL-1.0"
+      }
+    },
+    "nizhny-novgorod": {
+      "receipts": [
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Нижний Новгород",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 0,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:33:06.789Z",
+          "bytes": 165888,
+          "sha256": "6f1667a7d3d26be734a00f32ad7bdd95673a51ed553d8ae5f9330b1f742e0d78",
+          "file": "source/nizhny-novgorod/nizhny-novgorod-0000.json.gz",
+          "gzipSha256": "41ccc3c8d4ee2aeba521dcd2f0eb847a6f3b9cdfccb7ed3f80e54961001378e8"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Нижний Новгород",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 50,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:33:08.042Z",
+          "bytes": 165377,
+          "sha256": "d66786f0b3eac607c910dac2d11153d12c7d82d3859e01db2d6e1618d470c65b",
+          "file": "source/nizhny-novgorod/nizhny-novgorod-0050.json.gz",
+          "gzipSha256": "f2819fa81c6a9e4e8744344d9097d771d2162d0d69c6769deba6522d72af3a05"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Нижний Новгород",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 100,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:33:09.305Z",
+          "bytes": 165303,
+          "sha256": "34a7f26bf994c3f07f68ebcf885504895308924b48f611550332def19a2d1489",
+          "file": "source/nizhny-novgorod/nizhny-novgorod-0100.json.gz",
+          "gzipSha256": "4994e0d12f026f5ac4c58ca379e5130b6b776241aa5988e7d8a03e528015e660"
+        },
+        {
+          "url": "https://magnit.ru/webgate/v1/stores-facade/search/detail",
+          "request": {
+            "filters": {
+              "query": "Нижний Новгород",
+              "storeTypeListV2": [
+                "MM",
+                "MM_MINI",
+                "GM"
+              ]
+            },
+            "pagination": {
+              "offset": 150,
+              "size": 50
+            },
+            "sorting": {
+              "sortBy": "SORT_BY_CITY",
+              "sortType": "SORT_TYPE_ASC"
+            }
+          },
+          "httpStatus": 200,
+          "observedAt": "2026-11-07T05:33:10.791Z",
+          "bytes": 110056,
+          "sha256": "03f5b25e82aa4817666c42b4fa0b44962cde7304bff1b20de7b3315016a38dac",
+          "file": "source/nizhny-novgorod/nizhny-novgorod-0150.json.gz",
+          "gzipSha256": "98cb6e08e1e08d4f2fce29d2bacc73f9a778ae162f40c39f677f458152db2edb"
+        }
+      ],
+      "boundary": {
+        "file": "source/nizhny-novgorod/boundary.geojson.gz",
+        "sha256": "d42c55d44b6a90684ae0acd66d2293cd9a24930b2ada01963ca6b8acc0b2b9f0",
+        "sourceUrl": "https://www.openstreetmap.org/relation/335495",
+        "snapshotAt": "2026-11-05",
+        "license": "ODbL-1.0"
+      }
+    }
+  }
+}

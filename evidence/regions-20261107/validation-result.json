@@ -1,0 +1,14 @@
+{
+  "observedAt": "2026-11-07",
+  "command": "node --test tests/nearbyShopping.test.mjs evidence/regions-20261107/validate.mjs",
+  "tests": 32,
+  "passed": 32,
+  "failed": 0,
+  "scope": "Local source/data validation and existing directory logic; no live publication claim",
+  "newRecords": 642,
+  "preservedRecords": 2897,
+  "catalogBindingsAdded": 0,
+  "runtimeDependency": "Release magnit.ru in regionalDirectoryHosts, then publish mutable JSON and verify live regional search",
+  "physicalPhoneChecked": false,
+  "liveNewAddressesChecked": false
+}
