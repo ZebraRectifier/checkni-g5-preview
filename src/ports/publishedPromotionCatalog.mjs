@@ -23,6 +23,12 @@ const sources = Object.freeze({
   ])
 });
 const result = (kind, extra = {}) => Object.freeze({ kind, ...extra });
+export function publishedCatalogProductExpiry(product) {
+  const observed = Date.parse(product?.observedAt);
+  const dayEnd = Date.parse(product?.validUntil + 'T00:00:00+03:00') + 86_400_000;
+  return Number.isFinite(observed) && Number.isFinite(dayEnd)
+    ? Math.min(observed + 86_400_000 + 1, dayEnd) : 0;
+}
 const normalize = text => String(text).normalize('NFKC').toLocaleLowerCase('ru-RU').replaceAll('ё', 'е').trim();
 const validPage = (limit, offset) => Number.isSafeInteger(limit) && limit > 0 && limit <= 40
   && Number.isSafeInteger(offset) && offset >= 0 && offset <= 10_000;

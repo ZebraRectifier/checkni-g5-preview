@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { publishedCatalogProductExpiry } from '../src/ports/publishedPromotionCatalog.mjs';
 import { readFile } from 'node:fs/promises';
 import { createRetailCatalogClient, getRetailCatalogDefinition, normalizeRetailRow, RETAIL_CATALOG_IDS } from '../src/ports/retailCatalogPort.mjs';
 import { parsePyatCatalogue } from '../src/observations/pyaterochkaPublishedPromotions.mjs';
@@ -8,6 +9,11 @@ import { parseOfficialProduct, OFFICIAL_SCOPE, OFFICIAL_CATALOG_URL } from '../s
 const raw = JSON.parse(await readFile(new URL('./fixtures/pyaterochka-public/raw-20261018.json', import.meta.url), 'utf8'));
 const snapshot = parsePyatCatalogue(raw);
 const at = Date.parse(raw.observedAt) + 1000;
+test('visible campaign expires at Moscow midnight or the observation age, whichever comes first', () => {
+  assert.equal(publishedCatalogProductExpiry({ observedAt: '2026-10-18T10:00:00Z', validUntil: '2026-10-18' }), Date.parse('2026-10-18T21:00:00Z'));
+  assert.equal(publishedCatalogProductExpiry({ observedAt: '2026-10-18T10:00:00Z', validUntil: '2026-10-21' }), Date.parse('2026-10-19T10:00:00Z') + 1);
+  assert.equal(publishedCatalogProductExpiry({ observedAt: 'invalid', validUntil: '2026-10-21' }), 0);
+});
 const published = () => parsePublishedCatalogue({ sourceUrl: PUBLISHED_URL, title: 'КАТАЛОГ АКЦИЙ «ОКЕЙ ГИПЕРМАРКЕТ» — МОСКВА',
   period: 'с 15 по 21 октября 2026', observedAt: raw.observedAt,
   products: [{ id: '51922605', name: 'Свинина шея без кости п/ф охлажденный кг', rubles: '459', cents: '00',
