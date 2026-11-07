@@ -96,7 +96,7 @@ export function boundMagnitMapLocations(directory){
   return Object.freeze([...byCode.values()].filter(Boolean));
 }
 const localDirectoryHosts=new Set(['www.openstreetmap.org','globus.ru','www.globus.ru']);
-const regionalDirectoryHosts=new Set(['www.openstreetmap.org','www.metro-cc.ru','spb.vkusvill.ru','kzn.vkusvill.ru','ekb.vkusvill.ru','nnv.vkusvill.ru']);
+const regionalDirectoryHosts=new Set(['www.openstreetmap.org','www.metro-cc.ru','magnit.ru','spb.vkusvill.ru','kzn.vkusvill.ru','ekb.vkusvill.ru','nnv.vkusvill.ru']);
 export function nearbyGroceryMatches(stores,position,radiusKm,{connectedOnly=false,regional=false}={}){
   if(!Array.isArray(stores)||!Number.isFinite(radiusKm)||radiusKm<1||radiusKm>20)return[];
   const seen=new Set();return stores.flatMap(point=>{

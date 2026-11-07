@@ -116,3 +116,17 @@ test('browser directory loading is shared, finite and does not send device coord
   await Promise.all([p.directory(),p.directory()]);assert.equal(calls.length,1);assert.match(calls[0].u,/nearbyGroceryStores\.json$/u);
   assert.equal(calls[0].o.body,undefined);assert.equal(calls[0].o.credentials,'omit');
 });
+
+test('official regional Magnit addresses remain geography without a Moscow catalogue or price claim',()=>{
+  const point={id:'official:magnit:010852',name:'Магнит',retailerId:'magnit',city:'Казань',
+    address:'Казань, ул Академика Глушко, д 5А',lat:55.778891,lon:49.234856,sourceUrl:'https://magnit.ru/shops'};
+  const rows=nearbyGroceryMatches([point],point,3,{regional:true});
+  assert.equal(rows.length,1);assert.equal(rows[0].catalog,null);assert.equal(rows[0].priceMinor,undefined);
+  assert.deepEqual(nearbyGroceryMatches([point],point,3,{regional:true,connectedOnly:true}),[]);
+  assert.deepEqual(nearbyGroceryMatches([point],point,3),[]);
+  for(const sourceUrl of ['https://magnit.ru.example.org/shops','http://magnit.ru/shops','https://someone@magnit.ru/shops']) {
+    assert.deepEqual(nearbyGroceryMatches([{...point,sourceUrl}],point,3,{regional:true}),[]);
+  }
+  const forged={...point,catalogBinding:{retailerId:'magnit',shopCode:'777312',address:'Москва'}};
+  assert.equal(nearbyGroceryMatches([forged],point,3,{regional:true})[0].catalog,null);
+});
