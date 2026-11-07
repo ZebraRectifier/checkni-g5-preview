@@ -3,49 +3,85 @@ import { retailSelectionUrl } from '../intelligence/retailProductSelection.mjs';
 import {validWeeklyCardSource,OKEY_WEEKLY_SCOPE,PYAT_WEEKLY_SCOPE} from '../ports/weeklyRetailCatalogPort.mjs';
 const EMOJI = { mince: '🥩', chicken: '🍗', buckwheat: '🌾', pasta: '🍝', milk: '🥛', eggs: '🥚', tomatoes: '🍅',
   apples: '🍎', bananas: '🍌', curd: '🥣', cheese: '🧀', potatoes: '🥔', carrots: '🥕', onions: '🧅', cabbage: '🥬', oats: '🥣', flakes: '🥣', oil: '🌻',rice:'🍚',pork:'🥩' };
+const STORE_LABELS = { magnit: 'Магнит', okey: 'О’КЕЙ', pyaterochka: 'Пятёрочка', perekrestok: 'Перекрёсток' };
+// A display label only: store identities, source scopes and amounts stay in the model.
+function storeLabel(store) {
+  if (STORE_LABELS[store.retailerId]) return STORE_LABELS[store.retailerId];
+  const name = String(store.storeName ?? 'Магазин');
+  return store.address && name.endsWith(` · ${store.address}`) ? name.slice(0, -store.address.length - 3) : name;
+}
 
 export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
   if (!model?.quote || !Array.isArray(model.quote.lines)) return;
   const document = parent.ownerDocument;
   const root = document.createElement('section'); root.className = 'guided-shopping'; root.setAttribute('aria-label', 'Подобранные товары и цены');
+  const information = document.createElement('details'); information.className = 'guided-shopping-information';
+  const informationTitle = document.createElement('summary'); informationTitle.textContent = 'Как сравниваем и что учтено'; information.append(informationTitle);
+  const addInformation = text => { const note = document.createElement('p'); note.textContent = text; information.append(note); };
   if (model.location?.landmark) {
     const area = document.createElement('p'); area.className = 'guided-shopping-area';
     area.textContent = `${model.location.landmark.name} · до ${model.location.radiusKm} км по прямой · ${model.days} дн. · ${model.people} чел.`;
     root.append(area);
-    const coverage = document.createElement('p'); coverage.textContent = 'Проверены подключённые адресные каталоги ниже. Это частичный охват: остальные сети и все магазины района пока не сравнены. Расстояние по дороге может быть больше.';
-    root.append(coverage);
+    addInformation('Проверены подключённые адресные каталоги ниже. Это частичный охват: остальные сети и все магазины района пока не сравнены. Расстояние по дороге может быть больше.');
     const landmark = document.createElement('a'); landmark.href = model.location.landmark.sourceUrl;
-    landmark.textContent = 'Координаты ориентира'; landmark.target = '_blank'; landmark.rel = 'noopener noreferrer'; root.append(landmark);
+    landmark.textContent = 'Координаты ориентира'; landmark.target = '_blank'; landmark.rel = 'noopener noreferrer'; information.append(landmark);
   }
   if (model.alternatives?.length) {
     const coverage = document.createElement('section'); coverage.className = 'guided-shopping-stores'; coverage.setAttribute('aria-label', model.location?.landmark?'Проверенные магазины в радиусе':'Проверенные каталоги');
-    const title = document.createElement('strong'); title.textContent = 'Варианты по одному списку продуктов'; coverage.append(title);
+    const title = document.createElement('strong'); title.textContent = 'Варианты по твоему списку'; coverage.append(title);
+    const cards = document.createElement('div'); cards.className = 'guided-store-options'; coverage.append(cards);
     for (const store of model.alternatives) {
-      const line = document.createElement('p');
-      line.textContent = `${store.selected ? '📍 ' : '🏪 '}${store.storeName} · ${store.address}${Number.isFinite(store.distanceKm)?` · ≈${store.distanceKm.toLocaleString('ru-RU',{maximumFractionDigits:1})} км`:''} · ${store.found}/${store.requested} позиций · ${store.knownSubtotalMinor == null ? 'сумма неизвестна' : `${store.complete ? '' : 'найденная часть: '}${formatRubMinor(store.knownSubtotalMinor)}`} · ${store.allRecent ? 'наблюдаемые цены' : 'есть старые или неизвестные цены'}${store.priceScope==='city-promotion'?' · акции города, условия карты неизвестны':''}`;
-      coverage.append(line);
-      if(!model.confirmed&&['magnit','okey','pyaterochka','perekrestok'].includes(store.retailerId)){
-        const choose=document.createElement('button');choose.type='button';choose.textContent=`Показать ${{magnit:'Магнит',okey:'О’КЕЙ',pyaterochka:'Пятёрочку',perekrestok:'Перекрёсток'}[store.retailerId]}`;
-        choose.addEventListener('click',()=>send('Показать вариант '+store.retailerId));coverage.append(choose);
+      const card = document.createElement('article'); card.className = 'guided-store-option'; card.dataset.selected = String(Boolean(store.selected));
+      const name = document.createElement('strong'); name.className = 'guided-store-name'; name.textContent = storeLabel(store); card.append(name);
+      if (store.address) {
+        const address = document.createElement('p'); address.className = 'guided-store-address'; address.textContent = store.address; card.append(address);
       }
+      const count = document.createElement('p'); count.className = 'guided-store-coverage';
+      count.textContent = `${store.found}/${store.requested} позиций${Number.isFinite(store.distanceKm) ? ` · ≈${store.distanceKm.toLocaleString('ru-RU', { maximumFractionDigits: 1 })} км` : ''}`; card.append(count);
+      const amount = document.createElement('strong'); amount.className = 'guided-store-amount';
+      amount.textContent = store.knownSubtotalMinor == null ? 'Сумма неизвестна' : formatRubMinor(store.knownSubtotalMinor); card.append(amount);
+      const conditions = [];
+      if (!store.complete) conditions.push('Только найденная часть');
+      if (!store.allRecent) conditions.push('Есть старые или неизвестные цены');
+      if (store.priceScope === 'city-promotion') conditions.push('Акции города · условия карты неизвестны');
+      if (store.priceScope === 'delivery-catalog') conditions.push('Каталог доставки');
+      if (conditions.length) {
+        const note = document.createElement('p'); note.className = 'guided-store-condition'; note.textContent = conditions.join(' · '); card.append(note);
+      }
+      if(!model.confirmed&&['magnit','okey','pyaterochka','perekrestok'].includes(store.retailerId)){
+        const choose=document.createElement('button');choose.type='button';choose.className='guided-store-choose';choose.textContent=`Показать ${{magnit:'Магнит',okey:'О’КЕЙ',pyaterochka:'Пятёрочку',perekrestok:'Перекрёсток'}[store.retailerId]}`;
+        choose.setAttribute('aria-pressed', String(Boolean(store.selected)));
+        choose.addEventListener('click',()=>send('Показать вариант '+store.retailerId));card.append(choose);
+      }
+      cards.append(card);
     }
+    const summary = document.createElement('p'); summary.className = 'guided-shopping-conditions';
+    summary.textContent = 'Марки и фасовки различаются. ' + (model.quote.hasEstimates ? 'Количества примерные. ' : '') + 'Наличие не подтверждено.';
+    coverage.append(summary);
     if(model.alternatives.some(store=>store.priceScope==='delivery-catalog')){
-      const delivery=document.createElement('p');delivery.textContent='Перекрёсток: подключённый каталог доставки в Москве. Доставка по твоему адресу не подтверждена. Доставка и сборы не включены; цены в физическом магазине могут отличаться.';coverage.append(delivery);
+      summary.textContent += ' Доставка не подтверждена. Доставка и сборы не включены.';
+      addInformation('Перекрёсток: подключённый каталог доставки в Москве. Доставка по твоему адресу не подтверждена. Цены в физическом магазине могут отличаться.');
       if(!model.alternatives.every(store=>store.complete&&store.allRecent)){
-        const missing=document.createElement('p');missing.setAttribute('role','status');missing.textContent='Сравнение свежих сумм пока недоступно: есть недостающие позиции или цены старше часа. Старую цену не считаем сегодняшней.';coverage.append(missing);
+        const missing=document.createElement('p');missing.className='guided-shopping-warning';missing.setAttribute('role','status');missing.textContent='Сравнение свежих сумм пока недоступно: есть пропуски или цены старше часа.';coverage.append(missing);
+        addInformation('Старую цену не считаем сегодняшней. Недостающая карточка не доказывает отсутствие товара в магазине.');
       }
       if(model.draftComparison?.kind==='fresh'){
-        const comparison=document.createElement('p');comparison.setAttribute('role','status');
+        const comparison=document.createElement('p');comparison.className='guided-shopping-difference';comparison.setAttribute('role','status');
+        const lowerStore = model.alternatives.find(store => store.storeName === model.draftComparison.lowerStoreName);
         comparison.textContent=model.draftComparison.differenceMinor===0?'Суммы товаров в этих вариантах совпали.':
-          `${model.draftComparison.estimated?'Ориентировочно меньше':'Меньше'} сумма товаров у ${model.draftComparison.lowerStoreName}: разница ${formatRubMinor(model.draftComparison.differenceMinor)}. Это разные марки и фасовки; доставка и сборы не учтены.`;
+          `${model.draftComparison.estimated?'Ориентир: ':''}${lowerStore ? storeLabel(lowerStore) : model.draftComparison.lowerStoreName} — меньшая сумма, разница ${formatRubMinor(model.draftComparison.differenceMinor)}.`;
         coverage.append(comparison);
       }
     }
-    const note = document.createElement('p'); note.textContent = 'В магазинах могут быть разные марки и упаковки. Приоритет полному списку и свежим наблюдениям, затем меньшей сумме среди полученных карточек. Это не сравнение одинаковых SKU и не доказательство самого дешёвого магазина района.'; coverage.append(note); root.append(coverage);
+    addInformation('В магазинах могут быть разные марки и упаковки. Приоритет полному списку и свежим наблюдениям, затем меньшей сумме среди полученных карточек. Это не сравнение одинаковых SKU и не доказательство самого дешёвого магазина района.');
+    coverage.append(information); root.append(coverage);
+  } else if (information.childElementCount > 1) {
+    root.append(information);
   }
   const scroll = document.createElement('div'); scroll.className = 'guided-shopping-scroll'; scroll.tabIndex = 0;
   const table = document.createElement('table'); table.className = 'guided-shopping-table';
-  const caption = document.createElement('caption'); caption.textContent = `${model.confirmed ? 'Добавлено в корзину' : 'Список на проверку'} · ${model.storeName}`; table.append(caption);
+  const selectedStore = model.alternatives?.find(store => store.storeName === model.storeName);
+  const caption = document.createElement('caption'); caption.textContent = `${model.confirmed ? 'Добавлено в корзину' : 'Список на проверку'} · ${selectedStore ? storeLabel(selectedStore) : model.storeName}`; table.append(caption);
   const head = document.createElement('thead'), header = document.createElement('tr');
   for (const label of ['Продукт и количество', 'Цена']) {
     const cell = document.createElement('th'); cell.scope = 'col'; cell.textContent = label; header.append(cell);
