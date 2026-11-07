@@ -43,7 +43,8 @@ test('a separate food refusal while awaiting location is not treated as an addre
   await page.route('**/functions/v1/ai-basket-proposal', route => { ai++; return route.abort(); });
   await page.goto('/?comparison=observed&catalog=retail#shop');
   await selectStore(page); await openStoreDetails(page);
-  await say(page, 'Собери недорогую корзину на неделю для троих');
+  await say(page, 'Собери недорогую корзину на неделю для троих в другом магазине');
+  await expect(page.locator('#basket-proposal-status')).toContainText('Где закупаемся');
   await say(page, 'Морковь не добавляй');
   const stored = await page.evaluate(() => localStorage.getItem('checkni.shopping.preferences.v1'));
   expect(stored).toContain('carrots');
