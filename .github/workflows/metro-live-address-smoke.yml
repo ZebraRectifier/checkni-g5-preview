@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
     paths:
+      - "index.html"
+      - "tools/live-retail-smoke-contract.mjs"
+      - "tests/live-retail-smoke-contract.test.mjs"
       - "src/app.mjs"
       - "src/components/MetroStorePicker.mjs"
       - "src/data/metroMoscowRegionStores.mjs"
@@ -12,6 +15,9 @@ on:
       - ".github/workflows/live-retail-smoke.yml"
   pull_request:
     paths:
+      - "index.html"
+      - "tools/live-retail-smoke-contract.mjs"
+      - "tests/live-retail-smoke-contract.test.mjs"
       - "src/data/metroMoscowRegionStores.mjs"
       - ".github/workflows/metro-live-address-smoke.yml"
       - ".github/workflows/live-retail-smoke.yml"
@@ -32,11 +38,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Validate smoke contracts
+        run: node --test tests/live-retail-smoke-contract.test.mjs
       - name: Validate exact public pickup bindings
         run: |
           node --input-type=module <<'NODE'
           import assert from "node:assert/strict";
-          import {METRO_MOSCOW_REGION_STORES as stores} from "./src/data/metroMoscowRegionStores.mjs";
+          import {readFile} from "node:fs/promises";
+          import {pinnedRuntimePrefix} from "./tools/live-retail-smoke-contract.mjs";
+          const prefix = pinnedRuntimePrefix(await readFile("index.html", "utf8"));
+          const {METRO_MOSCOW_REGION_STORES: stores} = await import("./"+prefix+"src/data/metroMoscowRegionStores.mjs");
           assert.equal(stores.length,22);
           assert.equal(stores.filter(s=>s.scope==="moscow-city").length,12);
           assert.equal(stores.filter(s=>s.scope==="moscow-oblast").length,10);
@@ -134,6 +145,14 @@ jobs:
           }
 
           (async () => {
+            const { pinnedLiveRuntimeProof } = await import("./tools/live-retail-smoke-contract.mjs");
+            const runtime = await pinnedLiveRuntimeProof({
+              baseUrl: "https://zebrarectifier.github.io/checkni-g5-preview/",
+              files: ["src/app.mjs", "src/components/ProductCard.mjs", "src/ports/retailCatalogPort.mjs", "src/catalog/reviewedRetailBasket.mjs", "src/catalog/perekrestokReviewedList.mjs", "src/catalog/sourceScopedRetailList.mjs", "src/catalog/sourceCatalogListAdmission.mjs", "src/data/metroMoscowRegionStores.mjs"]
+            });
+            const runtimePrefix = "./" + runtime.prefix;
+            const { createRetailCatalogClient } = await import(runtimePrefix + "src/ports/retailCatalogPort.mjs");
+            const { getReviewedRetailBasketProduct } = await import(runtimePrefix + "src/catalog/reviewedRetailBasket.mjs");
             const browser = await chromium.launch({
               headless: true,
               executablePath: process.env.CHROME_BIN,
@@ -157,13 +176,16 @@ jobs:
               if (text.includes("METRO") && text.includes("Ленинградское ш. 71Г")
                   && /\d+ категор/u.test(text)
                   && /\d+ товар/u.test(text)
-                  && await page.locator('#metro-store-address option[value="49"]').count()) {
+                  && await page.locator('#metro-store-address option[value="49"]').count()
+                  && await runtime.matchesPublished(attempt)) {
                 ready = true;
                 break;
               }
               await page.waitForTimeout(1800);
             }
             assert(ready, "Published Pages artifact does not expose current METRO store card");
+            assert(await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src")
+              === runtimePrefix + "src/app.mjs", "Browser METRO runtime differs from byte-verified release");
 
             const store = page.locator("#retail-store-card-metro");
             await chooseStore(page, "#retail-store-card-metro");
@@ -195,13 +217,23 @@ jobs:
               await card.waitFor({state:"visible",timeout:15000});
               await priceDetails(card);
               const cardText=await card.innerText();
-              assert(/\d[\d\s]*,\d{2} ₽/u.test(cardText),"Current exact-store RUB price missing: "+item.storeNumber);
+              assert(/\d[\d\s]*,\d{2} ₽/u.test(cardText),"Observed exact-store RUB price missing: "+item.storeNumber);
               assert(cardText.includes("Обычная онлайн-цена"),"METRO price condition missing");
               assert(cardText.includes("источник"),"METRO official source missing");
-              assert(await card.getByRole("button").isDisabled(),"METRO observation must remain display-only");
+              const lookup = await createRetailCatalogClient({ retailerId: "metro", store: item.storeNumber }).bySourceProductIds([item.sku]);
+              const current = lookup.kind === "catalog" ? lookup.products.find(row => row.id === "retail:metro:" + item.bindingId + ":" + item.sku) : null;
+              assert(current, "Exact METRO observation missing from its proven pickup binding");
+              const identity = getReviewedRetailBasketProduct(current);
+              const allowed = Boolean(identity && current.basketProductId === identity.id);
+              assert(await card.locator(".add-button").isDisabled() === !allowed,
+                "METRO add action must follow pinned list admission, including freshness");
+              assert(await card.locator(".product-observed-at").getAttribute("datetime") === current.observedAt,
+                "METRO card observation date differs from the exact source row");
+              if (current.sourceListOnly) assert(identity.id === current.id,
+                "Source-scoped METRO list item must not become a canonical comparison product");
               const ids=await page.locator("#product-grid .product-card").evaluateAll(nodes=>nodes.map(n=>n.getAttribute("data-product-id")));
               assert(ids.length>0 && ids.every(id=>id?.startsWith("retail:metro:"+item.bindingId+":")),"Foreign address rows leaked into "+item.storeNumber);
-              console.log("METRO_LIVE_ADDRESS_OK",JSON.stringify({storeNumber:item.storeNumber,bindingId:item.bindingId,sku:item.sku,observedAt:item.observedAt,cardText}));
+              console.log("METRO_LIVE_ADDRESS_OK",JSON.stringify({storeNumber:item.storeNumber,bindingId:item.bindingId,sku:item.sku,observedAt:current.observedAt,listAdmission:allowed,runtime:runtime.prefix,cardText}));
               await page.locator("#retail-breadcrumbs").getByRole("button", {name:"Категории", exact:true}).click();
               await allCategories(page);
             }
