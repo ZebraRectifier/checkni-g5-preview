@@ -12,7 +12,8 @@ const SHA = /^[a-f0-9]{40}$/u;
 const MAX_BYTES = 128 * 1024 * 1024;
 const SUPPORT_PATHS = ['test', 'tests', 'tools', 'package.json', 'package-lock.json',
   'playwright.weekly.config.mjs', 'deployment.json', 'release',
-  'artifacts/nearby-shopping/catalog-geography-joins-20261024.json'];
+  'artifacts/nearby-shopping/catalog-geography-joins-20261024.json',
+  'evidence/magnit-nearby-20261107'];
 export const MUTABLE_PUBLIC_DATA_FILES = Object.freeze([
   'nearbyGroceryStores.json',
   ...['saint-petersburg', 'kazan', 'yekaterinburg', 'novosibirsk', 'nizhny-novgorod'].map(city => `nearby-regions/${city}.json`),
@@ -105,7 +106,10 @@ export async function prepareCiRuntime({root = '.', env = process.env, ciOnly = 
   const resolved = await fs.realpath(destination);
   if (path.dirname(resolved) !== runnerTemp || !path.basename(resolved).startsWith('checkni-active-runtime-')) throw Error('unsafe_ci_destination');
   try {
-    const archive = git(checkout, ['-c', 'core.autocrlf=false', '-c', 'core.eol=lf', 'archive', '--format=tar', commit, '--', ...SUPPORT_PATHS]);
+    // New, narrowly named evidence packets are optional for retained releases.
+    // Archive only paths that exist in the pinned test commit, never live files.
+    const archivePaths = SUPPORT_PATHS.filter(prefix => support.some(entry => entry.file === prefix || entry.file.startsWith(prefix + '/')));
+    const archive = git(checkout, ['-c', 'core.autocrlf=false', '-c', 'core.eol=lf', 'archive', '--format=tar', commit, '--', ...archivePaths]);
     execFileSync('tar', ['-xf', '-', '-C', resolved], {input: archive, maxBuffer: MAX_BYTES, stdio: ['pipe', 'pipe', 'pipe']});
     for (const entry of support) {
       const bytes = await fs.readFile(await regularFile(resolved, entry.file));
