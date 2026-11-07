@@ -59,6 +59,24 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
     await expect(page.locator('#basket-dock-copy')).not.toContainText('Пока пусто');
     const before=await page.locator('#basket-dock-copy').innerText();await page.reload();
     await expect(page.locator('#basket-dock-copy')).toHaveText(before);
+    if(manifest.entries.some(entry=>entry.file==='src/ports/publishedPromotionCatalog.mjs')){
+      await page.locator('[data-pixel-action="stores"]').click();
+      await expect(page.locator('.okey-directory,#pyaterochka-published')).toHaveCount(0);
+      await expect(page.locator('#beta-live-section')).toBeHidden();
+      await page.route('**/src/data/okey*.json',r=>r.fulfill({status:503,json:{}}));
+      await page.locator('#retail-store-card-okey').click();
+      await expect(page.locator('#pixel-storefront-title')).toHaveText('О’КЕЙ');
+      await expect(page.locator('#empty-search')).toContainText('Не удалось загрузить товары');
+      await expect(page.locator('.pixel-store-address')).toBeHidden();
+      await page.locator('#catalog-other-stores').click();
+      await expect(page.locator('#pixel-store-home')).toBeVisible();
+      await page.locator('[data-pixel-action="hory"]').click();
+      await expect(page.locator('#pixel-hory-dialog')).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(page.locator('#pixel-hory-dialog')).toBeHidden();
+      await expect(page.locator('#basket-dock-copy')).toHaveText(before);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    }
     await page.evaluate(async release=>{
       const {createNearbyShoppingPort}=await import(`/releases/${release}/src/ports/nearbyShoppingPort.mjs`);
       await createNearbyShoppingPort().directory();
