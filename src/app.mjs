@@ -2013,6 +2013,8 @@ function setupManualSearchControls() {
   });
   partialNotice.append(partialText, partialRetry); elements.productGrid.before(partialNotice);
   elements.partialCatalogNotice = partialNotice;
+  elements.partialCatalogText = partialText;
+  elements.partialCatalogRetry = partialRetry;
   const prompt = document.createElement("p");
   prompt.id = "catalog-search-prompt";
   prompt.className = "field-help catalog-search-prompt";
@@ -2200,9 +2202,21 @@ function renderCatalog() {
 
   const hasResults = results.length > 0;
   const hasVisibleProducts = hasResults || featuredIds.size > 0;
-  if (elements.partialCatalogNotice) elements.partialCatalogNotice.hidden = !(
-    publicRetailCatalogMode && live && hasVisibleProducts && catalogSearchState.unavailableSources > 0
-  );
+  const collectionRootPending = featuredIds.size > 0 && loading;
+  const collectionRootFailed = featuredIds.size > 0 && fallback;
+  if (elements.partialCatalogNotice) {
+    elements.partialCatalogNotice.hidden = !(collectionRootPending || collectionRootFailed
+      || publicRetailCatalogMode && live && hasVisibleProducts && catalogSearchState.unavailableSources > 0);
+    elements.partialCatalogText.textContent = collectionRootFailed
+      ? "Каталог загрузился не полностью. Подборка доступна."
+      : collectionRootPending ? "Загружаем остальные товары…" : "Часть товаров не загрузилась.";
+    elements.partialCatalogRetry.disabled = collectionRootPending;
+    // A failed main listing must be visible before the successful collection,
+    // including on mobile where the collection can fill several screens.
+    const collectionHost = document.getElementById('pixel-collections');
+    if ((collectionRootPending || collectionRootFailed) && collectionHost) collectionHost.before(elements.partialCatalogNotice);
+    else elements.productGrid.before(elements.partialCatalogNotice);
+  }
   elements.productGrid.hidden = !hasResults;
   elements.emptySearch.hidden = draft || loading || hasVisibleProducts || categoryBrowsing;
   if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = fallback
@@ -2270,7 +2284,8 @@ function renderCatalog() {
   elements.emptySearchCopy.textContent = fallback
     ? "Живой каталог сейчас не загрузился. Попробуйте ещё раз."
     : "Попробуйте более короткий запрос — например «сыр» или «хлеб».";
-  elements.searchStatus.textContent = hasVisibleProducts
+  elements.searchStatus.textContent = collectionRootFailed ? "Каталог загрузился не полностью"
+    : hasVisibleProducts
     ? (
         live
         && catalogSearchState.categoryName

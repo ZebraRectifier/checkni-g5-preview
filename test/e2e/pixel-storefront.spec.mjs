@@ -184,6 +184,51 @@ test('parent category guidance keeps product failures, empty leaves and empty se
  await expectNoOverflow(page);
 });
 
+test('failed main listing keeps its collection and exposes an exact retry above it', async ({page}, testInfo) => {
+ await setup(page,{collections:true});
+ let rootAttempts=0,releaseRetry;
+ const retryPending=new Promise(resolve=>{releaseRetry=resolve;});
+ await page.route('**/rest/v1/retail_catalog_items**',async route=>{
+  const p=new URL(route.request().url()).searchParams;
+  if(p.get('retailer_id')==='eq.globus'&&!p.has('main_category_id')&&!p.has('category_url')
+    &&!p.has('source_product_id')&&!p.has('name')&&p.get('limit')==='24'){
+   rootAttempts++;
+   if(rootAttempts===1)return route.fulfill({status:500,json:{error:'main listing fixture'}});
+   await retryPending;
+  }
+  return route.fallback();
+ });
+ await selectStore(page);
+ const notice=page.locator('#catalog-partial-notice');
+ await expect(page.locator('#pixel-collections .product-card')).toHaveCount(2);
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(0);
+ await expect(notice).toBeVisible();
+ await expect(notice).toContainText('Каталог загрузился не полностью. Подборка доступна.');
+ await expect(page.locator('#empty-search')).toBeHidden();
+ const first=page.locator('#pixel-collections .product-card').first();
+ await first.locator('.add-button').click();
+ const before=await savedBasket(page);
+ expect(JSON.parse(before).length).toBe(1);
+ const collectionIds=await page.locator('#pixel-collections .product-card').evaluateAll(nodes=>nodes.map(n=>n.dataset.productId));
+ await notice.scrollIntoViewIfNeeded();
+ expect(await notice.evaluate(node=>Boolean(node.compareDocumentPosition(document.getElementById('pixel-collections'))&Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+ await page.screenshot({path:testInfo.outputPath('main-listing-failed.png')});
+ const attemptsBeforeRetry=rootAttempts;
+ await notice.getByRole('button',{name:'Повторить загрузку',exact:true}).click();
+ await expect(notice).toContainText('Загружаем остальные товары');
+ await expect(notice.getByRole('button')).toBeDisabled();
+ expect(await savedBasket(page)).toBe(before);
+ expect(await page.locator('#pixel-collections .product-card').evaluateAll(nodes=>nodes.map(n=>n.dataset.productId))).toEqual(collectionIds);
+ releaseRetry();
+ await expect(notice).toBeHidden();
+ await expect(page.locator('#search-status')).toHaveText('Найдено товаров: 2');
+ expect(rootAttempts).toBe(attemptsBeforeRetry+1);
+ expect(await savedBasket(page)).toBe(before);
+ await expect(page.locator('#pixel-collections .product-card')).toHaveCount(2);
+ await expect(page.locator('#empty-search')).toBeHidden();
+ await expectNoOverflow(page);
+});
+
 test('METRO selected address exposes its forty-eighth root and retains that address when opening products', async ({page}) => {
  await setup(page);
  const storeId='metro-address-da224d',source='https://online.metro-cc.ru/products/fixture-eggs-10';
