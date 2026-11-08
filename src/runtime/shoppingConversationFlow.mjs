@@ -511,6 +511,15 @@ export function createShoppingConversationFlow(options) {
       rememberAdvice(text, message);
       return { kind: "advice", message };
     }
+    if (memory.rejected.fish) {
+      // The deployed provider contract does not yet share this new typed
+      // target. Keep the request local and fail closed: identity can be
+      // filtered by a product name/category, but package composition cannot.
+      const message = "Рыбу как товарную группу исключила по названию и категории. Состав конкретной упаковки и возможные следы нужно проверить на этикетке; аллергическую безопасность не обещаю. Корзину не меняю без подтверждения черновика.";
+      state = messageState("Учла исключение.", message);
+      rememberAdvice(text, message);
+      return { kind: "advice", message };
+    }
     const input = shoppingAdviceInput(shoppingDialogueText(text, memory, dialogueFreezer), memory,
       localCatalog, [], currentBasket, adviceHistory);
     state = { status: "loading" };
@@ -880,6 +889,10 @@ export function createShoppingConversationFlow(options) {
       adviceFocus = questionFocus ?? shoppingAdviceFocus(text); referencePlan = [];
       if (memory.facts.unresolvedConstraints) {
         state = messageState("Осталось непонятое условие.", "Сначала уточни или явно отмени нераспознанное условие. Сохраняю его, чтобы не нарушить отказ.");
+        return state;
+      }
+      if (memory.rejected.fish) {
+        state = messageState("Учла исключение.", "Рыбу как товарную группу исключила по названию и категории. Состав конкретной упаковки и возможные следы нужно проверить на этикетке; аллергическую безопасность не обещаю. Корзину не меняю без подтверждения черновика.");
         return state;
       }
       if (adviceTopic === "product_facts") {

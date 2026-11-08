@@ -22,6 +22,28 @@ test('mixed pork refusal preserves unknown restrictions and filters named pork',
   assert.ok(unknown.rejected.pork);
   assert.ok(unknown.facts.unresolvedConstraints);
 });
+
+test('fish refusal closes a known exclusion list without granting blanket permission', () => {
+  const delta = extractShoppingDelta('Рыбу исключи. Остальное можно. Собери корзину в выбранном магазине.');
+  assert.deepEqual(delta.reject, ['fish']);
+  assert.deepEqual(delta.allow, []);
+  assert.deepEqual(delta.unresolved, []);
+  const memory = updateShoppingConversation(createShoppingConversation(), delta).state;
+  assert.equal(memory.rejected.fish.value, true);
+  assert.equal(isShoppingProductRejected({ name: 'Филе трески', category: 'Рыба' }, memory), true);
+  assert.equal(isShoppingProductRejected({ name: 'Филе куриное', category: 'Мясо, птица и рыба' }, memory), false);
+  assert.equal(isShoppingProductRejected({ name: 'Тунец консервированный', category: 'Консервы' }, memory), true);
+});
+
+test('fish allergy and unknown restrictions remain blocking and blanket permission clears nothing', () => {
+  const allergy = extractShoppingDelta('У меня аллергия на рыбу, исключи её. Остальное можно.');
+  assert.ok(allergy.reject.includes('fish'));
+  assert.ok(allergy.unresolved.length);
+  const unknown = update(createShoppingConversation(), 'Без арахиса');
+  const blanket = update(unknown, 'Остальное можно');
+  assert.deepEqual(blanket.facts.unresolvedConstraints.value, unknown.facts.unresolvedConstraints.value.concat('остальное можно'));
+  assert.equal(blanket.rejected.fish, undefined);
+});
 const product = id => catalog.find(row => row.id === id);
 function session(extra = {}) {
   const basket = createBasketStore({ storage: null });

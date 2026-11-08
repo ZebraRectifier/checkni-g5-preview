@@ -57,6 +57,30 @@ const products = [
   scope_binding: 'same-source', binding_id: 'store:5011', location_label: 'г. Москва, вн.тер.г. муниципальный округ Кунцево, Новорижское шоссе 22-й км, д. 1 стр. 1',
   observed_at: '2026-10-10T08:30:00Z' }));
 
+test('three-turn fish exclusion creates only a confirmable store draft and never calls advice',async({page,context})=>{
+  let aiCalls=0;
+  await context.route('**/*',route=>['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
+  await page.route('**/functions/v1/ai-basket-proposal',route=>{aiCalls++;return route.abort();});
+  await page.route('**/rest/v1/retail_catalog_categories**',route=>route.fulfill({json:[]}));
+  await page.route('**/rest/v1/retail_catalog_items**',route=>route.fulfill({json:[...products,
+    {...products[0],source_product_id:'fish',name:'Филе трески',product_url:'https://www.globus.ru/products/fish',price_minor:39999}]
+    .map(row=>({...row,observed_at:new Date().toISOString()}))}));
+  await page.goto('/?comparison=observed&catalog=retail#shop');await selectStore(page);
+  const status=page.locator('#basket-proposal-status');
+  await submit(page,'Собери корзину для двоих на 3 дня');await expect(status).toContainText('Какой общий бюджет');
+  await submit(page,'Без лимита');await expect(status).toContainText('Какие продукты исключить');
+  await submit(page,'Рыбу исключи. Остальное можно. Собери корзину в выбранном магазине.');
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')??'[]'))).toEqual([]);
+  await status.getByRole('button',{name:'Подобрать товары и цены',exact:true}).click();
+  const table=page.locator('#hori-shopping-results').getByRole('table');await expect(table).toBeVisible();
+  await expect(table).not.toContainText(/треск|рыб/iu);
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')??'[]'))).toEqual([]);
+  expect(aiCalls).toBe(0);
+  const add=status.getByRole('button',{name:/Добавить (найденное|показанное)/u});await expect(add).toBeVisible();await add.click();
+  const basket=await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')??'[]'));
+  expect(basket.length).toBeGreaterThan(0);expect(basket.every(row=>!/треск|рыб/iu.test(row.name))).toBe(true);
+});
+
 test('switching store during an in-flight guided lookup cannot publish the previous quote', async ({ page, context }) => {
   let releaseOld, oldStarted = 0, oldCompleted = 0;
   const oldGate = new Promise(resolve => { releaseOld = resolve; });

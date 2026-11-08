@@ -1,4 +1,4 @@
-import { shoppingTargetLabel, productShoppingTargets } from "./shoppingConversation.mjs";
+import { shoppingTargetIsProviderCompatible, productShoppingTargets } from "./shoppingConversation.mjs";
 
 export const MAX_ADVICE_MESSAGE_LENGTH = 1000;
 export const MAX_ADVICE_HISTORY_LENGTH = 2400;
@@ -9,7 +9,7 @@ const record = value => value !== null && typeof value === "object" && !Array.is
 const exactKeys = (value, keys) => record(value) && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key));
 const boundedString = (value, max) => typeof value === "string" && value.length > 0 && value.length <= max && value.trim() === value && !/[\u0000-\u001f]/u.test(value);
 const targetList = (value, max) => Array.isArray(value) && value.length <= max && new Set(value).size === value.length
-  && value.every(key => boundedString(key, 40) && shoppingTargetLabel(key) !== key);
+  && value.every(key => boundedString(key, 40) && shoppingTargetIsProviderCompatible(key));
 
 // Only previously displayed, validated advice belongs here. It is temporary
 // conversation data, never privileged messages or a source of commerce facts.

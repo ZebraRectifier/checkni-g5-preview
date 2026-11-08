@@ -2,7 +2,10 @@
 // transcripts, identity, commercial facts and inferred hypotheses stay out.
 export const CONVERSATION_LIMITS = Object.freeze({ facts: 16, rejected: 32, wishes: 16, exceptions: 8, bytes: 8192 });
 export const normalizeShoppingText = value => String(value ?? "").normalize("NFKC").toLocaleLowerCase("ru-RU").replaceAll("ё", "е").replace(/\s+/g, " ").trim();
-export const shoppingTargetLabel = key => ({ pork: "свинина", meat: "мясо и птица", chicken_mince: "куриный фарш", chicken: "курица", nuggets: "наггетсы", chebureki: "чебуреки", eggs: "яйца", rice: "рис", pasta: "макароны", oatmeal: "овсянка", potatoes: "картофель", onions: "лук", carrots: "морковь", cabbage: "капуста", milk: "молоко", kefir: "кефир", vegetables: "овощи", fruit: "фрукты", tomatoes: "томаты", bread: "хлеб", cheese: "сыр", apples: "яблоки", bananas: "бананы", pelmeni: "пельмени", beef_mince: "говяжий фарш" }[key] ?? key);
+export const shoppingTargetLabel = key => ({ pork: "свинина", meat: "мясо и птица", fish: "рыба", chicken_mince: "куриный фарш", chicken: "курица", nuggets: "наггетсы", chebureki: "чебуреки", eggs: "яйца", rice: "рис", pasta: "макароны", oatmeal: "овсянка", potatoes: "картофель", onions: "лук", carrots: "морковь", cabbage: "капуста", milk: "молоко", kefir: "кефир", vegetables: "овощи", fruit: "фрукты", tomatoes: "томаты", bread: "хлеб", cheese: "сыр", apples: "яблоки", bananas: "бананы", pelmeni: "пельмени", beef_mince: "говяжий фарш" }[key] ?? key);
+// Fish is intentionally local until the separately deployed provider contract
+// supports the same typed target. Never send an unknown enum to that service.
+export const shoppingTargetIsProviderCompatible = key => key !== "fish" && shoppingTargetLabel(key) !== key;
 
 const TERMS = Object.freeze({
   pork: /свинин[а-я]*|свин[а-я]*\s+фарш|фарш\s+свин[а-я]*/u,
@@ -55,11 +58,20 @@ export function shoppingTargets(text) {
   return targets.includes("chicken_mince") ? targets.filter(key => key !== "chicken") : targets;
 }
 
+const shoppingPreferenceTargets = text => {
+  const targets = shoppingTargets(text);
+  if (/рыб[а-я]*/u.test(normalizeShoppingText(text))) targets.push("fish");
+  return [...new Set(targets)];
+};
+
 export function productShoppingTargets(product) {
   const name = normalizeShoppingText(product?.name).replace(/(?:для|к)\s+мяс(?:а|у)(?=$|[\s,.])/gu, "");
   const keys = shoppingTargets(name).filter(key => key !== "meat");
   if (keys.includes("chicken_mince")) keys.push("chicken");
   const category = normalizeShoppingText(product?.category);
+  if (/рыб[а-я]*/u.test(name)
+    || /(?:лосос|семг|форел|треск|минта|горбуш|скумбр|сел[её]д|тун(?:ец|ца)|сардин|кильк|хек|судак|щук|карп|дорад|сибас|палтус|камбал|мойв|анчоус|осетр|икр[аы])\S*/u.test(name)
+    || /^(?:рыба|рыбные продукты|рыба и морепродукты)$/u.test(category)) keys.push("fish");
   if (!/без\s+мяса/u.test(name) && (TERMS.meat.test(name) || keys.some(key => MEAT_TARGETS.has(key))
     || /говядин|свинин|индейк|бекон|ветчин|колбас|сосиск|баранин|теляти|ягнен|крольчат/u.test(name)
     || /(?:^|[^а-я])(?:утк[ауои]|гусь|гуся|гуси|кролик[а-я]*|перепел(?:а|ку|ки|ок)?)(?=$|[^а-я])/u.test(name)
@@ -114,18 +126,19 @@ export function extractShoppingDelta(text) {
   if (/быстр\S* готовк|один горячий|фарш/u.test(value)) delta.directions = "quick";
 
   const addTargets = (phrase, kind) => {
-    const targets = shoppingTargets(phrase);
+    const targets = shoppingPreferenceTargets(phrase);
     if (targets.length) delta[kind].push(...targets);
     else delta.unresolved.push(phrase.trim().slice(0, 80));
   };
   const clauses = shoppingClauses(value);
+  const hasExplicitRefusal = clauses.some(clause => REFUSAL.test(clause) && shoppingPreferenceTargets(clause).length > 0);
   for (let clause of clauses) {
     const askedAsQuestion = value.replace(/\s+\?/gu, "?").includes(`${clause.trim()}?`);
     const permissionQuestion = PERMISSION_QUESTION.test(clause) || askedAsQuestion;
     const replacement = clause.match(/вместо\s+(.+?)\s+(?:хочу|нужен|возьми|давай|добавь)\s+(.+)/u);
     if (replacement) {
       addTargets(replacement[1], "reject");
-      for (const target of shoppingTargets(replacement[1])) delta.rejectScopes[target] = /никогда|вообще не ем|всегда без/u.test(clause) ? "conversation" : "goal";
+      for (const target of shoppingPreferenceTargets(replacement[1])) delta.rejectScopes[target] = /никогда|вообще не ем|всегда без/u.test(clause) ? "conversation" : "goal";
       const [wanted, ...rest] = replacement[2].split(",");
       addTargets(wanted, "want");
       if (rest.length) clauses.push(rest.join(","));
@@ -143,7 +156,9 @@ export function extractShoppingDelta(text) {
       const without = clause.match(/без\s+(.+)/u);
       const otherRefusal = NEGATIVE_REQUEST.test(clause);
       const phrase = without && !otherRefusal ? without[1] : clause;
-      let targets = shoppingTargets(phrase);
+      let targets = shoppingPreferenceTargets(phrase);
+      const compositionCritical = targets.includes("fish") && /аллерг|неперенос|след(?:ы|ов)|состав/u.test(clause);
+      if (compositionCritical) delta.unresolved.push(clause.trim().slice(0, 80));
       if (targets.includes("meat") && /красн\S*\s+мяс|жирн\S*\s+мяс|переработан\S*\s+мяс|не\s+без\s+мяса/u.test(clause)) {
         targets = targets.filter(key => key !== "meat");
         delta.unresolved.push(clause.trim().slice(0, 80));
@@ -154,7 +169,7 @@ export function extractShoppingDelta(text) {
       const listed = sharedRefusal ? sharedRefusal[1].split(/\s*,\s*|\s+и\s+/u).map(part => part.trim()).filter(Boolean) : [];
       if (listed.length > 1) for (const part of listed) {
         const nonFoodContext = /^(?:на|для|в|по|до|радиус|бюджет|город|адрес|магазин|слушай|пожалуйста)(?=$|[\s.,])/u.test(part);
-        if (!shoppingTargets(part).length && !nonFoodContext) delta.unresolved.push(part.slice(0, 80));
+        if (!shoppingPreferenceTargets(part).length && !nonFoodContext) delta.unresolved.push(part.slice(0, 80));
       }
       delta.reject.push(...targets);
       for (const target of targets) delta.rejectScopes[target] = /никогда|вообще не ем|всегда без/u.test(clause) ? "conversation" : "goal";
@@ -167,7 +182,7 @@ export function extractShoppingDelta(text) {
           // clear existing unresolved constraints or ignore unknown list members.
           const noOtherRestrictions = /^(?:других|иных|остальных) ограничений нет$/u.test(part)
             || /^(?:что|чем) (?:посоветуешь|порекомендуешь|заменить)(?: вместо (?:неё|нее|него|этого))?$/u.test(part);
-          if (!shoppingTargets(part).length && !noOtherRestrictions && !/^(?:готовк[аиу]|пожалуйста|пж|плиз|спасибо)$/u.test(part)) {
+          if (!shoppingPreferenceTargets(part).length && !noOtherRestrictions && !/^(?:готовк[аиу]|пожалуйста|пж|плиз|спасибо)$/u.test(part)) {
             delta.unresolved.push(`без ${part.replace(/^без\s+/u, "")}`.slice(0, 80));
           }
         }
@@ -176,6 +191,10 @@ export function extractShoppingDelta(text) {
       if (!targets.length && !/готов|бренд|марк|самое дешев|не знаю/u.test(clause)) {
         delta.unresolved.push((without && !otherRefusal ? `без ${without[1]}` : clause).trim().slice(0, 80));
       }
+    } else if (/^(?:все|всё|остальное|другое) можно$/u.test(clause.trim()) && hasExplicitRefusal) {
+      // This closes the current list of exclusions. It is not permission to
+      // erase previous unknown constraints or to reintroduce every product.
+      continue;
     } else if (/верни|передумал|снова хочу/u.test(clause)
       || /можно/u.test(clause) && !permissionQuestion) {
       // Asking what is possible is not permission to reintroduce a refused

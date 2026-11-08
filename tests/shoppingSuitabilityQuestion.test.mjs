@@ -27,9 +27,10 @@ test('negative suitability questions do not invent a refusal or an unresolved di
 test('explicit refusals remain binding even when followed by a question',()=>{
  for(const[text,target]of [['рис не подходит','rice'],['Мне не подходит рис, что выбрать?','rice'],['Рис не подходит, убери его?','rice'],
  ['Не ем яйца, что посоветуешь?','eggs'],['Без яиц, что можно?','eggs']])assert.ok(extractShoppingDelta(text).reject.includes(target),text);
- for(const text of ['Мне не подходят морепродукты, что выбрать?','Мне не подходит рыба. Почему?'])assert.ok(extractShoppingDelta(text).unresolved.length,text);
+ assert.ok(extractShoppingDelta('Мне не подходят морепродукты, что выбрать?').unresolved.length);
+ assert.ok(extractShoppingDelta('Мне не подходит рыба. Почему?').reject.includes('fish'));
  const mixed=extractShoppingDelta('Яйца не подходят для пирога? Рыбу не ем.');
- assert.deepEqual(mixed.reject,[]);assert.ok(mixed.unresolved.some(s=>s.includes('рыбу')),JSON.stringify(mixed));
+ assert.deepEqual(mixed.reject,['fish']);assert.deepEqual(mixed.unresolved,[]);
 });
 
 test('challenging a previous recommendation reaches advice, retains history and leaves the next topic usable',async()=>{

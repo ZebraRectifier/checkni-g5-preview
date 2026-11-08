@@ -68,6 +68,19 @@ test('an active store with no returned cards cannot swallow an unclear conversat
   assert.deepEqual(s.basket.getSnapshot(), []);
 });
 
+test('fish exclusion stays local until the provider contract supports it', async () => {
+  const s = session(async () => { throw new Error('provider must not run'); });
+  await s.send('Рыбу исключи. Остальное можно.');
+  assert.equal(s.flow.getConversation().rejected.fish.value, true);
+  assert.deepEqual(s.advice, []);
+  const answer = await s.send('Что можно быстро приготовить?');
+  assert.equal(s.advice.length, 0);
+  assert.match(answer.presentation.message, /по названию и категории/u);
+  assert.match(answer.presentation.message, /состав конкретной упаковки/iu);
+  assert.match(answer.presentation.message, /Корзину не меняю без подтверждения/u);
+  assert.deepEqual(s.basket.getSnapshot(), []);
+});
+
 test('a concrete product keeps strict identity selection and a failed attempt asks locally before the next dialogue turn', async () => {
   const s = session();
   const failed = await s.send('хлеб бородинский');
