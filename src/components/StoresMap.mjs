@@ -150,6 +150,13 @@ export function createStoresSection({
   const list = textEl('ul','stores-list',''); list.id = 'stores-known-locations';
   const directory = document.createElement('details'); directory.className = 'stores-location-directory';
   directory.id = 'stores-location-directory';
+  const networkLabel = textEl('label', 'stores-map-network-label', 'Сеть на карте'); networkLabel.htmlFor = 'stores-map-network';
+  const networkFilter = document.createElement('select'); networkFilter.id = 'stores-map-network'; networkFilter.className = 'stores-map-network-filter';
+  for (const [value, label] of [['all','Все сети'],['globus','Глобус'],['metro','METRO'],['magnit','Магнит'],
+    ['perekrestok','Перекрёсток'],['pyaterochka','Пятёрочка'],['vkusvill','ВкусВилл'],['lenta','Лента'],['okey','О’КЕЙ'],['auchan','Ашан'],['chizhik','Чижик']]) {
+    const option = textEl('option', null, label); option.value = value; networkFilter.append(option);
+  }
+  networkFilter.addEventListener('change', () => { listLimit = STORE_LIST_PAGE_SIZE; focusedPin = null; pinCard.hidden = true; renderMap(); renderList(); });
   const summary = textEl('summary',null,'Магазины списком');
   const listCount = textEl('p','stores-list-count',''); listCount.setAttribute('role','status');
   const more = button('Показать ещё магазины', event => {
@@ -158,7 +165,7 @@ export function createStoresSection({
     renderList();
     if (event.detail === 0 && more.hidden) list.children[previousCount]?.querySelector('button,a')?.focus();
   });
-  directory.append(summary,listCount,list,more);
+  directory.append(summary,networkLabel,networkFilter,listCount,list,more);
   const mapInfo = document.createElement('details'); mapInfo.className = 'stores-map-info';
   mapInfo.append(textEl('summary',null,'О карте и данных'), textEl('p','stores-copy',
     'Расстояния — по прямой. Точка на карте не подтверждает цены, наличие или работу магазина. Место хранится только в этой вкладке. При открытии карты OpenFreeMap получает запросы участков карты; адрес и список покупок туда не отправляются.'));
@@ -167,7 +174,7 @@ export function createStoresSection({
     externalLink('© OpenMapTiles','https://openmaptiles.org'), document.createTextNode(' · '),
     externalLink('© OpenStreetMap','https://www.openstreetmap.org/copyright'));
   const magnitDirectory = createMagnitStoreDirectory();
-  function availablePins() { return contextPins ?? mapStores; }
+  function availablePins() { return (contextPins ?? mapStores).filter(store => networkFilter.value === 'all' || store.retailerId === networkFilter.value); }
   function visiblePins() {
     const pins = availablePins();
     return nearestStoreMapPins(pins,center,{selectedIds:[focusedPin?.id,...pins.filter(isSelected).map(pin=>pin.id)]});
@@ -243,7 +250,7 @@ export function createStoresSection({
   }
   function renderControls() {
     zoomIn.disabled = zoom >= 16; zoomOut.disabled = zoom <= 3;
-    searchHere.hidden = mapFailure || Boolean(geoState.position && distanceMeters(center,geoState.position) < 5);
+    searchHere.hidden = Boolean(geoState.position && distanceMeters(center,geoState.position) < 5);
     const label = geoState.position ? 'К моему месту' : 'Определить моё место';
     geoButton.setAttribute('aria-label', label); geoButton.title = label;
   }
@@ -312,12 +319,13 @@ export function createStoresSection({
     const context = event.detail;
     if (!context || !Number.isSafeInteger(context.revision) || context.revision < contextRevision || !Array.isArray(context.stores)) return;
     contextRevision = context.revision; nearbyContext = context; contextPins = context.stores;
+    networkFilter.value = 'all';
     listLimit = STORE_LIST_PAGE_SIZE; focusedPin = null; pinCard.hidden = true;
     renderMap(); renderList();
   });
   section.updateSelection = scope => { currentScope = scope; renderSelected(); renderList(); renderMap(); if (focusedPin) showPin(focusedPin); };
   function setNearbyMode(enabled) {
-    nearbyMode = enabled; section.classList.toggle('stores-nearby-mode',enabled);
+    nearbyMode = enabled; networkFilter.value = 'all'; section.classList.toggle('stores-nearby-mode',enabled);
     magnitDirectory.hidden = enabled; selected.hidden = enabled;
     directory.hidden = enabled && !mapFailure; directory.open = Boolean(enabled && mapFailure);
     summary.hidden = enabled && !mapFailure;

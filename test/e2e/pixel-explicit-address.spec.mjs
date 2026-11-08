@@ -60,7 +60,7 @@ test('exact-address chooser starts with five cards, expands, and still searches 
   const chooser = page.locator('#pixel-address-chooser');
   const choices = chooser.locator('.pixel-store-address-choice');
   await expect(choices).toHaveCount(5);
-  await expect(choices.locator('small')).toHaveText(Array(5).fill('Открыть каталог · дату цен покажем внутри'));
+  await expect(choices.locator('small')).toHaveCount(0);
 
   const showMore = chooser.locator('.pixel-store-address-toggle');
   await expect(showMore).toHaveText('Показать ещё 5');

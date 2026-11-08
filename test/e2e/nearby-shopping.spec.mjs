@@ -68,7 +68,7 @@ test('reviewed METRO points open the exact store catalogue from nearby cards and
   const mapRow=page.locator(`#stores-known-locations li[data-store-location-id="${point.id}"]`);
   await expect(mapRow).toContainText(point.address);await mapRow.getByRole('button',{name:'Metro',exact:true}).click();
   const card=page.locator('.stores-pin-card');await expect(card).toContainText(point.address);
-  await expect(card.getByRole('link',{name:'Маршрут'})).toHaveAttribute('href',/yandex\.ru\/maps/u);
+  await expect(card.getByRole('link',{name:'Маршрут'})).toHaveCount(0);
   await card.getByRole('button',{name:'Открыть товары',exact:true}).click();
   await expect(page.locator('#metro-store-address')).toHaveValue(point.storeNumber);
   await expect.poll(()=>scopes.includes(`eq.${point.storeId}`)).toBe(true);
@@ -100,7 +100,7 @@ test('official Magnit coordinates: map retains full paginated list and opens an 
   await expect(row).toContainText(point.address);
   await row.getByRole('button',{name:'Магнит',exact:true}).click();
   const card=page.locator('.stores-pin-card');await expect(card).toContainText(point.address);
-  await expect(card.getByRole('link',{name:'Маршрут'})).toHaveAttribute('href',/yandex\.ru\/maps/u);
+  await expect(card.getByRole('link',{name:'Маршрут'})).toHaveCount(0);
   await expect.poll(()=>page.locator('.stores-pin').count()).toBeGreaterThan(0);
   expect(await page.locator('.stores-pin').count()).toBeLessThanOrEqual(200);
   await page.getByRole('button',{name:'Показать ещё магазины',exact:true}).click();
@@ -188,7 +188,7 @@ test('five regional cities: real address cards, directory recovery and no Moscow
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
-test('selected map card keeps route and catalogue action reachable above the mobile navigation',async({page,context},testInfo)=>{
+test('selected map card keeps its catalogue action reachable above the mobile navigation',async({page,context},testInfo)=>{
   await page.route(/^https?:\/\/(?!(?:127\.0\.0\.1|localhost)(?::\d+)?\/)/u,route=>{
     const url=new URL(route.request().url());
     if(url.hostname!=='tiles.openfreemap.org')return route.abort();
@@ -211,7 +211,7 @@ test('selected map card keeps route and catalogue action reachable above the mob
   await expect(marker).toBeVisible({timeout:20000});await marker.click();
   const card=page.locator('.stores-pin-card'),action=card.getByRole('button',{name:'Открыть товары',exact:true});
   await expect(card).toContainText('Глобус Щелково');await expect(action).toBeInViewport();
-  await expect(card.getByRole('link',{name:'Маршрут'})).toBeInViewport();
+  await expect(card.getByRole('link',{name:'Маршрут'})).toHaveCount(0);
   // A geometric visibility check also detects sticky dock occlusion.
   expect(await action.evaluate(node=>{const box=node.getBoundingClientRect(),hit=document.elementFromPoint(box.x+box.width/2,box.y+box.height/2);return node===hit||node.contains(hit);})).toBe(true);
   // A hovered SDK marker/label previously painted above the card although its
@@ -452,7 +452,7 @@ test('clearing the nearby place cancels a pending map device callback in both vi
   await page.locator('#nearby-shopping').getByRole('button',{name:'Убрать моё место',exact:true}).click();
   await page.evaluate(()=>window.__nearbyLateDevice({coords:{latitude:55.75,longitude:37.61,accuracy:15},timestamp:Date.now()}));
   await expect(page.locator('#nearby-results')).toBeEmpty();await expect(page.locator('.stores-user-pin')).toHaveCount(0);
-  await expect(page.locator('#stores-location-status')).toContainText('Место ещё не указано');
+  await expect(page.locator('#stores-location-status')).toBeHidden();
   await expect(page.locator('#nearby-selected-store')).toBeHidden();
 });
 
@@ -463,7 +463,7 @@ test('a full spoken goal keeps people and period while the precise address stays
   await expect(page.locator('#nearby-address')).toHaveValue('в Пушкино');await expect(page.locator('#nearby-radius')).toHaveValue('10');
   await closeHory(page);await openStoreDetails(page);
   const stored=await page.evaluate(()=>JSON.stringify({...localStorage}));expect(stored).not.toContain('Пушкино');
-  await page.locator('#stores-manual-location').click();await page.locator('.stores-map').press('Enter');
+  await page.locator('.stores-map').press('Enter');
   await page.locator('#nearby-radius').selectOption('20');await page.locator('#nearby-connected-only').check();
   const choose=page.locator('#nearby-results article').first().getByRole('button',{name:'Открыть товары',exact:true});
   await choose.click();await page.getByRole('button',{name:'Собрать корзину здесь',exact:true}).click();

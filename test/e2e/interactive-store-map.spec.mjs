@@ -15,7 +15,7 @@ test('lazy SDK map supports marker card, store choice, keyboard search and touch
   await marker.click();await expect(marker).toHaveClass(/stores-pin-focused/u);await expect(marker).toHaveAttribute('aria-current','true');
   await expect(page.locator('.stores-pin-card')).toContainText('Пролетарский');
   await expect(page.locator('.stores-location-directory')).toBeHidden();
-  await expect(page.locator('.stores-pin-card a')).toHaveAttribute('href',/https:\/\/yandex\.ru\/maps\/\?rtext=/u);
+  await expect(page.locator('.stores-pin-card a')).toHaveCount(0);
   await page.locator('.stores-pin-card').getByRole('button',{name:'Открыть товары',exact:true}).click();
   await expect(page.locator('#selection')).toHaveText('selected:globus-store-5001');
   await page.locator('.stores-map').press('ArrowRight');
@@ -54,16 +54,10 @@ test('compact map mode offers a keyboard-only store route without duplicating th
   await page.evaluate(()=>{window.mapHarness.stores.hidden=false;window.mapHarness.stores.openNearbyMap();});
   await expect(page.locator('.maplibregl-canvas')).toBeVisible({timeout:15000});
   const directory=page.locator('.stores-location-directory');
-  const toggle=page.getByRole('button',{name:'Магазины списком',exact:true});
   await expect(directory).toBeHidden();
-  await expect(toggle).toBeVisible();
-  await toggle.focus();await page.keyboard.press('Enter');
-  await expect(toggle).toHaveAttribute('aria-expanded','true');
-  await expect(directory).toBeVisible();await expect(directory).toHaveAttribute('open','');
-  await expect(directory.locator(':scope > summary')).toBeHidden();
-  const firstStore=page.locator('#stores-known-locations li button').first();
-  await expect(firstStore).toBeFocused();
-  const focusedBox=await firstStore.boundingBox();expect(focusedBox.y).toBeGreaterThanOrEqual(0);expect(focusedBox.y+focusedBox.height).toBeLessThanOrEqual(800);
+  const marker=page.locator('.stores-pin[data-store-location-id="globus-store-5001"]');
+  await marker.focus();
+  await expect(marker).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('.stores-pin-card')).toBeVisible();
   await expect(page.locator('.stores-pin-card')).toContainText('Пролетарский');
@@ -92,7 +86,7 @@ test('map centre and radius survive opening a catalogue and returning to stores'
   await map.press('ArrowRight');await page.getByRole('button',{name:'Искать здесь',exact:true}).click();
   await expect(page.locator('#nearby-radius')).toHaveValue('10');
   await expect(page.locator('#nearby-status')).toContainText('Точка на карте · до 10 км');
-  await expect(page.getByRole('button',{name:'Искать здесь',exact:true})).toBeDisabled();
+  await expect(page.getByRole('button',{name:'Искать здесь',exact:true})).toBeHidden();
   const marker=page.locator('.stores-pin').first();
   await expect(marker).toBeVisible({timeout:15000});await marker.click();
   await page.locator('.stores-pin-card').getByRole('button',{name:'Открыть товары',exact:true}).click();
@@ -102,6 +96,6 @@ test('map centre and radius survive opening a catalogue and returning to stores'
   await expect(page.locator('#nearby-radius')).toHaveValue('10');
   await page.locator('#nearby-shopping .nearby-location-actions button').filter({hasText:'На карте'}).click();
   await expect(map).toBeVisible();
-  await expect(page.getByRole('button',{name:'Искать здесь',exact:true})).toBeDisabled();
+  await expect(page.getByRole('button',{name:'Искать здесь',exact:true})).toBeHidden();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
