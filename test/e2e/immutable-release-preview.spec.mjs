@@ -66,7 +66,7 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
       await page.route('**/src/data/okey*.json',r=>r.fulfill({status:503,json:{}}));
       await page.locator('#retail-store-card-okey').click();
       await expect(page.locator('#pixel-storefront-title')).toHaveText('О’КЕЙ');
-      await expect(page.locator('#empty-search')).toContainText('Не удалось загрузить товары');
+      await expect(page.locator('#empty-search')).toContainText('Каталог сейчас недоступен');
       await expect(page.locator('.pixel-store-address')).toBeHidden();
       await page.locator('#catalog-other-stores').click();
       await expect(page.locator('#pixel-store-home')).toBeVisible();
