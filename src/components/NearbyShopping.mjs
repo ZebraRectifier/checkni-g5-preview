@@ -7,7 +7,7 @@ import { yandexStoreRouteUrl } from '../navigation/storeRoute.mjs';
 export function createNearbyShopping({document=globalThis.document,port=createNearbyShoppingPort(),onChoose,onBuild,onManualMap,
   onInvalidate=()=>{},geolocationOptions={},locationController}={}){
   const el=(tag,text)=>{const e=document.createElement(tag);if(text)e.textContent=text;return e;};
-  const RESULT_PAGE_SIZE=5,RESULT_MAX_VISIBLE=15;
+  const RESULT_PAGE_SIZE=5;
   const button=(text,fn)=>{const b=el('button',text);b.type='button';b.addEventListener('click',fn);return b;};
   const root=el('section');root.id='nearby-shopping';root.className='nearby-shopping';root.setAttribute('aria-label','Магазины рядом и выбор места покупок');
   const stylesheet=new URL('./nearby-shopping.css',import.meta.url).href;
@@ -96,7 +96,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
       directoryDate.hidden=false;
       status.textContent=`${pointName||'Выбранная точка'} · до ${radius.value} км · найдено: ${rows.length}`
         +(rows.length?'':connected.checked?' · Расширь радиус или покажи все магазины.':' · Расширь радиус или уточни адрес.');
-      const shownRows=rows.slice(0,Math.min(limit,RESULT_MAX_VISIBLE));
+      const shownRows=rows.slice(0,limit);
       for(const row of shownRows){
         const card=el('article');card.className='nearby-store';card.dataset.storeId=row.id;
         if(chosen?.id===row.id){card.classList.add('is-selected');card.setAttribute('aria-current','true');}
@@ -114,10 +114,10 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
       const sourceUrls=[...new Set(shownRows.map(row=>row.sourceUrl).filter(Boolean))];
       if(sourceUrls.length){const sources=el('details');sources.className='nearby-result-sources';sources.append(el('summary','Источники адресов'));
         sourceUrls.forEach((url,index)=>{const link=el('a',`Источник ${index+1}`);link.href=url;link.target='_blank';link.rel='noopener noreferrer';sources.append(link);});results.append(sources);}
-      if(rows.length>shownRows.length&&shownRows.length<RESULT_MAX_VISIBLE){
-        const nextLimit=Math.min(limit+RESULT_PAGE_SIZE,RESULT_MAX_VISIBLE,rows.length);
+      if(rows.length>shownRows.length){
+        const nextLimit=Math.min(limit+RESULT_PAGE_SIZE,rows.length);
         results.append(button(`Показать ещё ${nextLimit-shownRows.length}`,()=>{limit=nextLimit;void renderResults();}));
-      }else if(rows.length>shownRows.length){results.append(el('p','Уточните адрес, сеть или радиус — показаны первые 15 магазинов.'));}
+      }
     }catch{if(token===version){publishMapContext('unavailable');status.textContent='Справочник сейчас не загрузился. Место сохранилось; попробуй ещё раз или выбери магазин в каталоге.';}}
   }
   async function choose(row){

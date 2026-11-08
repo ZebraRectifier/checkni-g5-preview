@@ -471,3 +471,28 @@ test('a full spoken goal keeps people and period while the precise address stays
   await expect(page.locator('#basket-proposal-status')).toContainText('для 3 человек, на 7 дн.');
   await expect(page.locator('#basket-proposal-status')).toContainText('Какие продукты исключить');expect(ai).toBe(0);
 });
+
+test('nearby cards page past fifteen and stop at the honest end',async({page,context})=>{
+  await isolateRegional(page);
+  const center={lat:55.75,lon:37.61};
+  const template=joinedDirectory.stores.find(row=>row.retailerId==='vkusvill'&&!row.catalogBinding);
+  const packet={...joinedDirectory,stores:Array.from({length:17},(_,i)=>({...template,
+    id:`fixture:nearby:${i+1}`,name:`Тестовый магазин ${i+1}`,address:`Москва, тестовая улица, ${i+1}`,
+    lat:center.lat+i*0.0002,lon:center.lon,catalogBinding:null}))};
+  await page.route('**/nearbyGroceryStores.json',route=>route.fulfill({json:packet}));
+  await page.route('**/magnitRegisteredCoordinates.json',route=>route.fulfill({status:404}));
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({latitude:center.lat,longitude:center.lon,accuracy:10});
+  await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
+  await selectStore(page);await openStoreDetails(page);
+  await page.locator('#nearby-shopping').getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
+  await page.locator('#nearby-locate').click();
+  await page.locator('#nearby-radius').selectOption('1');
+  await page.locator('#nearby-connected-only').uncheck();
+  const cards=page.locator('#nearby-results article');
+  const more=page.locator('#nearby-results').getByRole('button',{name:/Показать ещё/u});
+  await expect(cards).toHaveCount(5);
+  for(const count of [10,15,17]){await more.click();await expect(cards).toHaveCount(count);}
+  await expect(more).toHaveCount(0);
+  await expect(page.locator('#nearby-results')).not.toContainText('первые 15');
+});

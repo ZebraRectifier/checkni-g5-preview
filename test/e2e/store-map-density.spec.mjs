@@ -26,9 +26,12 @@ test("store map filters and paginates the address list even when the basemap is 
   await expect(page.locator('#stores-known-locations li')).toHaveCount(10);
   await page.getByRole('button',{name:'Показать ещё магазины',exact:true}).click();
   await expect(page.locator('#stores-known-locations li')).toHaveCount(15);
-  await expect(page.getByRole('button',{name:'Показать ещё магазины',exact:true})).toBeHidden();
+  const more = page.getByRole('button',{name:'Показать ещё магазины',exact:true});
+  await expect(more).toBeVisible();
+  await more.click();
+  await expect(page.locator('#stores-known-locations li')).toHaveCount(20);
   await expect(page.locator('.stores-list-count')).not.toContainText(/Адресов:\s*\d+/u);
-  await expect(page.locator('.stores-list-count')).toContainText('Уточните сеть или точку');
+  await expect(page.locator('.stores-list-count')).toContainText('Можно показать ещё');
   await expect(page.locator('#stores-known-locations')).not.toContainText('METRO');
   await expect(page.locator('#stores-known-locations li[data-store-location-id^="magnit-bound-"]').first()).toBeVisible();
 });

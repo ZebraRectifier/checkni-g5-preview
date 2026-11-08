@@ -15,7 +15,6 @@ const DEFAULT_CENTER = Object.freeze({ lat: 55.70, lon: 37.8 });
 const DEFAULT_ZOOM = 9;
 const COLORS = Object.freeze({ globus: "#a14700", metro: "#003d7d", magnit: "#c40013" });
 const STORE_LIST_PAGE_SIZE = 5;
-const STORE_LIST_MAX = 15;
 
 // Kept for callers of the original two-point orientation map.
 export const OBSERVED_STORES = Object.freeze(APPROXIMATE_MAP_LOCATIONS.map(store =>
@@ -178,7 +177,7 @@ export function createStoresSection({
   const summary = textEl('summary',null,'Магазины списком');
   const listCount = textEl('p','stores-list-count',''); listCount.setAttribute('role','status');
   const more = button('Показать ещё магазины', () => {
-    listLimit = Math.min(STORE_LIST_MAX, listLimit + STORE_LIST_PAGE_SIZE); renderList();
+    listLimit += STORE_LIST_PAGE_SIZE; renderList();
   });
   directory.append(summary,listCount,list,more);
   const mapInfo = document.createElement('details'); mapInfo.className = 'stores-map-info';
@@ -282,9 +281,9 @@ export function createStoresSection({
     const stores = [...availablePins()];
     if (geoState.position) stores.sort((a,b) => (distanceMeters(geoState.position,a) ?? Infinity) - (distanceMeters(geoState.position,b) ?? Infinity));
     summary.textContent = 'Магазины списком';
-    const visibleCount = Math.min(stores.length, listLimit, STORE_LIST_MAX);
+    const visibleCount = Math.min(stores.length, listLimit);
     listCount.textContent = stores.length
-      ? `${nearbyContext?.radiusKm ? 'До '+nearbyContext.radiusKm+' км · ' : ''}Показаны ${visibleCount} ближайших${stores.length > visibleCount ? '. Уточните сеть или точку для более точной выдачи.' : ''}`
+      ? `${nearbyContext?.radiusKm ? 'До '+nearbyContext.radiusKm+' км · ' : ''}Показаны ${visibleCount} ближайших${stores.length > visibleCount ? '. Можно показать ещё.' : '.'}`
       : nearbyContext?.state === 'loading' ? 'Обновляю магазины…' : 'В выбранной области магазины не найдены. Можно изменить точку или радиус в списке магазинов.';
     list.replaceChildren();
     for (const store of stores.slice(0,visibleCount)) {
@@ -299,7 +298,7 @@ export function createStoresSection({
       if (canSelect(store)) row.append(button(isSelected(store) ? 'Выбран для корзины' : 'Открыть товары',() => chooseStore(store)));
       list.append(row);
     }
-    more.hidden = stores.length <= visibleCount || visibleCount >= STORE_LIST_MAX;
+    more.hidden = stores.length <= visibleCount;
   }
   function renderGeoStatus() {
     geoButton.disabled = geoState.status === 'loading'; clearButton.disabled = geoState.status === 'idle' && !manualPicking;
