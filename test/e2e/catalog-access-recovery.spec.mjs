@@ -70,13 +70,24 @@ const openOkey = async page => {
 };
 const basketValue = page => page.evaluate(() => localStorage.getItem('checkni.surface.basket.v1'));
 
-test('a full raw page with no admitted cards has a finite honest browser state', async ({ page }) => {
+test('a full filtered raw page offers honest manual continuation without auto paging', async ({ page }) => {
   await page.goto('/test/support/catalog-pagination-harness.html?raw=40&admitted=0');
   await expect(page.getByRole('heading', { name: 'Нет актуальных товаров' })).toBeVisible();
   await expect(page.locator('#result')).toContainText(
     'Источник ответил, но свежих проверенных карточек в этой выдаче нет.'
   );
-  await expect(page.getByRole('button', { name: 'Показать ещё' })).toHaveCount(0);
+  await expect(page.locator('#result')).toContainText(
+    'В этой порции подходящих карточек нет. Следующую можно проверить вручную.'
+  );
+  const continuation = page.getByRole('button', { name: 'Проверить следующую страницу' });
+  await expect(continuation).toBeVisible();
+  await expect(continuation).toHaveAttribute('data-auto-paging', 'false');
+});
+
+test('an incomplete filtered raw page has no misleading continuation', async ({ page }) => {
+  await page.goto('/test/support/catalog-pagination-harness.html?raw=39&admitted=0');
+  await expect(page.getByRole('heading', { name: 'Нет актуальных товаров' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Проверить следующую страницу' })).toHaveCount(0);
 });
 
 test('cold stores include existing city catalogues and fold spelling without a data request', async ({ page }) => {

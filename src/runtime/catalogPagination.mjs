@@ -2,7 +2,9 @@ export const FILTERED_CATALOG_EMPTY = Object.freeze({
   title: 'Нет актуальных товаров',
   copy: 'Источник ответил, но свежих проверенных карточек в этой выдаче нет.',
   status: 'Актуальных товаров сейчас нет',
-  end: 'Других актуальных товаров сейчас нет'
+  end: 'Других актуальных товаров сейчас нет',
+  more: 'В этой порции подходящих карточек нет. Следующую можно проверить вручную.',
+  moreAction: 'Проверить следующую страницу'
 });
 
 export function catalogPageProgress(result, fallbackSize = 0) {
@@ -15,7 +17,9 @@ export function catalogPageProgress(result, fallbackSize = 0) {
   return Object.freeze({ raw, admitted, filtered: raw > 0 && admitted === 0 });
 }
 
-export function canLoadMoreCatalogPage({ progress, pageLimit, nextOffset, offset = 0, expectedCount = 0 }) {
-  return progress.admitted > 0 && progress.raw === pageLimit && nextOffset > offset && nextOffset <= 10_000
+export function canLoadMoreCatalogPage({ progress, pageLimit, nextOffset, offset = 0, expectedCount = 0,
+  allowFiltered = false }) {
+  const hasVisibleOrManualContinuation = progress.admitted > 0 || allowFiltered && progress.filtered;
+  return hasVisibleOrManualContinuation && progress.raw === pageLimit && nextOffset > offset && nextOffset <= 10_000
     && (expectedCount <= 0 || nextOffset < expectedCount);
 }

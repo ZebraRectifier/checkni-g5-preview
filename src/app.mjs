@@ -1640,7 +1640,7 @@ async function loadRetailCategoryProducts(category, {
       unavailableSources: result.unavailableSources ?? 0,
       nextOffset,
       admissionFiltered: progress.filtered,
-      canLoadMore: canLoadMoreCatalogPage({ progress, pageLimit, nextOffset, expectedCount }),
+      canLoadMore: canLoadMoreCatalogPage({ progress, pageLimit, nextOffset, expectedCount, allowFiltered: true }),
       loadingMore: false,
       loadMoreError: false
     };
@@ -1740,7 +1740,7 @@ async function loadMoreRetailProducts() {
     hasPaged: true,
     admissionFiltered: progress.filtered,
     canLoadMore: canLoadMoreCatalogPage({ progress, pageLimit, nextOffset, offset,
-      expectedCount: category ? catalogSearchState.categoryExpectedCount : 0 }),
+      expectedCount: category ? catalogSearchState.categoryExpectedCount : 0, allowFiltered: true }),
     loadingMore: false,
     loadMoreError: false
   };
@@ -2128,7 +2128,9 @@ function renderCatalog() {
       ? "Загружаем ещё…"
       : catalogSearchState.loadMoreError
         ? "Повторить загрузку"
-        : "Показать ещё";
+        : catalogSearchState.admissionFiltered
+          ? FILTERED_CATALOG_EMPTY.moreAction
+          : "Показать ещё";
     loadMore.setAttribute(
       "aria-label",
       `${loadMore.textContent}: ${catalogSearchState.categoryName || retailName}`
@@ -2137,7 +2139,8 @@ function renderCatalog() {
       void loadMoreRetailProducts();
     });
     elements.productGrid.after(loadMore);
-    if (!catalogSearchState.loadingMore && !catalogSearchState.loadMoreError) {
+    if (!catalogSearchState.loadingMore && !catalogSearchState.loadMoreError
+        && !catalogSearchState.admissionFiltered) {
       stopCatalogMoreWatch = watchCatalogMore(loadMore, () => void loadMoreRetailProducts());
     }
   } else if (publicRetailCatalogMode && live && !normalizedQuery && catalogSearchState.hasPaged && results.length) {
@@ -2276,7 +2279,9 @@ function renderCatalog() {
     }
     if (catalogSearchState.admissionFiltered) {
       if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = FILTERED_CATALOG_EMPTY.title;
-      elements.emptySearchCopy.textContent = FILTERED_CATALOG_EMPTY.copy;
+      elements.emptySearchCopy.textContent = catalogSearchState.canLoadMore
+        ? `${FILTERED_CATALOG_EMPTY.copy} ${FILTERED_CATALOG_EMPTY.more}`
+        : FILTERED_CATALOG_EMPTY.copy;
       elements.searchStatus.textContent = FILTERED_CATALOG_EMPTY.status;
       return;
     }
@@ -3375,7 +3380,8 @@ async function loadInitialRetailCatalog() {
       unavailableSources: retailResult.unavailableSources ?? 0,
       nextOffset: retailResult.nextOffset,
       admissionFiltered: progress.filtered,
-      canLoadMore: canLoadMoreCatalogPage({ progress, pageLimit: 24, nextOffset: retailResult.nextOffset })
+      canLoadMore: canLoadMoreCatalogPage({ progress, pageLimit: 24, nextOffset: retailResult.nextOffset,
+        allowFiltered: true })
     };
   } else {
     catalogSearchState = {
