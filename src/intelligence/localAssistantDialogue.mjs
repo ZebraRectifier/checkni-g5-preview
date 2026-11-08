@@ -6,7 +6,7 @@ import { MARTEN_STATE } from "./martenMind.mjs";
 
 const GREETING_PREFIX =
   /^(?:привет(?:ик)?|прив|превет|здравствуй(?:те)?|здрасте|здрасьте|здарова|здорово|доброе\s+утро|добрый\s+день|добрый\s+вечер|хай|hello|hi|privet(?:ik)?|zdraste|zdarova|ghbdtn(?:br)?|слушай|смотри|эй)(?=$|[\s,!.—-])[\s,!.—-]*/iu;
-const ASSISTANT_ADDRESS = /^(?:мойра|мартен|checkni|чекни)(?=$|[\s,!?.:—-])[\s,!?.:—-]*/iu;
+const ASSISTANT_ADDRESS = /^(?:хоря|мойра|мартен|checkni|чекни)(?=$|[\s,!?.:—-])[\s,!?.:—-]*/iu;
 const DISCOURSE_PREFIX = /^(?:ну|короче|пожалуйста)(?=[\s,!?.:—-])[\s,!?.:—-]*/iu;
 // "Скажи сыр" is not an unambiguous shopping request. Remove this wrapper
 // only when the remaining text is itself a question, preserving its subject.

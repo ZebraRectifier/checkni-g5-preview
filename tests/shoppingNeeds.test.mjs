@@ -51,6 +51,15 @@ test('unknown names survive mixed lists and cannot become nearest known products
   assert.deepEqual(s.lines().map(x=>x.quantity.value),['2','1','3','1']);assert.deepEqual(s.basket.getSnapshot(),[]);
   assert.equal(s.flow.getUnresolvedNeeds().length,4);assert.equal(s.calls(),0);
 });
+test('Hory routes a personal meal-advice question instead of saving its address as a product',async()=>{
+  const s=session();
+  const reply=await s.flow.run('Хоря, я вечно забываю поесть после смены. Как придумать что-то сытное, когда сил почти нет?');
+  assert.deepEqual(s.lines(),[]);
+  assert.deepEqual(s.basket.getSnapshot(),[]);
+  assert.match(reply.presentation.headline,/Подскажу/u);
+  assert.match(reply.presentation.message,/перекус|вариант/u);
+  assert.equal(s.calls(),0);
+});
 test('acknowledgement, retries, duplicate messages, corrections, increments and removal have distinct effects',async()=>{
   const s=session();await s.flow.run('хочу 12 бутылок кефира',{requestId:'initial'});
   await s.flow.run('да');assert.equal(s.lines()[0].quantity.value,'12');
