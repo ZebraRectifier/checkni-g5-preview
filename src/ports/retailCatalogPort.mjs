@@ -96,7 +96,9 @@ const RETAIL_CATALOG_DEFINITIONS = Object.freeze({
     catalogLabel: "Магнит · аллея Берёзовая, д 17 к 2",
     scopeLabel: "г Москва, аллея Берёзовая, д 17 к 2 · публичная цена сайта · наличие неизвестно",
     logo: "М",
-    defaultProductCount: 291,
+    // The legacy aggregate includes rows that may fail the exact-store
+    // admission contract. Keep the store total unknown until rows are read.
+    defaultProductCount: null,
     rootCategoryCount: 17,
     productUrlRules: Object.freeze([
       Object.freeze({ host: "magnit.ru", prefix: "/product/" }),
@@ -843,6 +845,9 @@ function normalizeRetailCategory(row, retailer = "globus") {
     rootId: row.root_id,
     depth: row.depth,
     productCount: row.product_count,
+    ...(definition.retailerId === "magnit"
+      ? { productCountVerified: false }
+      : {}),
     sourceUrl
   });
 }

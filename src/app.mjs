@@ -860,6 +860,15 @@ function russianCountNoun(value, one, few, many) {
   return many;
 }
 
+function retailCategoryCountVerified(definition, category) {
+  if (category?.productCountVerified === true) return true;
+  if (category?.productCountVerified === false) return false;
+  // Old history entries predate the verification flag. Magnit's legacy
+  // aggregates are not exact-store admission evidence, so absence must remain
+  // fail-closed after back/forward navigation and a restored session.
+  return definition?.retailerId !== "magnit";
+}
+
 function retailStoreCountCopy(definition, productCount) {
   if (!Number.isSafeInteger(productCount)) return "Каталог выбранного адреса";
   const products =
@@ -1131,13 +1140,16 @@ function renderRetailBrowser() {
       button.append(fallbackIcon);
     }
     const count = document.createElement("span");
+    const productCountVerified = retailCategoryCountVerified(definition, category);
     const productNoun = russianCountNoun(
       category.productCount,
       "товар",
       "товара",
       "товаров"
     );
-    count.textContent = definition.requiresPromoValidity ? "Проверить акции" : category.productCount > 0
+    count.textContent = definition.requiresPromoValidity ? "Проверить акции" : !productCountVerified
+      ? "Проверить раздел"
+      : category.productCount > 0
       ? `${formatCatalogCount(category.productCount)} ${productNoun} · открыть`
       : "Товары не заявлены · проверить раздел";
 
@@ -1304,6 +1316,10 @@ function normalizeRetailHistoryPath(path) {
           || productCount > 1_000_000
         )
       )
+      || (
+        category?.productCountVerified !== undefined
+        && typeof category.productCountVerified !== "boolean"
+      )
     ) {
       return null;
     }
@@ -1313,7 +1329,10 @@ function normalizeRetailHistoryPath(path) {
       name,
       ...(Number.isSafeInteger(depth) ? { depth } : {}),
       ...(sourceUrl ? { sourceUrl } : {}),
-      ...(Number.isSafeInteger(productCount) ? { productCount } : {})
+      ...(Number.isSafeInteger(productCount) ? { productCount } : {}),
+      ...(typeof category.productCountVerified === "boolean"
+        ? { productCountVerified: category.productCountVerified }
+        : {})
     });
   }
 
@@ -1477,7 +1496,11 @@ async function loadRetailRoots({ clearCatalog = true } = {}) {
   }
 
   const total = result.categories.reduce(
-    (sum, category) => sum + category.productCount,
+    (sum, category) => sum + (
+      retailCategoryCountVerified(client.definition, category)
+        ? category.productCount
+        : 0
+    ),
     0
   );
   retailBrowserState = {
@@ -1598,7 +1621,8 @@ async function loadRetailCategoryProducts(category, {
     discoveredCount: 0,
     categoryName: category.name,
     categoryExpectedCount:
-      Number.isSafeInteger(category.productCount) && category.productCount >= 0
+      retailCategoryCountVerified(client.definition, category)
+        && Number.isSafeInteger(category.productCount) && category.productCount >= 0
         ? category.productCount
         : 0,
     nextOffset: 0,
@@ -1628,7 +1652,8 @@ async function loadRetailCategoryProducts(category, {
     // Promo category totals include rows outside today's admitted issue.
     const expectedCount = client.definition?.requiresPromoValidity
       ? 0
-      : Number.isSafeInteger(category.productCount) && category.productCount >= 0
+      : retailCategoryCountVerified(client.definition, category)
+        && Number.isSafeInteger(category.productCount) && category.productCount >= 0
         ? category.productCount
         : result.products.length;
 

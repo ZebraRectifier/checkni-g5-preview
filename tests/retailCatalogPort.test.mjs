@@ -629,6 +629,8 @@ test("Magnit category and reads stay pinned to the proved public store binding",
   const roots = await client.rootCategories();
   assert.equal(roots.kind, "categories");
   assert.equal(roots.categories.length, 1);
+  assert.equal(roots.categories[0].productCount, 23);
+  assert.equal(roots.categories[0].productCountVerified, false);
   assert.equal(requestedUrl.searchParams.get("retailer_id"), "eq.magnit");
   assert.equal(requestedUrl.searchParams.get("store_id"), "eq.magnit-777312");
 
@@ -637,6 +639,13 @@ test("Magnit category and reads stay pinned to the proved public store binding",
   assert.equal(catalog.products.length, 1);
   assert.equal(requestedUrl.searchParams.get("locality_id"), "eq.city-moscow");
   assert.equal(requestedUrl.searchParams.get("main_category_id"), "eq.63963");
+});
+
+test("Magnit raw category totals stay explicitly unverified until exact rows are admitted", () => {
+  assert.equal(getRetailCatalogDefinition("magnit")?.defaultProductCount, null);
+  const category = normalizeRetailCategory(magnitCategoryRow({ product_count: 31 }), "magnit");
+  assert.equal(category?.productCount, 31);
+  assert.equal(category?.productCountVerified, false);
 });
 
 
