@@ -96,6 +96,25 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
       expect(dataPaths).toContain(pinnedCoordinates);
       expect(dataPaths).not.toContain('/'+coordinateFile);
     }
+    if(id==='697e216df9e2e58a506183ae33b67672b5fa7629b8d1d7b61b7927e6451da4eb'){
+      await context.grantPermissions(['geolocation']);
+      await page.goto(base+`releases/${id}/index.html?comparison=observed&catalog=retail#shop`);
+      await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready');
+      await context.setGeolocation({latitude:55.0302,longitude:82.9204,accuracy:20});
+      await page.locator('#nearby-locate').click();
+      const networks=page.locator('.nearby-network-filters');
+      const maria=networks.getByRole('button',{name:'Мария-Ра',exact:true});
+      await maria.click();
+      await expect(maria).toHaveAttribute('aria-pressed','true');
+      await expect(page.locator('#nearby-results article').first()).toContainText('Мария');
+      await expect(page.locator('#nearby-results .nearby-open-catalog')).toHaveCount(0);
+      await context.setGeolocation({latitude:59.9343,longitude:30.3351,accuracy:20});
+      await page.locator('#nearby-locate').click();
+      await expect(networks.getByRole('button',{name:'Лента',exact:true})).toBeVisible();
+      await expect(networks.getByRole('button',{name:'ВкусВилл',exact:true})).toBeVisible();
+      await expect(networks.getByRole('button',{name:'Все',exact:true})).toHaveAttribute('aria-pressed','true');
+      await expect(maria).toHaveCount(0);
+    }
     const pyatFile='src/components/PyaterochkaPublishedCatalog.mjs';
     if(manifest.entries.some(entry=>entry.file===pyatFile)
       && (await fs.readFile(path.join(root,'releases',id,pyatFile),'utf8')).includes('pyat-published-category')){
