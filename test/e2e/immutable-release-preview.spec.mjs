@@ -108,7 +108,7 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
       await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready');
       await page.locator('#nearby-locate').click();
       await expect(page.locator('#nearby-results article').first()).toBeVisible();
-      await page.getByRole('button',{name:'На карте',exact:true}).click();
+      await page.getByRole('button',{name:'Выбрать точку на карте',exact:true}).click();
       const mapSection=page.locator('#stores-section');
       await expect(mapSection.getByRole('button',{name:'К списку магазинов'})).toBeVisible();
       await expect(mapSection.locator('#stores-map-network,#stores-manual-location,#stores-clear-location')).toHaveCount(0);
