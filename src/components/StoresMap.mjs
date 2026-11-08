@@ -111,6 +111,7 @@ export function createStoresSection({
   let geoState = { status: 'idle', position: null }, currentScope = selectedScope;
   let mapStores = [...observedStores], nearbyContext = null, contextPins = null, contextRevision = 0;
   let mapApi = null, mapStarting = null, mapFailure = false, listLimit = STORE_LIST_PAGE_SIZE, focusedPin = null;
+  let accessibleListOpen = false;
   const controls = textEl('div', 'stores-controls', '');
   const geoButton = button('Моё место', () => geo.request()); geoButton.id = 'stores-locate'; geoButton.setAttribute('aria-label','Определить моё место');
   const manualButton = button('Указать точку', () => {
@@ -139,10 +140,23 @@ export function createStoresSection({
   const zoomOut = button('−', () => { void openMap(); moveCamera(center, Math.max(3, zoom - 1)); });
   zoomOut.setAttribute('aria-label','Отдалить');
   const searchHere = button('Искать здесь', () => geo.setManual(center)); searchHere.className = 'stores-search-here';
+  const listToggle = button('Магазины списком', () => {
+    accessibleListOpen = !accessibleListOpen;
+    listToggle.setAttribute('aria-expanded', String(accessibleListOpen));
+    directory.hidden = !accessibleListOpen;
+    directory.open = accessibleListOpen;
+    if (accessibleListOpen) requestAnimationFrame(() => {
+      const firstStore = list.querySelector('button');
+      firstStore?.focus(); firstStore?.scrollIntoView({ block:'nearest' });
+    });
+    else map.focus({ preventScroll: true });
+  });
+  listToggle.className = 'stores-list-toggle';
+  listToggle.setAttribute('aria-expanded','false');
   const ownCenter = button('К моему месту', () => { if (geoState.position) moveCamera(normalizeMapCenter(geoState.position), 13); });
   const navigation = document.createElement('details'); navigation.className = 'stores-map-navigation';
   navigation.append(textEl('summary', null, 'Другие действия'), ownCenter, clearButton);
-  mapControls.append(networkLabel, networkFilter, zoomOut, zoomIn, searchHere);
+  mapControls.append(networkLabel, networkFilter, zoomOut, zoomIn, searchHere, listToggle);
   const map = textEl('div', 'stores-map', ''); map.tabIndex = 0;
   map.setAttribute('aria-label', 'Карта магазинов. Перемещай карту, затем нажми «Искать здесь». Enter выбирает центр.');
   const canvas = textEl('div','stores-map-canvas stores-vector-canvas','');
@@ -159,6 +173,7 @@ export function createStoresSection({
   selected.setAttribute('aria-label','Адреса на карте для сравнения');
   const list = textEl('ul','stores-list',''); list.id = 'stores-known-locations';
   const directory = document.createElement('details'); directory.className = 'stores-location-directory';
+  directory.id = 'stores-location-directory'; listToggle.setAttribute('aria-controls', directory.id);
   const summary = textEl('summary',null,'Магазины списком');
   const listCount = textEl('p','stores-list-count',''); listCount.setAttribute('role','status');
   const more = button('Показать ещё магазины', () => {
@@ -226,11 +241,12 @@ export function createStoresSection({
   function mapStatus(status) {
     if (status === 'ready') {
       mapFailure = false; tileStatus.textContent = ''; retry.hidden = true;
-      if (nearbyMode) { directory.open = false; directory.hidden = true; }
+      if (nearbyMode) { directory.open = accessibleListOpen; directory.hidden = !accessibleListOpen; summary.hidden = true; }
+      listToggle.hidden = !nearbyMode;
     }
     else if (status === 'unavailable') {
       mapFailure = true; tileStatus.textContent = 'Карта не загрузилась. Магазины можно выбрать в списке ниже.';
-      retry.hidden = false; directory.open = true; directory.hidden = false;
+      retry.hidden = false; directory.open = true; directory.hidden = false; summary.hidden = false; listToggle.hidden = true;
     }
   }
   function openMap() {
@@ -249,6 +265,7 @@ export function createStoresSection({
   function renderControls() {
     zoomIn.disabled = zoom >= 16; zoomOut.disabled = zoom <= 3; ownCenter.disabled = !geoState.position;
     searchHere.disabled = Boolean(geoState.position && distanceMeters(center,geoState.position) < 5);
+    listToggle.hidden = !nearbyMode || mapFailure;
   }
   function renderMap() { mapApi?.setPins(visiblePins(),geoState.position); renderControls(); }
   function renderSelected() {
@@ -320,7 +337,9 @@ export function createStoresSection({
   function setNearbyMode(enabled) {
     nearbyMode = enabled; section.classList.toggle('stores-nearby-mode',enabled);
     magnitDirectory.hidden = enabled; selected.hidden = enabled;
+    accessibleListOpen = false; listToggle.setAttribute('aria-expanded','false');
     directory.hidden = enabled && !mapFailure; directory.open = Boolean(enabled && mapFailure);
+    summary.hidden = enabled && !mapFailure;
     focusedPin = null; pinCard.hidden = true; renderMap(); renderList();
   }
   section.openNearbyMap = () => {
@@ -334,7 +353,13 @@ export function createStoresSection({
       if (!Array.isArray(locations)) return; mapStores = [...observedStores,...locations]; renderMap(); renderList();
     }).catch(() => { extraStarted = false; });
   }
-  directory.addEventListener('toggle', () => { if (directory.open) loadExtraLocations(); });
+  directory.addEventListener('toggle', () => {
+    if (nearbyMode && !mapFailure) {
+      accessibleListOpen = directory.open;
+      listToggle.setAttribute('aria-expanded',String(accessibleListOpen));
+    }
+    if (directory.open) loadExtraLocations();
+  });
   if (typeof IntersectionObserver === 'function') {
     const observer = new IntersectionObserver(entries => {
       if (entries.some(entry => entry.isIntersecting)) { observer.disconnect(); void openMap(); }

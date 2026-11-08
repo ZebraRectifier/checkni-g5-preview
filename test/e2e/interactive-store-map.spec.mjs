@@ -45,3 +45,25 @@ test('WebGL failure keeps list selection, while region changes clear Moscow poin
   await page.evaluate(()=>document.dispatchEvent(new CustomEvent('checkni:nearby-map-context',{detail:{revision:2,state:'ready',stores:[{id:'old',name:'Москва',lat:55,lon:37}]}})));
   await expect(page.locator('#stores-known-locations li')).toHaveCount(0);
 });
+
+test('compact map mode offers a keyboard-only store route without duplicating the list by default',async({page})=>{
+  await page.setViewportSize({width:320,height:800});
+  await page.goto('/test/support/store-map-harness.html?lazy');
+  await page.waitForFunction(()=>window.harnessReady);
+  await page.evaluate(()=>{window.mapHarness.stores.hidden=false;window.mapHarness.stores.openNearbyMap();});
+  await expect(page.locator('.maplibregl-canvas')).toBeVisible({timeout:15000});
+  const directory=page.locator('.stores-location-directory');
+  const toggle=page.getByRole('button',{name:'Магазины списком',exact:true});
+  await expect(directory).toBeHidden();
+  await expect(toggle).toBeVisible();
+  await toggle.focus();await page.keyboard.press('Enter');
+  await expect(toggle).toHaveAttribute('aria-expanded','true');
+  await expect(directory).toBeVisible();await expect(directory).toHaveAttribute('open','');
+  await expect(directory.locator(':scope > summary')).toBeHidden();
+  const firstStore=page.locator('#stores-known-locations li button').first();
+  await expect(firstStore).toBeFocused();
+  const focusedBox=await firstStore.boundingBox();expect(focusedBox.y).toBeGreaterThanOrEqual(0);expect(focusedBox.y+focusedBox.height).toBeLessThanOrEqual(800);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.stores-pin-card')).toBeVisible();
+  await expect(page.locator('.stores-pin-card')).toContainText('Пролетарский');
+});
