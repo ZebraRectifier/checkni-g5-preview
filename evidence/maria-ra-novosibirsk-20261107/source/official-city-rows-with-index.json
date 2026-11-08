@@ -1,0 +1,1645 @@
+{
+  "totalPageRows": 1336,
+  "rows": [
+    {
+      "sourceRowIndex": 9,
+      "NAME": "г. Новосибирск, ул. В. Потылицына, 11/1",
+      "COORDINATE": "55.01751,83.00785",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 10,
+      "NAME": "г. Новосибирск, ул. В. Потылицына, 1",
+      "COORDINATE": "55.0209,83.00973",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 12,
+      "NAME": "г. Новосибирск, ул. Т. Снежиной, 51/1",
+      "COORDINATE": "55.02437,83.0215",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 13,
+      "NAME": "г. Новосибирск, ул. Т. Снежиной, 43а",
+      "COORDINATE": "55.02082,83.01918",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 20,
+      "NAME": "г. Новосибирск, ул. Динамовцев, 1",
+      "COORDINATE": "54.86154,82.9895",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 22,
+      "NAME": "г. Новосибирск, ул. Т.Снежиной 48/1",
+      "COORDINATE": "55.0244,83.02423",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 23,
+      "NAME": "г. Новосибирск, ул. Высоцкого 46а",
+      "COORDINATE": "55.02851,83.02443",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 35,
+      "NAME": "г. Новосибирск, ул. Аэропорт, 51",
+      "COORDINATE": "55.07894,82.90211",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 38,
+      "NAME": "г. Новосибирск, ул. Шмонина, 10",
+      "COORDINATE": "54.94115,82.96011",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 48,
+      "NAME": "г. Новосибирск, ул. Д.Ковальчук, 266а",
+      "COORDINATE": "55.06018,82.91535",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 50,
+      "NAME": "г. Новосибирск, ул. Доватора, 35",
+      "COORDINATE": "55.03809,83.00083",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 58,
+      "NAME": "г. Новосибирск, ул. Ерёмина, 12/4",
+      "COORDINATE": "54.93312,83.1231",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 71,
+      "NAME": "г. Новосибирск, ул. Солидарности, 89",
+      "COORDINATE": "55.15339,82.95493",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 112,
+      "NAME": "г. Новосибирск, пр. Дзержинского, 75",
+      "COORDINATE": "55.06147,82.98629",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 115,
+      "NAME": "г. Новосибирск, пр. Дзержинского, 18",
+      "COORDINATE": "55.05223,82.96825",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 136,
+      "NAME": "г. Новосибирск, ул. Демакова, д. 3",
+      "COORDINATE": "54.86429,83.10181",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 138,
+      "NAME": "г. Новосибирск, ул. Крылова, 53/1",
+      "COORDINATE": "55.04242,82.93408",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 155,
+      "NAME": "г. Новосибирск, ул.Плющихинская, 6",
+      "COORDINATE": "55.01444,83.00199",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 159,
+      "NAME": "г. Новосибирск, ул Плющихинская, д. 6",
+      "COORDINATE": "55.01444,83.00199",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 164,
+      "NAME": "г. Новосибирск, ул. Гурьевская, 177 ",
+      "COORDINATE": "55.02488,82.96543",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 165,
+      "NAME": "г.Новосибирск, ул. Тамбовская, 41А",
+      "COORDINATE": "55.1007,82.93275",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 168,
+      "NAME": "г. Новосибирск, ул. Ясный Берег, 1а",
+      "COORDINATE": "55.01836,82.8913",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 171,
+      "NAME": "г. Новосибирск, ул.Петухова, 162",
+      "COORDINATE": "54.93789,82.94918",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 185,
+      "NAME": "г. Новосибирск, ул. Надежды, 2а",
+      "COORDINATE": "55.02347,82.81235",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 186,
+      "NAME": "г. Новосибирск, ул. Коминтерна, 126",
+      "COORDINATE": "55.04241,83.0234",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 195,
+      "NAME": "г. Новосибирск, пр. Карла Маркса, 37/2",
+      "COORDINATE": "54.989,82.90515",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "0:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 196,
+      "NAME": "г. Новосибирск, пр. Карла Маркса, 37/2",
+      "COORDINATE": "54.989,82.90515",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "0:00",
+      "SECTION": "COFFEE_FRAME"
+    },
+    {
+      "sourceRowIndex": 200,
+      "NAME": "г. Новосибирск, ул Выборная, 144/2",
+      "COORDINATE": "55.00367,83.02567",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 201,
+      "NAME": "г. Новосибирск, ул. Н.Сотникова, 23",
+      "COORDINATE": "54.94694,82.97509",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 204,
+      "NAME": "г. Новосибирск, ул. Каспийская, 1",
+      "COORDINATE": "54.84725,83.04376",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 222,
+      "NAME": "г. Новосибирск, ул.Виктора Уса, 9/1",
+      "COORDINATE": "54.93734,82.88451",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 223,
+      "NAME": "г. Новосибирск, ул.Ключ-Камышенское плато, 7/1",
+      "COORDINATE": "54.98692,83.04077",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 225,
+      "NAME": "г. Новосибирск, ул. Сибиряков-Гвардейцев, 1 ",
+      "COORDINATE": "54.97893,82.89745",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 228,
+      "NAME": "г. Новосибирск, пр-кт Красный, 13",
+      "COORDINATE": "55.02411,82.92153",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 229,
+      "NAME": "г. Новосибирск, пр-кт Красный, 13",
+      "COORDINATE": "55.02411,82.92153",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "COFFEE_FRAME"
+    },
+    {
+      "sourceRowIndex": 233,
+      "NAME": "г. Новосибирск, пр-кт Строителей, 19/1",
+      "COORDINATE": "54.86047,83.08488",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 235,
+      "NAME": "г. Новосибирск, ул. Аэропорт, 56",
+      "COORDINATE": "55.07553,82.9098",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 240,
+      "NAME": "г. Новосибирск, ул. Связистов, 11",
+      "COORDINATE": "54.98364,82.83098",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 241,
+      "NAME": "г. Новосибирск, ул. Б. Хмельницкого, 35",
+      "COORDINATE": "55.07467,82.951",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 244,
+      "NAME": "г. Новосибирск, пр-кт Красный, 96",
+      "COORDINATE": "55.05349,82.91501",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 245,
+      "NAME": "г. Новосибирск, ул. Пархоменко, 86а",
+      "COORDINATE": "54.98735,82.85139",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 246,
+      "NAME": "г. Новосибирск, ул. Д. Ковальчук, 20",
+      "COORDINATE": "55.05088,82.8925",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 247,
+      "NAME": "г. Новосибирск, пр-кт Дзержинского, 32",
+      "COORDINATE": "55.05671,82.97763",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 249,
+      "NAME": "г. Новосибирск, ул. Немировича-Данченко, 118/1",
+      "COORDINATE": "54.97253,82.90307",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 250,
+      "NAME": "г. Новосибирск, ул. Ударная, 27/2",
+      "COORDINATE": "54.9679,82.86205",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 251,
+      "NAME": "г. Новосибирск, ул. Станиславского, 22",
+      "COORDINATE": "54.97783,82.87188",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 252,
+      "NAME": "г. Новосибирск, ул. Авиастроителей, 2",
+      "COORDINATE": "55.07044,82.96892",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 253,
+      "NAME": "г. Новосибирск, ул. Сибиряков-гвардейцев, 55",
+      "COORDINATE": "54.94014,82.89882",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 255,
+      "NAME": "г. Новосибирск, пр-кт Дзержинского, 33",
+      "COORDINATE": "55.05469,82.97175",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 257,
+      "NAME": "г. Новосибирск, ул. Первомайская, 196",
+      "COORDINATE": "54.97437,83.07008",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 258,
+      "NAME": "г. Новосибирск, ул. 9-ой Гвардейской дивизии, 18",
+      "COORDINATE": "54.96873,82.84742",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 259,
+      "NAME": "г. Новосибирск, ул. Петропавловская, 1",
+      "COORDINATE": "54.98507,82.86294",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 260,
+      "NAME": "г. Новосибирск, ул. Широкая, 1",
+      "COORDINATE": "54.99405,82.86824",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 261,
+      "NAME": "г. Новосибирск, ул. Эйхе, 11",
+      "COORDINATE": "54.97473,83.0989",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 262,
+      "NAME": "г. Новосибирск, ул. Новосибирская, 20/1",
+      "COORDINATE": "54.9885,82.84311",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 263,
+      "NAME": "г. Новосибирск, пр-кт Дзержинского, 7",
+      "COORDINATE": "55.05175,82.96542",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 272,
+      "NAME": "г.Новосибирск, ул.Березовая, 15а",
+      "COORDINATE": "54.93645,83.1097",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 303,
+      "NAME": "г.Новосибирск, ул.1905 г., 87",
+      "COORDINATE": "55.04684,82.91031",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 307,
+      "NAME": "г. Новосибирск, ул. Шукшина, 13/1",
+      "COORDINATE": "54.93835,83.12085",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 310,
+      "NAME": "г. Новосибирск, ул. Кропоткина, 130/5",
+      "COORDINATE": "55.05746,82.9398",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 323,
+      "NAME": "г. Новосибирск, ул.В.Клевцова, 1",
+      "COORDINATE": "55.09804,82.97565",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 328,
+      "NAME": "г. Новосибирск, ул.Немировича-Данченко, 40",
+      "COORDINATE": "54.9711,82.87684",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 330,
+      "NAME": "г. Новосибирск, ул.Глинки, 4",
+      "COORDINATE": "55.04896,82.96471",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 331,
+      "NAME": "г. Новосибирск, ул.Ученическая, 1 ",
+      "COORDINATE": "54.94149,83.12746",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 335,
+      "NAME": "г. Новосибирск, ул.Ошанина, 7",
+      "COORDINATE": "54.94091,83.09965",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 336,
+      "NAME": "г. Новосибирск, ул.Междуреченская, 3/2",
+      "COORDINATE": "55.02219,82.85908",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 341,
+      "NAME": "г. Новосибирск, ул.Высоцкого, 9",
+      "COORDINATE": "55.03197,83.01198",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 343,
+      "NAME": "г. Новосибирск, ул.Спортивная, 13",
+      "COORDINATE": "54.98318,82.80204",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 347,
+      "NAME": "г. Новосибирск, ул.Петухова, 97/2",
+      "COORDINATE": "54.9444,82.95161",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 348,
+      "NAME": "г. Новосибирск, ул.Новая Заря, 9а",
+      "COORDINATE": "55.07722,82.97891",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 351,
+      "NAME": "г. Новосибирск, ул.Одоевского, 1/10",
+      "COORDINATE": "54.93724,83.10302",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 356,
+      "NAME": "г. Новосибирск, ул.Большая, 632/1",
+      "COORDINATE": "55.03003,82.80596",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 372,
+      "NAME": "г. Новосибирск, ул. Невельского, 59",
+      "COORDINATE": "54.99187,82.81113",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 373,
+      "NAME": "г. Новосибирск, ул. Мира, 28",
+      "COORDINATE": "54.96367,82.9118",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 375,
+      "NAME": "г. Новосибирск, 6-ой переулок Танкистов, 12 ",
+      "COORDINATE": "54.97164,82.83541",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 385,
+      "NAME": "г. Новосибирск, Гусинобродское шоссе, 31",
+      "COORDINATE": "55.03908,83.01391",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 401,
+      "NAME": "г. Новосибирск, ул. Киевская, 11а",
+      "COORDINATE": "54.98886,82.85012",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 407,
+      "NAME": "г. Новосибирск,  ул. Р. Зорге, 133/3",
+      "COORDINATE": "54.93507,82.92408",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 409,
+      "NAME": "г. Новосибирск, ул. Первомайская, 236/1",
+      "COORDINATE": "54.9771,83.04799",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 412,
+      "NAME": "г. Новосибирск, ул. Титова, 232в",
+      "COORDINATE": "54.97973,82.8139",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 420,
+      "NAME": "г. Новосибирск, ул. Героев Революции, 39",
+      "COORDINATE": "54.97625,83.08038",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 425,
+      "NAME": "г. Новосибирск, ул. Забалуева, 51а",
+      "COORDINATE": "54.98823,82.80693",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 426,
+      "NAME": "г. Новосибирск, ул. Забалуева, 51а",
+      "COORDINATE": "54.98823,82.80693",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "COFFEE_FRAME"
+    },
+    {
+      "sourceRowIndex": 428,
+      "NAME": "г. Новосибирск, ул. Тюленина, 14/1",
+      "COORDINATE": "55.10935,82.94466",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 437,
+      "NAME": "г. Новосибирск, ул. Аэропорт, 45",
+      "COORDINATE": "55.07601,82.9084",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 453,
+      "NAME": "г. Новосибирск, ул.Никитина, 128а",
+      "COORDINATE": "55.0242,82.978",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 457,
+      "NAME": "г. Новосибирск, ул.Терешковой, 12",
+      "COORDINATE": "54.84162,83.10209",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 460,
+      "NAME": "г. Новосибирск, ул.Героев Труда, 18",
+      "COORDINATE": "54.86587,83.08114",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 468,
+      "NAME": "г. Новосибирск, ул.Воскресная, 2",
+      "COORDINATE": "54.94274,82.99986",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 473,
+      "NAME": "г. Новосибирск, ул.Фасадная, 20а",
+      "COORDINATE": "54.98691,82.81921",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 474,
+      "NAME": "г. Новосибирск, ул.Зорге, 4",
+      "COORDINATE": "54.93503,82.89994",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 476,
+      "NAME": "г. Новосибирск, ул.Крылова, 31",
+      "COORDINATE": "55.04156,82.92928",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 480,
+      "NAME": "г. Новосибирск, ул.Иванова, 29",
+      "COORDINATE": "54.86859,83.09092",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 485,
+      "NAME": "г. Новосибирск, ул.Шамшурина, 10",
+      "COORDINATE": "55.03212,82.90113",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 494,
+      "NAME": "г. Новосибирск, ул.Связистов, 153",
+      "COORDINATE": "54.96311,82.83982",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 502,
+      "NAME": "г. Новосибирск, ул. Курчатова, 9 ",
+      "COORDINATE": "55.1061,82.97086",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 508,
+      "NAME": "г. Новосибирск, ул. Заречная, 27",
+      "COORDINATE": "54.98015,83.0558",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 511,
+      "NAME": "г. Новосибирск, ул. Бердышева, 5",
+      "COORDINATE": "54.86214,82.97081",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 515,
+      "NAME": "г. Новосибирск, ул.Планировочная, 56",
+      "COORDINATE": "54.99645,82.89389",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 516,
+      "NAME": "г. Новосибирск, ул. Новоуральская, 19",
+      "COORDINATE": "55.17217,82.96496",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 517,
+      "NAME": "г. Новосибирск, ул. Комсомольская, 10",
+      "COORDINATE": "54.95747,82.96454",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 521,
+      "NAME": "г. Новосибирск, ул.Первомайская, 170",
+      "COORDINATE": "54.97272,83.08125",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 522,
+      "NAME": "г. Новосибирск, ул.Вертковская, 5/2",
+      "COORDINATE": "54.97542,82.89071",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 523,
+      "NAME": "г. Новосибирск, ул. Степная, 55",
+      "COORDINATE": "54.97772,82.8675",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 527,
+      "NAME": "г. Новосибирск, ул.Королева 14/1 ",
+      "COORDINATE": "55.04862,82.96969",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 528,
+      "NAME": "г. Новосибирск, ул. Забалуева, 5а",
+      "COORDINATE": "54.99097,82.83413",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 530,
+      "NAME": "г. Новосибирск, ул.Виталия Потылицына 9/4",
+      "COORDINATE": "55.01815,83.00584",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 534,
+      "NAME": "г. Новосибирск, ул Вилюйская, 24",
+      "COORDINATE": "54.99884,83.00793",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 535,
+      "NAME": "г. Новосибирск, ул Ватутина, 9",
+      "COORDINATE": "54.98915,82.88647",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 536,
+      "NAME": "г. Новосибирск, ул.Б. Богаткова, 181",
+      "COORDINATE": "55.03445,82.96861",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 537,
+      "NAME": "г. Новосибирск, ул Титова, 11",
+      "COORDINATE": "54.98225,82.88248",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 538,
+      "NAME": "г. Новосибирск, ул. Селезнева, 36",
+      "COORDINATE": "55.04387,82.94597",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 540,
+      "NAME": "г. Новосибирск, ул Выборная, 125/1",
+      "COORDINATE": "55.00299,83.01944",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 541,
+      "NAME": "г. Новосибирск, ул.Титова, 35/2",
+      "COORDINATE": "54.98134,82.86515",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 542,
+      "NAME": "г. Новосибирск, ул. Гидромонтажная, 50",
+      "COORDINATE": "54.86092,82.97837",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 543,
+      "NAME": "г. Новосибирск, ул. Зорге, 267",
+      "COORDINATE": "54.9332,82.92427",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 546,
+      "NAME": "г. Новосибирск, ул. Героев Революции, 16",
+      "COORDINATE": "54.9746,83.09324",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 547,
+      "NAME": "г. Новосибирск, ул. Забалуева, 21",
+      "COORDINATE": "54.98979,82.82751",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 549,
+      "NAME": "г. Новосибирск, ул. Широкая, 37а",
+      "COORDINATE": "54.99431,82.8549",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 550,
+      "NAME": "г. Новосибирск, ул. Оловозаводская, 4а",
+      "COORDINATE": "54.96575,82.9565",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 559,
+      "NAME": "г. Новосибирск, ул. Московская, 218",
+      "COORDINATE": "55.00874,82.9651",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 560,
+      "NAME": "г. Новосибирск, ул. 2-ая Миргородская, 12",
+      "COORDINATE": "54.85313,83.03978",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 573,
+      "NAME": "г. Новосибирск, ул. С. Кожевникова, 9/1",
+      "COORDINATE": "54.95816,82.97233",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 574,
+      "NAME": "г. Новосибирск, ул.Новогодняя 22 ",
+      "COORDINATE": "54.98395,82.90605",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 577,
+      "NAME": "г. Новосибирск, ул. Спортивная, 17/1 ",
+      "COORDINATE": "54.98214,82.79885",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 578,
+      "NAME": "г. Новосибирск, ул. 2-ая Портовая, 3 ",
+      "COORDINATE": "55.02561,82.86236",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 579,
+      "NAME": "г. Новосибирск, ул. Петухова, 14/4 ",
+      "COORDINATE": "54.93954,82.88717",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 580,
+      "NAME": "г. Новосибирск, ул. Халтурина, 20а",
+      "COORDINATE": "54.98786,82.8233",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 590,
+      "NAME": "г. Новосибирск, ул. О. Жилиной, 73",
+      "COORDINATE": "55.04566,82.93244",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 593,
+      "NAME": "г. Новосибирск, ул. Кубовая, 107/3",
+      "COORDINATE": "55.12801,82.8921",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 609,
+      "NAME": "г. Новосибирск, ул. Мясниковой, 6",
+      "COORDINATE": "55.10558,82.94524",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 615,
+      "NAME": "г. Новосибирск, ул. Панфиловцев, 1",
+      "COORDINATE": "55.02617,82.97626",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 616,
+      "NAME": "г. Новосибирск, ул. 1-я Механическая, 5",
+      "COORDINATE": "54.96497,83.05325",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 622,
+      "NAME": "г. Новосибирск, ул. Т. Снежиной, 25",
+      "COORDINATE": "55.01967,83.01162",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 624,
+      "NAME": "г. Новосибирск, ул. Лесосечная, 5/1",
+      "COORDINATE": "54.89019,83.08817",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 642,
+      "NAME": "г. Новосибирск, ул.Ударная, 29/1",
+      "COORDINATE": "54.96668,82.86197",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 660,
+      "NAME": "г. Новосибирск, ул. Полтавская, 27/1",
+      "COORDINATE": "54.97299,82.84775",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 662,
+      "NAME": "г. Новосибирск, ул. Блюхера, 47",
+      "COORDINATE": "54.98853,82.89706",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 667,
+      "NAME": "г. Новосибирск, ул. Котовского, 48",
+      "COORDINATE": "54.99019,82.86016",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 678,
+      "NAME": "г. Новосибирск, ул. Фадеева, 83/1",
+      "COORDINATE": "55.09811,82.93562",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 679,
+      "NAME": "г. Новосибирск, ул. Большая, 608",
+      "COORDINATE": "55.02833,82.80923",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 681,
+      "NAME": "г. Новосибирск, ул. Кошурникова, 8/1",
+      "COORDINATE": "55.0428,82.95307",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 689,
+      "NAME": "г. Новосибирск, ул. Петухова, 156",
+      "COORDINATE": "54.93861,82.94337",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 697,
+      "NAME": "г. Новосибирск, ул. Демакова, 20",
+      "COORDINATE": "54.86323,83.1093",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 728,
+      "NAME": "г. Новосибирск, ул. Д. Бедного, 58а",
+      "COORDINATE": "55.04823,82.9349",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 740,
+      "NAME": "г. Новосибирск, ул. Селезнева, 46/1",
+      "COORDINATE": "55.04539,82.94579",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 753,
+      "NAME": "г. Новосибирск, ул. Новосибирская, 8",
+      "COORDINATE": "54.99059,82.84315",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 754,
+      "NAME": "г. Новосибирск, ул. Высоцкого, 41/1",
+      "COORDINATE": "55.03148,83.02179",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 758,
+      "NAME": "г. Новосибирск, ул. Троллейная, 14",
+      "COORDINATE": "54.9903,82.85692",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 771,
+      "NAME": "г. Новосибирск, ул. Сержанта Коротаева, 5",
+      "COORDINATE": "54.96209,82.95345",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 777,
+      "NAME": "г. Новосибирск, ул. Сызранская, 4",
+      "COORDINATE": "54.96472,83.06105",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 808,
+      "NAME": "г. Новосибирск, ул. Энгельса, 3",
+      "COORDINATE": "54.85957,82.98489",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 846,
+      "NAME": "г. Новосибирск, пр. Красный, 173",
+      "COORDINATE": "55.0674,82.90973",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 853,
+      "NAME": "г. Новосибирск, ул. Флотская, 18а",
+      "COORDINATE": "55.17067,82.99362",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 877,
+      "NAME": "г. Новосибирск, ул. Д. Ковальчук, 177",
+      "COORDINATE": "55.05819,82.9082",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 904,
+      "NAME": "г. Новосибирск, ул. Широкая, 5",
+      "COORDINATE": "54.99363,82.86539",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 905,
+      "NAME": "г. Новосибирск, ул. Д. Донского, 34",
+      "COORDINATE": "55.06231,82.89327",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 922,
+      "NAME": "г. Новосибирск, ул. Дачная, 23/5",
+      "COORDINATE": "55.06153,82.9039",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 925,
+      "NAME": "г. Новосибирск, ул. Немировича-Данченко, 120/4",
+      "COORDINATE": "54.9776,82.91177",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 941,
+      "NAME": "г. Новосибирск, ул. Объединения, 29",
+      "COORDINATE": "55.09792,82.96632",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 942,
+      "NAME": "г. Новосибирск, ул. Громова, 7",
+      "COORDINATE": "54.9368,82.9104",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 943,
+      "NAME": "г. Новосибирск, ул. Б. Богаткова, 163а",
+      "COORDINATE": "55.02856,82.96551",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 944,
+      "NAME": "г. Новосибирск, ул. Волховская, 28",
+      "COORDINATE": "54.96953,82.84219",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 957,
+      "NAME": "г. Новосибирск, ул. Мира, 39",
+      "COORDINATE": "54.96384,82.91705",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 984,
+      "NAME": "г. Новосибирск, ул. Рассветная, 13",
+      "COORDINATE": "55.10846,82.97351",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1006,
+      "NAME": "г. Новосибирск, ул. Твардовского, 6",
+      "COORDINATE": "54.9392,83.12768",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1007,
+      "NAME": "г. Новосибирск, ул. Владимировская, 1/1",
+      "COORDINATE": "55.03087,82.89245",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1008,
+      "NAME": "г. Новосибирск, ул. Первомайская, 100",
+      "COORDINATE": "54.96668,83.11099",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1010,
+      "NAME": "г. Новосибирск, ул. Мичурина, 20",
+      "COORDINATE": "55.04636,82.92079",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1014,
+      "NAME": "г. Новосибирск, ул. Станиславского, 19",
+      "COORDINATE": "54.98016,82.87253",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1020,
+      "NAME": "г. Новосибирск, ул. Тюленина, 17/1",
+      "COORDINATE": "55.11119,82.94178",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1023,
+      "NAME": "г. Новосибирск, ул. Котовского, 4",
+      "COORDINATE": "54.9929,82.88249",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1024,
+      "NAME": "г. Новосибирск, ул. Б. Богаткова, 201",
+      "COORDINATE": "55.03537,82.97375",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1033,
+      "NAME": "г. Новосибирск, ул. Выборная, 115/2",
+      "COORDINATE": "55.00257,83.01692",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1041,
+      "NAME": "г. Новосибирск, ул. Новоуральская, 17",
+      "COORDINATE": "55.17628,82.9619",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1042,
+      "NAME": "г. Новосибирск, ул. Добролюбова, 14",
+      "COORDINATE": "55.00776,82.95",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1049,
+      "NAME": "г. Новосибирск, ул. Гурьевская, 76",
+      "COORDINATE": "55.01521,82.95466",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1053,
+      "NAME": "г. Новосибирск, ул. Лескова, 252/1",
+      "COORDINATE": "55.01349,82.97055",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1063,
+      "NAME": "г. Новосибирск, ул. Новочеркасская, 2",
+      "COORDINATE": "55.09237,82.93823",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1077,
+      "NAME": "г. Новосибирск, ул. Громова, 22",
+      "COORDINATE": "54.93248,82.9072",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1078,
+      "NAME": "г. Новосибирск, ул. Степная, 63",
+      "COORDINATE": "54.97766,82.86272",
+      "STARTED_WORK": "9:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1095,
+      "NAME": "г. Новосибирск, ул. Станиславского, 12",
+      "COORDINATE": "54.98299,82.87112",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1104,
+      "NAME": "г. Новосибирск, ул. Доватора, 31а",
+      "COORDINATE": "55.04034,82.99958",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1107,
+      "NAME": "г. Новосибирск, ул. Ключ-Камышенское плато, 14",
+      "COORDINATE": "54.98793,83.04627",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1123,
+      "NAME": "г. Новосибирск, ул.Лескова, 25",
+      "COORDINATE": "55.02527,82.9536",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1125,
+      "NAME": "г. Новосибирск, ул. Колхидская, 11",
+      "COORDINATE": "54.98977,82.81649",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1136,
+      "NAME": "г. Новосибирск, мкр. Горский, 8",
+      "COORDINATE": "54.995,82.90943",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1137,
+      "NAME": "г. Новосибирск, ул.Курчатова, 36",
+      "COORDINATE": "55.10945,82.97821",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1145,
+      "NAME": "г. Новосибирск, мкр. Горский, 64",
+      "COORDINATE": "54.9933,82.89406",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1159,
+      "NAME": "г. Новосибирск, ул. Сибиряков-Гвардейцев, 57/2",
+      "COORDINATE": "54.9385,82.89824",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1170,
+      "NAME": "г. Новосибирск, ул. Софийская, 1",
+      "COORDINATE": "54.85438,82.97464",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1177,
+      "NAME": "г. Новосибирск, ул. Часовая, 1",
+      "COORDINATE": "54.86515,82.98976",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1191,
+      "NAME": "г. Новосибирск, ул. Учительская, 22",
+      "COORDINATE": "55.07829,82.97025",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1192,
+      "NAME": "г. Новосибирск, ул. Б. Богаткова, 248",
+      "COORDINATE": "55.03751,82.97882",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1197,
+      "NAME": "г. Новосибирск, ул. Красина, 51",
+      "COORDINATE": "55.04638,82.96088",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1202,
+      "NAME": "г. Новосибирск, ул. Станиславского, 40",
+      "COORDINATE": "54.9694,82.87281",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1224,
+      "NAME": "г. Новосибирск, ул. Курчатова, 11/1",
+      "COORDINATE": "55.10548,82.96846",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1232,
+      "NAME": "г. Новосибирск, ул. Никитина, 64",
+      "COORDINATE": "55.01248,82.96104",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1235,
+      "NAME": "г. Новосибирск, ул. Петухова, 122/3",
+      "COORDINATE": "54.93887,82.92901",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1236,
+      "NAME": "г. Новосибирск, ул. Р. Зорге, 179/1",
+      "COORDINATE": "54.93478,82.91933",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1241,
+      "NAME": "г. Новосибирск, ул. Есенина, 41/1",
+      "COORDINATE": "55.04249,82.98913",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": null
+    },
+    {
+      "sourceRowIndex": 1243,
+      "NAME": "г. Новосибирск, ул. Трикотажная, 62",
+      "COORDINATE": "55.06899,82.96333",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1254,
+      "NAME": "г. Новосибирск, ул. Челюскинцев, 18/2",
+      "COORDINATE": "55.03909,82.90564",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1260,
+      "NAME": "г. Новосибирск, ул. Б. Богаткова, 251",
+      "COORDINATE": "55.04178,82.98241",
+      "STARTED_WORK": "7:00",
+      "END_WORK": "23:00",
+      "SECTION": "SELECTION_WINES"
+    },
+    {
+      "sourceRowIndex": 1330,
+      "NAME": "г. Новосибирск, ул. Красноярская, 34",
+      "COORDINATE": "55.03986,82.90243",
+      "STARTED_WORK": "8:00",
+      "END_WORK": "22:00",
+      "SECTION": "SELECTION_WINES"
+    }
+  ]
+}

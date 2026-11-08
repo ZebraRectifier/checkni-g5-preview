@@ -1,0 +1,61 @@
+{
+  "sourceRows": 205,
+  "initialLiteralAddresses": 202,
+  "normalizedUniqueAddresses": 201,
+  "duplicateRowsCollapsed": 4,
+  "acceptedGeographicCandidates": 201,
+  "heldCandidates": 0,
+  "exactAddressCorroboratedWithin250m": 95,
+  "officialMapOnly": 106,
+  "nearbyDistinctAddressPairs": 0,
+  "alreadyPublishedSameNetwork": 0,
+  "catalogBindings": 0,
+  "freshPrices": 0,
+  "newWebSourceCollections": 0,
+  "heldReasons": {},
+  "sourceManifest": {
+    "city-boundary.geojson": {
+      "sha256": "80e191e56adf03f49b3e4674b0a485d6e0df18db850f9b9c904c9fd29c9d9cb4",
+      "hashBasis": "UTF-8 LF",
+      "bytesLF": 71954
+    },
+    "official-city-rows.json": {
+      "sha256": "1b3607c479c52c34c781a64e8591bfae0e373501430e869c1eb1726ea9876619",
+      "hashBasis": "UTF-8 LF",
+      "bytesLF": 43767
+    },
+    "official-city-rows-with-index.json": {
+      "sha256": "411be1fda4c2826708e7aee356f627b1318f33315fe826bdc37ae812b03bcbc2",
+      "hashBasis": "UTF-8 LF",
+      "bytesLF": 49610
+    },
+    "cached-address-evidence.json": {
+      "sha256": "b324a2746434136677a68c8f84396142de12da03073a818cdc011c4827b45d3d",
+      "hashBasis": "UTF-8 LF",
+      "bytesLF": 281544
+    },
+    "published-city-baseline.json": {
+      "sha256": "8c99e064f026a98fbc7890c5b1d9ecf1f15f7ba66d5286c427911d217e1e1f0e",
+      "hashBasis": "UTF-8 LF",
+      "bytesLF": 206228
+    }
+  },
+  "publicationStatus": "prepared-not-published; root review and release ordering pending",
+  "beforePublished": 350,
+  "afterPrepared": 551,
+  "regionalTotalAfterPrepared": 3740,
+  "runtimeDependency": "Activate source containing commit 63c85cccb82aa966fc845953540c6e116500e17d before publishing these mutable city data.",
+  "reuseReview": {
+    "checkedPages": [
+      "https://www.maria-ra.ru/",
+      "https://www.maria-ra.ru/o-kompanii/karta-seti/"
+    ],
+    "finding": "No specific address-fact reuse prohibition or separate open licence found on checked pages; copyright alone is not a new user permission requirement. Limited observation, not a legal guarantee."
+  },
+  "originalOfficialHtml": {
+    "sha256": "dfb8d6dc6e2e8d4a0639f2dd45dd176684ecaf378a4dc6cf67cbe77f51e3d5e1",
+    "bytes": 409403,
+    "localArchive": "E:/CHECKNI-evidence/goal-20261107/regions/maria-ra-package-20261107/source/official-home.html",
+    "note": "Original full website HTML is retained in the local evidence archive; the public packet includes only relevant address facts and source hash."
+  }
+}
