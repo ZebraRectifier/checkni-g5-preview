@@ -298,6 +298,21 @@ jobs:
                 }
                 assert(geocoderCalls === 0,"Browser geolocation unexpectedly invoked the geocoder");
                 console.log("LIVE_NEARBY_PAGINATION_OK",JSON.stringify({width,counts}));
+                if(runtimePrefix.includes('fc89edf6375c11cf378dfdbdc4bc8962cbdf76b9ee18b291863095f013303d45')){
+                  await check.goto(url,{waitUntil:"domcontentloaded"});
+                  await assertPublishedRuntime(check);
+                  await check.locator("#retail-store-card").click();
+                  const chooser=check.locator("#pixel-address-chooser");
+                  const rows=chooser.locator(".pixel-store-address-choice");
+                  assert(await chooser.getByRole("searchbox").count()===1,"Globus chooser must show one search field");
+                  assert(await rows.count()===5,"Globus chooser must start with five address rows");
+                  assert(!/официальном справочнике|дат[ау] цен после выбора/iu.test(await chooser.innerText()),"Globus chooser exposes long source copy");
+                  await chooseAddressCard(check,"globus","5011");
+                  await chooser.waitFor({state:"hidden"});
+                  await check.locator('#product-grid [data-product-id^="retail:globus:globus-store-5011:"]').first().waitFor({state:"visible",timeout:20000});
+                  console.log("LIVE_GLOBUS_COMPACT_ADDRESS_OK",JSON.stringify({width,store:"5011"}));
+                }
+
               } finally { await nearby.close(); }
             }
             const racePage = await browser.newPage({
