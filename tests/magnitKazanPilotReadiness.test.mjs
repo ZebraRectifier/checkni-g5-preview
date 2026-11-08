@@ -92,10 +92,11 @@ test('regional nearby search cannot expose 010852 as connected even if a seriali
   const {directory, point} = await evidenceAndDirectory();
   const position = {lat: point.lat, lon: point.lon};
   const found = nearbyGroceryMatches(directory.stores, position, 1, {regional: true});
-  assert.equal(found.find(row => row.id === point.id), undefined);
+  assert.equal(found.find(row => row.id === point.id)?.catalog, null);
   assert.deepEqual(nearbyGroceryMatches(directory.stores, position, 1, {regional: true, connectedOnly: true}), []);
   const forged = {...point, catalogBinding: {retailerId: 'magnit', shopCode: '010852'}};
-  assert.deepEqual(nearbyGroceryMatches([forged], position, 1, {regional: true}), []);
+  assert.equal(nearbyGroceryMatches([forged], position, 1, {regional: true})[0]?.catalog, null);
+  assert.deepEqual(nearbyGroceryMatches([forged], position, 1, {regional: true, connectedOnly: true}), []);
 });
 
 test('an unregistered pilot definition admits only a fully exact scoped synthetic row', () => {
