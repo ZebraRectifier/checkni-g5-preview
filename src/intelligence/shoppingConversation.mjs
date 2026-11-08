@@ -64,6 +64,19 @@ const shoppingPreferenceTargets = text => {
   return [...new Set(targets)];
 };
 
+const negatesFishCompositionRisk = text => {
+  const value = normalizeShoppingText(text);
+  return /(?:аллерги\S*|непереносимост\S*)\s+(?:на\s+рыб\S*\s+)?нет/u.test(value)
+    || /нет\s+(?:у\s+(?:меня|нас)\s+)?(?:аллерги\S*|непереносимост\S*)(?:\s+на\s+рыб\S*)?/u.test(value)
+    || /след\S*\s+(?:допустим\S*|можно|разрешен\S*)/u.test(value);
+};
+
+const targetsFishSafetyOnly = text => {
+  const value = normalizeShoppingText(text);
+  if (!shoppingPreferenceTargets(value).includes("fish") || !negatesFishCompositionRisk(value)) return false;
+  return !/(?:верни|передумал|снова\s+хочу)\S*(?:\s+\S+){0,3}\s+рыб\S*|рыб\S*\s+(?:снова\s+)?можно/u.test(value);
+};
+
 export function productShoppingTargets(product) {
   const name = normalizeShoppingText(product?.name).replace(/(?:для|к)\s+мяс(?:а|у)(?=$|[\s,.])/gu, "");
   const keys = shoppingTargets(name).filter(key => key !== "meat");
@@ -157,7 +170,8 @@ export function extractShoppingDelta(text) {
       const otherRefusal = NEGATIVE_REQUEST.test(clause);
       const phrase = without && !otherRefusal ? without[1] : clause;
       let targets = shoppingPreferenceTargets(phrase);
-      const compositionCritical = targets.includes("fish") && /аллерг|неперенос|след(?:ы|ов)|состав/u.test(clause);
+      const compositionCritical = targets.includes("fish") && /аллерг|неперенос|след(?:ы|ов)|состав/u.test(clause)
+        && !negatesFishCompositionRisk(clause);
       if (compositionCritical) delta.unresolved.push(clause.trim().slice(0, 80));
       if (targets.includes("meat") && /красн\S*\s+мяс|жирн\S*\s+мяс|переработан\S*\s+мяс|не\s+без\s+мяса/u.test(clause)) {
         targets = targets.filter(key => key !== "meat");
@@ -194,6 +208,10 @@ export function extractShoppingDelta(text) {
     } else if (/^(?:все|всё|остальное|другое) можно$/u.test(clause.trim()) && hasExplicitRefusal) {
       // This closes the current list of exclusions. It is not permission to
       // erase previous unknown constraints or to reintroduce every product.
+      continue;
+    } else if (targetsFishSafetyOnly(clause)) {
+      // "Следы можно" describes package-risk tolerance, not a request to
+      // reintroduce fish that may still be disliked or otherwise excluded.
       continue;
     } else if (/верни|передумал|снова хочу/u.test(clause)
       || /можно/u.test(clause) && !permissionQuestion) {

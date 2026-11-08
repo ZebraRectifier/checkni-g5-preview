@@ -44,6 +44,28 @@ test('fish allergy and unknown restrictions remain blocking and blanket permissi
   assert.deepEqual(blanket.facts.unresolvedConstraints.value, unknown.facts.unresolvedConstraints.value.concat('остальное можно'));
   assert.equal(blanket.rejected.fish, undefined);
 });
+
+test('fish safety negation is not permission, explicit permission is reversible, and a store switch preserves rejection', () => {
+  const excluded = update(createShoppingConversation(), 'Рыбу исключи');
+  const safety = update(excluded, 'Аллергии на рыбу нет, следы можно');
+  assert.ok(safety.rejected.fish);
+  assert.equal(safety.exceptions.fish, undefined);
+  assert.equal(safety.wishes.fish, undefined);
+  assert.equal(safety.facts.unresolvedConstraints, undefined);
+
+  const switched = update(safety, 'Теперь магазин Магнит');
+  assert.ok(switched.rejected.fish);
+  assert.equal(switched.facts.retailer.value, 'магнит');
+
+  const allowed = update(switched, 'Рыбу снова можно');
+  assert.equal(allowed.rejected.fish, undefined);
+  assert.ok(allowed.exceptions.fish);
+  assert.ok(allowed.wishes.fish);
+
+  const negatedAllergyWithRefusal = extractShoppingDelta('Аллергии на рыбу нет, но рыбу исключи');
+  assert.deepEqual(negatedAllergyWithRefusal.reject, ['fish']);
+  assert.deepEqual(negatedAllergyWithRefusal.unresolved, []);
+});
 const product = id => catalog.find(row => row.id === id);
 function session(extra = {}) {
   const basket = createBasketStore({ storage: null });
