@@ -99,6 +99,30 @@ test("retail search scopes PostgREST to active GLOBUS Moscow rows", async () => 
   assert.equal(requestedUrl.searchParams.get("limit"), "8");
 });
 
+test("catalogue pages report raw progress separately from admitted cards", async () => {
+  const rejected = Array.from({ length: 40 }, (_, index) => row({
+    source_product_id: `rejected-${index}`,
+    availability: "available"
+  }));
+  const client = createRetailCatalogClient({
+    endpoint: "https://project.supabase.co/rest/v1/retail_catalog_items",
+    publishableKey: "publishable-test",
+    fetchImpl: async () => new Response(JSON.stringify(rejected), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    })
+  });
+
+  const result = await client.browse({ limit: 40 });
+  assert.equal(result.kind, "catalog");
+  assert.equal(result.rawPageSize, 40);
+  assert.equal(result.admittedPageSize, 0);
+  assert.equal(result.pageSize, 40);
+  assert.equal(result.nextOffset, 40);
+  assert.equal(result.products.length, 0);
+  assert.equal(result.partial, true);
+});
+
 function lentaRow(overrides = {}) {
   return {
     retailer_id: "lenta",
