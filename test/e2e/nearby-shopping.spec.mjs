@@ -25,7 +25,7 @@ test('official Magnit coordinates: Moscow and oblast open their exact existing c
     await page.locator('#nearby-address-candidates button').click();await page.locator('#nearby-radius').selectOption('1');
     const row=page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
     await expect(row).toContainText('Актуальность цен и возможность добавить товар указаны в каталоге');
-    await expect(row.getByRole('link',{name:'Источник адреса'})).toHaveAttribute('href','https://magnit.ru/shops');
+    await expect(page.locator('.nearby-result-sources a[href="https://magnit.ru/shops"]')).toHaveAttribute('href','https://magnit.ru/shops');
     await row.getByRole('button',{name:'Открыть товары'}).click();
     await expect(page.locator('#magnit-store-address')).toHaveValue(code);
     await expect.poll(()=>scopes.includes('eq.magnit-'+code)).toBe(true);
@@ -43,14 +43,17 @@ test('official Magnit coordinates: map retains full paginated list and opens an 
   await context.grantPermissions(['geolocation']);await context.setGeolocation({latitude:point.lat,longitude:point.lon,accuracy:10});
   await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
   await selectStore(page);await openStoreDetails(page);await page.locator('#stores-section').scrollIntoViewIfNeeded();
-  await expect.poll(async()=>Number((await page.locator('.stores-location-directory > summary').textContent()).match(/\d+/u)?.[0])).toBeGreaterThanOrEqual(1409);
+  await expect(page.locator('.stores-location-directory > summary')).toHaveText('Магазины списком');
   await page.locator('.stores-location-directory').evaluate(node=>{node.open=true;});
   // Before choosing a position there is no nearby context: this exercises the
   // general app callback and its oblast resolver, not the nearby event path.
-  const direct=page.locator('#stores-known-locations li[data-store-location-id="official:magnit:019945"]');
-  for(let step=0;step<8&&!await direct.count();step++)await page.getByRole('button',{name:'Показать ещё магазины',exact:true}).click();
-  await expect(direct).toBeVisible();await direct.getByRole('button',{name:'Открыть товары',exact:true}).click();
-  await expect(page.locator('#magnit-store-address')).toHaveValue('019945');
+  // The compact directory deliberately caps browsing at 15, so use its first
+  // visible exact Magnit binding instead of paging through the whole registry.
+  await page.locator('#stores-map-network').selectOption('magnit');
+  const direct=page.locator('#stores-known-locations li').filter({has:page.getByRole('button',{name:'Открыть товары',exact:true})}).first();
+  await expect(direct).toBeVisible();const directId=await direct.getAttribute('data-store-location-id');
+  await direct.getByRole('button',{name:'Открыть товары',exact:true}).click();
+  await expect(page.locator('#magnit-store-address')).toHaveValue(directId.slice(-6));
   await selectStore(page);await openStoreDetails(page);await page.locator('#stores-section').scrollIntoViewIfNeeded();
   await page.locator('#stores-locate').click();await page.locator('#stores-map-network').selectOption('magnit');
   await expect(page.locator('#stores-known-locations li')).toHaveCount(5);
@@ -61,9 +64,8 @@ test('official Magnit coordinates: map retains full paginated list and opens an 
   await expect(card.getByRole('link',{name:'Маршрут'})).toHaveAttribute('href',/yandex\.ru\/maps/u);
   await expect.poll(()=>page.locator('.stores-pin').count()).toBeGreaterThan(0);
   expect(await page.locator('.stores-pin').count()).toBeLessThanOrEqual(200);
-  const total=Number((await page.locator('.stores-location-directory > summary').textContent()).match(/\d+/u)?.[0]);
   await page.getByRole('button',{name:'Показать ещё магазины',exact:true}).click();
-  await expect(page.locator('#stores-known-locations li')).toHaveCount(Math.min(15,total));await expect(card).toContainText(point.address);
+  await expect(page.locator('#stores-known-locations li')).toHaveCount(10);await expect(card).toContainText(point.address);
   await card.scrollIntoViewIfNeeded();
   await page.screenshot({path:testInfo.outputPath('official-magnit-map.png')});
   await card.getByRole('button',{name:'Открыть товары',exact:true}).click();
@@ -120,7 +122,7 @@ test('five regional cities: real address cards, directory recovery and no Moscow
     await page.locator('#nearby-locate').click();
     const card=page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
     await expect(card).toContainText('Цены неизвестны');
-    await expect(card.getByRole('link',{name:'Источник адреса'})).toHaveAttribute('href',point.sourceUrl);
+    await expect(page.locator(`.nearby-result-sources a[href="${point.sourceUrl}"]`)).toHaveAttribute('href',point.sourceUrl);
     await expect(page.locator('#nearby-results .nearby-open-catalog')).toHaveCount(0);
     await expect(page.locator('#nearby-results')).not.toContainText('Москва');
     const cityOffset=point.address.toLocaleLowerCase('ru').indexOf(city.toLocaleLowerCase('ru')+',');
@@ -331,7 +333,7 @@ test('a bound Magnit map card selects its exact address offline, while the legac
   await page.goto('/?comparison=observed&catalog=retail#shop');
   await selectStore(page);await openStoreDetails(page);
   await page.locator('#stores-section').scrollIntoViewIfNeeded();
-  await expect.poll(async()=>Number((await page.locator('.stores-location-directory > summary').textContent())?.match(/\d+/u)?.[0])).toBeGreaterThanOrEqual(64);
+  await expect(page.locator('.stores-location-directory > summary')).toHaveText('Магазины списком');
   await page.locator('.stores-location-directory').evaluate(node=>{node.open=true;});
   await page.locator('#stores-map-network').selectOption('magnit');
   const legacy=page.locator('#stores-known-locations li[data-store-location-id="magnit-1812"]');

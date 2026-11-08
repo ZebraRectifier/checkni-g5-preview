@@ -345,11 +345,12 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   });
 
   const selectableAddressIndex = new Map();
-  let addressQuery = '', addressesExpanded = false;
+  const ADDRESS_PAGE_SIZE = 5, ADDRESS_MAX_VISIBLE = 15;
+  let addressQuery = '', addressLimit = ADDRESS_PAGE_SIZE;
   function filterStores() {
     if (!stores) return;
     const query = searchInput.value.trim();
-    if (query !== addressQuery) { addressQuery = query; addressesExpanded = false; }
+    if (query !== addressQuery) { addressQuery = query; addressLimit = ADDRESS_PAGE_SIZE; }
     const pickerIds = { magnit: 'magnit-store-address', metro: 'metro-store-address', globus: 'globus-store-address' };
     const cards = [...stores.querySelectorAll('.retail-store-card')];
     const entries = cards.map(card => {
@@ -379,7 +380,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     });
     const firstKeys = new Set(firstByNetwork.map(row => `${row.retailerId}:${row.value}`));
     const ordered = [...firstByNetwork, ...addresses.filter(row => !firstKeys.has(`${row.retailerId}:${row.value}`))];
-    const shown = addressesExpanded ? ordered : ordered.slice(0, 4);
+    const shown = ordered.slice(0, addressLimit);
     if (shown.length) {
       const title = node('h2', 'pixel-store-address-title', 'Подходящие адреса');
       const list = node('div', 'pixel-store-address-list');
@@ -404,22 +405,25 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
         list.append(button);
       }
       addressResults.append(title, list);
-      if (addresses.length > 4) {
-        const toggle = node('button', 'pixel-store-address-toggle', addressesExpanded
-          ? 'Свернуть адреса' : `Показать все ${addresses.length} адресов`);
-        toggle.type = 'button'; toggle.setAttribute('aria-expanded', String(addressesExpanded));
+      if (addresses.length > shown.length && shown.length < ADDRESS_MAX_VISIBLE) {
+        const nextLimit = Math.min(addressLimit + ADDRESS_PAGE_SIZE, ADDRESS_MAX_VISIBLE, addresses.length);
+        const toggle = node('button', 'pixel-store-address-toggle', `Показать ещё ${nextLimit - shown.length}`);
+        toggle.type = 'button'; toggle.setAttribute('aria-expanded', 'false');
         toggle.addEventListener('click', () => {
-          addressesExpanded = !addressesExpanded;
+          addressLimit = nextLimit;
           filterStores();
           addressResults.querySelector('.pixel-store-address-toggle')?.focus({ preventScroll: true });
         });
         addressResults.append(toggle);
       }
+      if (addresses.length > shown.length && shown.length >= ADDRESS_MAX_VISIBLE) {
+        addressResults.append(node('p', 'pixel-store-address-refine', 'Слишком много совпадений. Уточните улицу или дом — либо выберите точку на карте.'));
+      }
     }
     addressResults.hidden = Boolean(pendingAddress) || !shown.length;
     storeStatus.textContent = query && !matches.length
       ? 'Магазин или адрес не найден. Уточните название или город.'
-      : query ? `Сетей: ${matches.length}${addresses.length ? ` · адресов: ${addresses.length}` : ''}`
+      : query ? `Подходящие сети: ${matches.length}`
         : `Сетей: ${cards.length}`;
   }
   storeSearch.addEventListener('submit', event => { event.preventDefault(); filterStores(); });

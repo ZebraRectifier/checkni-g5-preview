@@ -300,17 +300,19 @@ test('city search exposes only selectable exact addresses and opens their own ca
  const magnitAddresses=page.locator('#pixel-store-address-results button[data-retailer-id="magnit"]');
  const globusAddress=page.locator('#pixel-store-address-results button[data-retailer-id="globus"][data-store-id="5014"]');
  const addressChoices=page.locator('#pixel-store-address-results button[data-store-id]');
- await expect(addressChoices).toHaveCount(4);
+ await expect(addressChoices).toHaveCount(5);
  expect(await magnitAddresses.count()).toBeGreaterThan(0);
  await expect(globusAddress).toBeVisible();
  await expect(globusAddress).toContainText('Глобус Пушкино');
  await expect(globusAddress).not.toContainText('дата цен после выбора');
- const showAll=page.locator('.pixel-store-address-toggle');
- await showAll.click();
+ const showMore=page.locator('.pixel-store-address-toggle');
+ await expect(showMore).toHaveText('Показать ещё 5');
+ await showMore.click();
+ await expect(addressChoices).toHaveCount(10);
+ await page.locator('.pixel-store-address-toggle').click();
  await expect(addressChoices).toHaveCount(11);
- await showAll.click();
- await expect(addressChoices).toHaveCount(4);
- await expect(page.locator('#pixel-store-status')).toContainText('адресов:');
+ await expect(page.locator('.pixel-store-address-toggle')).toHaveCount(0);
+ await expect(page.locator('#pixel-store-status')).toHaveText('Подходящие сети: 2');
  expect(calls).toEqual({categories:[],items:[],global:0,ai:0});
 
  const magnitCode=await magnitAddresses.first().getAttribute('data-store-id');
