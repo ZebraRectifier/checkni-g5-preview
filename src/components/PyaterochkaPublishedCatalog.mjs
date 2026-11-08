@@ -24,6 +24,13 @@ export function createPyaterochkaPublishedCatalog({document=globalThis.document,
     const build=el('button','Подобрать часть корзины по акциям');build.type='button';build.addEventListener('click',()=>{
       if(!currentPyatProducts(bundle,now()).length){void render();return;}onBuild?.();});
     build.hidden=!pyatWeeklyCards(bundle,now()).length;
+    const categoryLabel=el('label','Категория');categoryLabel.htmlFor='pyat-published-category';
+    const category=el('select');category.id=categoryLabel.htmlFor;
+    category.append(el('option','Все категории'));
+    category.firstElementChild.value='';
+    for(const name of [...new Set(products.map(product=>product.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'))){
+      const option=el('option',name);option.value=name;category.append(option);
+    }
     const count=el('p');let limit=8;
     const loadMore=()=>{limit+=8;show();};
     function show(){
@@ -31,7 +38,7 @@ export function createPyaterochkaPublishedCatalog({document=globalThis.document,
       grid.replaceChildren();const current=currentPyatProducts(bundle,now());
       if(!current.length){void render();return;}
       const q=search.value.trim().toLowerCase().replaceAll('ё','е');
-      const rows=current.filter(p=>p.name.toLowerCase().replaceAll('ё','е').includes(q));
+      const rows=current.filter(p=>(!category.value||p.category===category.value) && p.name.toLowerCase().replaceAll('ё','е').includes(q));
       count.textContent=`Найдено: ${rows.length}.`;
       for(const p of rows.slice(0,limit)){
         const card=el('article');card.append(el('strong',p.name),el('span',rub(p.priceMinor)));
@@ -40,8 +47,9 @@ export function createPyaterochkaPublishedCatalog({document=globalThis.document,
       more.hidden=rows.length<=limit;
       if(!more.hidden)stopMoreWatch=watchCatalogMore(more,loadMore);
     }
-    search.addEventListener('input',()=>{limit=8;show();});more.addEventListener('click',loadMore);
-    content.append(label,search,count,grid,more,build);show();
+    const resetPage=()=>{limit=8;show();};
+    search.addEventListener('input',resetPage);category.addEventListener('change',resetPage);more.addEventListener('click',loadMore);
+    content.append(label,search,categoryLabel,category,count,grid,more,build);show();
     const deadline=Math.min(Date.parse(bundle.observedAt)+86400001,Date.parse(bundle.cataloguePeriod.until+'T21:00:00Z'));
     expiryTimer=setTimeout(()=>{expiryTimer=null;void render();},Math.max(1,deadline-now()));
   }
