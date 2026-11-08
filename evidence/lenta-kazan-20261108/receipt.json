@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-08T08:03:44.717Z",
+  "scope": "Two previously absent physical Lenta stores in Kazan; geography only",
+  "exhaustive": false,
+  "priceEvidence": false,
+  "catalogBindings": 0,
+  "stores": [
+    {
+      "officialStoreId": "0221",
+      "address": "Казань, улица Рихарда Зорге, 11Б",
+      "officialAddressEvidenceUrl": "https://lenta.com/globalassets/skaters/exchange.pdf",
+      "currentTenantEvidenceUrl": "https://ud-group.com/proekty/tts-gorkipark/",
+      "coordinateEvidenceUrl": "https://www.openstreetmap.org/relation/14069506",
+      "coordinateObjectVersion": 12,
+      "coordinateObservedAt": "2026-04-05T22:00:29Z",
+      "lat": 55.7646744,
+      "lon": 49.1854901,
+      "coordinateAccuracy": "representative-point-not-entrance"
+    },
+    {
+      "officialStoreId": "0307",
+      "address": "Казань, улица Павлюхина, 91",
+      "officialAddressEvidenceUrl": "https://lenta.com/globalassets/skaters/exchange.pdf",
+      "currentTenantEvidenceUrl": "https://kazanmall.com/shops/lenta/",
+      "coordinateEvidenceUrl": "https://www.openstreetmap.org/way/675361612",
+      "coordinateObjectVersion": 21,
+      "coordinateObservedAt": "2026-02-11T15:52:20Z",
+      "lat": 55.768875,
+      "lon": 49.1485024,
+      "coordinateAccuracy": "building-representative-point-not-entrance"
+    }
+  ],
+  "license": "OSM coordinate objects: ODbL-1.0, © OpenStreetMap contributors",
+  "limitations": "No entrance coordinates, catalogue binding, stock, price, delivery scope or exhaustive Kazan coverage is asserted."
+}
