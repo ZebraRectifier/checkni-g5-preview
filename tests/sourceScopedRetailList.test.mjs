@@ -8,6 +8,7 @@ const url='https://magnit.ru/product/9072651501-banany?shopCode=777885&shopType=
 function row(overrides={}) {return {retailer_id:'magnit',store_id:'magnit-777885',store_name:'Магнит · '+store.address,
  locality_id:'city-moscow',locality_name:'Москва',source_product_id:'9072651501',name:'Бананы 1кг',weight_text:null,
  price_minor:17999,currency:'RUB',price_condition:'public-online',availability:'unknown',product_url:url,source_url:url,
+ location_label:store.address,scope_binding:'public-store-product-page',binding_id:'magnit-shopcode-777885',scope_evidence_url:url,
  observed_at:'2026-11-02T21:51:54.734Z',...overrides};}
 test('reviewed weighed Magnit item can be explicitly selected into a scoped list without a canonical alias',()=>{
  const card=normalizeRetailRow(row(),{retailerId:'magnit',store});
@@ -93,7 +94,8 @@ test('new source egg packs retain exact 20/10 counts and do not alias older ten-
  const evidence=JSON.parse(await readFile(new URL('./fixtures/weekly-retail/magnit-eggs-777885-20261102.json',import.meta.url),'utf8'));
  const expected={'1000219622':{unit:'20 шт',count:20},'2047000033':{unit:'10 шт',count:10}};
  for(const retained of evidence.rows){
-  const source=row({...retained,retailer_id:'magnit',store_id:evidence.storeId,source_url:retained.product_url});
+  const source=row({...retained,retailer_id:'magnit',store_id:evidence.storeId,source_url:retained.product_url,
+   scope_evidence_url:retained.product_url});
   const card=normalizeRetailRow(source,{retailerId:'magnit',store}),identity=getReviewedRetailBasketProduct(card),pack=expected[retained.source_product_id];
   assert.ok(identity);assert.equal(identity.id,card.id);assert.equal(identity.unit,pack.unit);
   assert.equal(card.priceMinor,retained.price_minor);assert.equal(Date.parse(card.observedAt),Date.parse(retained.observed_at));

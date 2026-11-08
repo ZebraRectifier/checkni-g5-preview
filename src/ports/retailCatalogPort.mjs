@@ -392,6 +392,15 @@ function safeUrl(raw, rules) {
   }
 }
 
+function hasExactShopCode(raw, expected) {
+  try {
+    const values = new URL(raw).searchParams.getAll("shopCode");
+    return values.length === 1 && values[0] === expected;
+  } catch {
+    return false;
+  }
+}
+
 export function getRetailCatalogDefinition(retailerId) {
   if (typeof retailerId !== "string") return null;
   return RETAIL_CATALOG_DEFINITIONS[retailerId] ?? null;
@@ -620,14 +629,22 @@ function normalizeRetailRow(row, retailer = "globus", options = {}) {
   const productUrl = safeUrl(row.product_url, definition.productUrlRules);
   const imageUrl = safeUrl(row.image_url, definition.imageUrlRules);
   if (definition.retailerId === "magnit" && definition.shopCode) {
-    try {
-      if (new URL(productUrl).searchParams.get("shopCode") !== definition.shopCode) return null;
-    } catch {
-      return null;
-    }
+    if (!hasExactShopCode(productUrl, definition.shopCode)) return null;
   }
-  const sourceUrl = safeUrl(row.source_url, definition.sourceUrlRules)
+  const explicitSourceUrl = safeUrl(row.source_url, definition.sourceUrlRules);
+  const sourceUrl = explicitSourceUrl
     ?? productUrl;
+  if (definition.retailerId === "magnit" && definition.shopCode) {
+    const scopeEvidenceUrl = safeUrl(row.scope_evidence_url, definition.sourceUrlRules);
+    if (row.location_label !== definition.storeAddress
+        || row.scope_binding !== "public-store-product-page"
+        || row.binding_id !== `magnit-shopcode-${definition.shopCode}`
+        || !explicitSourceUrl
+        || !hasExactShopCode(sourceUrl, definition.shopCode)
+        || !hasExactShopCode(scopeEvidenceUrl, definition.shopCode)
+        || !scopeEvidenceUrl
+        || scopeEvidenceUrl !== sourceUrl) return null;
+  }
   if (definition.retailerId === "metro") {
     const scopeEvidenceUrl = safeUrl(
       row.scope_evidence_url,
