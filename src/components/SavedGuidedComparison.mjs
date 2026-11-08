@@ -1,7 +1,23 @@
 import {formatRubMinor} from './ComparisonResult.mjs';
 import {quoteCatalogDraft,compareCatalogDraftAlternatives} from '../core/catalogDraft.mjs';
+import {reviewedCrossSourceCounterpart} from '../catalog/reviewedCrossSourcePairs.mjs';
 
 export const savedComparisonStoreLabel = scope => scope.retailerId==='magnit'?'Магнит':'Перекрёсток · доставка';
+
+export function savedComparisonUsesAlternatives(result) {
+  const bindings=result?.request?.bindings;
+  if(!Array.isArray(bindings)||!bindings.length||!Array.isArray(result?.drafts))return false;
+  return bindings.some((binding,index)=>result.drafts.some(draft=>{
+    // Saved drafts are built in request binding order. Refuse to infer an
+    // alternative if a caller supplies a differently ordered result.
+    const row=draft?.rows?.[index],card=row?.card,targetRetailerId=draft?.scope?.retailerId;
+    if(row?.group?.key!==binding.groupKey)return false;
+    if(!card||typeof card.sourceProductId!=='string'||typeof targetRetailerId!=='string')return false;
+    const expected=targetRetailerId===binding.retailerId?binding.sourceProductId
+      :reviewedCrossSourceCounterpart(binding,targetRetailerId);
+    return card.sourceProductId!==expected;
+  }));
+}
 
 function describeGaps(quote) {
   const reasons = [
@@ -39,9 +55,10 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
   const status=el('p');status.setAttribute('role','status');
   const messages=[];
   const pendingCount=result.request?.unresolvedGroupKeys?.length??0;
+  const usesAlternatives=savedComparisonUsesAlternatives(result);
   const lowerScope=result.drafts.find(draft=>draft.scope.storeId===comparison.lowerStoreId)?.scope;
   if(pendingCount)messages.push('Подбор ещё неполный. Выгоду всего подбора пока не определяем.');
-  if(!pendingCount&&comparison.kind==='fresh')messages.push((comparison.estimated?'Ориентировочно: ':'По наблюдаемым ценам ')+(comparison.differenceMinor===0
+  if(!pendingCount&&comparison.kind==='fresh')messages.push((comparison.estimated?'Ориентировочно: ':usesAlternatives?'По наблюдаемым ценам среди сопоставленных вариантов ':'По наблюдаемым ценам ')+(comparison.differenceMinor===0
     ?'суммы товаров в этих вариантах совпали.'
     :'сумма товаров в '+(lowerScope?savedComparisonStoreLabel(lowerScope):comparison.lowerStoreName)+' ниже на '+formatRubMinor(comparison.differenceMinor)+'.'));
   else {
@@ -55,7 +72,9 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
   }
   status.textContent=messages.join(' ');
   if(result.request?.unresolvedGroupKeys?.length)parent.append(el('p','Сравниваем только выбранные позиции. В исходном подборе ещё '+result.request.unresolvedGroupKeys.length+' поз. без подтверждённых товаров.'));
-  parent.append(status,el('p','По количествам из списка. Марки и фасовки различаются. Доставка и сборы не включены; наличие неизвестно.'));
+  parent.append(status);
+  if(usesAlternatives)parent.append(el('p','В сравнении есть альтернативные марки или фасовки. Разница относится к показанным вариантам.'));
+  parent.append(el('p','По количествам из списка. Доставка и сборы не включены; наличие неизвестно.'));
   const calculation=el('details');calculation.className='future-step';
   calculation.append(el('summary','Как рассчитана сумма'),el('p','Сравниваем количества в сохранённом списке. Для фасованных товаров учитываем целые упаковки, поэтому сумма может отличаться от первоначального подбора на людей и дни.'));
   if(quotes.some(quote=>quote.hasEstimates))calculation.append(el('p','Весовые количества примерные: окончательная сумма зависит от взвешивания.'));
@@ -69,7 +88,7 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
   for (const complete of [true, false]) {
     if (!quotes.some(quote => quote.complete === complete)) continue;
     const group = el('section'); group.className = 'saved-comparison-group';
-    group.append(el('h3', complete ? 'Полные по составу' : 'Неполные корзины'));
+    group.append(el('h3', complete ? 'Все позиции сопоставлены' : 'Неполные корзины'));
     const columns = el('div'); columns.className = 'saved-comparison-columns'; columns.setAttribute('aria-hidden', 'true');
     for (const label of ['Магазин', 'Покрытие', 'Сумма товаров', 'Актуальность', '']) columns.append(el('span', label));
     group.append(columns); parent.append(group); groups.set(complete, group);
