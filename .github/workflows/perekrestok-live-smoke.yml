@@ -179,11 +179,15 @@ jobs:
                 await check.locator("#product-search").fill("молоко");
                 const firstPending = responseFor(0);
                 await check.locator("#search-form").getByRole("button",{name:"Найти",exact:true}).click();
-                assert((await firstPending).ok(), "First live search page failed");
+                const firstResponse = await firstPending;
+                assert(firstResponse.ok(), "First live search page failed: HTTP " + firstResponse.status()
+                  + " (Supabase request " + (firstResponse.headers()["sb-request-id"] || "unavailable") + ")");
                 const first = await idsAt(24);
                 const secondPending = responseFor(24);
                 await check.locator("#retail-load-more").click();
-                assert((await secondPending).ok(), "Second live search page failed");
+                const secondResponse = await secondPending;
+                assert(secondResponse.ok(), "Second live search page failed: HTTP " + secondResponse.status()
+                  + " (Supabase request " + (secondResponse.headers()["sb-request-id"] || "unavailable") + ")");
                 const all = await idsAt(48);
                 assert(first.every((id,index) => id === all[index]) && new Set(all).size === 48,
                   "Live search continuation lost or duplicated products");
