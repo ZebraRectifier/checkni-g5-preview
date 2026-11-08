@@ -141,8 +141,9 @@ for (const issue of [
   const store = page.locator("#retail-store-card-da");
   await expect(store).toBeVisible();
   await expect(store.locator("strong")).toHaveText("ДА!");
-  await expect(store).toHaveAttribute("aria-label", "ДА!: Публичный промо-каталог · наличие зависит от магазина");
-  await expect(store).toContainText("Публичный промо-каталог");
+  await expect(store).toHaveAttribute("aria-label", "ДА!: Акции");
+  await expect(store).toContainText("Акции");
+  await expect(store).not.toContainText("Публичный промо-каталог");
   await expect(store).not.toContainText("1 категория · 94 товара");
 
   await store.click();
