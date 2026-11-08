@@ -94,7 +94,9 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     globus: ['globus-store-picker', 'globus-store-address'],
     metro: ['metro-store-picker', 'metro-store-address']
   });
+  const EXACT_ADDRESS_PAGE_SIZE = 5;
   let pendingAddress = null;
+  let exactAddressLimit = EXACT_ADDRESS_PAGE_SIZE;
   const watchedPickerSearches = new WeakSet();
   function clearPendingSelection() {
     if (!pendingAddress) return;
@@ -117,7 +119,8 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     exactCards.replaceChildren();
     if (!pendingAddress) return;
     const options = [...pendingAddress.select.options].filter(option => option.value && !option.disabled);
-    for (const option of options.slice(0, 24)) {
+    const shown = options.slice(0, exactAddressLimit);
+    for (const option of shown) {
       const card = node('button', 'pixel-store-address-choice'); card.type = 'button';
       card.dataset.storeId = option.value;
       card.append(node('strong', '', option.textContent), node('small', '', 'Открыть каталог · дату цен покажем внутри'));
@@ -129,7 +132,17 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
       exactCards.append(card);
     }
     if (!options.length) exactCards.append(node('p', '', 'Адрес не найден. Уточните город или улицу.'));
-    if (options.length > 24) exactCards.append(node('p', '', 'Показаны первые 24 адреса. Уточните город или улицу.'));
+    if (options.length > shown.length) {
+      const nextLimit = Math.min(exactAddressLimit + EXACT_ADDRESS_PAGE_SIZE, options.length);
+      const toggle = node('button', 'pixel-store-address-toggle', `Показать ещё ${nextLimit - shown.length}`);
+      toggle.type = 'button'; toggle.setAttribute('aria-expanded', 'false');
+      toggle.addEventListener('click', () => {
+        exactAddressLimit = nextLimit;
+        renderExactCards();
+        exactCards.querySelector('.pixel-store-address-toggle')?.focus({ preventScroll: true });
+      });
+      exactCards.append(toggle);
+    }
   }
   function showPendingPicker() {
     if (!pendingAddress) return;
@@ -169,6 +182,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
       return;
     }
     closeAddressChooser();
+    exactAddressLimit = EXACT_ADDRESS_PAGE_SIZE;
     pendingAddress = { retailerId, sourceButton, select, search, originalValue: select.value };
     select.dataset.pixelOriginalAddress = select.value;
     const name = sourceButton.querySelector('.retail-store-copy strong')?.textContent || retailerId;
@@ -184,7 +198,10 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     clearPendingSelection();
     if (!watchedPickerSearches.has(search)) {
       search.addEventListener('input', () => {
-        if (pendingAddress?.search === search) clearPendingSelection();
+        if (pendingAddress?.search === search) {
+          exactAddressLimit = EXACT_ADDRESS_PAGE_SIZE;
+          clearPendingSelection();
+        }
       });
       watchedPickerSearches.add(search);
     }

@@ -639,7 +639,7 @@ body.pixel-workspace #pixel-store-home-title { margin-bottom: 12px; font-size: c
 body.pixel-workspace #pixel-address-chooser { max-width: none; }
 body.pixel-workspace #pixel-address-chooser select { display: none; }
 body.pixel-workspace .pixel-exact-address-cards { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 10px; }
-body.pixel-workspace .pixel-exact-address-cards button { display: grid; gap: 8px; padding: 14px; text-align: left; min-height: 88px; }
+body.pixel-workspace .pixel-exact-address-cards .pixel-store-address-choice { display: grid; gap: 8px; padding: 14px; text-align: left; min-height: 88px; }
 body.pixel-workspace .pixel-exact-address-cards small { color: var(--muted); }
 body.pixel-workspace .nearby-home > button { display: none; }
 body.pixel-workspace .nearby-home { margin: 0 0 24px; }
