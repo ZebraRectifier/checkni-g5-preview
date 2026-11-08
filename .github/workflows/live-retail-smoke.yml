@@ -1,15 +1,9 @@
 name: Live Retail Smoke
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "index.html"
-      - "src/**"
-      - "deployment.json"
-      - ".github/workflows/live-retail-smoke.yml"
-      - "tools/live-retail-smoke-contract.mjs"
-      - "tests/live-retail-smoke-contract.test.mjs"
+  workflow_run:
+    workflows: ["Publish verified Pages tree"]
+    types: [completed]
   pull_request:
     paths:
       - "src/components/WebSnapshotResult.mjs"
@@ -21,13 +15,17 @@ on:
 permissions:
   contents: read
 
+env:
+  CHECKNI_PUBLISHED_SHA: ${{ github.event.workflow_run.head_sha || github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   globus-address-contract:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.event != 'pull_request')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ env.CHECKNI_PUBLISHED_SHA }}
       - name: Verify live smoke source and immutable-runtime contracts
         run: node --test tests/live-retail-smoke-contract.test.mjs
       - name: Verify archived basket references cannot recommend a winner
@@ -49,7 +47,7 @@ jobs:
           assert.match(model.facts,/не текущая стоимость/);
           assert.ok(model.stores.every(store=>!store.isWinner && store.diffMinor===null));
           assert.ok(model.stores.filter(store=>store.summary.includes('Ориентир:')).length>=2);
-          console.log('ARCHIVE_REFERENCE_OK',process.env.GITHUB_SHA);
+          console.log('ARCHIVE_REFERENCE_OK',process.env.CHECKNI_PUBLISHED_SHA);
           NODE
       - name: Verify exact artifact address data
         run: |
@@ -65,14 +63,14 @@ jobs:
           assert.equal(d.availability,'unknown'); assert.equal(d.assortment,'partial');
           NODE
   live-retail:
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.event != 'pull_request')
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
       - name: Checkout published artifact
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ env.CHECKNI_PUBLISHED_SHA }}
 
       - name: Wait for the reviewed address runtime on Pages
         shell: bash
@@ -90,11 +88,11 @@ jobs:
           const expected=await Promise.all(paths.map(path=>readFile(path)));
           for(let attempt=0;attempt<12;attempt++){
             const matched=await Promise.all(paths.map(async(path,i)=>{
-              try{const response=await fetch('https://zebrarectifier.github.io/checkni-g5-preview/'+path+'?verify='+process.env.GITHUB_SHA,{signal:AbortSignal.timeout(8000)});
+              try{const response=await fetch('https://zebrarectifier.github.io/checkni-g5-preview/'+path+'?verify='+process.env.CHECKNI_PUBLISHED_SHA,{signal:AbortSignal.timeout(8000)});
                 return response.ok&&Buffer.from(await response.arrayBuffer()).equals(expected[i]);
               }catch{return false;}
             }));
-            if(matched.every(Boolean)){console.log('PUBLISHED_ADDRESS_RUNTIME_MATCH',process.env.GITHUB_SHA,prefix);process.exit(0);}
+            if(matched.every(Boolean)){console.log('PUBLISHED_ADDRESS_RUNTIME_MATCH',process.env.CHECKNI_PUBLISHED_SHA,prefix);process.exit(0);}
             await new Promise(resolve=>setTimeout(resolve,5000));
           }
           throw Error('Pages does not yet serve the reviewed address runtime');
