@@ -492,7 +492,11 @@ test('nearby cards page past fifteen and stop at the honest end',async({page,con
   const cards=page.locator('#nearby-results article');
   const more=page.locator('#nearby-results').getByRole('button',{name:/Показать ещё/u});
   await expect(cards).toHaveCount(5);
-  for(const count of [10,15,17]){await more.click();await expect(cards).toHaveCount(count);}
+  for(const [count,firstNew] of [[10,6],[15,11],[17,16]]){
+    await more.press('Enter');
+    await expect(cards).toHaveCount(count);
+    await expect(cards.nth(firstNew-1).getByRole('link',{name:'Маршрут',exact:true})).toBeFocused();
+  }
   await expect(more).toHaveCount(0);
   await expect(page.locator('#nearby-results')).not.toContainText('первые 15');
 });

@@ -176,8 +176,11 @@ export function createStoresSection({
   directory.id = 'stores-location-directory'; listToggle.setAttribute('aria-controls', directory.id);
   const summary = textEl('summary',null,'Магазины списком');
   const listCount = textEl('p','stores-list-count',''); listCount.setAttribute('role','status');
-  const more = button('Показать ещё магазины', () => {
-    listLimit += STORE_LIST_PAGE_SIZE; renderList();
+  const more = button('Показать ещё магазины', event => {
+    const previousCount = list.children.length;
+    listLimit += STORE_LIST_PAGE_SIZE;
+    renderList();
+    if (event.detail === 0 && more.hidden) list.children[previousCount]?.querySelector('button,a')?.focus();
   });
   directory.append(summary,listCount,list,more);
   const mapInfo = document.createElement('details'); mapInfo.className = 'stores-map-info';

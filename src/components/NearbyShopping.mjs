@@ -116,7 +116,14 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
         sourceUrls.forEach((url,index)=>{const link=el('a',`Источник ${index+1}`);link.href=url;link.target='_blank';link.rel='noopener noreferrer';sources.append(link);});results.append(sources);}
       if(rows.length>shownRows.length){
         const nextLimit=Math.min(limit+RESULT_PAGE_SIZE,rows.length);
-        results.append(button(`Показать ещё ${nextLimit-shownRows.length}`,()=>{limit=nextLimit;void renderResults();}));
+        results.append(button(`Показать ещё ${nextLimit-shownRows.length}`,async event=>{
+          const renderVersion=version+1;
+          limit=nextLimit;
+          await renderResults();
+          if(event.detail===0&&renderVersion===version&&document.activeElement===document.body){
+            results.querySelectorAll('.nearby-store')[shownRows.length]?.querySelector('button,a')?.focus();
+          }
+        }));
       }
     }catch{if(token===version){publishMapContext('unavailable');status.textContent='Справочник сейчас не загрузился. Место сохранилось; попробуй ещё раз или выбери магазин в каталоге.';}}
   }
