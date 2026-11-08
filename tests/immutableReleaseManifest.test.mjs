@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {digest,mime,validateManifest,verifyLocal,releaseCandidates} from '../tools/browser-release/verify.mjs';
+import {addedReleaseCandidates,digest,mime,validateManifest,verifyLocal,releaseCandidates,verifySourceCommitRuntime} from '../tools/browser-release/verify.mjs';
 const files=['index.html','prices.html','src/app.mjs','src/priceCapture.mjs'];
 async function cleanup(root,prefix){const target=path.resolve(root);assert.equal(path.dirname(target),path.resolve(os.tmpdir()));assert.ok(path.basename(target).startsWith(prefix));await fs.rm(target,{recursive:true,force:true});}
 function manifest(){const descriptor={schemaVersion:1,sourceCommit:'a'.repeat(40),entries:files.map(file=>({file,bytes:2,sha256:digest('ok'),mime:mime(file)}))};return {...descriptor,releaseId:digest(JSON.stringify(descriptor))};}
@@ -62,4 +62,32 @@ test('changed subtree selects its release even with legacy root entrypoints',asy
     await fs.writeFile(path.join(root,'releases',id,'manifest.json'),'{}');commit();
     assert.deepEqual(await releaseCandidates(root,{base,exact:''}),[id]);
   }finally{await cleanup(root,'checkni-release-selection-');}
+});
+test('new release candidates match exact source commit blobs, not checkout line endings',async()=>{
+  const root=await fs.mkdtemp(path.join(os.tmpdir(),'checkni-release-source-'));
+  const git=(...args)=>execFileSync('git',args,{cwd:root,stdio:['ignore','pipe','pipe']}).toString().trim();
+  try{
+    git('init');await fs.mkdir(path.join(root,'src'),{recursive:true});
+    const bodies=new Map([['index.html',Buffer.from('<script src="./src/app.mjs"></script>\n')],
+      ['prices.html',Buffer.from('<script src="./src/priceCapture.mjs"></script>\n')],
+      ['src/app.mjs',Buffer.from('export const app=true;\n')],['src/priceCapture.mjs',Buffer.from('export const capture=true;\n')]]);
+    for(const [file,bytes] of bodies){await fs.mkdir(path.dirname(path.join(root,file)),{recursive:true});await fs.writeFile(path.join(root,file),bytes);}
+    git('add','.');git('-c','user.name=Release test','-c','user.email=release-test@example.invalid','commit','-m','source');
+    const sourceCommit=git('rev-parse','HEAD');
+    const makeManifest=values=>{const descriptor={schemaVersion:1,sourceCommit,entries:[...values].map(([file,bytes])=>({file,bytes:bytes.length,sha256:digest(bytes),mime:mime(file)}))};return {...descriptor,releaseId:digest(JSON.stringify(descriptor))};};
+    assert.doesNotThrow(()=>verifySourceCommitRuntime(root,makeManifest(bodies)));
+    const crlf=new Map([...bodies].map(([file,bytes])=>[file,Buffer.from(bytes.toString('utf8').replaceAll('\n','\r\n'))]));
+    assert.throws(()=>verifySourceCommitRuntime(root,makeManifest(crlf)),/source_commit_runtime_mismatch:index\.html/u);
+  }finally{await cleanup(root,'checkni-release-source-');}
+});
+test('source guard selects only release directories added after the reviewed base',async()=>{
+  const root=await fs.mkdtemp(path.join(os.tmpdir(),'checkni-release-source-'));
+  const git=(...args)=>execFileSync('git',args,{cwd:root,stdio:['ignore','pipe','pipe']}).toString().trim();
+  const commit=message=>{git('add','.');git('-c','user.name=Release test','-c','user.email=release-test@example.invalid','commit','-m',message);};
+  try{
+    git('init');const oldId='a'.repeat(64),newId='b'.repeat(64);
+    await fs.mkdir(path.join(root,'releases',oldId),{recursive:true});await fs.writeFile(path.join(root,'releases',oldId,'manifest.json'),'{}');commit('retained');
+    const base=git('rev-parse','HEAD');await fs.mkdir(path.join(root,'releases',newId),{recursive:true});await fs.writeFile(path.join(root,'releases',newId,'manifest.json'),'{}');commit('candidate');
+    assert.deepEqual(addedReleaseCandidates(root,base),[newId]);
+  }finally{await cleanup(root,'checkni-release-source-');}
 });
