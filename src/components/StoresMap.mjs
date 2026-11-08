@@ -107,31 +107,15 @@ export function createStoresSection({
   const css = document.createElement('link'); css.rel = 'stylesheet';
   css.href = new URL('./stores-interactive.css', import.meta.url).href; document.head.append(css);
   const heading = textEl('h2', null, 'Магазины на карте');
-  let center = { ...DEFAULT_CENTER }, zoom = DEFAULT_ZOOM, manualPicking = false, nearbyMode = false;
+  let center = { ...DEFAULT_CENTER }, zoom = DEFAULT_ZOOM, nearbyMode = false;
   let geoState = { status: 'idle', position: null }, currentScope = selectedScope;
   let mapStores = [...observedStores], nearbyContext = null, contextPins = null, contextRevision = 0;
   let mapApi = null, mapStarting = null, mapFailure = false, listLimit = STORE_LIST_PAGE_SIZE, focusedPin = null;
-  let accessibleListOpen = false;
   const controls = textEl('div', 'stores-controls', '');
-  const geoButton = button('Моё место', () => geo.request()); geoButton.id = 'stores-locate'; geoButton.setAttribute('aria-label','Определить моё место');
-  const manualButton = button('Указать точку', () => {
-    manualPicking = !manualPicking; renderGeoStatus(); void openMap(); map.focus({ preventScroll: true });
-  });
-  manualButton.id = 'stores-manual-location'; manualButton.setAttribute('aria-pressed', 'false'); manualButton.setAttribute('aria-label','Указать место на карте');
-  const clearButton = button('Убрать моё место', () => { manualPicking = false; geo.clear(); });
-  clearButton.id = 'stores-clear-location';
-  const back = onBackToNearby ? button('← Список', () => { setNearbyMode(false); onBackToNearby(); }) : null;
+  const back = onBackToNearby ? button('← К списку', () => { setNearbyMode(false); onBackToNearby(); }) : null;
   if (back) {back.setAttribute('aria-label','К списку магазинов');controls.append(back);}
-  controls.append(geoButton, manualButton);
   const geoStatus = textEl('p', 'stores-status', ''); geoStatus.id = 'stores-location-status'; geoStatus.setAttribute('role', 'status');
   const mapControls = textEl('div', 'stores-map-controls', '');
-  const networkLabel = textEl('label', 'stores-map-network-label', 'Сеть на карте'); networkLabel.htmlFor = 'stores-map-network';
-  const networkFilter = document.createElement('select'); networkFilter.id = 'stores-map-network'; networkFilter.className = 'stores-map-network-filter';
-  for (const [value, label] of [['all','Все сети'],['globus','Глобус'],['metro','METRO'],['magnit','Магнит'],
-    ['perekrestok','Перекрёсток'],['pyaterochka','Пятёрочка'],['vkusvill','ВкусВилл'],['lenta','Лента'],['okey','О’КЕЙ'],['auchan','Ашан'],['chizhik','Чижик']]) {
-    const option = textEl('option', null, label); option.value = value; networkFilter.append(option);
-  }
-  networkFilter.addEventListener('change', () => { listLimit = STORE_LIST_PAGE_SIZE; focusedPin = null; pinCard.hidden = true; renderMap(); renderList(); });
   function moveCamera(point, level = zoom) {
     if (!point) return; center = point; zoom = level; mapApi?.setCamera(center, zoom); renderControls();
   }
@@ -140,23 +124,15 @@ export function createStoresSection({
   const zoomOut = button('−', () => { void openMap(); moveCamera(center, Math.max(3, zoom - 1)); });
   zoomOut.setAttribute('aria-label','Отдалить');
   const searchHere = button('Искать здесь', () => geo.setManual(center)); searchHere.className = 'stores-search-here';
-  const listToggle = button('Магазины списком', () => {
-    accessibleListOpen = !accessibleListOpen;
-    listToggle.setAttribute('aria-expanded', String(accessibleListOpen));
-    directory.hidden = !accessibleListOpen;
-    directory.open = accessibleListOpen;
-    if (accessibleListOpen) requestAnimationFrame(() => {
-      const firstStore = list.querySelector('button');
-      firstStore?.focus(); firstStore?.scrollIntoView({ block:'nearest' });
-    });
-    else map.focus({ preventScroll: true });
-  });
-  listToggle.className = 'stores-list-toggle';
-  listToggle.setAttribute('aria-expanded','false');
-  const ownCenter = button('К моему месту', () => { if (geoState.position) moveCamera(normalizeMapCenter(geoState.position), 13); });
-  const navigation = document.createElement('details'); navigation.className = 'stores-map-navigation';
-  navigation.append(textEl('summary', null, 'Другие действия'), ownCenter, clearButton);
-  mapControls.append(networkLabel, networkFilter, zoomOut, zoomIn, searchHere, listToggle);
+  const geoButton = button('⌖', () => {
+    if (geoState.position) moveCamera(normalizeMapCenter(geoState.position), 13);
+    else geo.request();
+  }, 'stores-recenter');
+  geoButton.id = 'stores-locate';
+  geoButton.setAttribute('aria-label', 'Определить моё место');
+  zoomIn.classList.add('stores-map-zoom');
+  zoomOut.classList.add('stores-map-zoom');
+  mapControls.append(zoomOut, zoomIn, geoButton, searchHere);
   const map = textEl('div', 'stores-map', ''); map.tabIndex = 0;
   map.setAttribute('aria-label', 'Карта магазинов. Перемещай карту, затем нажми «Искать здесь». Enter выбирает центр.');
   const canvas = textEl('div','stores-map-canvas stores-vector-canvas','');
@@ -173,7 +149,7 @@ export function createStoresSection({
   selected.setAttribute('aria-label','Адреса на карте для сравнения');
   const list = textEl('ul','stores-list',''); list.id = 'stores-known-locations';
   const directory = document.createElement('details'); directory.className = 'stores-location-directory';
-  directory.id = 'stores-location-directory'; listToggle.setAttribute('aria-controls', directory.id);
+  directory.id = 'stores-location-directory';
   const summary = textEl('summary',null,'Магазины списком');
   const listCount = textEl('p','stores-list-count',''); listCount.setAttribute('role','status');
   const more = button('Показать ещё магазины', event => {
@@ -191,7 +167,7 @@ export function createStoresSection({
     externalLink('© OpenMapTiles','https://openmaptiles.org'), document.createTextNode(' · '),
     externalLink('© OpenStreetMap','https://www.openstreetmap.org/copyright'));
   const magnitDirectory = createMagnitStoreDirectory();
-  function availablePins() { return (contextPins ?? mapStores).filter(store => networkFilter.value === 'all' || store.retailerId === networkFilter.value); }
+  function availablePins() { return contextPins ?? mapStores; }
   function visiblePins() {
     const pins = availablePins();
     return nearestStoreMapPins(pins,center,{selectedIds:[focusedPin?.id,...pins.filter(isSelected).map(pin=>pin.id)]});
@@ -216,7 +192,7 @@ export function createStoresSection({
       textEl('p','stores-list-note', (canSelect(pin) ? 'Каталог этого адреса подключён' : 'Каталог адреса пока не подключён') + distanceNote(geoState.position,pin)));
     const actions = textEl('div','stores-pin-actions','');
     if (canSelect(pin)) actions.append(button('Открыть товары', () => chooseStore(pin)));
-    actions.append(externalLink('Маршрут',yandexStoreRouteUrl(pin)));
+    else actions.append(externalLink('Маршрут',yandexStoreRouteUrl(pin)));
     const close = button('×', () => {
       focusedPin = null; pinCard.hidden = true; renderMap(); renderList(); map.focus({ preventScroll: true });
     }, 'stores-pin-close');
@@ -244,12 +220,12 @@ export function createStoresSection({
   function mapStatus(status) {
     if (status === 'ready') {
       mapFailure = false; tileStatus.textContent = ''; retry.hidden = true;
-      if (nearbyMode) { directory.open = accessibleListOpen; directory.hidden = !accessibleListOpen; summary.hidden = true; }
-      listToggle.hidden = !nearbyMode;
+      if (nearbyMode) { directory.open = false; directory.hidden = true; }
+      renderControls();
     }
     else if (status === 'unavailable') {
       mapFailure = true; tileStatus.textContent = 'Карта не загрузилась. Магазины можно выбрать в списке ниже.';
-      retry.hidden = false; directory.open = true; directory.hidden = false; summary.hidden = false; listToggle.hidden = true;
+      retry.hidden = false; directory.open = true; directory.hidden = false; summary.hidden = false; renderControls();
     }
   }
   function openMap() {
@@ -259,16 +235,17 @@ export function createStoresSection({
     tileStatus.textContent = 'Загружаю карту…'; retry.hidden = true;
     mapStarting = createMap({ element: canvas, center, zoom, createMarker, onStatus: mapStatus,
       onMove: (point, level) => { center = point; zoom = level; renderMap(); },
-      onPoint: point => { if (manualPicking) geo.setManual(point); },
-      onSelect: pin => { if (manualPicking) geo.setManual(pin); else showPin(pin,true); }
+      onPoint: () => {},
+      onSelect: pin => showPin(pin,true)
     }).then(api => { mapApi = api; mapApi.setCamera(center,zoom); mapApi.setPins(visiblePins(),geoState.position); return api; })
       .catch(() => { mapStatus('unavailable'); return null; }).finally(() => { mapStarting = null; });
     return mapStarting;
   }
   function renderControls() {
-    zoomIn.disabled = zoom >= 16; zoomOut.disabled = zoom <= 3; ownCenter.disabled = !geoState.position;
-    searchHere.disabled = Boolean(geoState.position && distanceMeters(center,geoState.position) < 5);
-    listToggle.hidden = !nearbyMode || mapFailure;
+    zoomIn.disabled = zoom >= 16; zoomOut.disabled = zoom <= 3;
+    searchHere.hidden = mapFailure || Boolean(geoState.position && distanceMeters(center,geoState.position) < 5);
+    const label = geoState.position ? 'К моему месту' : 'Определить моё место';
+    geoButton.setAttribute('aria-label', label); geoButton.title = label;
   }
   function renderMap() { mapApi?.setPins(visiblePins(),geoState.position); renderControls(); }
   function renderSelected() {
@@ -304,26 +281,28 @@ export function createStoresSection({
     more.hidden = stores.length <= visibleCount;
   }
   function renderGeoStatus() {
-    geoButton.disabled = geoState.status === 'loading'; clearButton.disabled = geoState.status === 'idle' && !manualPicking;
-    manualButton.setAttribute('aria-pressed',String(manualPicking)); map.classList.toggle('stores-map-picking',manualPicking);
-    const messages = { idle:'Место ещё не указано. Выбери точку или определи своё место.', loading:'Определяем место…',
-      denied:'Доступ к геопозиции закрыт. Можно указать точку на карте.', unavailable:'Геопозиция недоступна. Можно указать точку на карте.', timeout:'Место не определилось. Можно указать точку на карте.' };
-    geoStatus.textContent = manualPicking ? 'Нажми на карту или выбери центр клавишей Enter.' : geoState.position ? 'Передвинь карту и нажми «Искать здесь».' : messages[geoState.status];
+    geoButton.disabled = geoState.status === 'loading';
+    const messages = { idle:'', loading:'Определяю место…',
+      denied:'Геопозиция недоступна. Передвинь карту и нажми «Искать здесь».',
+      unavailable:'Передвинь карту и нажми «Искать здесь».',
+      timeout:'Место не определилось. Передвинь карту и нажми «Искать здесь».' };
+    geoStatus.textContent = messages[geoState.status] ?? '';
+    geoStatus.hidden = !geoStatus.textContent;
   }
   const locationChanged = state => {
     // A denied retry must preserve the previous position, region and results.
     if (['loading','denied','timeout','unavailable'].includes(state.status)) geoState = { ...state, position: geoState.position };
     else geoState = state;
-    if (state.position) { manualPicking = false; moveCamera(normalizeMapCenter(state.position),13); }
-    if (state.status === 'idle') { manualPicking = false; moveCamera({...DEFAULT_CENTER},DEFAULT_ZOOM); }
+    if (state.position) moveCamera(normalizeMapCenter(state.position),13);
+    if (state.status === 'idle') moveCamera({...DEFAULT_CENTER},DEFAULT_ZOOM);
     renderGeoStatus(); renderMap(); renderSelected(); renderList();
   };
   const geo = locationController ?? createStoreGeolocation({...geolocationOptions,onChange:locationChanged});
   if (locationController) geo.subscribe(locationChanged);
   map.addEventListener('keydown',event => {
     if (event.target.closest('button,a,select,input')) return;
-    if (event.key === 'Enter' && (manualPicking || nearbyMode)) { event.preventDefault(); geo.setManual(center); }
-    else if (event.key === 'Escape') { manualPicking = false; pinCard.hidden = true; renderGeoStatus(); manualButton.focus(); }
+    if (event.key === 'Enter' && !searchHere.hidden) { event.preventDefault(); geo.setManual(center); }
+    else if (event.key === 'Escape') { focusedPin = null; pinCard.hidden = true; renderMap(); renderList(); }
     else if (event.target === map) {
       const shifts = {ArrowLeft:[-180,0],ArrowRight:[180,0],ArrowUp:[0,-180],ArrowDown:[0,180]};
       if (shifts[event.key]) { event.preventDefault(); moveCamera(shiftMapCenter(center,...shifts[event.key],zoom)); }
@@ -333,14 +312,13 @@ export function createStoresSection({
     const context = event.detail;
     if (!context || !Number.isSafeInteger(context.revision) || context.revision < contextRevision || !Array.isArray(context.stores)) return;
     contextRevision = context.revision; nearbyContext = context; contextPins = context.stores;
-    networkFilter.value = 'all'; listLimit = STORE_LIST_PAGE_SIZE; focusedPin = null; pinCard.hidden = true;
+    listLimit = STORE_LIST_PAGE_SIZE; focusedPin = null; pinCard.hidden = true;
     renderMap(); renderList();
   });
   section.updateSelection = scope => { currentScope = scope; renderSelected(); renderList(); renderMap(); if (focusedPin) showPin(focusedPin); };
   function setNearbyMode(enabled) {
     nearbyMode = enabled; section.classList.toggle('stores-nearby-mode',enabled);
     magnitDirectory.hidden = enabled; selected.hidden = enabled;
-    accessibleListOpen = false; listToggle.setAttribute('aria-expanded','false');
     directory.hidden = enabled && !mapFailure; directory.open = Boolean(enabled && mapFailure);
     summary.hidden = enabled && !mapFailure;
     focusedPin = null; pinCard.hidden = true; renderMap(); renderList();
@@ -357,10 +335,6 @@ export function createStoresSection({
     }).catch(() => { extraStarted = false; });
   }
   directory.addEventListener('toggle', () => {
-    if (nearbyMode && !mapFailure) {
-      accessibleListOpen = directory.open;
-      listToggle.setAttribute('aria-expanded',String(accessibleListOpen));
-    }
     if (directory.open) loadExtraLocations();
   });
   if (typeof IntersectionObserver === 'function') {
@@ -368,7 +342,7 @@ export function createStoresSection({
       if (entries.some(entry => entry.isIntersecting)) { observer.disconnect(); void openMap(); }
     }); observer.observe(map);
   }
-  section.append(heading,controls,geoStatus,mapControls,mapFrame,tileStatus,retry,directory,navigation,selected,mapInfo,attribution,magnitDirectory);
+  section.append(heading,controls,geoStatus,mapControls,mapFrame,tileStatus,retry,directory,selected,mapInfo,attribution,magnitDirectory);
   renderGeoStatus(); renderMap(); renderSelected(); renderList();
   return section;
 }

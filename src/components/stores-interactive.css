@@ -59,3 +59,6 @@ body.pixel-workspace .stores-interactive .stores-pin-actions > button { flex:1; 
  body.pixel-workspace .stores-interactive .stores-map { height:48svh; min-height:300px; }
 }
 @media(prefers-reduced-motion:reduce) { .stores-interactive * { scroll-behavior:auto; } }
+
+.stores-interactive .stores-recenter { min-width:44px; min-height:44px; font-size:22px; }
+@media (max-width: 899px) and (pointer: coarse) { .stores-interactive .stores-map-zoom { display:none; } }
