@@ -4,6 +4,7 @@ import{readBoundedJsonResponse}from'./retailCatalogPort.mjs';
 import{createAddressRecovery,directoryAddressCandidates}from'./addressRecovery.mjs';
 import { nearbyCityQuery, nearbyRegionForPosition } from '../intelligence/nearbyRegions.mjs';
 import { withRegisteredMagnitCoordinates } from '../intelligence/nearbyShopping.mjs';
+import { withReviewedMetroNearbyBindings } from '../data/metroNearbyMapBindings.mjs';
 export const NEARBY_ADDRESS_ENDPOINT='https://cxpneczhczashanbetgj.supabase.co/functions/v1/nearby-address';
 const regionalDirectories=new Set(['saint-petersburg','kazan','yekaterinburg','novosibirsk','nizhny-novgorod']);
 export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
@@ -55,7 +56,7 @@ export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
         if(!r.ok)throw Error('directory_unavailable');const d=await readBoundedJsonResponse(r,8*1024*1024);
         if(d?.schemaVersion!==1||d.region!=='moscow-and-oblast'||d.exhaustive!==false||d.priceEvidence!==false
           ||!Array.isArray(d.stores)||d.stores.length>25000||!Number.isFinite(Date.parse(d.observedAt)))throw Error('directory_invalid');
-        cached=withRegisteredMagnitCoordinates(d,await official);return cached;
+        cached=withReviewedMetroNearbyBindings(withRegisteredMagnitCoordinates(d,await official));return cached;
       }finally{pending=null;}})();return pending;
     },
     async address(query){

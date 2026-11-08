@@ -4,6 +4,7 @@ import{resolveGlobusMoscowRegionStore}from'../data/globusMoscowRegionStores.mjs'
 import{GLOBUS_MAP_LOCATIONS}from'../data/storeMapLocations.mjs';
 import{exactMagnitAddressKey}from'./magnitAddressJoin.mjs';
 import{nearbyRegionForPosition}from'./nearbyRegions.mjs';
+import{reviewedMetroNearbyBinding}from'../data/metroNearbyMapBindings.mjs';
 import{extractShoppingDelta,normalizeShoppingText,shoppingTargets,shoppingTargetLabel}from'./shoppingConversation.mjs';
 export const NEARBY_RADIUS_KM=Object.freeze([1,3,5,10,20]);
 const officialMagnitBindings=new WeakMap();
@@ -123,6 +124,14 @@ export function nearbyCatalogBinding(point){
     return store?.priceStatus==='verified'&&store.address===b.address&&point.address===b.address
       &&known?.lat===point.lat&&known?.lon===point.lon
       ?{retailerId:'globus',store}:null;
+  }
+  if(point.retailerId==='metro'&&b.retailerId==='metro'&&b.kind==='reviewed-osm-official-exact-address-join'){
+    const reviewed=reviewedMetroNearbyBinding(point);
+    return reviewed&&b.storeNumber===reviewed.store.storeNumber&&b.storeId===reviewed.store.storeId
+      &&b.bindingId===reviewed.store.bindingId&&b.address===reviewed.store.address
+      &&b.sourceAddress===point.address&&b.coordinateObservedAt==='2026-10-18T00:49:32.311Z'
+      &&b.officialObservedAt==='2026-10-07'
+      ?reviewed:null;
   }
   return null;
 }

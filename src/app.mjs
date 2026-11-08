@@ -2454,6 +2454,11 @@ if(publicRetailCatalogMode){
       }else if(catalog.retailerId==='magnit'){
         const store=resolveMagnitMoscowStore({shopCode:catalog.store.shopCode,address:catalog.store.address});
         if(!store)return false;selectedMagnitStore=store;comparedGlobusStore=null;
+      }else if(catalog.retailerId==='metro'){
+        const store=resolveMetroMoscowRegionStore({storeNumber:catalog.store.storeNumber,
+          storeId:catalog.store.storeId,address:catalog.store.address});
+        if(store?.onlinePickupStatus!=='proven'||store.bindingId!==catalog.store.bindingId)return false;
+        selectedMetroStore=store;comparedGlobusStore=null;
       }else return false;
       comparisonAddressChanged();
       // The exact choice is consent even while the selected catalogue is loading.
@@ -3682,8 +3687,10 @@ try {
         comparedGlobusStore = resolveGlobusComparisonPeer(store.officialStoreId, comparedGlobusStore?.officialStoreId);
         retailerId = "globus";
       } else if (point.retailerId === "metro") {
-        const store = resolveMetroMoscowRegionStore({ storeNumber: "10" });
-        if (point.id !== "metro-leningradskoe" || store?.onlinePickupStatus !== "proven") return;
+        const binding = nearbyCatalogBinding(point);
+        const store = binding?.retailerId === "metro" ? binding.store
+          : point.id === "metro-leningradskoe" ? resolveMetroMoscowRegionStore({ storeNumber: "10" }) : null;
+        if (store?.onlinePickupStatus !== "proven") return;
         selectedMetroStore = store;
         comparedGlobusStore = null;
         retailerId = "metro";

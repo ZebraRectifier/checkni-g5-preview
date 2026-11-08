@@ -3,6 +3,10 @@ import{test,expect}from'@playwright/test';
 import fs from 'node:fs';
 const joinedDirectory = JSON.parse(fs.readFileSync(new URL('../../src/data/nearbyGroceryStores.json',import.meta.url),'utf8'));
 const registeredCoordinates = JSON.parse(fs.readFileSync(new URL('../../src/data/magnitRegisteredCoordinates.json',import.meta.url),'utf8'));
+const reviewedMetroPoints = [
+  {id:'osm:way:36394860',storeNumber:'10',storeId:'metro-address-c5gsqz',address:'Москва, Ленинградское шоссе, 71Г',lat:55.8758342,lon:37.4473228},
+  {id:'osm:way:38106162',storeNumber:'12',storeId:'metro-address-5e2aa4',address:'Москва, Дорожная улица, 1 к1',lat:55.6307578,lon:37.6249212}
+];
 test.setTimeout(60000);
 async function isolateRegional(page){
   // Let local modules load natively; intercept only external traffic. Hundreds
@@ -33,6 +37,41 @@ test('official Magnit coordinates: Moscow and oblast open their exact existing c
     await page.screenshot({path:testInfo.outputPath(`official-magnit-${code}.png`)});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   }
+});
+
+test('reviewed METRO points open the exact store catalogue from nearby cards and map',async({page,context},testInfo)=>{
+  await isolateRegional(page);let point;const scopes=[];
+  await page.route('**/functions/v1/nearby-address',route=>route.fulfill({json:{version:1,candidates:[{
+    lat:point.lat,lon:point.lon,label:point.address,precision:'house'}]}}));
+  await page.route('**/rest/v1/**',route=>{scopes.push(new URL(route.request().url()).searchParams.get('store_id'));return route.fulfill({json:[]});});
+  for(const target of reviewedMetroPoints){
+    point=target;
+    await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
+    await selectStore(page);await openStoreDetails(page);
+    await page.locator('#nearby-shopping').getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
+    await page.locator('#nearby-address').fill(point.address);await page.locator('#nearby-address-search').click();
+    await page.locator('#nearby-address-candidates button').click();await page.locator('#nearby-radius').selectOption('1');
+    const row=page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
+    await expect(row).toContainText('Актуальность цен и возможность добавить товар указаны в каталоге');
+    await row.getByRole('button',{name:'Открыть товары'}).click();
+    await expect(page.locator('#metro-store-address')).toHaveValue(point.storeNumber);
+    await expect.poll(()=>scopes.includes(`eq.${point.storeId}`)).toBe(true);
+    await expect(page.locator('#nearby-selected-store')).toContainText(point.address);
+    await page.screenshot({path:testInfo.outputPath(`reviewed-metro-${point.storeNumber}.png`)});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  }
+
+  point=reviewedMetroPoints[0];
+  await context.grantPermissions(['geolocation']);await context.setGeolocation({latitude:point.lat,longitude:point.lon,accuracy:10});
+  await selectStore(page);await openStoreDetails(page);await page.locator('#stores-section').scrollIntoViewIfNeeded();
+  await page.locator('#stores-locate').click();await page.locator('#stores-map-network').selectOption('metro');
+  const mapRow=page.locator(`#stores-known-locations li[data-store-location-id="${point.id}"]`);
+  await expect(mapRow).toContainText(point.address);await mapRow.getByRole('button',{name:'Metro',exact:true}).click();
+  const card=page.locator('.stores-pin-card');await expect(card).toContainText(point.address);
+  await expect(card.getByRole('link',{name:'Маршрут'})).toHaveAttribute('href',/yandex\.ru\/maps/u);
+  await card.getByRole('button',{name:'Открыть товары',exact:true}).click();
+  await expect(page.locator('#metro-store-address')).toHaveValue(point.storeNumber);
+  await expect.poll(()=>scopes.includes(`eq.${point.storeId}`)).toBe(true);
 });
 
 test('official Magnit coordinates: map retains full paginated list and opens an oblast store with bounded markers',async({page,context},testInfo)=>{
