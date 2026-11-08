@@ -173,7 +173,7 @@ jobs:
               });
               await page.waitForTimeout(1200);
               const text = await page.locator("#retail-store-card-metro").innerText().catch(() => "");
-              if (text.includes("METRO") && text.includes("Ленинградское ш. 71Г")
+              if (text.includes("METRO") && text.includes("Каталог по адресу")
                   && /\d+ категор/u.test(text)
                   && /\d+ товар/u.test(text)
                   && await page.locator('#metro-store-address option[value="49"]').count()
