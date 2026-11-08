@@ -35,6 +35,12 @@ test('single-store partial intent survives reload, explicit pair promotion and l
  for(const invalid of [['invented'],['potatoes','potatoes'],null])assert.equal(prepareManualCatalogComparison(basket,{unresolvedGroupKeys:invalid}).kind,'needs_review');
 });
 
+test('saved comparison keeps one concise basket-volume explanation for promoted and manual pairs',async()=>{
+ const source=await readFile(new URL('../src/components/SavedGuidedComparison.mjs',import.meta.url),'utf8');
+ assert.match(source,/Считаем объём сохранённой корзины\. В другом магазине может понадобиться больше упаковок\. Доставка и сборы не включены\. Наличие неизвестно\./u);
+ assert.doesNotMatch(source,/parent\.append\(el\('p','По количествам из списка/u);
+});
+
 test('manual selection proposes the exact Magnit address and explicit delivery alternative without AI',()=>{
  const basket=[banana(),chicken()],result=prepareManualCatalogComparison(basket);assert.equal(result.kind,'ready');
  assert.equal(result.request.version,2);assert.equal(result.request.bindings.length,2);assert.equal(result.request.bindings[1].allowPoultryCuts,false);
