@@ -1,5 +1,6 @@
 import { createProductCard } from './ProductCard.mjs';
 import { SOURCE_CATALOG_LIST_MAX_AGE_MS } from '../catalog/sourceCatalogListAdmission.mjs';
+import { getLentaObservationStatus } from '../catalog/lentaObservationPolicy.mjs';
 
 // Presentation only: legacy reviewed identities may still enter a shopping
 // list. This warning neither admits their price nor changes that identity rule.
@@ -18,6 +19,7 @@ export function createPixelProductCard(product, options = {}) {
   const body = card.querySelector('.product-body');
   const add = card.querySelector('.add-button');
   const quantity = options.quantity ?? 0;
+  const lentaObservationStatus = getLentaObservationStatus(product);
 
   const details = document.createElement('details');
   details.className = 'pixel-product-details';
@@ -44,7 +46,11 @@ export function createPixelProductCard(product, options = {}) {
   }
   if (add.disabled) {
     add.title = add.textContent;
-    add.textContent = 'Пока только просмотр';
+    add.textContent = lentaObservationStatus === 'stale'
+      ? 'Старая цена · просмотр'
+      : lentaObservationStatus === 'unknown'
+        ? 'Дата цены неизвестна'
+        : 'Пока только просмотр';
     actions.classList.add('is-view-only');
   } else {
     // aria-label retains the full, established product-and-pack identity.

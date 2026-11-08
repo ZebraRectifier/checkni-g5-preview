@@ -136,6 +136,43 @@ test('Lenta populated categories remain usable beyond forty products and after a
  await expectNoOverflow(page);
 });
 
+test('Lenta stale age is explicit and every public card remains display-only', async ({page}) => {
+ await setup(page);
+ const root={retailer_id:'lenta',store_id:'lenta-public-web',category_id:3,name:'Молочные продукты, яйцо',
+  product_count:2,parent_id:null,root_id:3,depth:0,source_url:'https://lenta.com/catalog/molochnye-produkty/'};
+ const row=(id,name,observedAt)=>({retailer_id:'lenta',store_id:'lenta-public-web',
+  store_name:'Лента · публичный каталог',locality_id:'country-ru-public-catalog',locality_name:'Россия',
+  source_product_id:id,name,weight_text:'1 л',main_category_id:3,price_minor:9999,currency:'RUB',
+  price_condition:'loyalty-card-1',availability:'unknown',product_url:`https://lenta.com/product/${id}/`,
+  source_url:root.source_url,image_url:`https://cdn.api.lenta.com/resample/${id}.png`,observed_at:observedAt});
+ const rows=[row('stale-milk','Молоко со старой ценой','2026-10-01T08:30:00Z'),
+  row('recent-milk','Молоко с недавней ценой','2026-10-20T08:30:00Z')];
+ await page.route('https://cdn.api.lenta.com/resample/**',route=>route.fulfill({contentType:'image/png',
+  body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wlq6AAAAABJRU5ErkJggg==','base64')}));
+ await page.route('**/rest/v1/retail_catalog_categories**',route=>{
+  const p=new URL(route.request().url()).searchParams;
+  return route.fulfill({json:p.get('retailer_id')==='eq.lenta'?[root]:[]});
+ });
+ await page.route('**/rest/v1/retail_catalog_items**',route=>{
+  const p=new URL(route.request().url()).searchParams;
+  return route.fulfill({json:p.get('retailer_id')==='eq.lenta'?rows:[]});
+ });
+ await page.locator('#retail-store-card-lenta').click();
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(2);
+ const stale=page.locator('.product-card',{hasText:'Молоко со старой ценой'});
+ const recent=page.locator('.product-card',{hasText:'Молоко с недавней ценой'});
+ await expect(stale).toContainText('Лента · данные устарели');
+ await expect(stale).toContainText('Старая цена от');
+ await expect(stale.locator('.add-button')).toBeDisabled();
+ await expect(stale.locator('.add-button')).toHaveText('Старая цена · просмотр');
+ await expect(stale.locator('.add-button')).toHaveAttribute('aria-label',/старая цена, только просмотр/u);
+ await expect(recent).toContainText('Лента · цена наблюдалась');
+ await expect(recent.locator('.add-button')).toBeDisabled();
+ await expect(recent.locator('.add-button')).toHaveText('Пока только просмотр');
+ await expect(stale.locator('.product-photo')).toHaveJSProperty('complete',true);
+ await expectNoOverflow(page);
+});
+
 test('parent category guidance keeps product failures, empty leaves and empty search results distinct', async ({page}, testInfo) => {
  await setup(page);
  const category=(id,name,parent=null)=>({retailer_id:'lenta',store_id:'lenta-public-web',category_id:id,name,

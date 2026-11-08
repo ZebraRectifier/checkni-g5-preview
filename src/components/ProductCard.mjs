@@ -4,6 +4,10 @@ import { formatRubMinor } from "./ComparisonResult.mjs";
 import { formatPerUnit, priceHintTitle } from "../runtime/priceHints.mjs";
 import { focusByKey, productAddFocusKey } from "../runtime/focusRecovery.mjs";
 import { getReviewedRetailBasketProduct } from "../catalog/reviewedRetailBasket.mjs";
+import {
+  canAdmitLentaCatalogCard,
+  getLentaObservationStatus
+} from "../catalog/lentaObservationPolicy.mjs";
 
 function initials(name) {
   return name
@@ -101,7 +105,13 @@ export function createProductCard(product, {
   badge.className = "mock-chip";
   const retailerDisplayName = product.retailerDisplayName
     ?? (legacyRetailerId === "globus" ? "Глобус" : "Магазин");
-  badge.textContent = retailObservation
+  const lentaObservationStatus = getLentaObservationStatus(product);
+  article.dataset.observationStatus = lentaObservationStatus ?? "current";
+  badge.textContent = lentaObservationStatus === 'stale'
+    ? `${retailerDisplayName} · данные устарели`
+    : lentaObservationStatus === 'unknown'
+      ? `${retailerDisplayName} · дата не подтверждена`
+      : retailObservation
     ? `${retailerDisplayName} · цена наблюдалась`
     : product.catalogSource === "open-food-facts"
       ? "Каталог · не наличие"
@@ -126,7 +136,9 @@ export function createProductCard(product, {
   if (Number.isSafeInteger(product.priceMinor) && product.priceMinor > 0) {
     price = document.createElement("p");
     price.className = "product-price";
-    price.title = "Наблюдаемая цена; наличие не подтверждено";
+    price.title = lentaObservationStatus === 'stale'
+      ? "Старая наблюдаемая цена; наличие не подтверждено"
+      : "Наблюдаемая цена; наличие не подтверждено";
     const amount = document.createElement("strong");
     amount.textContent = formatRubMinor(product.priceMinor);
     price.append(amount);
@@ -177,7 +189,7 @@ export function createProductCard(product, {
       const stamp = document.createElement("time");
       stamp.className = "product-observed-at";
       stamp.dateTime = observed.toISOString();
-      stamp.textContent = `Цена от ${observedLabel}`;
+      stamp.textContent = `${lentaObservationStatus === 'stale' ? 'Старая цена от' : 'Цена от'} ${observedLabel}`;
       price.append(stamp);
     }
   }
@@ -185,8 +197,9 @@ export function createProductCard(product, {
   const button = document.createElement("button");
   const focusKey = productAddFocusKey(product.id);
   const reviewedProduct = retailObservation ? getReviewedRetailBasketProduct(product) : null;
+  const lentaAdmissionAllowed = canAdmitLentaCatalogCard(product);
   const displayOnly = product.catalogDisplayOnly === true
-    && (!reviewedProduct || product.basketProductId !== reviewedProduct.id);
+    && (!lentaAdmissionAllowed || !reviewedProduct || product.basketProductId !== reviewedProduct.id);
   const atLimit = isAddLimitReached(quantity);
 
   button.className = quantity > 0 ? "add-button is-added" : "add-button";
@@ -202,7 +215,11 @@ export function createProductCard(product, {
 
   if (displayOnly) {
     button.disabled = true;
-    button.setAttribute("aria-label", `${product.name}: пока только просмотр`);
+    button.setAttribute("aria-label", lentaObservationStatus === 'stale'
+      ? `${product.name}: старая цена, только просмотр`
+      : lentaObservationStatus === 'unknown'
+        ? `${product.name}: дата цены неизвестна, только просмотр`
+        : `${product.name}: пока только просмотр`);
   } else if (atLimit) {
     button.setAttribute("aria-disabled", "true");
     button.setAttribute(
@@ -225,7 +242,9 @@ export function createProductCard(product, {
     // their own contract and are not assigned a new freshness policy here.
     const currentProduct = retailObservation ? getReviewedRetailBasketProduct(product) : null;
     if (product.catalogDisplayOnly === true
-        && (!currentProduct || product.basketProductId !== currentProduct.id)) {
+        && (!canAdmitLentaCatalogCard(product)
+          || !currentProduct
+          || product.basketProductId !== currentProduct.id)) {
       button.disabled = true;
       button.closest('.pixel-product-actions')?.classList.add('is-view-only');
       button.textContent = product.sourceListOnly ? 'Цена устарела' : 'Пока только просмотр';
