@@ -45,3 +45,33 @@ test('exact delivery packs add to a manual list, keep quantities through reload 
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')))).toEqual(before);
  expect(errors).toEqual([]);expect(aiRequests).toBe(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+test('a fresh reviewed delivery selection remains present after choosing a Magnit address without forcing equivalence',async({page})=>{
+ const observedAt=new Date().toISOString(),milk=packs[3],magnitUrl='https://magnit.ru/product/1899800733-moloko_prostokvashino_pasterizovannoe_2_5_930ml?shopCode=502843&shopType=1';
+ const delivery={...rows[3],observed_at:observedAt};
+ const magnit={retailer_id:'magnit',store_id:'magnit-502843',store_name:'Магнит',locality_id:'city-moscow',locality_name:'Москва',
+  source_product_id:'1899800733',name:'Молоко Простоквашино пастеризованное 2.5% 930мл',weight_text:null,
+  price_minor:9499,currency:'RUB',price_condition:'public-online',sales_channel:'store-catalog',minimum_quantity:null,
+  availability:'unknown',product_url:magnitUrl,source_url:magnitUrl,scope_evidence_url:magnitUrl,observed_at:observedAt};
+ await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
+ await page.route('**/rest/v1/**retail_catalog_items**',r=>{
+  const q=new URL(r.request().url()).searchParams,storeId=q.get('store_id')?.replace('eq.','');
+  const ids=q.get('source_product_id')?.slice(4,-1).split(',');
+  const candidates=storeId==='perekrestok-yandex-3186917'?[delivery]:storeId==='magnit-502843'?[magnit]:[];
+  return r.fulfill({json:candidates.filter(row=>!ids||ids.includes(row.source_product_id))});
+ });
+ await page.goto('/?comparison=observed&catalog=retail#shop');await selectStore(page,'perekrestok');
+ await page.locator(`[data-product-id="retail:perekrestok:perekrestok-yandex-3186917:${milk[0]}"] .add-button`).click();
+ await openBasket(page);await page.getByRole('button',{name:'Выбрать Магнит',exact:true}).click();
+ const address=await page.locator('#magnit-store-address option[value="502843"]').textContent();
+ await page.locator('#magnit-store-picker input[type=search]').fill(address.replace(/^(?:Москва|МО) · /u,''));
+ await page.locator('#pixel-address-chooser [data-store-id="502843"]').click();
+ await openBasket(page);await page.locator('#compare-basket').click();
+ const result=page.locator('#comparison-output');await expect(result.locator('.saved-catalog-variant')).toHaveCount(2);
+ await expect(result.locator('.saved-catalog-variant').filter({hasText:'Перекрёсток'}).locator('summary').first()).toContainText('1/1');
+ // Different fat/content identity is not silently declared equivalent merely
+ // because both cards happen to be 930 ml.
+ await expect(result.locator('.saved-catalog-variant').filter({hasText:'Магнит'}).locator('summary').first()).toContainText('0/1');
+ await expect(result).not.toContainText('ниже на');
+ await expect(result).toContainText('Доставка и сборы не включены');
+});

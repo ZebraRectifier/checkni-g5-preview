@@ -4,6 +4,7 @@ import { getReviewedRetailBasketIdentity, getReviewedRetailBasketProduct, matche
 import { normalizeRetailRow } from '../src/ports/retailCatalogPort.mjs';
 import { createBasketStore } from '../src/state/basketStore.mjs';
 import { PEREKRESTOK_REVIEWED_LIST_CONTEXT, PEREKRESTOK_REVIEWED_LIST_PACKS } from '../src/catalog/perekrestokReviewedList.mjs';
+import {createWeeklyRetailCatalogPort,PEREKRESTOK_WEEKLY_SCOPE} from '../src/ports/weeklyRetailCatalogPort.mjs';
 
 // Independent retained public DB observation, 2026-10-31T18:17:04.801Z.
 // Delivery context only; prices below are fixtures, never a current quote.
@@ -75,4 +76,39 @@ test('supplied contradictory context and URL ambiguity cannot survive the final 
  const delivery=getReviewedRetailBasketIdentity(packs[3][1]);
  assert.notEqual(delivery.id,generic.id);
  assert.equal(matchesReviewedRetailBasketIdentity({...delivery,name:generic.name}),false);
+});
+
+const reviewedMilkCard={id:'retail:perekrestok:perekrestok-yandex-3186917:22e71f23-4a19-438a-855b-2dcfc480e4ae',
+ retailerId:'perekrestok',storeId:store,storeName,sourceProductId:packs[3][0],name:packs[3][2]+' '+packs[3][3],unit:packs[3][3],
+ priceMinor:packs[3][4],currency:'RUB',priceCondition:packs[3][5],availability:'unknown',observedAt:raw().observed_at,
+ sourceUrl:source,productUrl:source,bindingId:PEREKRESTOK_REVIEWED_LIST_CONTEXT.bindingId,
+ salesChannel:PEREKRESTOK_REVIEWED_LIST_CONTEXT.salesChannel,scopeBinding:'same-source'};
+const discoveredMilk={...reviewedMilkCard,
+ id:'retail:perekrestok:perekrestok-yandex-3186917:3efc55a2-9305-410b-97ea-0620d9fadd71',
+ sourceProductId:'3efc55a2-9305-410b-97ea-0620d9fadd71',name:'Молоко пастеризованное Простоквашино 1.5% 930 мл'};
+function weeklyPort(rows=[reviewedMilkCard,discoveredMilk]) {
+ const requested=[];
+ return {requested,catalog:createWeeklyRetailCatalogPort({createMagnitClient:()=>({
+  async bySourceProductIds(ids){requested.push(...ids);return {kind:'catalog',products:rows.filter(row=>ids.includes(row.sourceProductId))};}
+ })})};
+}
+
+test('exact reviewed delivery SKU survives ID readback without entering weekly discovery',async()=>{
+ const {catalog,requested}=weeklyPort();
+ const anchor=await catalog.bySourceProductIds([reviewedMilkCard.sourceProductId],{scope:PEREKRESTOK_WEEKLY_SCOPE});
+ assert.equal(anchor.kind,'catalog');assert.equal(anchor.products.length,1);
+ assert.equal(anchor.products[0].sourceProductId,reviewedMilkCard.sourceProductId);
+ assert.equal(anchor.products[0].unit,'930 мл');assert.ok(requested.includes(reviewedMilkCard.sourceProductId));
+ const search=await catalog.search('молоко',{scope:PEREKRESTOK_WEEKLY_SCOPE,limit:40});
+ assert.ok(search.products.some(row=>row.sourceProductId===discoveredMilk.sourceProductId));
+ assert.ok(!search.products.some(row=>row.sourceProductId===reviewedMilkCard.sourceProductId));
+});
+
+test('reviewed anchor still fails closed on source and pack identity drift',async()=>{
+ for(const card of [{...reviewedMilkCard,productUrl:source+'&other=1'},
+  {...reviewedMilkCard,name:reviewedMilkCard.name.replace('930','900')},{...reviewedMilkCard,unit:'900 мл'}]){
+  const {catalog}=weeklyPort([card]);
+  const result=await catalog.bySourceProductIds([reviewedMilkCard.sourceProductId],{scope:PEREKRESTOK_WEEKLY_SCOPE});
+  assert.deepEqual(result.products,[]);
+ }
 });

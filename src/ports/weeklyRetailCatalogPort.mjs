@@ -6,7 +6,8 @@ export {weeklyMagnitCard};
 import { validPublishedSnapshot,currentPublishedProducts,PUBLISHED_URL } from '../observations/okeyPublishedPromotions.mjs';
 import {validPyatSnapshot,pyatWeeklyCards,validPyatWeeklySource,PYAT_WEEKLY_SCOPE} from '../observations/pyaterochkaPublishedPromotions.mjs';
 import {resolveRegisteredMagnitStore} from '../data/registeredMagnitStores.mjs';
-import {PEREKRESTOK_REVIEWED_LIST_CONTEXT} from '../catalog/perekrestokReviewedList.mjs';
+import {PEREKRESTOK_REVIEWED_LIST_CONTEXT,PEREKRESTOK_REVIEWED_LIST_PACKS,
+  getReviewedPerekrestokListProduct} from '../catalog/perekrestokReviewedList.mjs';
 export {PYAT_WEEKLY_SCOPE};
 export const PEREKRESTOK_WEEKLY_SCOPE=Object.freeze({...PEREKRESTOK_REVIEWED_LIST_CONTEXT,
   storeAddress:PEREKRESTOK_REVIEWED_LIST_CONTEXT.locationLabel,priceScope:'delivery-catalog'});
@@ -45,7 +46,12 @@ export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,create
     if(deliveryPending&&now()-deliveryChecked<30000)return deliveryPending;
     deliveryChecked=now();
     const client=createMagnitClient({retailerId:'perekrestok',fetchImpl});
-    const ids=WEEKLY_PEREKRESTOK_IDENTITIES.map(p=>p.sourceProductId);
+    // A reviewed card selected by the shopper is a valid reload anchor even
+    // when it is intentionally absent from the weekly discovery corpus. Keep
+    // discovery unchanged below; this union only makes exact ID readback
+    // symmetrical with the manual-list admission contract.
+    const ids=[...new Set([...WEEKLY_PEREKRESTOK_IDENTITIES.map(p=>p.sourceProductId),
+      ...PEREKRESTOK_REVIEWED_LIST_PACKS.map(p=>p.sourceProductId)])];
     // Two finite ID reads replace fifteen concurrent wildcard searches.
     // Coalesce both success and failure for 30s; do not hammer an outage.
     deliveryPending=Promise.all([ids.slice(0,40),ids.slice(40)].filter(chunk=>chunk.length)
@@ -83,6 +89,8 @@ export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,create
       if(scope?.retailerId==='perekrestok'&&scope.storeId===PEREKRESTOK_WEEKLY_SCOPE.storeId){
         const response=await deliveryRows();if(response?.kind!=='catalog')return response;
         return {...response,products:response.products.flatMap(card=>{
+          const reviewed=ids.includes(card.sourceProductId)&&getReviewedPerekrestokListProduct(card);
+          if(reviewed)return [{...card,unit:reviewed.unit}];
           const identity=WEEKLY_PEREKRESTOK_IDENTITIES.find(p=>p.sourceProductId===card.sourceProductId&&ids.includes(p.sourceProductId));
           if(!identity||normalize(card.name)!==normalize(identity.name)||normalize(card.unit)!==normalize(identity.sourceUnit)
             ||card.id!==`retail:perekrestok:${PEREKRESTOK_WEEKLY_SCOPE.storeId}:${identity.sourceProductId}`
