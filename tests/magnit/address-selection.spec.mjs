@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { resolveMagnitMoscowStore } from "../../src/data/magnitMoscowStores.mjs";
 import { openStoreDetails, selectStore } from "../../test/e2e/helpers/pixel-surface.mjs";
 
 async function fixture(page, { delayFirst = false } = {}) {
@@ -24,12 +25,14 @@ async function fixture(page, { delayFirst = false } = {}) {
     const code = (url.searchParams.get("store_id") ?? "").replace("eq.magnit-", "");
     seen.push(code);
     if (code === "777312" && delayFirst) { firstRequested = true; await gate; }
+    const productUrl = "https://magnit.ru/product/1899800733-moloko?shopCode="+code+"&shopType=1";
     const rows = ["777312","303857"].includes(code) ? [{
       retailer_id:"magnit",store_id:"magnit-"+code,store_name:"Магнит",locality_id:"city-moscow",locality_name:"Москва",
       source_product_id:"1899800733",name:"Молоко Простоквашино 930мл",price_minor:code==="777312"?7999:14999,
       currency:"RUB",price_condition:"public-online",availability:"unknown",main_category_id:63963,
-      product_url:"https://magnit.ru/product/1899800733-moloko?shopCode="+code+"&shopType=1",
-      source_url:"https://magnit.ru/product/1899800733-moloko?shopCode="+code+"&shopType=1",
+      product_url:productUrl,
+      source_url:productUrl,scope_evidence_url:productUrl,scope_binding:"public-store-product-page",
+      binding_id:"magnit-shopcode-"+code,location_label:resolveMagnitMoscowStore({shopCode:code}).address,
       image_url:"https://images-foodtech.magnit.ru/test-product.png",weight_text:"930мл",
       observed_at:new Date().toISOString()
     }] : [];

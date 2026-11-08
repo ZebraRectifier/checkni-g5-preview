@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { expectedLentaRoots, pinnedRuntimePrefix, pinnedLiveRuntimeProof } from '../tools/live-retail-smoke-contract.mjs';
 
 const row = (id, count = 2) => ({ retailer_id: 'lenta', store_id: 'lenta-public-web',
@@ -54,4 +55,15 @@ test('runtime gate requires the immutable entry, not the mutable source tree', (
   for (const html of ['<script src="./src/app.mjs"></script>', tag + tag,
     '<script src="./releases/../src/app.mjs"></script>'])
     assert.throws(() => pinnedRuntimePrefix(html));
+});
+
+test('live acceptance follows a successful exact Pages deployment instead of racing the push', async () => {
+  const workflow = await readFile(new URL('../.github/workflows/live-retail-smoke.yml', import.meta.url), 'utf8');
+  assert.match(workflow, /workflow_run:\s*\n\s+workflows: \["Publish verified Pages tree"\]\s*\n\s+types: \[completed\]/u);
+  assert.doesNotMatch(workflow, /^\s{2}push:/mu);
+  assert.match(workflow, /github\.event\.workflow_run\.conclusion == 'success'/u);
+  assert.match(workflow, /github\.event\.workflow_run\.head_branch == 'main'/u);
+  assert.match(workflow, /github\.event\.workflow_run\.event != 'pull_request'/u);
+  assert.match(workflow, /CHECKNI_PUBLISHED_SHA: \$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/u);
+  assert.equal((workflow.match(/ref: \$\{\{ env\.CHECKNI_PUBLISHED_SHA \}\}/gu) ?? []).length, 2);
 });
