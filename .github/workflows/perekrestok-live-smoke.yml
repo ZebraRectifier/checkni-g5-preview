@@ -112,6 +112,55 @@ jobs:
               executablePath: process.env.CHROME_BIN,
               args: ["--no-sandbox"]
             });
+            for (const viewport of [{width:1280,height:900},{width:390,height:844}]) {
+              const check = await browser.newPage({viewport});
+              const allowedHosts = new Set(["zebrarectifier.github.io", "cxpneczhczashanbetgj.supabase.co"]);
+              const errors = [];
+              check.on("pageerror", error => errors.push(error.message));
+              await check.route("**/*", route => {
+                const url = new URL(route.request().url());
+                return allowedHosts.has(url.hostname) && !url.pathname.startsWith("/functions/v1/")
+                  ? route.continue() : route.abort("blockedbyclient");
+              });
+              const responseFor = offset => check.waitForResponse(response => {
+                const url = new URL(response.url());
+                const args = url.searchParams;
+                return url.hostname === "cxpneczhczashanbetgj.supabase.co"
+                  && url.pathname === "/rest/v1/rpc/retail_catalog_items_search_v2"
+                  && response.request().method() === "GET"
+                  && args.get("p_retailer_id") === "perekrestok"
+                  && args.get("p_store_id") === "perekrestok-yandex-3186917"
+                  && args.get("p_locality_id") === "city-moscow"
+                  && args.get("p_query") === "молоко"
+                  && args.get("p_limit") === "24"
+                  && args.get("p_offset") === String(offset);
+              }, {timeout:20000});
+              const cards = '#product-grid .product-card[data-product-id^="retail:perekrestok:perekrestok-yandex-3186917:"]';
+              const idsAt = async count => {
+                await check.waitForFunction(({cards,count}) => document.querySelectorAll(cards).length === count,
+                  {cards,count}, {timeout:20000});
+                return check.locator(cards).evaluateAll(nodes => nodes.map(node => node.dataset.productId));
+              };
+              try {
+                await check.goto(base, {waitUntil:"domcontentloaded",timeout:30000});
+                assert(await check.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src")
+                  === runtimePrefix + "src/app.mjs", "Pagination browser runtime differs from the published release");
+                await chooseStore(check, "#retail-store-card-perekrestok");
+                await check.locator("#product-search").fill("молоко");
+                const firstPending = responseFor(0);
+                await check.locator("#search-form").getByRole("button",{name:"Найти",exact:true}).click();
+                assert((await firstPending).ok(), "First live search page failed");
+                const first = await idsAt(24);
+                const secondPending = responseFor(24);
+                await check.locator("#retail-load-more").click();
+                assert((await secondPending).ok(), "Second live search page failed");
+                const all = await idsAt(48);
+                assert(first.every((id,index) => id === all[index]) && new Set(all).size === 48,
+                  "Live search continuation lost or duplicated products");
+                assert(!errors.length, "Live pagination browser errors: " + errors.join(", "));
+                console.log("PEREKRESTOK_PAGED_SEARCH_LIVE", JSON.stringify({width:viewport.width,first:24,total:48}));
+              } finally { await check.close(); }
+            }
             const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
             const pageErrors = [];
             page.on("pageerror", (error) => pageErrors.push(error.message));
