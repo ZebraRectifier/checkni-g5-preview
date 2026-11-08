@@ -96,6 +96,31 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
       expect(dataPaths).toContain(pinnedCoordinates);
       expect(dataPaths).not.toContain('/'+coordinateFile);
     }
+    const pyatFile='src/components/PyaterochkaPublishedCatalog.mjs';
+    if(manifest.entries.some(entry=>entry.file===pyatFile)
+      && (await fs.readFile(path.join(root,'releases',id,pyatFile),'utf8')).includes('pyat-published-category')){
+      const bundle=JSON.parse(await fs.readFile(path.join(root,'src/data/pyaterochkaPublishedPromotions.json'),'utf8'));
+      await page.clock.setFixedTime(new Date(Date.parse(bundle.observedAt)+60000));
+      await page.evaluate(async release=>{
+        const {createPyaterochkaPublishedCatalog}=await import(`/releases/${release}/src/components/PyaterochkaPublishedCatalog.mjs`);
+        const fixture=createPyaterochkaPublishedCatalog();
+        fixture.id='pyat-category-browser-fixture';
+        document.querySelector('#pyaterochka-published')?.remove();
+        document.body.prepend(fixture);
+      },id);
+      const catalog=page.locator('#pyat-category-browser-fixture');
+      await catalog.locator('summary').click();
+      const category=catalog.getByLabel('Категория',{exact:true});
+      await expect(category).toBeVisible();
+      expect(await category.locator('option').count()).toBeGreaterThan(2);
+      await category.selectOption({label:'Овощи, фрукты и зелень'});
+      const count=catalog.getByText(/^Найдено:/u);
+      await expect(count).not.toHaveText(`Найдено: ${bundle.products.length}.`);
+      await catalog.getByLabel('Найти продукт в акциях').fill('несуществующийтовар');
+      await expect(count).toHaveText('Найдено: 0.');
+      await catalog.getByLabel('Найти продукт в акциях').clear();
+      await expect(count).not.toHaveText('Найдено: 0.');
+    }
     if(await activationState(root)===id){
       for(const entry of ['index.html','prices.html']){
         await page.goto(base+entry);await expect(page.locator('main').first()).toBeVisible();
