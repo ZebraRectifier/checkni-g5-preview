@@ -135,11 +135,11 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     if (options.length > shown.length) {
       const nextLimit = Math.min(exactAddressLimit + EXACT_ADDRESS_PAGE_SIZE, options.length);
       const toggle = node('button', 'pixel-store-address-toggle', `Показать ещё ${nextLimit - shown.length}`);
-      toggle.type = 'button'; toggle.setAttribute('aria-expanded', 'false');
+      toggle.type = 'button'; toggle.setAttribute('aria-controls', exactCards.id);
       toggle.addEventListener('click', () => {
         exactAddressLimit = nextLimit;
         renderExactCards();
-        exactCards.querySelector('.pixel-store-address-toggle')?.focus({ preventScroll: true });
+        exactCards.children[shown.length]?.focus();
       });
       exactCards.append(toggle);
     }

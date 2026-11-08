@@ -66,7 +66,7 @@ test('exact-address chooser starts with five cards, expands, and still searches 
   await expect(showMore).toHaveText('Показать ещё 5');
   await showMore.click();
   await expect(choices).toHaveCount(10);
-  await expect(chooser.locator('.pixel-store-address-toggle')).toBeFocused();
+  await expect(choices.nth(5)).toBeFocused();
 
   const search = page.locator('#magnit-store-picker input[type="search"]');
   await search.fill(distant.label);
