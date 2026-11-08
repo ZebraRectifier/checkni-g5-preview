@@ -46,7 +46,7 @@ jobs:
         run: node --test tests/localDialogueRoutingCorpus.test.mjs tests/shoppingNeeds.test.mjs tests/shoppingNeedsRefusalRouting.test.mjs tests/shoppingConversation.test.mjs tests/shoppingIntentIntegrity.test.mjs tests/retailProductSelection.test.mjs tests/shoppingNeedContext.test.mjs tests/householdContextReload.test.mjs tests/adviceContinuationIntake.test.mjs
       - name: Verify common promotions and supported regional searches
         working-directory: ${{ steps.prepare.outputs.workspace }}
-        run: node --test tests/publishedPromotionCatalog.test.mjs tests/nearbyRegions.test.mjs tests/mariaRaNearbyAdmission.test.mjs
+        run: node --test tests/publishedPromotionCatalog.test.mjs tests/nearbyRegions.test.mjs tests/mariaRaNearbyAdmission.test.mjs tests/mariaRaRegionalData.test.mjs
       - name: Verify interactive map and source-specific list admission
         working-directory: ${{ steps.prepare.outputs.workspace }}
         run: node --test tests/sourceCatalogListAdmission.test.mjs tests/datedListPricePresentation.test.mjs tests/mapLibreMap.test.mjs tests/storeGeolocation.test.mjs tests/magnitRegisteredCoordinates.test.mjs tests/metroCategoryRoots.test.mjs
