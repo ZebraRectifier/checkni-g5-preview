@@ -144,6 +144,18 @@ export const WEEKLY_MAGNIT_IDENTITIES = Object.freeze([
     "productPath": "/product/1899800733-moloko_prostokvashino_pasterizovannoe_2_5_930ml"
   },
   {
+    "sourceProductId": "1000151468",
+    "name": "Молоко Простоквашино пастеризованное 1.5% 930мл",
+    "unit": "930 мл",
+    "productPath": "/product/1000151468-prostokvashino_moloko_past_1_5_930ml_pl_but_yunimilk_6"
+  },
+  {
+    "sourceProductId": "1000461809",
+    "name": "Сметана Брест-Литовск 20% 300г",
+    "unit": "300 г",
+    "productPath": "/product/1000461809-brest_litovsk_smetana_20_300g_pl_st"
+  },
+  {
     "sourceProductId": "8000072732",
     "name": "Сыр Лёгкий 30% Тысяча Озёр 180г",
     "unit": "180 г",

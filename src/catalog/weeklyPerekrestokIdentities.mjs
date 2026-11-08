@@ -84,6 +84,22 @@ export const WEEKLY_PEREKRESTOK_IDENTITIES=Object.freeze([
     "weighed": false
   },
   {
+    "query": "молоко",
+    "sourceProductId": "09fe3ce5-77db-4edd-ab53-18beabd501ba",
+    "name": "Молоко пастеризованное Простоквашино 2.5% 930 мл",
+    "sourceUnit": "930 мл",
+    "unit": "930 мл",
+    "weighed": false
+  },
+  {
+    "query": "сметана",
+    "sourceProductId": "246ec37a-906a-4dc2-a03e-907953cf0e2a",
+    "name": "Сметана Брест-Литовск 20% 300 г",
+    "sourceUnit": "300 г",
+    "unit": "300 г",
+    "weighed": false
+  },
+  {
     "query": "яйц",
     "sourceProductId": "146230c3-8a8e-41cd-a842-605798f984f5",
     "name": "Яйцо куриное Село Зелёное Деревенское цвет яиц в ассортименте С1 10 шт. 600 г",
