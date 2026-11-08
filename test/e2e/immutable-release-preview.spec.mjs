@@ -96,6 +96,40 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
       expect(dataPaths).toContain(pinnedCoordinates);
       expect(dataPaths).not.toContain('/'+coordinateFile);
     }
+    const mapFile='src/components/StoresMap.mjs';
+    if(manifest.entries.some(entry=>entry.file===mapFile)
+      && (await fs.readFile(path.join(root,'releases',id,mapFile),'utf8')).includes("'stores-recenter'")){
+      await context.grantPermissions(['geolocation']);
+      await context.setGeolocation({latitude:55.928776,longitude:38.003613,accuracy:15});
+      await page.route('https://tiles.openfreemap.org/**',route=>route.fulfill({json:{
+        version:8,sources:{},layers:[{id:'background',type:'background',paint:{'background-color':'#e5e8de'}}]
+      }}));
+      await page.goto(base+`releases/${id}/index.html?comparison=observed&catalog=retail#shop`);
+      await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready');
+      await page.locator('#nearby-locate').click();
+      await expect(page.locator('#nearby-results article').first()).toBeVisible();
+      await page.getByRole('button',{name:'На карте',exact:true}).click();
+      const mapSection=page.locator('#stores-section');
+      await expect(mapSection.getByRole('button',{name:'К списку магазинов'})).toBeVisible();
+      await expect(mapSection.locator('#stores-map-network,#stores-manual-location,#stores-clear-location')).toHaveCount(0);
+      await expect(mapSection.getByRole('button',{name:'К моему месту'})).toBeVisible();
+      const searchHere=mapSection.getByRole('button',{name:'Искать здесь'});
+      await expect(searchHere).toBeHidden();
+      await mapSection.locator('.stores-map').press('ArrowRight');
+      await expect(searchHere).toBeVisible();
+      await mapSection.getByRole('button',{name:'К моему месту'}).click();
+      await expect(searchHere).toBeHidden();
+      const marker=mapSection.locator('.stores-pin').filter({hasText:'Глобус Щелково'}).first();
+      await marker.click({timeout:15000});
+      const card=mapSection.locator('.stores-pin-card');
+      await expect(card.getByRole('button',{name:'Открыть товары'})).toBeVisible();
+      await expect(card.getByRole('link',{name:'Маршрут'})).toHaveCount(0);
+      const zoom=mapSection.getByRole('button',{name:'Приблизить',includeHidden:true});
+      if(test.info().project.name==='mobile')await expect(zoom).toBeHidden();
+      else await expect(zoom).toBeVisible();
+      await card.getByRole('button',{name:'Открыть товары'}).click();
+      await expect(page.locator('#pixel-storefront-title')).toContainText('Глобус');
+    }
     const pyatFile='src/components/PyaterochkaPublishedCatalog.mjs';
     if(manifest.entries.some(entry=>entry.file===pyatFile)
       && (await fs.readFile(path.join(root,'releases',id,pyatFile),'utf8')).includes('pyat-published-category')){
