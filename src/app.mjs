@@ -2265,12 +2265,6 @@ function renderCatalog() {
   }
 
   if (live && !hasVisibleProducts) {
-    if (catalogSearchState.admissionFiltered) {
-      if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = FILTERED_CATALOG_EMPTY.title;
-      elements.emptySearchCopy.textContent = FILTERED_CATALOG_EMPTY.copy;
-      elements.searchStatus.textContent = FILTERED_CATALOG_EMPTY.status;
-      return;
-    }
     if (publicRetailCatalogMode && !normalizedQuery && retailDefinition?.requiresPromoValidity
         && !catalogSearchState.canLoadMore) {
       if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = retailDefinition.publishedPromotions
@@ -2278,6 +2272,12 @@ function renderCatalog() {
       elements.emptySearchCopy.hidden = Boolean(compactCatalogEmpty);
       elements.emptySearchCopy.textContent = "Можно повторить загрузку или выбрать другой магазин.";
       elements.searchStatus.textContent = compactCatalogEmpty?.status ?? "Действующих акций сейчас нет";
+      return;
+    }
+    if (catalogSearchState.admissionFiltered) {
+      if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = FILTERED_CATALOG_EMPTY.title;
+      elements.emptySearchCopy.textContent = FILTERED_CATALOG_EMPTY.copy;
+      elements.searchStatus.textContent = FILTERED_CATALOG_EMPTY.status;
       return;
     }
     if (catalogSearchState.categoryName) {
