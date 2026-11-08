@@ -14,13 +14,52 @@ test('comparison presentation separates complete and partial quotes without inve
  const output=document.createElement('div');output.id='comparison-output';basket.replaceChildren(output);renderSavedGuidedComparison(output,result,{nowMs:Date.parse(at)});output.scrollIntoView();
  });
  const groups=page.locator('.saved-comparison-group');await expect(groups).toHaveCount(2);
- await expect(groups.first()).toContainText('Полные по составу');await expect(groups.first().locator('summary')).toContainText('Старые / неизвестные цены');
+ await expect(groups.first()).toContainText('Все позиции сопоставлены');await expect(groups.first().locator('summary')).toContainText('Старые / неизвестные цены');
  await expect(groups.last().locator('summary')).toContainText('1/2');await expect(groups.last().locator('summary')).toContainText('Найденная часть');
  await expect(page.locator('#comparison-output')).not.toContainText('ниже на');
  await groups.last().locator('summary').click();await expect(groups.last().locator('tbody')).toContainText('Не удалось подтвердить товар');
  await groups.last().locator('summary').click();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.screenshot({path:test.info().outputPath('comparison-polish.png')});
+});
+
+test('comparison qualifies mixed alternatives but keeps an exact reviewed pair precise',async({page},info)=>{
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready');
+ const render=async mixed=>page.evaluate(async mixed=>{
+  const {renderSavedGuidedComparison}=await import('/src/components/SavedGuidedComparison.mjs');
+  const at='2026-11-08T09:00:00Z',card=(retailerId,sourceProductId,name,price)=>({retailerId,sourceProductId,
+   id:`retail:${retailerId}:${retailerId==='magnit'?'magnit-502843':'perekrestok-yandex-3186917'}:${sourceProductId}`,
+   name,unit:'500 г',priceMinor:price,currency:'RUB',availability:'unknown',observedAt:at,
+   sourceUrl:'https://example.com/source',priceConditionLabel:'Наблюдаемая цена'});
+  const row=(key,label,card)=>({group:{key,label,dimension:'g',dailyAmount:500},quantity:1,quantityReview:false,
+   unit:{label:'500 г',dimension:'g',amount:500,approximate:false},product:{id:key,name:label,unit:'500 г'},card});
+  const bindings=[{retailerId:'magnit',sourceProductId:'1349400001',productId:'oats',groupKey:'oats'}];
+  const magnit=[row('oats','Овсяные хлопья',card('magnit','1349400001','Хлопья Ясно Солнышко №2 500 г',10699))];
+  const perek=[row('oats','Овсяные хлопья',card('perekrestok','fb3574cb-eba6-47a1-9932-30da895354fb','Хлопья Ясно Солнышко №2 500 г',10000))];
+  if(mixed){
+   bindings.push({retailerId:'perekrestok',sourceProductId:'egg-perek',productId:'eggs',groupKey:'eggs'});
+   magnit.push(row('eggs','Яйца',card('magnit','egg-magnit','Яйца C1 10 шт.',8299)));
+   perek.push(row('eggs','Яйца',card('perekrestok','egg-perek','Яйца C1 10 шт.',12100)));
+  }
+  const result={kind:'catalog_comparison',request:{bindings,unresolvedGroupKeys:[]},drafts:[
+   {scope:{retailerId:'magnit',storeId:'magnit-502843'},rows:magnit},
+   {scope:{retailerId:'perekrestok',storeId:'perekrestok-yandex-3186917'},rows:perek}]};
+  const output=document.createElement('div');output.id='comparison-qualification-fixture';document.body.replaceChildren(output);
+  renderSavedGuidedComparison(output,result,{nowMs:Date.parse(at)});
+ },mixed);
+ await render(false);
+ await expect(page.getByRole('status')).toContainText('По наблюдаемым ценам сумма товаров');
+ await expect(page.getByRole('status')).not.toContainText('среди сопоставленных вариантов');
+ await expect(page.locator('#comparison-qualification-fixture')).not.toContainText('альтернативные марки или фасовки');
+ await expect(page.locator('#comparison-qualification-fixture')).not.toContainText('Марки и фасовки различаются');
+ await render(true);
+ await expect(page.getByRole('status')).toContainText('По наблюдаемым ценам среди сопоставленных вариантов');
+ await expect(page.locator('#comparison-qualification-fixture')).toContainText('В сравнении есть альтернативные марки или фасовки');
+ await expect(page.locator('#comparison-qualification-fixture')).not.toContainText('Все позиции найдены');
+ await expect(page.getByRole('heading',{name:'Все позиции сопоставлены'})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:info.outputPath('mixed-alternatives.png'),fullPage:true});
 });
 
 test('compact basket keeps price conditions, editable addresses and keyboard controls on narrow screens',async({page},info)=>{
