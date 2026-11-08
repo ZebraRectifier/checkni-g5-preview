@@ -2,6 +2,7 @@ import{createStoreGeolocation}from'../runtime/storeGeolocation.mjs';
 import{NEARBY_RADIUS_KM,nearbyGroceryMatches}from'../intelligence/nearbyShopping.mjs';
 import{createNearbyShoppingPort}from'../ports/nearbyShoppingPort.mjs';
 import { nearbyCityQuery, nearbyRegionForPosition, nearbyAddressQueryInRegion } from '../intelligence/nearbyRegions.mjs';
+import { yandexStoreRouteUrl } from '../navigation/storeRoute.mjs';
 
 export function createNearbyShopping({document=globalThis.document,port=createNearbyShoppingPort(),onChoose,onBuild,onManualMap,
   onInvalidate=()=>{},geolocationOptions={},locationController}={}){
@@ -105,6 +106,9 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
           const open=button('Открыть товары',()=>choose(row));open.className='nearby-open-catalog';card.append(open);
           card.addEventListener('click',event=>{if(!event.target.closest('button,a'))open.click();});
         }
+        const routeUrl=yandexStoreRouteUrl(row);
+        if(routeUrl){const route=el('a','Маршрут');route.className='nearby-store-route';route.href=routeUrl;
+          route.target='_blank';route.rel='noopener noreferrer';card.append(route);}
         results.append(card);
       }
       const sourceUrls=[...new Set(shownRows.map(row=>row.sourceUrl).filter(Boolean))];

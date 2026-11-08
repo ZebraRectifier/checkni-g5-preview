@@ -7,6 +7,7 @@ import {
 import {
   createStoreGeolocation, distanceMeters, normalizeMapCenter, normalizeMapZoom, shiftMapCenter
 } from "../runtime/storeGeolocation.mjs";
+import { yandexStoreRouteUrl } from "../navigation/storeRoute.mjs";
 
 const TILE_SIZE = 256;
 const TILE_HOST = "https://tile.openstreetmap.org";
@@ -213,7 +214,7 @@ export function createStoresSection({
       textEl('p','stores-list-note', (canSelect(pin) ? 'Каталог этого адреса подключён' : 'Каталог адреса пока не подключён') + distanceNote(geoState.position,pin)));
     const actions = textEl('div','stores-pin-actions','');
     if (canSelect(pin)) actions.append(button('Открыть товары', () => chooseStore(pin)));
-    actions.append(externalLink('Маршрут','https://yandex.ru/maps/?rtext=~'+encodeURIComponent(pin.lat+','+pin.lon)+'&rtt=auto'));
+    actions.append(externalLink('Маршрут',yandexStoreRouteUrl(pin)));
     const close = button('×', () => {
       focusedPin = null; pinCard.hidden = true; renderMap(); renderList(); map.focus({ preventScroll: true });
     }, 'stores-pin-close');
@@ -294,7 +295,7 @@ export function createStoresSection({
       row.append(button(store.name,() => { moveCamera({lat:store.lat,lon:store.lon},15); showPin(store,true); }),
         textEl('span','stores-list-note',store.address || 'Адрес не указан'),
         textEl('span','stores-list-note',(canSelect(store) ? 'Каталог подключён' : 'Каталог не подключён')+distanceNote(geoState.position,store)),
-        externalLink('Маршрут','https://yandex.ru/maps/?rtext=~'+encodeURIComponent(store.lat+','+store.lon)+'&rtt=auto'));
+        externalLink('Маршрут',yandexStoreRouteUrl(store)));
       if (canSelect(store)) row.append(button(isSelected(store) ? 'Выбран для корзины' : 'Открыть товары',() => chooseStore(store)));
       list.append(row);
     }

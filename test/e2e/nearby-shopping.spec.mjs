@@ -161,6 +161,10 @@ test('five regional cities: real address cards, directory recovery and no Moscow
     await page.locator('#nearby-locate').click();
     const card=page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
     await expect(card).toContainText('Цены неизвестны');
+    const route=card.getByRole('link',{name:'Маршрут',exact:true});
+    await expect(route).toHaveAttribute('href',`https://yandex.ru/maps/?rtext=~${encodeURIComponent(`${point.lat},${point.lon}`)}&rtt=auto`);
+    await expect(route).toHaveAttribute('target','_blank');
+    await expect(route).toHaveAttribute('rel','noopener noreferrer');
     await expect(page.locator(`.nearby-result-sources a[href="${point.sourceUrl}"]`)).toHaveAttribute('href',point.sourceUrl);
     await expect(page.locator('#nearby-results .nearby-open-catalog')).toHaveCount(0);
     await expect(page.locator('#nearby-results')).not.toContainText('Москва');
