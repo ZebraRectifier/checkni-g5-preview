@@ -460,12 +460,13 @@ jobs:
             await allCategories(page);
             await matchLentaRoots(page, lentaRoots);
             assert(
-              (await storeFacts(lenta)).includes("Лента · Публичный каталог"),
+              (await storeFacts(lenta)).includes("Лента · Онлайн-каталог"),
               "Lenta selector has the wrong store label"
             );
             assert(
-              (await storeFacts(lenta)).includes("наличие неизвестно"),
-              "Lenta selector must not claim stock availability"
+              (await page.locator(".pixel-store-reference-scope").textContent())
+                .includes("наличие неизвестно"),
+              "Lenta storefront must preserve the complete stock/source scope"
             );
             assert(
               await lenta.getAttribute("aria-pressed") === "true",

@@ -126,9 +126,8 @@ jobs:
               const text = await storeFacts(page.locator("#retail-store-card-perekrestok"))
                 .catch(() => "");
               if (
-                text.includes("Перекрёсток · Москва · цены доставки Яндекс Еды")
+                text.includes("Перекрёсток · Доставка · Москва")
                 && text.includes("Каталог выбранного адреса")
-                && text.includes("наличие неизвестно")
                 && await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src") === runtimePrefix + "src/app.mjs"
                 && await runtime.matchesPublished(attempt)
               ) {
@@ -149,6 +148,11 @@ jobs:
                 && url.searchParams.get("depth") === "eq.0" && response.status() === 200;
             }, {timeout:15000});
             await chooseStore(page, "#retail-store-card-perekrestok");
+            assert(
+              (await page.locator(".pixel-store-reference-scope").textContent())
+                .includes("наличие неизвестно"),
+              "Perekrestok storefront must preserve the complete delivery/source scope"
+            );
             const sourceRows = await (await rootResponse).json();
             assert(Array.isArray(sourceRows) && sourceRows.length > 0, "Source roots missing");
             const expectedIds = sourceRows.map(row => normalizeRetailCategory(row, definition)).filter(Boolean)
