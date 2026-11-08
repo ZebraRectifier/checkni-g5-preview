@@ -11,8 +11,7 @@ test("store map filters and paginates the address list even when the basemap is 
   await selectStore(page, "globus");
   await openStoreDetails(page);
   await page.locator("#stores-section").scrollIntoViewIfNeeded();
-  await expect.poll(async () => Number((await page.locator(".stores-location-directory > summary").textContent())?.match(/\d+/u)?.[0]))
-    .toBeGreaterThanOrEqual(64);
+  await expect(page.locator(".stores-location-directory > summary")).toHaveText('Магазины списком');
   await page.locator('.stores-location-directory').evaluate(node=>{node.open=true;});
   await expect(page.locator('#stores-known-locations li')).toHaveCount(5);
   const filter = page.locator("#stores-map-network");
@@ -24,7 +23,12 @@ test("store map filters and paginates the address list even when the basemap is 
   await filter.selectOption("magnit");
   await expect(page.locator('#stores-known-locations li')).toHaveCount(5);
   await page.getByRole('button',{name:'Показать ещё магазины',exact:true}).click();
+  await expect(page.locator('#stores-known-locations li')).toHaveCount(10);
+  await page.getByRole('button',{name:'Показать ещё магазины',exact:true}).click();
   await expect(page.locator('#stores-known-locations li')).toHaveCount(15);
+  await expect(page.getByRole('button',{name:'Показать ещё магазины',exact:true})).toBeHidden();
+  await expect(page.locator('.stores-list-count')).not.toContainText(/Адресов:\s*\d+/u);
+  await expect(page.locator('.stores-list-count')).toContainText('Уточните сеть или точку');
   await expect(page.locator('#stores-known-locations')).not.toContainText('METRO');
   await expect(page.locator('#stores-known-locations li[data-store-location-id^="magnit-bound-"]').first()).toBeVisible();
 });

@@ -13,6 +13,8 @@ const TILE_HOST = "https://tile.openstreetmap.org";
 const DEFAULT_CENTER = Object.freeze({ lat: 55.70, lon: 37.8 });
 const DEFAULT_ZOOM = 9;
 const COLORS = Object.freeze({ globus: "#a14700", metro: "#003d7d", magnit: "#c40013" });
+const STORE_LIST_PAGE_SIZE = 5;
+const STORE_LIST_MAX = 15;
 
 // Kept for callers of the original two-point orientation map.
 export const OBSERVED_STORES = Object.freeze(APPROXIMATE_MAP_LOCATIONS.map(store =>
@@ -108,7 +110,7 @@ export function createStoresSection({
   let center = { ...DEFAULT_CENTER }, zoom = DEFAULT_ZOOM, manualPicking = false, nearbyMode = false;
   let geoState = { status: 'idle', position: null }, currentScope = selectedScope;
   let mapStores = [...observedStores], nearbyContext = null, contextPins = null, contextRevision = 0;
-  let mapApi = null, mapStarting = null, mapFailure = false, listLimit = 5, focusedPin = null;
+  let mapApi = null, mapStarting = null, mapFailure = false, listLimit = STORE_LIST_PAGE_SIZE, focusedPin = null;
   const controls = textEl('div', 'stores-controls', '');
   const geoButton = button('Моё место', () => geo.request()); geoButton.id = 'stores-locate'; geoButton.setAttribute('aria-label','Определить моё место');
   const manualButton = button('Указать точку', () => {
@@ -128,7 +130,7 @@ export function createStoresSection({
     ['perekrestok','Перекрёсток'],['pyaterochka','Пятёрочка'],['vkusvill','ВкусВилл'],['lenta','Лента'],['okey','О’КЕЙ'],['auchan','Ашан'],['chizhik','Чижик']]) {
     const option = textEl('option', null, label); option.value = value; networkFilter.append(option);
   }
-  networkFilter.addEventListener('change', () => { listLimit = 5; pinCard.hidden = true; renderMap(); renderList(); });
+  networkFilter.addEventListener('change', () => { listLimit = STORE_LIST_PAGE_SIZE; focusedPin = null; pinCard.hidden = true; renderMap(); renderList(); });
   function moveCamera(point, level = zoom) {
     if (!point) return; center = point; zoom = level; mapApi?.setCamera(center, zoom); renderControls();
   }
@@ -159,7 +161,9 @@ export function createStoresSection({
   const directory = document.createElement('details'); directory.className = 'stores-location-directory';
   const summary = textEl('summary',null,'Магазины списком');
   const listCount = textEl('p','stores-list-count',''); listCount.setAttribute('role','status');
-  const more = button('Показать ещё магазины', () => { listLimit += 10; renderList(); });
+  const more = button('Показать ещё магазины', () => {
+    listLimit = Math.min(STORE_LIST_MAX, listLimit + STORE_LIST_PAGE_SIZE); renderList();
+  });
   directory.append(summary,listCount,list,more);
   const mapInfo = document.createElement('details'); mapInfo.className = 'stores-map-info';
   mapInfo.append(textEl('summary',null,'О карте и данных'), textEl('p','stores-copy',
@@ -195,11 +199,13 @@ export function createStoresSection({
     const actions = textEl('div','stores-pin-actions','');
     if (canSelect(pin)) actions.append(button('Открыть товары', () => chooseStore(pin)));
     actions.append(externalLink('Маршрут','https://yandex.ru/maps/?rtext=~'+encodeURIComponent(pin.lat+','+pin.lon)+'&rtt=auto'));
-    const close = button('×', () => { focusedPin = null; pinCard.hidden = true; map.focus({ preventScroll: true }); }, 'stores-pin-close');
+    const close = button('×', () => {
+      focusedPin = null; pinCard.hidden = true; renderMap(); renderList(); map.focus({ preventScroll: true });
+    }, 'stores-pin-close');
     close.setAttribute('aria-label','Закрыть карточку');
     pinCard.append(actions,close);
     pinCard.hidden = false;
-    renderMap();
+    renderMap(); renderList();
     if (focus) {
       pinCard.focus({ preventScroll: true });
       if (window.matchMedia?.('(max-width:899px)').matches) requestAnimationFrame(() => {
@@ -213,10 +219,15 @@ export function createStoresSection({
     marker.style.setProperty('--store-pin-color', COLORS[pin.retailerId] ?? '#7532c5');
     marker.setAttribute('aria-label', `Открыть: ${pin.name}, ${pin.address || 'адрес не указан'}`);
     marker.classList.toggle('stores-pin-selected',Boolean(isSelected(pin)));
+    marker.classList.toggle('stores-pin-focused',focusedPin?.id === pin.id);
+    if (focusedPin?.id === pin.id) marker.setAttribute('aria-current','true');
     marker.append(textEl('span','stores-pin-label',pin.name)); return marker;
   }
   function mapStatus(status) {
-    if (status === 'ready') { mapFailure = false; tileStatus.textContent = ''; retry.hidden = true; }
+    if (status === 'ready') {
+      mapFailure = false; tileStatus.textContent = ''; retry.hidden = true;
+      if (nearbyMode) { directory.open = false; directory.hidden = true; }
+    }
     else if (status === 'unavailable') {
       mapFailure = true; tileStatus.textContent = 'Карта не загрузилась. Магазины можно выбрать в списке ниже.';
       retry.hidden = false; directory.open = true; directory.hidden = false;
@@ -252,11 +263,17 @@ export function createStoresSection({
   function renderList() {
     const stores = [...availablePins()];
     if (geoState.position) stores.sort((a,b) => (distanceMeters(geoState.position,a) ?? Infinity) - (distanceMeters(geoState.position,b) ?? Infinity));
-    summary.textContent = `Магазины списком: ${stores.length}`;
-    listCount.textContent = stores.length ? `${nearbyContext?.radiusKm ? 'До '+nearbyContext.radiusKm+' км · ' : ''}Адресов: ${stores.length}` : nearbyContext?.state === 'loading' ? 'Обновляю магазины…' : 'В выбранной области магазины не найдены. Можно изменить точку или радиус в списке магазинов.';
+    summary.textContent = 'Магазины списком';
+    const visibleCount = Math.min(stores.length, listLimit, STORE_LIST_MAX);
+    listCount.textContent = stores.length
+      ? `${nearbyContext?.radiusKm ? 'До '+nearbyContext.radiusKm+' км · ' : ''}Показаны ${visibleCount} ближайших${stores.length > visibleCount ? '. Уточните сеть или точку для более точной выдачи.' : ''}`
+      : nearbyContext?.state === 'loading' ? 'Обновляю магазины…' : 'В выбранной области магазины не найдены. Можно изменить точку или радиус в списке магазинов.';
     list.replaceChildren();
-    for (const store of stores.slice(0,listLimit)) {
+    for (const store of stores.slice(0,visibleCount)) {
       const row = textEl('li',null,''); row.dataset.storeLocationId = store.id;
+      row.classList.toggle('is-focused',focusedPin?.id === store.id);
+      row.classList.toggle('is-selected',Boolean(isSelected(store)));
+      if (focusedPin?.id === store.id || isSelected(store)) row.setAttribute('aria-current','true');
       row.append(button(store.name,() => { moveCamera({lat:store.lat,lon:store.lon},15); showPin(store,true); }),
         textEl('span','stores-list-note',store.address || 'Адрес не указан'),
         textEl('span','stores-list-note',(canSelect(store) ? 'Каталог подключён' : 'Каталог не подключён')+distanceNote(geoState.position,store)),
@@ -264,7 +281,7 @@ export function createStoresSection({
       if (canSelect(store)) row.append(button(isSelected(store) ? 'Выбран для корзины' : 'Открыть товары',() => chooseStore(store)));
       list.append(row);
     }
-    more.hidden = stores.length <= listLimit;
+    more.hidden = stores.length <= visibleCount || visibleCount >= STORE_LIST_MAX;
   }
   function renderGeoStatus() {
     geoButton.disabled = geoState.status === 'loading'; clearButton.disabled = geoState.status === 'idle' && !manualPicking;
@@ -296,14 +313,15 @@ export function createStoresSection({
     const context = event.detail;
     if (!context || !Number.isSafeInteger(context.revision) || context.revision < contextRevision || !Array.isArray(context.stores)) return;
     contextRevision = context.revision; nearbyContext = context; contextPins = context.stores;
-    networkFilter.value = 'all'; listLimit = 5; focusedPin = null; pinCard.hidden = true;
+    networkFilter.value = 'all'; listLimit = STORE_LIST_PAGE_SIZE; focusedPin = null; pinCard.hidden = true;
     renderMap(); renderList();
   });
   section.updateSelection = scope => { currentScope = scope; renderSelected(); renderList(); renderMap(); if (focusedPin) showPin(focusedPin); };
   function setNearbyMode(enabled) {
     nearbyMode = enabled; section.classList.toggle('stores-nearby-mode',enabled);
-    magnitDirectory.hidden = enabled; selected.hidden = enabled; directory.hidden = false;
-    directory.open = enabled || mapFailure; pinCard.hidden = true; renderMap(); renderList();
+    magnitDirectory.hidden = enabled; selected.hidden = enabled;
+    directory.hidden = enabled && !mapFailure; directory.open = Boolean(enabled && mapFailure);
+    focusedPin = null; pinCard.hidden = true; renderMap(); renderList();
   }
   section.openNearbyMap = () => {
     setNearbyMode(true); void openMap(); section.scrollIntoView({ block:'start' }); map.focus({ preventScroll:true });

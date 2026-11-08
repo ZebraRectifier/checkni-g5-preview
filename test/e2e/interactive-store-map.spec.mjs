@@ -7,10 +7,13 @@ test('lazy SDK map supports marker card, store choice, keyboard search and touch
   expect(vendor).toHaveLength(0);
   await page.evaluate(()=>{window.mapHarness.stores.hidden=false;window.mapHarness.stores.openNearbyMap();window.mapHarness.geo.setManual({lat:55.928776,lon:38.003613});});
   await expect(page.locator('.maplibregl-canvas')).toBeVisible({timeout:15000});
+  await expect(page.locator('.stores-location-directory')).toBeHidden();
   const marker=page.locator('.stores-pin[data-store-location-id="globus-store-5001"]');
   try{await expect(marker).toBeVisible({timeout:15000});}catch(error){throw new Error(error.message+' SDK errors: '+JSON.stringify(await page.evaluate(()=>window.mapErrors)));}
   const box=await marker.boundingBox();expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);
-  await marker.click();await expect(page.locator('.stores-pin-card')).toContainText('Пролетарский');
+  await marker.click();await expect(marker).toHaveClass(/stores-pin-focused/u);await expect(marker).toHaveAttribute('aria-current','true');
+  await expect(page.locator('.stores-pin-card')).toContainText('Пролетарский');
+  await expect(page.locator('.stores-location-directory')).toBeHidden();
   await expect(page.locator('.stores-pin-card a')).toHaveAttribute('href',/https:\/\/yandex\.ru\/maps\/\?rtext=/u);
   await page.locator('.stores-pin-card').getByRole('button',{name:'Открыть товары',exact:true}).click();
   await expect(page.locator('#selection')).toHaveText('selected:globus-store-5001');
@@ -25,6 +28,9 @@ test('WebGL failure keeps list selection, while region changes clear Moscow poin
   await page.waitForFunction(()=>window.harnessReady);
   await page.evaluate(()=>window.mapHarness.stores.openNearbyMap());
   await expect(page.locator('#stores-tile-status')).toContainText('Магазины можно выбрать');
+  await expect(page.locator('.stores-location-directory')).toBeVisible();
+  await expect(page.locator('.stores-location-directory')).toHaveAttribute('open','');
+  await expect(page.locator('#stores-known-locations li')).toHaveCount(1);
   await page.locator('#stores-known-locations').getByRole('button',{name:'Открыть товары',exact:true}).click();
   await expect(page.locator('#selection')).toHaveText('selected:globus-store-5001');
   await page.evaluate(()=>document.dispatchEvent(new CustomEvent('checkni:nearby-map-context',{detail:{revision:1,state:'loading',stores:[],radiusKm:3,position:{lat:55.79,lon:49.12}}})));

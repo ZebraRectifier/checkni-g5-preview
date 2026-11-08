@@ -14,6 +14,8 @@ body.pixel-workspace .stores-interactive .stores-map,
 .stores-interactive .stores-map-frame { position:relative; isolation:isolate; display:grid; gap:12px; align-items:start; }
 .stores-interactive .stores-list { margin:0; padding:0; }
 .stores-interactive .stores-list li { display:grid; grid-template-columns:1fr auto; gap:6px 12px; padding:12px; border:1px solid var(--line,#c9bfd6); border-radius:6px; }
+.stores-interactive .stores-list li:is(.is-focused,.is-selected) { border-color:var(--accent,#7532c5); background:var(--accent-soft,#f1eafd); }
+.stores-interactive .stores-list li.is-selected { box-shadow:inset 4px 0 0 var(--accent,#7532c5); }
 .stores-interactive .stores-list li > button:first-child { text-align:left; font-weight:700; padding:0; background:none; border:0; box-shadow:none; }
 .stores-interactive .stores-list-note { grid-column:1/-1; font-size:14px; line-height:1.4; }
 .stores-interactive .stores-list-count { margin:4px 0 12px; font-size:14px; }
@@ -23,7 +25,9 @@ body.pixel-workspace .stores-interactive button.stores-pin,
 body.pixel-workspace .stores-interactive button.stores-pin::before,
 .stores-interactive button.stores-pin::before { content:''; position:absolute; inset:9px 9px 2px; border:3px solid #fff; background:var(--store-pin-color,#7532c5); clip-path:polygon(4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% 65%,65% 65%,50% 100%,35% 65%,0 65%,0 4px,4px 4px); }
 .stores-interactive .stores-pin:focus-visible { outline:3px solid var(--accent,#7532c5); outline-offset:0; }
-.stores-interactive .stores-pin-label { transform:none; top:-12px; left:22px; max-width:190px; text-overflow:ellipsis; overflow:hidden; font-size:12px; }
+.stores-interactive .stores-pin-label { display:none; transform:none; top:-12px; left:22px; max-width:190px; text-overflow:ellipsis; overflow:hidden; font-size:12px; }
+.stores-interactive .stores-pin:is(:hover,:focus-visible,.stores-pin-focused,.stores-pin-selected) .stores-pin-label { display:block; }
+.stores-interactive .stores-pin-focused::before { outline:3px solid var(--accent,#7532c5); outline-offset:2px; }
 .stores-interactive .stores-user-pin { width:18px; height:18px; border:3px solid #fff; border-radius:50%; background:#7532c5; box-shadow:0 0 0 6px #7532c533; }
 body.pixel-workspace .stores-interactive .stores-pin-card { position:relative; border-radius:8px; padding:16px; scroll-margin:16px 0 110px; }
 .stores-interactive .stores-pin-card:focus { outline:none; }
