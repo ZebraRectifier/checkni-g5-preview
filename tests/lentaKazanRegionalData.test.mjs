@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {nearbyGroceryMatches} from '../src/intelligence/nearbyShopping.mjs';
-import {nearbyRegionForPosition} from '../src/intelligence/nearbyRegions.mjs';
-import {directoryAddressCandidates} from '../src/ports/addressRecovery.mjs';
+const entry = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const release = entry.match(/\.\/releases\/([a-f0-9]{64})\/src\/app\.mjs/u)?.[1];
+const runtime = new URL(release ? `../releases/${release}/src/` : '../src/', import.meta.url);
+const { nearbyGroceryMatches } = await import(new URL('intelligence/nearbyShopping.mjs', runtime));
+const { nearbyRegionForPosition } = await import(new URL('intelligence/nearbyRegions.mjs', runtime));
+const { directoryAddressCandidates } = await import(new URL('ports/addressRecovery.mjs', runtime));
 
 const directory=JSON.parse(await readFile(new URL('../src/data/nearby-regions/kazan.json',import.meta.url)));
 const receipt=JSON.parse(await readFile(new URL('../evidence/lenta-kazan-20261108/receipt.json',import.meta.url)));
