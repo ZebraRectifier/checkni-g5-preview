@@ -12,7 +12,13 @@ const FAMILIES = [
   ['cereal', /^крупы и сухие завтраки$/u],
   ['care', /^гигиена и уход$/u],
   ['kids', /^для детей$/u],
-  ['grocery', /^(?:бакалея|крупы|макароны|макаронные изделия|мука|сахар|соль)(?=$|[\s,;:/()—–-])/u]
+  ['grocery', /^(?:бакалея|крупы|макароны|макаронные изделия|мука|сахар|соль)(?=$|[\s,;:/()—–-])/u],
+  ['frozen', /^(?:заморозка|замороженные продукты|замороженные продукты и полуфабрикаты|полуфабрикаты)(?=$|[\s,;:/()—–-])/u],
+  ['sweets', /^(?:сладости|кондитерские изделия|шоколад)(?=$|[\s,;:/()—–-])/u],
+  ['pets', /^(?:зоотовары|для животных|товары для животных)(?=$|[\s,;:/()—–-])/u],
+  ['household', /^(?:для дома|товары для дома|бытовая химия)(?=$|[\s,;:/()—–-])/u],
+  ['conserves', /^(?:консервы|консервация|соленья)(?=$|[\s,;:/()—–-])/u],
+  ['snacks', /^(?:снеки|чипсы|орехи|сухарики)(?=$|[\s,;:/()—–-])/u]
 ];
 const IMAGES = Object.freeze(Object.fromEntries(
   ['dairy', 'veg', 'meat', 'bread', 'drinks', 'grocery']
@@ -55,7 +61,8 @@ export function sortPixelCategories(categories) {
 
 export function pixelCategoryImage(category) {
   const kind = kindOf(category);
-  if (['brands', 'ready-food', 'cereal', 'care', 'kids'].includes(kind)) {
+  if (['brands', 'ready-food', 'cereal', 'care', 'kids', 'frozen', 'sweets',
+    'pets', 'household', 'conserves', 'snacks'].includes(kind)) {
     return new URL(`../img/cat-${kind}.svg`, import.meta.url).href;
   }
   return IMAGES[kind] ?? null;

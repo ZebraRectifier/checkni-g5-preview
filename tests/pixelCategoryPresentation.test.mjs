@@ -40,14 +40,18 @@ test('known category illustrations use bundled assets', async () => {
     ['Молоко, сыр и яйца', 'cat-dairy.png'], ['Фрукты, ягоды и овощи', 'cat-veg.png'],
     ['Рыба и морепродукты', 'cat-meat.png'], ['Хлеб, выпечка', 'cat-bread.png'],
     ['Чай, кофе', 'cat-drinks.png'], ['Крупы и макароны', 'cat-grocery.png'],
-    ['Наши бренды', 'cat-brands.svg'], ['Готовая еда', 'cat-ready-food.svg']
+    ['Наши бренды', 'cat-brands.svg'], ['Готовая еда', 'cat-ready-food.svg'],
+    ['Замороженные продукты и полуфабрикаты', 'cat-frozen.svg'],
+    ['Сладости и кондитерские изделия', 'cat-sweets.svg'],
+    ['Зоотовары', 'cat-pets.svg'], ['Для дома', 'cat-household.svg'],
+    ['Консервы и соленья', 'cat-conserves.svg'], ['Снеки и чипсы', 'cat-snacks.svg']
   ]) {
     const row = category(name, 1, { imageUrl: 'https://untrusted.test/image.png' });
     const image = pixelCategoryImage(row);
     assert.equal(image, new URL(`../src/img/${file}`, import.meta.url).href, name);
     await access(new URL(image));
   }
-  for (const name of ['Для дома', 'Хлебопечки', 'Мясорубки', 'МолочноеXYZ']) {
+  for (const name of ['Хлебопечки', 'Мясорубки', 'МолочноеXYZ', 'Домашняя кухня']) {
     assert.equal(pixelCategoryImage(category(name, 1)), null, name);
   }
   for (const row of [null, undefined, {}, [], { name: 12 }]) assert.equal(pixelCategoryImage(row), null);
