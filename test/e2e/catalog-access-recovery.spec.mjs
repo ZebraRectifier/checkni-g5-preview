@@ -158,6 +158,18 @@ test('Okey active storefront keeps the header compact and full price truth colla
 
 test('exact-address, online and delivery storefronts use compact scope labels', async ({ page }) => {
   const calls = await setup(page, { items: [milk] });
+  for (const [retailerId, label] of [
+    ['vkusvill', 'Онлайн-каталог'],
+    ['lenta', 'Онлайн-каталог'],
+    ['perekrestok', 'Доставка · Москва'],
+    ['da', 'Акции']
+  ]) {
+    const scope = page.locator(`#retail-store-card-${retailerId} .retail-store-copy > span:last-child`);
+    await expect(scope).toBeVisible();
+    await expect(scope).toHaveText(label);
+    expect(await scope.evaluate(node => node.scrollWidth <= node.clientWidth + 1
+      && node.scrollHeight <= node.clientHeight + 1)).toBe(true);
+  }
   await selectStore(page, 'magnit');
   await expect(page.locator('.pixel-store-address')).toBeVisible();
   await expect(page.locator('.pixel-store-scope')).toHaveText('Каталог по адресу');
