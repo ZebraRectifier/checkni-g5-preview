@@ -37,6 +37,11 @@ export function createPixelProductCard(product, options = {}) {
 
   const actions = document.createElement('div');
   actions.className = 'pixel-product-actions';
+  const datedPrice = hasDatedListPrice(product);
+  if (datedPrice && (!add.disabled || product.retailerId === 'magnit')) {
+    const stamp = card.querySelector('.product-observed-at');
+    if (stamp) stamp.textContent = stamp.textContent.replace(/^Цена от/u, 'Старая цена от');
+  }
   if (add.disabled) {
     add.title = add.textContent;
     add.textContent = 'Пока только просмотр';
@@ -45,13 +50,11 @@ export function createPixelProductCard(product, options = {}) {
     // aria-label retains the full, established product-and-pack identity.
     add.textContent = '+';
     add.title = add.getAttribute('aria-label') || 'Добавить в список';
-    if (hasDatedListPrice(product)) {
+    if (datedPrice) {
       add.classList.add('is-dated-list');
       add.textContent = 'В список без цены';
       add.setAttribute('aria-label', `Добавить ${product.name}, ${product.unit}, в список без цены`);
       add.title = add.getAttribute('aria-label');
-      const stamp = card.querySelector('.product-observed-at');
-      if (stamp) stamp.textContent = stamp.textContent.replace(/^Цена от/u, 'Старая цена от');
     }
     if (quantity > 0 && typeof options.onRemoveOne === 'function') {
       const remove = document.createElement('button');

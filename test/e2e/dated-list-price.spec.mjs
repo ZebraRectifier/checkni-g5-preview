@@ -44,6 +44,10 @@ for(const [retailer,raw,addressId,query] of [['globus',globus,'5011','Новор
   await expect(card.locator('.product-observed-at')).toHaveAttribute('datetime',new Date(raw.observed_at).toISOString());
   const readonly=page.locator(`[data-product-id="retail:${retailer}:${raw.store_id}:900000001"] .add-button`);
   await expect(readonly).toBeDisabled();await expect(readonly).toHaveText('Пока только просмотр');
+  if (retailer === 'magnit') {
+   await expect(page.locator(`[data-product-id="retail:${retailer}:${raw.store_id}:900000001"] .product-observed-at`))
+     .toHaveText(/^Старая цена от/u);
+  }
   await add.evaluate(n=>n.scrollIntoView({block:'center'}));
   expect(await add.evaluate(n=>{const b=n.getBoundingClientRect();const hit=document.elementFromPoint(b.x+b.width/2,b.y+b.height/2);return b.height>=44&&getComputedStyle(n).fontSize!=='0px'&&getComputedStyle(n,'::before').display==='none'&&n.contains(hit);})).toBe(true);
   await page.screenshot({path:info.outputPath(`${retailer}-dated-card.png`)});
