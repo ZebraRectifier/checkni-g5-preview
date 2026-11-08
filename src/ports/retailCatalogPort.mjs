@@ -995,7 +995,11 @@ export function createRetailCatalogClient(options = {}) {
         products: Object.freeze(products),
         partial: products.length !== payload.length,
         nextOffset: offset + payload.length,
-        pageSize: payload.length
+        // Transport progress and display admission are different facts. A
+        // complete raw page can fail closed during normalization.
+        pageSize: payload.length,
+        rawPageSize: payload.length,
+        admittedPageSize: products.length
       });
     } catch {
       return result("unavailable", { code: "transport_unavailable" });

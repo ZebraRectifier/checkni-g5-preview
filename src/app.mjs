@@ -22,6 +22,7 @@ import { createProductCard } from "./components/ProductCard.mjs";
 import { compactCatalogAbsence, compactRetailScope } from "./presentation/retailSurfaceCopy.mjs";
 import { createPixelProductCard } from "./components/PixelProductCard.mjs";
 import { watchCatalogMore } from "./components/catalogMoreOnScroll.mjs";
+import { FILTERED_CATALOG_EMPTY, canLoadMoreCatalogPage, catalogPageProgress } from "./runtime/catalogPagination.mjs";
 import { sortPixelCategories, pixelCategoryImage, pixelCollectionCategories } from "./components/pixelCategoryPresentation.mjs";
 import { BASKET_COMPARE_LABEL, renderBasketView, basketHasWeightAmounts } from "./components/BasketView.mjs";
 import {
@@ -1620,9 +1621,7 @@ async function loadRetailCategoryProducts(category, {
     const nextOffset = Number.isSafeInteger(result.nextOffset)
       ? result.nextOffset
       : result.products.length;
-    const pageSize = Number.isSafeInteger(result.pageSize)
-      ? result.pageSize
-      : result.products.length;
+    const progress = catalogPageProgress(result, result.products.length);
     // Promo category totals include rows outside today's admitted issue.
     const expectedCount = client.definition?.requiresPromoValidity
       ? 0
@@ -1640,7 +1639,8 @@ async function loadRetailCategoryProducts(category, {
       categoryExpectedCount: expectedCount,
       unavailableSources: result.unavailableSources ?? 0,
       nextOffset,
-      canLoadMore: pageSize === pageLimit && nextOffset > 0 && (expectedCount <= 0 || nextOffset < expectedCount),
+      admissionFiltered: progress.filtered,
+      canLoadMore: canLoadMoreCatalogPage({ progress, pageLimit, nextOffset, expectedCount }),
       loadingMore: false,
       loadMoreError: false
     };
@@ -1728,9 +1728,7 @@ async function loadMoreRetailProducts() {
   const nextOffset = Number.isSafeInteger(result.nextOffset)
     ? result.nextOffset
     : offset + result.products.length;
-  const pageSize = Number.isSafeInteger(result.pageSize)
-    ? result.pageSize
-    : result.products.length;
+  const progress = catalogPageProgress(result, result.products.length);
 
   catalogSearchState = {
     ...catalogSearchState,
@@ -1740,8 +1738,9 @@ async function loadMoreRetailProducts() {
     unavailableSources: result.unavailableSources ?? 0,
     nextOffset,
     hasPaged: true,
-    canLoadMore: pageSize === pageLimit && nextOffset > offset && nextOffset <= 10_000
-      && (!category || !catalogSearchState.categoryExpectedCount || nextOffset < catalogSearchState.categoryExpectedCount),
+    admissionFiltered: progress.filtered,
+    canLoadMore: canLoadMoreCatalogPage({ progress, pageLimit, nextOffset, offset,
+      expectedCount: category ? catalogSearchState.categoryExpectedCount : 0 }),
     loadingMore: false,
     loadMoreError: false
   };
@@ -2144,7 +2143,9 @@ function renderCatalog() {
   } else if (publicRetailCatalogMode && live && !normalizedQuery && catalogSearchState.hasPaged && results.length) {
     const end = document.createElement('p');
     end.id = 'retail-page-end';
-    end.textContent = 'Все доступные товары показаны';
+    end.textContent = catalogSearchState.admissionFiltered
+      ? FILTERED_CATALOG_EMPTY.end
+      : 'Все доступные товары показаны';
     elements.productGrid.after(end);
   }
 
@@ -2264,6 +2265,12 @@ function renderCatalog() {
   }
 
   if (live && !hasVisibleProducts) {
+    if (catalogSearchState.admissionFiltered) {
+      if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = FILTERED_CATALOG_EMPTY.title;
+      elements.emptySearchCopy.textContent = FILTERED_CATALOG_EMPTY.copy;
+      elements.searchStatus.textContent = FILTERED_CATALOG_EMPTY.status;
+      return;
+    }
     if (publicRetailCatalogMode && !normalizedQuery && retailDefinition?.requiresPromoValidity
         && !catalogSearchState.canLoadMore) {
       if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = retailDefinition.publishedPromotions
@@ -3354,6 +3361,7 @@ async function loadInitialRetailCatalog() {
   ) return;
 
   if (retailResult.kind === "catalog") {
+    const progress = catalogPageProgress(retailResult, retailResult.products.length);
     catalogSearchState = {
       status: "live",
       query: "",
@@ -3362,7 +3370,8 @@ async function loadInitialRetailCatalog() {
       discoveredCount: retailResult.products.length,
       unavailableSources: retailResult.unavailableSources ?? 0,
       nextOffset: retailResult.nextOffset,
-      canLoadMore: retailResult.pageSize === 24 && retailResult.nextOffset > 0
+      admissionFiltered: progress.filtered,
+      canLoadMore: canLoadMoreCatalogPage({ progress, pageLimit: 24, nextOffset: retailResult.nextOffset })
     };
   } else {
     catalogSearchState = {
