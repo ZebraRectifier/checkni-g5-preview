@@ -1,4 +1,5 @@
 import { publicDataUrl } from './publicDataUrl.mjs';
+import { admitPublishedPromotionListCard } from '../catalog/publishedPromotionListAdmission.mjs';
 import { currentOfficialProducts, validOfficialSnapshot, OFFICIAL_CATALOG_URL } from '../observations/okeyOfficialPromotions.mjs';
 import { currentPublishedProducts, validPublishedSnapshot, PUBLISHED_URL } from '../observations/okeyPublishedPromotions.mjs';
 import { currentPyatProducts, validPyatSnapshot, pyatWeeklyCards, PYAT_PUBLISHED_URL } from '../observations/pyaterochkaPublishedPromotions.mjs';
@@ -72,7 +73,7 @@ export function createPublishedPromotionCatalogClient({ definition, fetchImpl, r
         ? new Map(pyatWeeklyCards(snapshot, at).map(card => [card.sourceProductId, card])) : new Map();
       return source.current(snapshot, at).map(product => {
         const category = definition.retailerId === 'pyaterochka' ? categories.find(row => row.key === product.category) : null;
-        return Object.freeze({
+        const card = Object.freeze({
           id: `retail:${definition.retailerId}:${source.storeId}:${product.sourceProductId}`,
           retailerId: definition.retailerId, retailerDisplayName: definition.displayName,
           storeId: source.storeId, storeName: definition.displayName + ' · акции Москвы',
@@ -86,9 +87,11 @@ export function createPublishedPromotionCatalogClient({ definition, fetchImpl, r
             ? 'Акция Москвы · условия карты неизвестны' : 'Акция Москвы · Прошопер · условия карты неизвестны',
           observedAt: product.observedAt, validFrom: product.validFrom ?? null, validUntil: product.validUntil,
           sourceUrl: product.productUrl, productUrl: product.productUrl, catalogSourceUrl: source.sourceUrl, imageUrl: null,
-          publisher: source.publisher, priceScope: 'city-promotion', physicalStoreId: null,
+          publisher: source.publisher, priceScope: 'city-promotion', physicalStoreId: null, physicalStoreAddress: null,
           catalogSource: definition.retailerId, catalogDisplayOnly: true, comparisonEligible: false
         });
+        return definition.retailerId === 'pyaterochka'
+          ? admitPublishedPromotionListCard(card, { snapshot, product, nowMs: at }) ?? card : card;
       });
     });
     // Deterministic source identity order makes subsequent pages disjoint.
