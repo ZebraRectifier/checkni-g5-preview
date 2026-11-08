@@ -2982,7 +2982,11 @@ function renderComparisonState({ focusResult = false } = {}) {
     if (comparisonMode === COMPARISON_MODE.DEMO) {
       output.append(snapshotNode, resultNode);
     } else {
-      output.append(resultNode, snapshotNode);
+      const archive = document.createElement("details");
+      const summary = document.createElement("summary");
+      summary.textContent = "Архивные цены · справочно";
+      archive.append(summary, snapshotNode);
+      output.append(resultNode, archive);
     }
   } else {
     output.append(resultNode);
