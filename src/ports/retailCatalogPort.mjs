@@ -920,8 +920,8 @@ export function createRetailCatalogClient(options = {}) {
     // Browsing, category and exact-ID reads retain their existing transport.
     const boundedSearch = query !== null && definition.retailerId === "perekrestok";
     if (boundedSearch) {
-      url.pathname = url.pathname.replace(/\/retail_catalog_items$/u, "/rpc/retail_catalog_items_search");
-      if (!url.pathname.endsWith("/rpc/retail_catalog_items_search")) {
+      url.pathname = url.pathname.replace(/\/retail_catalog_items$/u, "/rpc/retail_catalog_items_search_v2");
+      if (!url.pathname.endsWith("/rpc/retail_catalog_items_search_v2")) {
         return result("unavailable", { code: "transport_unconfigured" });
       }
       url.searchParams.set("p_retailer_id", definition.retailerId);
@@ -929,6 +929,7 @@ export function createRetailCatalogClient(options = {}) {
       url.searchParams.set("p_locality_id", definition.localityId);
       url.searchParams.set("p_query", query);
       url.searchParams.set("p_limit", String(limit));
+      url.searchParams.set("p_offset", String(offset));
     }
     // PostgREST RPC ordering needs the ordered column in the projection.
     // updated_at is transport ordering metadata, never price freshness.
@@ -963,12 +964,13 @@ export function createRetailCatalogClient(options = {}) {
         : "name.asc,source_product_id.asc"
     );
     url.searchParams.set("limit", String(limit));
-    url.searchParams.set("offset", String(offset));
+    if (!boundedSearch) url.searchParams.set("offset", String(offset));
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetchImpl(url.href, {
+      let legacySearchFallback = false;
+      const requestOptions = {
         headers: {
           Accept: "application/json",
           apikey: publishableKey
@@ -976,7 +978,21 @@ export function createRetailCatalogClient(options = {}) {
         credentials: "omit",
         cache: "no-store",
         signal: controller.signal
-      });
+      };
+      let response = await fetchImpl(url.href, requestOptions);
+      if (boundedSearch && offset === 0 && response.status === 404) {
+        const missing = await readBoundedJsonResponse(response.clone(), 16_384).catch(() => null);
+        if (missing?.code === "PGRST202") {
+          const legacyUrl = new URL(url.href);
+          legacyUrl.pathname = legacyUrl.pathname.replace(
+            /\/rpc\/retail_catalog_items_search_v2$/u,
+            "/rpc/retail_catalog_items_search"
+          );
+          legacyUrl.searchParams.delete("p_offset");
+          response = await fetchImpl(legacyUrl.href, requestOptions);
+          legacySearchFallback = true;
+        }
+      }
 
       if (response.status === 429 || response.status >= 500) {
         return result("unavailable", { code: "transport_unavailable" });
@@ -1004,7 +1020,8 @@ export function createRetailCatalogClient(options = {}) {
         // complete raw page can fail closed during normalization.
         pageSize: payload.length,
         rawPageSize: payload.length,
-        admittedPageSize: products.length
+        admittedPageSize: products.length,
+        ...(legacySearchFallback ? { paginationSupported: false } : {})
       });
     } catch {
       return result("unavailable", { code: "transport_unavailable" });
@@ -1118,7 +1135,8 @@ export function createRetailCatalogClient(options = {}) {
       }
       return requestRows({
         query: normalizedQuery,
-        limit: searchOptions.limit ?? 24
+        limit: searchOptions.limit ?? 24,
+        offset: searchOptions.offset ?? 0
       });
     },
     async browse(browseOptions = {}) {

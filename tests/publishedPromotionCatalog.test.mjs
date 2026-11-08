@@ -67,12 +67,18 @@ test('Pyaterochka supplies real dates, sources and categories to the existing cl
 test('multiple pages expose more than forty distinct products, and no match is an empty success', async () => {
   const large = structuredClone(snapshot);
   large.products = Array.from({ length: 85 }, (_, index) => ({ ...snapshot.products[index % snapshot.products.length],
-    sourceProductId: String(61000000 + index), productUrl: snapshot.sourceUrl + '#id_product_' + (61000000 + index) }));
+    sourceProductId: String(61000000 + index), name: `Товар акции ${index + 1}`,
+    productUrl: snapshot.sourceUrl + '#id_product_' + (61000000 + index) }));
   const client = createRetailCatalogClient({ retailerId: 'pyaterochka', nowMs: at, fetchImpl: async () => Response.json(large) });
   const first = await client.browse({ limit: 40 }); const second = await client.browse({ limit: 40, offset: first.nextOffset });
   const third = await client.browse({ limit: 40, offset: second.nextOffset });
   assert.deepEqual([first.pageSize, second.pageSize, third.pageSize], [40, 40, 5]);
   assert.equal(new Set([...first.products, ...second.products, ...third.products].map(row => row.id)).size, 85);
+  const searchFirst = await client.search('Товар', { limit: 24 });
+  const searchSecond = await client.search('Товар', { limit: 24, offset: searchFirst.nextOffset });
+  assert.equal(searchFirst.products.length, 24);
+  assert.equal(searchSecond.products.length, 24);
+  assert.equal(new Set([...searchFirst.products, ...searchSecond.products].map(row => row.id)).size, 48);
   const empty = await client.search('несуществующий товар'); assert.equal(empty.kind, 'catalog'); assert.deepEqual(empty.products, []);
 });
 

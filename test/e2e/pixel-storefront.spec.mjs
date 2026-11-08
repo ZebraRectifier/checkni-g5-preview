@@ -87,7 +87,10 @@ test('Lenta populated categories remain usable beyond forty products and after a
   main_category_id:i<30?31:i<59?37:roots[i-58][0],price_minor:4999+i,currency:'RUB',
   price_condition:'loyalty-card-1',availability:'unknown',product_url:`https://lenta.com/product/fixture-${800000+i}/`,
   source_url:'https://lenta.com/catalog/fixture-25/',image_url:null,observed_at:'2026-10-20T08:30:00Z'}));
- let failNextPage=true;
+ let failNextPage=true,failSearchNextPage=true,releaseHeldSearch,noteHeldSearch;
+ const heldSearch=new Promise(resolve=>{releaseHeldSearch=resolve;});
+ const heldSearchStarted=new Promise(resolve=>{noteHeldSearch=resolve;});
+ let holdSearchNextPage=true;
  const reads=[];
  await page.route('**/rest/v1/retail_catalog_categories**',route=>{
   const p=new URL(route.request().url()).searchParams;reads.push(Object.fromEntries(p));
@@ -95,10 +98,13 @@ test('Lenta populated categories remain usable beyond forty products and after a
   return route.fulfill({json:p.get('retailer_id')==='eq.lenta'
    ?p.get('parent_id')==='eq.25'?childRows:p.has('parent_id')?[]:rootRows:[]});
  });
- await page.route('**/rest/v1/retail_catalog_items**',route=>{
+ await page.route('**/rest/v1/retail_catalog_items**',async route=>{
   const p=new URL(route.request().url()).searchParams;reads.push(Object.fromEntries(p));
   const offset=Number(p.get('offset')??0),limit=Number(p.get('limit')??40);
   if(p.get('retailer_id')!=='eq.lenta')return route.fulfill({json:[]});
+  let wasHeldSearch=false;
+  if(p.has('name')&&offset===24&&holdSearchNextPage){wasHeldSearch=true;holdSearchNextPage=false;noteHeldSearch();await heldSearch;}
+  if(p.has('name')&&offset===24&&!wasHeldSearch&&failSearchNextPage){failSearchNextPage=false;return route.fulfill({status:503,json:{error:'offline search fixture'}});}
   if(offset===24&&failNextPage){failNextPage=false;return route.fulfill({status:503,json:{error:'offline fixture'}});}
   const id=p.get('main_category_id')?.replace('eq.','');
   return route.fulfill({json:rows.filter(row=>!id||row.main_category_id===Number(id)).slice(offset,offset+limit)});
@@ -131,6 +137,33 @@ test('Lenta populated categories remain usable beyond forty products and after a
  await page.reload();
  await expect(page.locator('#retail-breadcrumbs .is-current')).toHaveText('Макароны');
  await expect(page.locator('#product-grid .product-card')).toHaveCount(30);
+ const search=page.getByRole('searchbox',{name:'Найти продукты',exact:true});
+ await search.fill('Продукт ЛЕНТА');
+ await page.locator('#search-form').getByRole('button',{name:'Найти',exact:true}).click();
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(24);
+ await page.locator('#retail-load-more').click();
+ await heldSearchStarted;
+ await search.fill('Совсем другой запрос');
+ releaseHeldSearch();
+ await expect(search).toHaveValue('Совсем другой запрос');
+ await expect(page.locator('#catalog-search-prompt')).toBeVisible();
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(0);
+ await search.fill('Продукт ЛЕНТА');
+ await page.locator('#search-form').getByRole('button',{name:'Найти',exact:true}).click();
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(24);
+ await page.locator('#retail-load-more').click();
+ await expect(page.locator('#retail-load-more')).toHaveText('Повторить загрузку');
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(24);
+ await page.locator('#retail-load-more').click();
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(48);
+ await page.locator('#retail-load-more').click();
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(64);
+ await expect(page.locator('#retail-load-more')).toHaveCount(0);
+ await expect(page.locator('#retail-page-end')).toHaveText('Все доступные товары показаны');
+ const searchIds=await page.locator('#product-grid .product-card').evaluateAll(nodes=>nodes.map(n=>n.dataset.productId));
+ expect(new Set(searchIds).size).toBe(64);
+ const searchReads=reads.filter(p=>p.name);
+ expect(searchReads.map(p=>p.offset)).toEqual(['0','24','0','24','24','48']);
  expect(reads.filter(p=>p.depth||p.parent_id).every(p=>p.product_count==='gt.0')).toBe(true);
  expect(reads.every(p=>p.store_id==='eq.lenta-public-web')).toBe(true);
  await expectNoOverflow(page);

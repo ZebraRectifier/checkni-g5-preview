@@ -87,7 +87,7 @@ test("retail search scopes PostgREST to active GLOBUS Moscow rows", async () => 
     }
   });
 
-  const result = await client.search("молоко", { limit: 8 });
+  const result = await client.search("молоко", { limit: 8, offset: 24 });
 
   assert.equal(result.kind, "catalog");
   assert.equal(result.products.length, 1);
@@ -97,6 +97,7 @@ test("retail search scopes PostgREST to active GLOBUS Moscow rows", async () => 
   assert.equal(requestedUrl.searchParams.get("active"), "eq.true");
   assert.equal(requestedUrl.searchParams.get("name"), "ilike.*молоко*");
   assert.equal(requestedUrl.searchParams.get("limit"), "8");
+  assert.equal(requestedUrl.searchParams.get("offset"), "24");
 });
 
 test("catalogue pages report raw progress separately from admitted cards", async () => {
@@ -1473,27 +1474,33 @@ test("Perekrestok keyword search uses bounded invoker RPC without slow output IL
     endpoint: "https://project.supabase.co/rest/v1/retail_catalog_items",
     fetchImpl: async (url, options) => {
       calls.push({url: new URL(url), options});
-      return new Response(JSON.stringify([perekrestokRow()]));
+      const offset = Number(new URL(url).searchParams.get("p_offset") ?? 0);
+      return new Response(JSON.stringify([perekrestokRow({source_product_id: `page-${offset}`})]));
     }
   });
   const found = await client.search("  Фарш   куриный  ", {limit: 8});
   assert.equal(found.kind, "catalog");
   assert.equal(found.products.length, 1);
   const {url, options} = calls[0];
-  assert.equal(url.pathname, "/rest/v1/rpc/retail_catalog_items_search");
+  assert.equal(url.pathname, "/rest/v1/rpc/retail_catalog_items_search_v2");
   assert.equal(url.searchParams.get("p_retailer_id"), "perekrestok");
   assert.equal(url.searchParams.get("p_store_id"), "perekrestok-yandex-3186917");
   assert.equal(url.searchParams.get("p_locality_id"), "city-moscow");
   assert.equal(url.searchParams.get("p_query"), "Фарш куриный");
   assert.equal(url.searchParams.get("p_limit"), "8");
+  assert.equal(url.searchParams.get("p_offset"), "0");
   assert.equal(url.searchParams.has("name"), false);
   assert.equal(options.credentials, "omit");
   assert.equal(options.cache, "no-store");
   assert.equal(calls.length, 1);
+  const nextPage = await client.search("Фарш куриный", {limit: 8, offset: 8});
+  assert.equal(nextPage.kind, "catalog");
+  assert.equal(nextPage.products[0].sourceProductId, "page-8");
+  assert.equal(calls[1].url.searchParams.get("p_offset"), "8");
   await client.browse();
   await client.bySourceProductIds([perekrestokRow().source_product_id]);
-  assert.equal(calls[1].url.pathname, "/rest/v1/retail_catalog_items");
   assert.equal(calls[2].url.pathname, "/rest/v1/retail_catalog_items");
+  assert.equal(calls[3].url.pathname, "/rest/v1/retail_catalog_items");
 });
 
 test("Perekrestok RPC rejects foreign scope and surfaces failure without hidden retry", async () => {
@@ -1510,6 +1517,32 @@ test("Perekrestok RPC rejects foreign scope and surfaces failure without hidden 
   assert.equal(retried.products.length, 1);
   assert.equal(retried.partial, true);
   assert.equal(calls, 2);
+});
+
+test("Perekrestok first page falls back to v1 only when PostgREST reports missing v2", async () => {
+  const paths = [];
+  const legacyRows = Array.from({length: 24}, (_, index) => perekrestokRow({
+    source_product_id: `legacy-${index}`
+  }));
+  const client = createRetailCatalogClient({retailerId: "perekrestok", fetchImpl: async url => {
+    const parsed = new URL(url);
+    paths.push(parsed.pathname);
+    return parsed.pathname.endsWith("_v2")
+      ? new Response(JSON.stringify({code: "PGRST202"}), {status: 404, headers: {"Content-Type": "application/json"}})
+      : new Response(JSON.stringify(legacyRows));
+  }});
+  const fallback = await client.search("фарш", {limit: 24});
+  assert.equal(fallback.kind, "catalog");
+  assert.equal(fallback.rawPageSize, 24);
+  assert.equal(fallback.nextOffset, 24);
+  assert.equal(fallback.paginationSupported, false);
+  assert.deepEqual(paths, [
+    "/rest/v1/rpc/retail_catalog_items_search_v2",
+    "/rest/v1/rpc/retail_catalog_items_search"
+  ]);
+  paths.length = 0;
+  assert.equal((await client.search("фарш", {limit: 8, offset: 8})).kind, "error");
+  assert.deepEqual(paths, ["/rest/v1/rpc/retail_catalog_items_search_v2"]);
 });
 
 

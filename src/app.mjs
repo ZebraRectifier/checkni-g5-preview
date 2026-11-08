@@ -1708,12 +1708,13 @@ async function loadMoreRetailProducts() {
   }
 
   const category = retailBrowserState.path.at(-1);
+  const query = catalogSearchState.query?.trim() ?? "";
 
   const retailerId = retailBrowserState.retailerId;
   const navigationRequestId = retailBrowserRequestVersion;
   const client = currentRetailClient();
   const requestId = ++catalogRequestVersion;
-  const pageLimit = category ? 40 : 24;
+  const pageLimit = query ? 24 : category ? 40 : 24;
   const offset = Number.isSafeInteger(catalogSearchState.nextOffset)
     ? catalogSearchState.nextOffset
     : catalogSearchState.products.length;
@@ -1726,12 +1727,17 @@ async function loadMoreRetailProducts() {
   renderCatalog();
 
   const options = { limit: pageLimit, offset };
-  const result = await (category ? client.browseCategory(category, options) : client.browse(options));
+  const result = await (query
+    ? client.search(query, options)
+    : category
+      ? client.browseCategory(category, options)
+      : client.browse(options));
 
   if (
     requestId !== catalogRequestVersion
     || navigationRequestId !== retailBrowserRequestVersion
     || retailerId !== retailBrowserState.retailerId
+    || query !== activeQuery.trim()
   ) {
     return;
   }
@@ -1768,7 +1774,7 @@ async function loadMoreRetailProducts() {
     hasPaged: true,
     admissionFiltered: progress.filtered,
     canLoadMore: canLoadMoreCatalogPage({ progress, pageLimit, nextOffset, offset,
-      expectedCount: category ? catalogSearchState.categoryExpectedCount : 0, allowFiltered: true }),
+      expectedCount: !query && category ? catalogSearchState.categoryExpectedCount : 0, allowFiltered: true }),
     loadingMore: false,
     loadMoreError: false
   };
@@ -2140,7 +2146,6 @@ function renderCatalog() {
 
   if (
     live
-    && !normalizedQuery
     && (
       catalogSearchState.canLoadMore
       || catalogSearchState.loadingMore
@@ -2171,7 +2176,7 @@ function renderCatalog() {
         && !catalogSearchState.admissionFiltered) {
       stopCatalogMoreWatch = watchCatalogMore(loadMore, () => void loadMoreRetailProducts());
     }
-  } else if (publicRetailCatalogMode && live && !normalizedQuery && catalogSearchState.hasPaged && results.length) {
+  } else if (publicRetailCatalogMode && live && catalogSearchState.hasPaged && results.length) {
     const end = document.createElement('p');
     end.id = 'retail-page-end';
     end.textContent = catalogSearchState.admissionFiltered
@@ -3307,6 +3312,7 @@ function handleManualSearch() {
 
   const requestId = ++catalogRequestVersion;
   const query = activeQuery;
+  const retailerId = retailBrowserState.retailerId;
   const pendingToken = {
     query,
     requestId,
@@ -3328,7 +3334,11 @@ function handleManualSearch() {
         publicRetailCatalogMode ? Promise.resolve({ kind: 'catalog', products: [] }) : requestCatalogSearch([query], { limitPerQuery: 8 }),
         currentRetailClient().search(query, { limit: 24 })
       ]);
-      if (requestId !== catalogRequestVersion) return;
+      if (
+        requestId !== catalogRequestVersion
+        || retailerId !== retailBrowserState.retailerId
+        || query !== activeQuery.trim()
+      ) return;
 
       if (
         publicRetailCatalogMode
@@ -3341,12 +3351,28 @@ function handleManualSearch() {
         const retailProducts = retailResult.kind === "catalog"
           ? retailResult.products
           : [];
+        const nextOffset = Number.isSafeInteger(retailResult.nextOffset)
+          ? retailResult.nextOffset
+          : retailProducts.length;
+        const progress = catalogPageProgress(retailResult, retailProducts.length);
         catalogSearchState = {
           status: "live",
           query,
           products: [...retailProducts, ...canonicalProducts],
           retailCount: retailProducts.length,
           unavailableSources: retailResult.unavailableSources ?? 0,
+          nextOffset,
+          admissionFiltered: progress.filtered,
+          canLoadMore: publicRetailCatalogMode
+            && retailResult.paginationSupported !== false
+            && canLoadMoreCatalogPage({
+            progress,
+            pageLimit: 24,
+            nextOffset,
+            allowFiltered: true
+          }),
+          loadingMore: false,
+          loadMoreError: false,
           discoveredCount:
             (catalogResult.products?.length ?? 0)
             + (catalogResult.rejectedCount ?? 0)
