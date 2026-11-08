@@ -7569,6 +7569,46 @@
       "verification": "official-listed",
       "observedAt": "2026-11-07T05:32:50.240Z",
       "storeType": "MM"
+    },
+    {
+      "id": "official:lenta:0907",
+      "sourceStoreId": "0907",
+      "retailerId": "lenta",
+      "name": "Лента",
+      "city": "Екатеринбург",
+      "address": "Екатеринбург, Московская улица, 200",
+      "lat": 56.8000253,
+      "lon": 60.5934093,
+      "sourceUrl": "https://www.openstreetmap.org/relation/16454661",
+      "sourceType": "official-address-osm-containing-building-join",
+      "coordinateEvidence": "osm-relation-representative-point",
+      "officialAddressEvidenceUrl": "https://catalog.lenta.com/uploads/rules_28a36e002d.pdf",
+      "currentTenantEvidenceUrl": "https://ekaterinburg.1000bankov.ru/bankomats/2673/",
+      "verification": "official-listed-address-coordinate-corroborated",
+      "observedAt": "2026-11-08T08:13:19.397Z",
+      "coordinateObservedAt": "2023-10-08T02:26:34Z",
+      "coordinateObjectVersion": 1,
+      "coordinateAccuracy": "building-representative-point-not-entrance"
+    },
+    {
+      "id": "official:lenta:0912",
+      "sourceStoreId": "0912",
+      "retailerId": "lenta",
+      "name": "Лента",
+      "city": "Екатеринбург",
+      "address": "Екатеринбург, Красноуральская улица, 22",
+      "lat": 56.8335943,
+      "lon": 60.5554572,
+      "sourceUrl": "https://www.openstreetmap.org/way/35942347",
+      "sourceType": "official-address-osm-containing-building-join",
+      "coordinateEvidence": "osm-way-representative-point",
+      "officialAddressEvidenceUrl": "https://catalog.lenta.com/uploads/rules_28a36e002d.pdf",
+      "currentTenantEvidenceUrl": "https://rting.ru/ekaterinburg/co/super_lenta/461552",
+      "verification": "official-listed-address-coordinate-corroborated",
+      "observedAt": "2026-11-08T08:13:19.397Z",
+      "coordinateObservedAt": "2016-01-28T05:00:19Z",
+      "coordinateObjectVersion": 8,
+      "coordinateAccuracy": "building-representative-point-not-entrance"
     }
   ],
   "sources": [
@@ -7601,10 +7641,21 @@
       "evidencePath": "evidence/regions-20261107/source-manifest.json",
       "exhaustive": false,
       "note": "Active offline food stores within administrative city boundary; catalogues and prices are not verified."
+    },
+    {
+      "retailerId": "lenta",
+      "type": "official-address-with-osm-coordinate-corroboration",
+      "sourceUrl": "https://lenta.com/info/shops/",
+      "officialAddressEvidenceUrl": "https://catalog.lenta.com/uploads/rules_28a36e002d.pdf",
+      "observedAt": "2026-11-08T08:13:19.397Z",
+      "addedCount": 2,
+      "evidencePath": "evidence/lenta-yekaterinburg-20261108/receipt.json",
+      "exhaustive": false,
+      "note": "Physical-store address and stable official ID only. OSM building representative points are not entrances; catalogues, stock and prices are not verified."
     }
   ],
   "license": "ODbL-1.0 for OSM-derived records",
   "attribution": "© OpenStreetMap contributors",
   "attributionUrl": "https://www.openstreetmap.org/copyright",
-  "updatedAt": "2026-11-07T05:32:55.173Z"
+  "updatedAt": "2026-11-08T08:13:19.397Z"
 }

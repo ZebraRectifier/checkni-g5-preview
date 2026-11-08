@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-08T08:13:19.397Z",
+  "scope": "Two previously absent physical Lenta stores in Yekaterinburg; geography only",
+  "exhaustive": false,
+  "priceEvidence": false,
+  "catalogBindings": 0,
+  "stores": [
+    {
+      "officialStoreId": "0907",
+      "address": "Екатеринбург, Московская улица, 200",
+      "officialAddressEvidenceUrl": "https://catalog.lenta.com/uploads/rules_28a36e002d.pdf",
+      "currentTenantEvidenceUrl": "https://ekaterinburg.1000bankov.ru/bankomats/2673/",
+      "coordinateEvidenceUrl": "https://www.openstreetmap.org/relation/16454661",
+      "coordinateObjectVersion": 1,
+      "coordinateObservedAt": "2023-10-08T02:26:34Z",
+      "lat": 56.8000253,
+      "lon": 60.5934093,
+      "coordinateAccuracy": "building-representative-point-not-entrance"
+    },
+    {
+      "officialStoreId": "0912",
+      "address": "Екатеринбург, Красноуральская улица, 22",
+      "officialAddressEvidenceUrl": "https://catalog.lenta.com/uploads/rules_28a36e002d.pdf",
+      "currentTenantEvidenceUrl": "https://rting.ru/ekaterinburg/co/super_lenta/461552",
+      "coordinateEvidenceUrl": "https://www.openstreetmap.org/way/35942347",
+      "coordinateObjectVersion": 8,
+      "coordinateObservedAt": "2016-01-28T05:00:19Z",
+      "lat": 56.8335943,
+      "lon": 60.5554572,
+      "coordinateAccuracy": "building-representative-point-not-entrance"
+    }
+  ],
+  "excluded": [
+    {
+      "officialStoreId": "0908",
+      "address": "Екатеринбург, улица Кузнецова, 3",
+      "reason": "Current map listing marks the store as no longer operating; the older official promotional roster alone is insufficient for admission."
+    }
+  ],
+  "license": "OSM coordinate objects: ODbL-1.0, © OpenStreetMap contributors",
+  "limitations": "No entrance coordinates, catalogue binding, stock, price, delivery scope or exhaustive Yekaterinburg coverage is asserted."
+}
