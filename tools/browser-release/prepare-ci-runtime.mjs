@@ -17,7 +17,9 @@ const SUPPORT_PATHS = ['test', 'tests', 'tools', 'package.json', 'package-lock.j
   '.github/workflows/okey-public-data.yml', '.github/workflows/pyaterochka-public-data.yml',
   '.github/workflows/pages-publication.yml',
   'artifacts/nearby-shopping/catalog-geography-joins-20261024.json',
-  'evidence/magnit-nearby-20261107'];
+  'evidence/magnit-nearby-20261107',
+  'evidence/magnit-kazan-pilot-20261108/address-evidence.json',
+  'evidence/magnit-kazan-pilot-20261108/validate.mjs'];
 export const MUTABLE_PUBLIC_DATA_FILES = Object.freeze([
   'nearbyGroceryStores.json',
   ...['saint-petersburg', 'kazan', 'yekaterinburg', 'novosibirsk', 'nizhny-novgorod'].map(city => `nearby-regions/${city}.json`),
