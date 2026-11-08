@@ -77,7 +77,8 @@ test('cold stores include existing city catalogues and fold spelling without a d
   }
   if (await page.locator(".pixel-directory-search:not([open])").count()) await page.getByText("Поиск по сетям и адресам", {exact:true}).click();
   await page.locator('#pixel-store-search').fill('');
-  await expect(page.locator('#retail-store-card-okey')).toContainText('цена конкретного магазина и наличие не подтверждены');
+  await expect(page.locator('#retail-store-card-okey')).not.toContainText('цена конкретного магазина и наличие не подтверждены');
+  await expect(page.locator('#retail-store-card-okey')).toHaveAttribute('aria-label', 'О’КЕЙ: Акции Москвы');
   for (const id of ['okey', 'pyaterochka']) {
     const label = page.locator('#retail-store-card-' + id + ' .retail-store-kicker');
     await expect(label).toHaveText('Акции Москвы');
@@ -110,6 +111,44 @@ test('city catalogue entries preserve a confirmed basket, Hory draft and exact-s
   await page.keyboard.press('Escape'); await page.locator('[data-pixel-action="basket"]').click();
   await page.reload(); await expect(page.locator('#basket-view .basket-row')).toHaveCount(1); expect(await basketValue(page)).toBe(before);
   expect(calls.ai).toBe(0); expect(calls.beta).toBe(0); expect(calls.external).toEqual([]);
+});
+
+test('Okey active storefront keeps the header compact and full price truth collapsed', async ({ page }) => {
+  const calls = await setup(page);
+  const card = page.locator('#retail-store-card-okey');
+  await expect(card).toHaveAttribute('aria-label', 'О’КЕЙ: Акции Москвы');
+  await expect(card).toHaveAttribute('title', 'Акции Москвы');
+  const root = await openOkey(page);
+  await expect(root.locator('.pixel-store-scope')).toHaveText('Акции Москвы');
+  const disclosure = root.locator('.hori-price-note');
+  await expect(disclosure.getByText('О ценах', { exact: true })).toBeVisible();
+  await expect(disclosure).not.toHaveAttribute('open', '');
+  await expect(disclosure.locator('.hori-price-scope')).toHaveText('Акции Москвы · цена конкретного магазина и наличие не подтверждены');
+  await disclosure.getByText('О ценах', { exact: true }).click();
+  const priceDetails = disclosure.locator('.hori-price-details');
+  await expect(priceDetails).toBeVisible();
+  const box = await priceDetails.boundingBox(); const viewport = page.viewportSize();
+  expect(box.x).toBeGreaterThanOrEqual(0); expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+  await expect(root.locator('#product-grid .product-card')).toHaveCount(2);
+  expect(calls.ai).toBe(0); expect(calls.external).toEqual([]);
+});
+
+test('exact-address, online and delivery storefronts use compact scope labels', async ({ page }) => {
+  const calls = await setup(page, { items: [milk] });
+  await selectStore(page, 'magnit');
+  await expect(page.locator('.pixel-store-address')).toBeVisible();
+  await expect(page.locator('.pixel-store-scope')).toHaveText('Каталог по адресу');
+  await expect(page.locator('.hori-price-note')).not.toHaveAttribute('open', '');
+  await expect(page.locator('.hori-price-scope')).toContainText('наличие неизвестно');
+
+  await page.locator('[data-pixel-action="stores"]').click();
+  await page.locator('#retail-store-card-lenta').click();
+  await expect(page.locator('.pixel-store-scope')).toHaveText('Онлайн-каталог');
+
+  await page.locator('[data-pixel-action="stores"]').click();
+  await page.locator('#retail-store-card-perekrestok').click();
+  await expect(page.locator('.pixel-store-scope')).toHaveText('Доставка · Москва');
+  expect(calls.ai).toBe(0); expect(calls.external).toEqual([]);
 });
 
 test('one hung JSON request has a finite deadline, preserves the independent source and permits one explicit retry', async ({ page }) => {
@@ -157,10 +196,24 @@ test('an unavailable catalogue recovers explicitly without pretending missing pr
   const calls = await setup(page); let fail = true;
   await page.route('**/src/data/okey*.json', route => fail ? route.fulfill({ status: 503, json: {} })
     : route.fulfill({ json: files[new URL(route.request().url()).pathname.split('/').at(-1)] ?? {} }));
-  const root = await openOkey(page); await expect(page.locator('#empty-search')).toContainText('Не удалось загрузить товары');
+  const root = await openOkey(page); await expect(page.locator('#empty-search h3')).toHaveText('Каталог сейчас недоступен');
+  await expect(page.locator('#empty-search-copy')).toBeHidden();
+  await expect(page.locator('#search-status')).toHaveText('Каталог сейчас недоступен');
+  await expect(page.locator('#empty-search').getByRole('button', { name: 'Повторить загрузку', exact: true })).toBeVisible();
   await expect(page.locator('#product-grid .product-card')).toHaveCount(0); await expect(root).not.toContainText('0,00');
   fail = false; await root.getByRole('button', { name: 'Повторить загрузку', exact: true }).click();
   await expect(page.locator('#product-grid .product-card')).toHaveCount(2); await expect(root).toContainText('не подтвержден');
+  expect(calls.ai).toBe(0); expect(calls.external).toEqual([]);
+});
+
+test('Okey successful catalogue with no current promotions stays one short state', async ({ page }) => {
+  const calls = await setup(page, { now: '2026-10-22T02:00:00Z' });
+  await openOkey(page);
+  await expect(page.locator('#empty-search h3')).toHaveText('Свежих акций пока нет');
+  await expect(page.locator('#empty-search-copy')).toBeHidden();
+  await expect(page.locator('#search-status')).toHaveText('Свежих акций пока нет');
+  await expect(page.locator('#empty-search').getByRole('button', { name: 'Повторить загрузку', exact: true })).toBeVisible();
+  await expect(page.locator('#product-grid .product-card')).toHaveCount(0);
   expect(calls.ai).toBe(0); expect(calls.external).toEqual([]);
 });
 

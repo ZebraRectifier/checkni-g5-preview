@@ -2,6 +2,7 @@
 // requests and every basket mutation; this shell only reuses their real nodes.
 import { findStoreSearchMatches } from './storeSearchIndex.mjs';
 import { nearbyRegionForPosition } from '../intelligence/nearbyRegions.mjs';
+import { compactRetailScope } from '../presentation/retailSurfaceCopy.mjs';
 
 export function createHoriCommerce({ document, main, shop, header, onOpenHory, onOpenAddress }) {
   const view = document.defaultView;
@@ -256,6 +257,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   else desktopNavigation.addListener(mountNavigation);
 
   let state = { stage: 'stores', view: 'shop', basketUnits: 0 }; let assistantOpen = false;
+  let priceScopeNote = null;
   function syncNavigation() {
     const active = assistantOpen ? 'hory' : state.view === 'basket' ? 'basket' : 'stores';
     for (const [name, button] of navButtons) {
@@ -272,7 +274,14 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
       const priceNote = node('details', 'hori-price-note');
       const priceSummary = node('summary', '', 'О ценах');
       priceSummary.setAttribute('aria-label', 'О ценах и источниках каталога');
-      priceNote.append(priceSummary, note); searchForm.append(priceNote);
+      priceScopeNote = node('p', 'field-help hori-price-scope');
+      const priceDetails = node('div', 'hori-price-details');
+      priceDetails.append(priceScopeNote, note);
+      priceNote.append(priceSummary, priceDetails); searchForm.append(priceNote);
+    }
+    if (priceScopeNote) {
+      priceScopeNote.textContent = typeof state.scopeLabel === 'string' ? state.scopeLabel : '';
+      priceScopeNote.hidden = !priceScopeNote.textContent;
     }
     for (const selector of ['#globus-store-picker', '#metro-store-picker', '#magnit-store-picker']) {
       const existing = document.querySelector(selector); if (existing && existing.parentElement !== pickers) pickers.append(existing);
@@ -442,7 +451,8 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     const storeAddress = typeof state.storeAddress === 'string' ? state.storeAddress : '';
     const repeatedPrefix = storeAddress && [' · ', ' — ', ' | '].map(separator => storeAddress + separator)
       .find(prefix => fullScope.startsWith(prefix));
-    scope.textContent = repeatedPrefix ? fullScope.slice(repeatedPrefix.length) : fullScope;
+    const visibleScope = repeatedPrefix ? fullScope.slice(repeatedPrefix.length) : fullScope;
+    scope.textContent = compactRetailScope(state.retailerId, visibleScope);
     scope.hidden = !scope.textContent;
     scopeReference.textContent = inStore ? fullScope : ''; scopeReference.hidden = !inStore || !fullScope;
     const units = Number.isSafeInteger(state.basketUnits) && state.basketUnits >= 0 ? state.basketUnits : 0;

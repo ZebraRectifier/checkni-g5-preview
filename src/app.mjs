@@ -19,6 +19,7 @@ import {
 } from "./ports/betaRetailPricesPort.mjs";
 import { VALIDATED_MERGE_REASON, createBasketStore, countBasketUnits } from "./state/basketStore.mjs";
 import { createProductCard } from "./components/ProductCard.mjs";
+import { compactCatalogAbsence, compactRetailScope } from "./presentation/retailSurfaceCopy.mjs";
 import { createPixelProductCard } from "./components/PixelProductCard.mjs";
 import { watchCatalogMore } from "./components/catalogMoreOnScroll.mjs";
 import { sortPixelCategories, pixelCategoryImage, pixelCollectionCategories } from "./components/pixelCategoryPresentation.mjs";
@@ -904,8 +905,9 @@ function renderRetailStoreButtons() {
       && ['magnit', 'globus', 'metro'].includes(retailerId);
     button.setAttribute('aria-label', awaitsAddress
       ? `${definition.displayName}: выбрать адрес магазина`
-      : `${definition.displayName}: ${definition.scopeLabel}`);
-    button.title = awaitsAddress ? 'Выбрать конкретный адрес магазина' : definition.scopeLabel;
+      : `${definition.displayName}: ${compactRetailScope(retailerId, definition.scopeLabel)}`);
+    button.title = awaitsAddress ? 'Выбрать конкретный адрес магазина'
+      : compactRetailScope(retailerId, definition.scopeLabel);
 
     const logo = document.createElement("span");
     logo.className = "retail-store-logo";
@@ -928,7 +930,7 @@ function renderRetailStoreButtons() {
     const name = document.createElement("strong");
     name.textContent = definition.displayName;
     const scope = document.createElement("span");
-    scope.textContent = definition.scopeLabel;
+    scope.textContent = compactRetailScope(retailerId, definition.scopeLabel);
     copy.append(kicker, name, scope);
 
     const total = document.createElement("span");
@@ -2058,6 +2060,8 @@ function renderCatalog() {
   }
   const retailDefinition = currentRetailDefinition();
   const retailName = retailDefinition?.displayName ?? "магазина";
+  const compactCatalogError = compactCatalogAbsence(retailDefinition?.retailerId, 'error');
+  const compactCatalogEmpty = compactCatalogAbsence(retailDefinition?.retailerId, 'empty');
   const draft = catalogSearchState.status === "draft";
   const draftPrompt = normalizedQuery
     ? "Введите запрос и нажмите «Найти»."
@@ -2220,7 +2224,8 @@ function renderCatalog() {
   elements.productGrid.hidden = !hasResults;
   elements.emptySearch.hidden = draft || loading || hasVisibleProducts || categoryBrowsing;
   if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = fallback
-    ? "Не удалось загрузить товары" : "Ничего не нашли";
+    ? compactCatalogError?.title ?? "Не удалось загрузить товары" : "Ничего не нашли";
+  elements.emptySearchCopy.hidden = Boolean(compactCatalogError && fallback);
   if (elements.searchRetry) {
     const unavailablePromotions = publicRetailCatalogMode && retailDefinition?.requiresPromoValidity && !normalizedQuery;
     elements.searchRetry.hidden = !(fallback || unavailablePromotions) || draft || loading || hasVisibleProducts || categoryBrowsing;
@@ -2262,9 +2267,10 @@ function renderCatalog() {
     if (publicRetailCatalogMode && !normalizedQuery && retailDefinition?.requiresPromoValidity
         && !catalogSearchState.canLoadMore) {
       if (elements.emptySearchTitle) elements.emptySearchTitle.textContent = retailDefinition.publishedPromotions
-        ? 'Свежих цен пока нет' : 'Действующих акций сейчас нет';
+        ? compactCatalogEmpty?.title ?? 'Свежих цен пока нет' : 'Действующих акций сейчас нет';
+      elements.emptySearchCopy.hidden = Boolean(compactCatalogEmpty);
       elements.emptySearchCopy.textContent = "Можно повторить загрузку или выбрать другой магазин.";
-      elements.searchStatus.textContent = "Действующих акций сейчас нет";
+      elements.searchStatus.textContent = compactCatalogEmpty?.status ?? "Действующих акций сейчас нет";
       return;
     }
     if (catalogSearchState.categoryName) {
@@ -2295,7 +2301,7 @@ function renderCatalog() {
       ? `Показано товаров: ${results.length} из ${catalogSearchState.categoryExpectedCount}`
       : `Найдено товаров: ${results.length + featuredIds.size}`
     : fallback
-      ? "Живой каталог временно недоступен"
+      ? compactCatalogError?.status ?? "Живой каталог временно недоступен"
       : "По вашему запросу ничего не найдено";
 }
 
