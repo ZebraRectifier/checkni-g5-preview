@@ -96,6 +96,26 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
       expect(dataPaths).toContain(pinnedCoordinates);
       expect(dataPaths).not.toContain('/'+coordinateFile);
     }
+    const addressCss='src/components/pixel-storefront.css';
+    if((await fs.readFile(path.join(root,'releases',id,addressCss),'utf8')).includes('grid-template-columns: minmax(0,1fr); gap: 6px;')){
+      await page.locator('[data-pixel-action="stores"]').click();
+      await page.locator('#retail-store-card').click();
+      const chooser=page.locator('#pixel-address-chooser');
+      await expect(chooser.getByRole('heading')).toHaveText('Магазины · Глобус');
+      await expect(chooser.getByText(/адресов в официальном справочнике/u)).toBeHidden();
+      const rows=chooser.locator('.pixel-store-address-choice');
+      await expect(rows).toHaveCount(5);
+      await expect(rows.first()).not.toContainText('дату цен');
+      const search=chooser.getByRole('searchbox');
+      await expect(search).toHaveCount(1);
+      const address=chooser.locator('#globus-store-address option[value="5011"]').textContent();
+      const query=(await address).split(' · ').at(-1).split(' — ')[0];
+      await search.fill(query);
+      await chooser.locator('[data-store-id="5011"]').click();
+      await expect(chooser).toBeHidden();
+      await expect(page.locator('#pixel-storefront-title')).toContainText('Глобус');
+      await expect(page.locator('#globus-store-address')).toHaveValue('5011');
+    }
     const mapFile='src/components/StoresMap.mjs';
     if(manifest.entries.some(entry=>entry.file===mapFile)
       && (await fs.readFile(path.join(root,'releases',id,mapFile),'utf8')).includes("'stores-recenter'")){
