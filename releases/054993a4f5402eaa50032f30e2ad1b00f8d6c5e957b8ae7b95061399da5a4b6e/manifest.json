@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "dbded7216b404fe0049912cf0bacdbf313fbe5a1",
+  "sourceCommit": "b75d3cbf93211355e6eaed8255971c1cec61e857",
   "entries": [
     {
       "file": "index.html",
@@ -238,8 +238,8 @@
     },
     {
       "file": "src/components/PyaterochkaPublishedCatalog.mjs",
-      "sha256": "5c16a89c5e7079f8c87af632ec17f8518946a8f2e689a0139a2f2b49c6c8048c",
-      "bytes": 5928,
+      "sha256": "30f860e83c5318e599ec38be567bf0758e8e2b7e70570a297a6bd417a6a985d5",
+      "bytes": 6710,
       "mime": "text/javascript"
     },
     {
@@ -1701,5 +1701,5 @@
       "mime": "text/javascript"
     }
   ],
-  "releaseId": "16e0f3807888ee10ef0dce51640152910d5a4a6d809e49bc3bdd478e1882014e"
+  "releaseId": "054993a4f5402eaa50032f30e2ad1b00f8d6c5e957b8ae7b95061399da5a4b6e"
 }
