@@ -9,6 +9,9 @@ const reviewed = {
   price_condition: "public-online", availability: "unknown", main_category_id: 63963,
   product_url: "https://magnit.ru/product/1899800689-kefir_prostokvashino_2_5_930g?shopCode=777312&shopType=1",
   source_url: "https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1",
+  location_label: "г Москва, аллея Берёзовая, д 17 к 2", scope_binding: "public-store-product-page",
+  binding_id: "magnit-shopcode-777312",
+  scope_evidence_url: "https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1",
   image_url: null, observed_at: "2026-10-10T06:30:00Z"
 };
 const unreviewed = { ...reviewed, source_product_id: "other", name: "Кефир Другая марка 2.5% 900г", weight_text: "900 г", price_minor: 5999,

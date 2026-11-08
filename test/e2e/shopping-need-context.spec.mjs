@@ -5,7 +5,10 @@ import { openBasket, openHory, selectStore } from "./helpers/pixel-surface.mjs";
 const base = { retailer_id: "magnit", store_id: "magnit-777312", store_name: "Магнит · Берёзовая аллея, 17к2",
   locality_id: "city-moscow", locality_name: "Москва", currency: "RUB", price_condition: "public-online",
   availability: "unknown", main_category_id: 63963, image_url: null, observed_at: "2026-10-10T06:30:00Z",
-  source_url: "https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1" };
+  source_url: "https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1",
+  location_label: "г Москва, аллея Берёзовая, д 17 к 2", scope_binding: "public-store-product-page",
+  binding_id: "magnit-shopcode-777312",
+  scope_evidence_url: "https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1" };
 const kefir = { ...base, source_product_id: "1899800689", name: "Кефир Простоквашино 2.5% 930г", weight_text: "930 г", price_minor: 7999,
   product_url: "https://magnit.ru/product/1899800689-kefir_prostokvashino_2_5_930g?shopCode=777312&shopType=1" };
 const milk = { ...base, source_product_id: "1899800733", name: "Молоко Простоквашино пастеризованное 2.5% 930мл", weight_text: "930 мл", price_minor: 8999,

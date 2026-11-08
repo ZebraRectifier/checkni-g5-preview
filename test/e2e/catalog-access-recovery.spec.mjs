@@ -24,7 +24,10 @@ const milk = { retailer_id: 'magnit', store_id: 'magnit-777312', store_name: 'М
   currency: 'RUB', price_condition: 'public-online', sales_channel: 'public-store-product-page', availability: 'unknown', main_category_id: 63963,
   product_url: 'https://magnit.ru/product/1899800733-moloko_prostokvashino_pasterizovannoe_2_5_930ml?shopCode=777312&shopType=1',
   source_url: 'https://magnit.ru/product/1899800733-moloko_prostokvashino_pasterizovannoe_2_5_930ml?shopCode=777312&shopType=1',
-  location_label: 'г Москва, аллея Берёзовая, д 17 к 2', observed_at: at };
+  location_label: 'г Москва, аллея Берёзовая, д 17 к 2', scope_binding: 'public-store-product-page',
+  binding_id: 'magnit-shopcode-777312',
+  scope_evidence_url: 'https://magnit.ru/product/1899800733-moloko_prostokvashino_pasterizovannoe_2_5_930ml?shopCode=777312&shopType=1',
+  observed_at: at };
 
 async function setup(page, { now = '2026-10-18T02:00:00Z', items = [], instrumentMock = false } = {}) {
   await page.clock.install({ time: new Date(now) });

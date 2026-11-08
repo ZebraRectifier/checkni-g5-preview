@@ -646,7 +646,7 @@ for (const first of ['globus', 'magnit']) {
       const categoryIds = { globus: 10111111, magnit: 22222 };
       const roots = {
         globus: 'https://www.globus.ru/catalog/gotovaya-eda-10111111',
-        magnit: 'https://magnit.ru/catalog/gotovaya-eda/'
+        magnit: 'https://magnit.ru/catalog/gotovaya-eda/?shopCode=777312&shopType=1'
       };
       const product = (retailer, kind) => ({
         retailer_id: retailer, store_id: stores[retailer], store_name: names[retailer],
@@ -660,7 +660,11 @@ for (const first of ['globus', 'magnit']) {
         ...(retailer === 'globus' ? {
           sales_channel: 'store', scope_binding: 'same-source', binding_id: 'store:5011',
           location_label: products[0].location_label, scope_evidence_url: roots.globus
-        } : {})
+        } : {
+          sales_channel: 'public-store-product-page', scope_binding: 'public-store-product-page',
+          binding_id: 'magnit-shopcode-777312', location_label: 'г Москва, аллея Берёзовая, д 17 к 2',
+          scope_evidence_url: roots.magnit
+        })
       });
       let releaseOld, releaseRoots, releaseProducts;
       const oldGate = new Promise(resolve => { releaseOld = resolve; });
