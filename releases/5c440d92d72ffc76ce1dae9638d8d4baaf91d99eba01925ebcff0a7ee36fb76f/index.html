@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0c11" />
+    <meta name="color-scheme" content="dark" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://images.openfoodfacts.org https://image.globus.ru https://cdn.api.lenta.com https://images-foodtech.magnit.ru https://img.vkusvill.ru https://cdn.metro-cc.ru https://avatars.mds.yandex.net https://market-da.ru https://tile.openstreetmap.org https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; connect-src 'self' https://cxpneczhczashanbetgj.supabase.co https://gcdigtvknihwytbuzaga.supabase.co https://tiles.openfreemap.org; worker-src 'self'; upgrade-insecure-requests" />
+    <title>CHECKNI — Где корзина дешевле?</title>
+    <script src="./src/appearance-v17.js"></script>
+    <link rel="preload" href="./src/img/hory-states-v17.png" as="image" fetchpriority="high" />
+    <link rel="stylesheet" href="./src/styles.css" />
+    <link rel="stylesheet" href="./src/theme-violet.css" />
+    <link rel="stylesheet" href="./src/components/pixel-storefront.css" />
+    <link rel="stylesheet" href="./src/components/storefront-v15.css" />
+    <link rel="stylesheet" href="./src/components/pixel-basket-hory.css" />
+    <link rel="stylesheet" href="./src/components/nearby-shopping.css" />
+    <link rel="stylesheet" href="./src/components/shell-v17.css" />
+    <link rel="stylesheet" href="./src/components/shopping-v17.css" />
+    <link rel="stylesheet" href="./src/components/hory-v17.css" />
+  </head>
+  <body>
+    <div id="checkni-boot" role="status"><strong>CHECKNI</strong><span>Открываем магазины…</span></div>
+    <a class="skip-link" href="#main">К основному содержимому</a>
+
+    <header class="app-header">
+      <a class="brand" href="#shop" aria-label="CHECKNI — на главную">
+        <span class="brand-mark" aria-hidden="true">C</span>
+        <span class="brand-word">CheckNi</span>
+      </a>
+      <span id="comparison-mode-badge" class="demo-badge">CHECKNI</span>
+    </header>
+
+    <main id="main" class="app-shell">
+      <section id="shop-view" class="view" aria-labelledby="shop-title">
+        <div class="hero">
+          <div class="hero-identity" data-mascot-state="idle">
+            <div class="hero-bubble">Что ищем сегодня?</div>
+            <img
+              class="hero-mascot"
+              src="./src/img/ferret-hero.png"
+              alt="Маскот CheckNi — хорёк в очках"
+              width="512"
+              height="384"
+            />
+          </div>
+          <p class="eyebrow">Умная корзина</p>
+          <h1 id="shop-title" tabindex="-1">Скажи или напиши, что нужно купить</h1>
+          <p class="hero-copy">
+            CHECKNI соберёт черновик корзины, Core проверит товары, а цены и победителя определит только детерминированное сравнение.
+          </p>
+
+          <section id="basket-proposal-section" class="phrase-entry phrase-entry-primary" aria-labelledby="phrase-entry-title" hidden>
+            <div class="phrase-entry-heading">
+              <p class="eyebrow">Главное действие</p>
+              <h2 id="phrase-entry-title">Собрать корзину одной фразой</h2>
+            </div>
+            <form id="basket-proposal-form" class="proposal-form">
+              <label class="proposal-box" for="basket-proposal-input">
+                <span class="sr-only">Список продуктов одной фразой</span>
+                <input
+                  id="basket-proposal-input"
+                  name="basket-proposal"
+                  type="text"
+                  autocomplete="off"
+                  maxlength="300"
+                  placeholder="Например: два молока, яйца и яблоки"
+                  enterkeyhint="send"
+                  aria-describedby="basket-proposal-help basket-proposal-status"
+                />
+                <button id="basket-proposal-submit" class="proposal-submit" type="submit">
+                  Собрать корзину
+                </button>
+              </label>
+              <p id="basket-proposal-help" class="field-help">
+                Простой список CHECKNI разбирает локально. Если запрос сложный, подключается AI. Core всё равно проверяет товары перед добавлением.
+              </p>
+              <div id="basket-proposal-status" class="proposal-status" aria-live="polite"></div>
+              <button id="basket-proposal-fallback" class="text-button" type="button" hidden>
+                Искать вручную
+              </button>
+            </form>
+          </section>
+
+          <div id="manual-divider" class="manual-divider" aria-hidden="true" hidden><span>или найти товар вручную</span></div>
+
+          <form id="search-form" class="search-form" role="search">
+            <label class="search-box" for="product-search">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+                <path d="m21 21-4.35-4.35m2.35-5.15a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              <input
+                id="product-search"
+                name="q"
+                type="search"
+                inputmode="search"
+                autocomplete="off"
+                placeholder="Например, молоко"
+                aria-describedby="search-help search-status"
+              />
+              <button id="clear-search" class="icon-button clear-button" type="button" aria-label="Очистить поиск" hidden>
+                <span aria-hidden="true">×</span>
+              </button>
+            </label>
+            <p id="search-help" class="field-help">Ручной поиск всегда доступен, даже если AI временно не отвечает.</p>
+          </form>
+        </div>
+
+        <section id="beta-live-section" class="beta-live-card" aria-labelledby="beta-live-title" hidden>
+          <p class="eyebrow">Живой пример · Москва</p>
+          <h2 id="beta-live-title">Проверить реальные цены прямо сейчас</h2>
+          <p>
+            Молоко Простоквашино 930 мл, кефир Простоквашино 930 г и масло Брест-Литовск 180 г сверяем в METRO и Магните. В METRO используется обычная онлайн-цена, в Магните может быть публичная акционная цена — это условие будет показано в результате.
+          </p>
+          <button id="beta-live-button" class="primary-button" type="button">
+            Подтвердить товары и сравнить реальные цены
+          </button>
+          <p id="beta-live-status" class="field-help" aria-live="polite">
+            Сначала подтверждаем соответствие товаров без цен. Затем CHECKNI заново читает публичные страницы магазинов. Если данные неоднозначны — сравнения не будет.
+          </p>
+        </section>
+
+        <section id="retail-browser" class="retail-browser" aria-label="Каталоги магазинов" hidden>
+          <div id="retail-store-grid" class="retail-store-grid" aria-label="Магазины с живым каталогом"></div>
+
+          <div id="retail-catalog-nav" class="retail-catalog-nav">
+            <div class="retail-browser-head">
+              <button id="retail-category-back" class="retail-category-back" type="button" hidden>
+                ← Назад
+              </button>
+              <div>
+                <p class="eyebrow">Каталог магазина</p>
+                <h2 id="retail-category-title">Категории</h2>
+                <p id="retail-category-note" class="field-help">
+                  Выберите раздел, затем подкатегорию — товары появятся ниже.
+                </p>
+              </div>
+            </div>
+            <nav id="retail-breadcrumbs" class="retail-breadcrumbs" aria-label="Путь по каталогу" hidden></nav>
+            <div id="retail-category-grid" class="retail-category-grid"></div>
+            <p id="retail-category-status" class="sr-only" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <section class="catalog-section" aria-labelledby="catalog-title">
+          <div class="section-heading">
+            <div>
+              <p id="catalog-eyebrow" class="eyebrow">Демо-каталог</p>
+              <h2 id="catalog-title">Товары</h2>
+            </div>
+            <span id="result-count" class="result-count" aria-hidden="true"></span>
+          </div>
+          <p id="catalog-note" class="field-help">Тестовые позиции для резервного режима.</p>
+          <p id="search-status" class="sr-only" aria-live="polite"></p>
+          <div id="product-grid" class="product-grid"></div>
+          <div id="empty-search" class="empty-state" hidden>
+            <div class="empty-icon" aria-hidden="true">⌕</div>
+            <h3>Ничего не нашли</h3>
+            <p id="empty-search-copy">Попробуйте более короткий запрос — например «сыр» или «хлеб».</p>
+          </div>
+        </section>
+      </section>
+
+      <section id="basket-view" class="view basket-view" aria-labelledby="basket-title" hidden>
+        <button id="back-to-shop" class="back-button" type="button">
+          <span aria-hidden="true">←</span>
+          К товарам
+        </button>
+
+        <div class="basket-heading">
+          <p class="eyebrow">Ваша корзина</p>
+          <h1 id="basket-title" tabindex="-1">Проверьте количество</h1>
+          <p id="basket-mode-copy" class="hero-copy">Проверьте состав и запустите сравнение.</p>
+        </div>
+
+        <div id="basket-content"></div>
+      </section>
+    </main>
+
+    <aside id="basket-dock" class="basket-dock" aria-live="polite">
+      <button id="open-basket" class="basket-dock-button" type="button">
+        <span>
+          <strong>Корзина</strong>
+          <small id="basket-dock-copy">Пока пусто</small>
+        </span>
+        <span class="dock-arrow" aria-hidden="true">→</span>
+      </button>
+    </aside>
+
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script type="module" src="./src/app.mjs"></script>
+  </body>
+</html>
