@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-08",
+  "sourceCommit": "dbb280ae17b1b0e7aa043c89921f12860f30ba32",
+  "scope": "Five published regional geography-only address directories",
+  "totalStores": 3744,
+  "priceEvidence": false,
+  "catalogBindings": 0,
+  "cities": {
+    "saint-petersburg": {
+      "city": "Санкт-Петербург",
+      "stores": 1608,
+      "sha256Lf": "d35a783064341253e9e92971cb6b00fb3011485d5c4a8cb02a76aa2f5e9f352e",
+      "networks": {"auchan": 4, "lenta": 84, "magnit": 684, "metro": 3, "okey": 6, "perekrestok": 108, "pyaterochka": 453, "vkusvill": 266}
+    },
+    "kazan": {
+      "city": "Казань",
+      "stores": 637,
+      "sha256Lf": "7e39096d45ceb0119632e4ec70a8658c2943308ef365acd23025d270b93d34d8",
+      "networks": {"auchan": 4, "lenta": 6, "magnit": 269, "metro": 2, "perekrestok": 8, "pyaterochka": 342, "vkusvill": 6}
+    },
+    "yekaterinburg": {
+      "city": "Екатеринбург",
+      "stores": 504,
+      "sha256Lf": "5024b6e8ef79d2ad386ffee90bdc65261f5abd249463d11ec2a6f162e4cf5aca",
+      "networks": {"auchan": 2, "lenta": 12, "magnit": 267, "metro": 3, "okey": 1, "perekrestok": 22, "pyaterochka": 194, "vkusvill": 3}
+    },
+    "novosibirsk": {
+      "city": "Новосибирск",
+      "stores": 551,
+      "sha256Lf": "25ba8fe23d0f7b575939109dcfa7b51593f843c51ec81f5acf5f3db8fcd503bf",
+      "networks": {"auchan": 3, "lenta": 26, "magnit": 213, "maria-ra": 201, "metro": 3, "okey": 2, "pyaterochka": 103}
+    },
+    "nizhny-novgorod": {
+      "city": "Нижний Новгород",
+      "stores": 444,
+      "sha256Lf": "25678b18afc853837315da60c30e11dd3114bf6a1aabcd79b2076ea550b90243",
+      "networks": {"auchan": 5, "lenta": 3, "magnit": 202, "metro": 2, "okey": 1, "perekrestok": 9, "pyaterochka": 214, "vkusvill": 8}
+    }
+  },
+  "networkTotals": {"auchan": 18, "lenta": 131, "magnit": 1635, "maria-ra": 201, "metro": 13, "okey": 10, "perekrestok": 147, "pyaterochka": 1306, "vkusvill": 283},
+  "lineage": {
+    "osmRows": 2633,
+    "officialRows": 910,
+    "derivedOfficialRows": 201,
+    "osmSnapshots": "2026-11-05",
+    "metroAndVkusvillOfficialCapture": "2026-11-05",
+    "magnitOfficialCapture": "2026-11-07",
+    "mariaRaOfficialCapture": "2026-11-07",
+    "lentaExactReceipts": "2026-11-08",
+    "evidence": [
+      "evidence/regions-20261107/source-manifest.json",
+      "evidence/maria-ra-novosibirsk-20261107/summary.json",
+      "evidence/lenta-kazan-20261108/receipt.json",
+      "evidence/lenta-yekaterinburg-20261108/receipt.json"
+    ]
+  },
+  "limits": [
+    "The directories are non-exhaustive and cannot be used to claim full city coverage.",
+    "Rows identify geography only; catalogue binding, stock, availability, delivery scope and prices are not established.",
+    "OSM-derived rows retain ODbL attribution; official and derived rows retain their per-row source URLs.",
+    "Possible duplicate Magnit candidates held by the 2026-11-07 review are not included."
+  ]
+}
