@@ -7,6 +7,7 @@ import { resolveRegisteredMagnitStore } from '../data/registeredMagnitStores.mjs
 import { createRetailCatalogClient } from '../ports/retailCatalogPort.mjs';
 import { createWeeklyRetailCatalogPort, PEREKRESTOK_WEEKLY_SCOPE } from '../ports/weeklyRetailCatalogPort.mjs';
 import { getReviewedRetailBasketProduct } from '../catalog/reviewedRetailBasket.mjs';
+import { reviewedCrossSourceCounterpart } from '../catalog/reviewedCrossSourcePairs.mjs';
 import { catalogPurchaseUnit, catalogRequestForQuantity, economicalCatalogCards,
   suggestedCatalogQuantity, suggestedCatalogQuantityForIntent, quoteCatalogDraft,
   compareCatalogDraftAlternatives } from '../core/catalogDraft.mjs';
@@ -69,7 +70,11 @@ export async function loadSavedGuidedComparison(request,basket,{
   const anchorCards=new Map();
   if(typeof catalog.bySourceProductIds==='function') {
     const batches=scopes.flatMap(scope=>{
-      const ids=[...new Set(state.bindings.filter(b=>b.retailerId===scope.retailerId).map(b=>b.sourceProductId))];
+      const ids=[...new Set(state.bindings.flatMap(binding=>{
+        if(binding.retailerId===scope.retailerId)return [binding.sourceProductId];
+        const counterpart=reviewedCrossSourceCounterpart(binding,scope.retailerId);
+        return counterpart?[counterpart]:[];
+      }))];
       return Array.from({length:Math.ceil(ids.length/40)},(_,index)=>({scope,ids:ids.slice(index*40,index*40+40)}));
     });
     let nextBatch=0;
@@ -126,7 +131,13 @@ export async function loadSavedGuidedComparison(request,basket,{
         if(draft.scope.retailerId===binding.retailerId){card=anchor;quantity=item.quantity;}
         else{
           const exactCards=target.approximate?sourceCards:sourceCards.filter(row=>!catalogPurchaseUnit(row)?.approximate);
-          card=economicalCatalogCards(group,exactCards,1,1,{nowMs:now()})[0]
+          const counterpartId=reviewedCrossSourceCounterpart(binding,draft.scope.retailerId);
+          const counterpart=(anchorCards.get(draft.scope.retailerId)??[]).find(row=>
+            row.sourceProductId===counterpartId&&admitted(row,draft.scope,baseGroup,memory,now()));
+          const anchorUnit=catalogRequestForQuantity(anchor,1),counterpartUnit=catalogRequestForQuantity(counterpart,1);
+          const exactCounterpart=counterpart&&anchorUnit&&!anchorUnit.approximate&&counterpartUnit&&!counterpartUnit.approximate
+            &&anchorUnit.dimension===counterpartUnit.dimension&&anchorUnit.amount===counterpartUnit.amount?counterpart:null;
+          card=exactCounterpart??economicalCatalogCards(group,exactCards,1,1,{nowMs:now()})[0]
             ??economicalCatalogCards(group,sourceCards,1,1,{nowMs:now()})[0]??null;
           if(card)quantity=suggestedCatalogQuantity(group,card,1,1);
         }

@@ -9,6 +9,7 @@ import {createWeeklyRetailCatalogPort} from '../src/ports/weeklyRetailCatalogPor
 import {getReviewedRetailBasketProduct} from '../src/catalog/reviewedRetailBasket.mjs';
 import {resolveRegisteredMagnitStore} from '../src/data/registeredMagnitStores.mjs';
 import {loadSavedGuidedComparison} from '../src/runtime/savedGuidedComparison.mjs';
+import {reviewedCrossSourceCounterpart} from '../src/catalog/reviewedCrossSourcePairs.mjs';
 const {rows}=JSON.parse(await readFile(new URL('./fixtures/weekly-retail/cross-retailer-20261101.json',import.meta.url),'utf8'));
 const store=resolveRegisteredMagnitStore({shopCode:'503695'}),now=Date.parse('2026-11-02T08:00:00Z');
 const normalized=raw=>normalizeRetailRow({...raw,observed_at:new Date(now).toISOString()},raw.retailer_id==='magnit'?{retailerId:'magnit',store}:'perekrestok');
@@ -142,4 +143,37 @@ test('a source-scoped milk anchor is quoted rather than lost to its legacy canon
  assert.equal(result.quotes[0].complete,true);assert.equal(result.quotes[1].complete,true);
  assert.equal(result.drafts[0].rows[0].card.id,item.id);assert.equal(result.drafts[0].rows[0].quantity,2);
  assert.equal(result.drafts[0].rows[0].quantityReview,false);
+});
+
+test('reviewed same-pack oats counterpart wins discovery without carrying a price claim',async()=>{
+ const perekSource='https://eda.yandex.ru/retail/perekrestok?placeSlug=perekryostok_h5q7w';
+ const perekId='fb3574cb-eba6-47a1-9932-30da895354fb',magnitId='1349400001';
+ assert.equal(reviewedCrossSourceCounterpart({retailerId:'perekrestok',sourceProductId:perekId},'magnit'),magnitId);
+ assert.equal(reviewedCrossSourceCounterpart({retailerId:'magnit',sourceProductId:magnitId},'perekrestok'),perekId);
+ assert.equal(reviewedCrossSourceCounterpart({retailerId:'perekrestok',sourceProductId:'other'},'magnit'),null);
+ const perek=normalizeRetailRow({retailer_id:'perekrestok',store_id:'perekrestok-yandex-3186917',
+  store_name:'Перекрёсток · Москва, Большой Овчинниковский пер. 16 · Яндекс Еда',locality_id:'city-moscow',locality_name:'Москва',
+  source_product_id:perekId,name:'Хлопья овсяные Ясно Солнышко средний размер No 2 500 г',weight_text:'500 г',price_minor:10000,
+  currency:'RUB',price_condition:'yandex-eda-regular',sales_channel:'yandex-eda-delivery',minimum_quantity:null,quantity_semantics:null,
+  availability:'unknown',product_url:perekSource,source_url:perekSource,scope_evidence_url:perekSource,scope_binding:'same-source',
+  binding_id:'yandex-eda:perekryostok_h5q7w:3186917',location_label:'Москва',observed_at:new Date(now).toISOString()},'perekrestok');
+ const magnit=weeklyMagnitCard(normalized(rows.find(row=>row.source_product_id===magnitId)));
+ const generic=weeklyMagnitCard(normalized(rows.find(row=>row.source_product_id==='1000146531')));
+ const item={...getReviewedRetailBasketProduct(perek),quantity:1};assert.ok(item.id);
+ const request=prepareManualCatalogComparison([item],{magnitStoreId:'magnit-503695'}).request;
+ const requested=[];
+ const run=exactMagnit=>loadSavedGuidedComparison(request,[item],{now:()=>now,catalog:{
+  bySourceProductIds:async(ids,{scope})=>{requested.push([scope.retailerId,...ids]);return {kind:'catalog',products:
+    scope.retailerId==='magnit'?[exactMagnit].filter(card=>ids.includes(card.sourceProductId)):[perek].filter(card=>ids.includes(card.sourceProductId))};},
+  search:async(_query,{scope})=>({kind:'catalog',products:scope.retailerId==='magnit'?[generic]:[]})
+ }});
+ const fresh=await run(magnit);assert.equal(fresh.kind,'catalog_comparison');
+ assert.ok(requested.some(([retailer,id])=>retailer==='magnit'&&id===magnitId),'opposite exact ID is read explicitly');
+ assert.equal(fresh.drafts[0].rows[0].card.sourceProductId,magnitId);
+ assert.equal(fresh.drafts[0].rows[0].quantity,1);assert.equal(fresh.drafts[1].rows[0].quantity,1);
+ assert.equal(fresh.comparison.kind,'fresh');
+ const stale=await run({...magnit,observedAt:new Date(now-2*60*60*1000).toISOString()});
+ assert.equal(stale.drafts[0].rows[0].card.sourceProductId,magnitId,'fresh generic products cannot impersonate the approved exact pack');
+ assert.equal(stale.quotes[0].allRecent,false);assert.equal(stale.comparison.kind,'needs_refresh');
+ assert.equal(stale.comparison.lowerStoreId,undefined,'a stale exact pack never creates a winner');
 });
