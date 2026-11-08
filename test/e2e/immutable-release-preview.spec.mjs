@@ -39,7 +39,10 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
       locality_id:'city-moscow',locality_name:'Москва',source_product_id:'1899800689',name:'Кефир Простоквашино 2.5% 930г',
       weight_text:'930 г',price_minor:7999,currency:'RUB',price_condition:'public-online',availability:'unknown',main_category_id:63963,
       product_url:'https://magnit.ru/product/1899800689-kefir_prostokvashino_2_5_930g?shopCode=777312&shopType=1',
-      source_url:'https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1',image_url:null,observed_at:'2026-10-10T06:30:00Z'}]};
+      source_url:'https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1',
+      scope_evidence_url:'https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1',
+      scope_binding:'public-store-product-page',binding_id:'magnit-shopcode-777312',
+      location_label:'г Москва, аллея Берёзовая, д 17 к 2',image_url:null,observed_at:'2026-10-10T06:30:00Z'}]};
     const headers={'access-control-allow-origin':'*','access-control-allow-headers':'apikey,content-type','access-control-allow-methods':'GET,OPTIONS'};
     await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({headers,json:[]}));
     await page.route('**/rest/v1/retail_catalog_items**',r=>{
