@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {selectStore,openStoreDetails} from './helpers/pixel-surface.mjs';
 
 test('lazy SDK map supports marker card, store choice, keyboard search and touch-sized controls',async({page})=>{
   const vendor=[];page.on('request',request=>{if(request.url().includes('/vendor/maplibre'))vendor.push(request.url());});
@@ -66,4 +67,41 @@ test('compact map mode offers a keyboard-only store route without duplicating th
   await page.keyboard.press('Enter');
   await expect(page.locator('.stores-pin-card')).toBeVisible();
   await expect(page.locator('.stores-pin-card')).toContainText('Пролетарский');
+});
+
+test('map centre and radius survive opening a catalogue and returning to stores',async({page,context})=>{
+  test.setTimeout(90000);
+  await page.route(/^https?:\/\/(?!(?:127\.0\.0\.1|localhost)(?::\d+)?\/)/u,route=>{
+    const url=new URL(route.request().url());
+    if(url.hostname!=='tiles.openfreemap.org')return route.abort();
+    if(url.pathname==='/styles/liberty')return route.fulfill({json:{version:8,
+      glyphs:new URL('/test/support/map-test-fonts/',page.url()).href+'{fontstack}/{range}.pbf',
+      sources:{fixture:{type:'geojson',data:{type:'FeatureCollection',features:[]},attribution:'CHECKNI offline map fixture'}},
+      layers:[{id:'background',type:'background',paint:{'background-color':'#e5e8de'}}]}});
+    return route.abort();
+  });
+  await page.route('**/rest/v1/**',route=>route.fulfill({json:[]}));
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({latitude:55.802136,longitude:37.299144,accuracy:10});
+  await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
+  await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready',{timeout:20000});
+  await selectStore(page,'globus');await openStoreDetails(page);
+  await page.locator('#nearby-locate').click();await page.locator('#nearby-radius').selectOption('10');
+  await page.locator('#nearby-shopping .nearby-location-actions button').filter({hasText:'На карте'}).click();
+  const map=page.locator('.stores-map');await expect(map).toBeFocused();
+  await map.press('ArrowRight');await page.getByRole('button',{name:'Искать здесь',exact:true}).click();
+  await expect(page.locator('#nearby-radius')).toHaveValue('10');
+  await expect(page.locator('#nearby-status')).toContainText('Точка на карте · до 10 км');
+  await expect(page.getByRole('button',{name:'Искать здесь',exact:true})).toBeDisabled();
+  const marker=page.locator('.stores-pin').first();
+  await expect(marker).toBeVisible({timeout:15000});await marker.click();
+  await page.locator('.stores-pin-card').getByRole('button',{name:'Открыть товары',exact:true}).click();
+  await expect(page.locator('#pixel-storefront')).toBeVisible();
+  await page.locator('[data-pixel-action="stores"]').click();
+  await expect(page.locator('#pixel-store-home')).toBeVisible();
+  await expect(page.locator('#nearby-radius')).toHaveValue('10');
+  await page.locator('#nearby-shopping .nearby-location-actions button').filter({hasText:'На карте'}).click();
+  await expect(map).toBeVisible();
+  await expect(page.getByRole('button',{name:'Искать здесь',exact:true})).toBeDisabled();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
