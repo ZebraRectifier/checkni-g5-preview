@@ -106,7 +106,7 @@ test('saved comparison distinguishes a fresh weight estimate from quantities tha
  await expect(status).toContainText('Ориентировочно:');
  await expect(status).toContainText('ниже на 100,00');
  await expect(status).not.toContainText('нужно уточнить');
- await expect(host).toContainText('По количествам из списка');
+ await expect(host).toContainText('Считаем объём сохранённой корзины. В другом магазине может понадобиться больше упаковок.');
  await expect(host).toContainText('Доставка и сборы не включены');
  const explanation=host.getByText('Как рассчитана сумма',{exact:true});await explanation.click();
  await expect(host.getByText(/сумма может отличаться от первоначального подбора/)).toBeVisible();
