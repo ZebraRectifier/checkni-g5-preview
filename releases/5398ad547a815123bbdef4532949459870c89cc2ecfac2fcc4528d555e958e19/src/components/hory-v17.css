@@ -1,0 +1,91 @@
+/* Shared silhouette and fixed frame geometry keep the character stable. */
+body.pixel-workspace .hory-v17-sprite {
+  display: inline-block;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  background-image: url('../img/hory-states-v17.png');
+  background-size: 680% 200%;
+  background-position: 1% 52%;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  transform-origin: 50% 90%;
+}
+body.pixel-workspace .hory-v17-sprite[data-state='listening'] { background-position-x: 20.6%; }
+body.pixel-workspace .hory-v17-sprite[data-state='thinking'] { background-position-x: 40.2%; }
+body.pixel-workspace .hory-v17-sprite[data-state='searching'] { background-position-x: 59.8%; }
+body.pixel-workspace .hory-v17-sprite[data-state='found'] { background-position-x: 79.4%; }
+body.pixel-workspace .hory-v17-sprite[data-state='clarify'] { background-position-x: 99%; }
+body.pixel-workspace .pixel-nav-button[data-pixel-action='hory'] { overflow: visible; }
+body.pixel-workspace .pixel-nav-button[data-pixel-action='hory']:active { transform: translateY(2px); }
+@media (hover: hover) {
+  body.pixel-workspace .pixel-nav-button[data-pixel-action='hory']:hover .hory-v17-sprite {
+    animation: hory-v17-peek 420ms steps(4, end) 1;
+  }
+}
+@keyframes hory-v17-peek {
+  35% { transform: translateY(-4px) rotate(-4deg); }
+  70% { transform: translateY(-4px) rotate(3deg); }
+}
+@keyframes hory-v17-check { 50% { transform: translateX(2px) rotate(2deg); } }
+body.pixel-workspace .pixel-hory-dialog[open] .hory-v17-sprite[data-state='searching'],
+body.pixel-workspace .pixel-hory-dialog[open] .hory-v17-sprite[data-state='thinking'] {
+  animation: hory-v17-check 1.8s steps(3, end) infinite;
+}
+body.pixel-workspace .pixel-hory-dialog {
+  inset: 12px 12px 12px auto;
+  width: min(460px, calc(100% - 24px));
+  max-width: 460px;
+  height: calc(100dvh - 24px);
+  max-height: calc(100dvh - 24px);
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 16px 70px #21133430;
+  --hory-dialog-padding: 20px;
+}
+body.pixel-workspace .pixel-hory-dialog::backdrop { background: #23163555; }
+body.pixel-workspace .pixel-hory-header { background: var(--surface); border-bottom: 1px solid var(--line); }
+body.pixel-workspace .pixel-hory-identity p { display: none; }
+body.pixel-workspace .pixel-hory-header h2 { font-size: 22px; }
+body.pixel-workspace .pixel-dialog-close { border-radius: 8px; }
+body.pixel-workspace .hory-v17-welcome { display: block; width: 120px; height: 120px; margin: 4px auto 12px; }
+body.pixel-workspace .pixel-hory-dialog .shopping-welcome:not([hidden]):has(.shopping-conversation-choices) {
+  border: 0;
+  background: transparent;
+  padding: 8px 0;
+}
+body.pixel-workspace .hori-greeting { font-size: 18px; margin-bottom: 16px; }
+body.pixel-workspace .shopping-conversation-choices { display: grid; grid-template-columns: 1fr; gap: 10px; }
+body.pixel-workspace .shopping-conversation-choices button { min-height: 48px; text-align: left; border-radius: 8px; padding: 12px 16px; }
+body.pixel-workspace .shopping-dialogue-user { margin-left: 24px; border: 0; border-radius: 12px 12px 3px 12px; }
+body.pixel-workspace .shopping-dialogue-answer,
+body.pixel-workspace .shopping-dialogue .proposal-status { border: 0; border-radius: 3px 12px 12px 12px; line-height: 1.55; }
+body.pixel-workspace .hori-composer { gap: 8px; padding: 12px 0; bottom: -20px; }
+body.pixel-workspace .hori-composer input { border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); }
+body.pixel-workspace #basket-proposal-submit { border-radius: 8px; padding: 8px 12px; min-height: 48px; }
+body.pixel-workspace .shopping-dialogue-note { font-size: 12px; line-height: 1.5; }
+body.pixel-workspace .shopping-dialogue-header { gap: 8px; flex-wrap: wrap; }
+body.pixel-workspace .shopping-dialogue-header > strong { display: none; }
+@media (max-width: 620px) {
+  body.pixel-workspace .pixel-hory-dialog { inset: 0; width: 100%; height: 100dvh; max-height: 100dvh; max-width: none; border: 0; border-radius: 0; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+  body.pixel-workspace .pixel-hory-header { padding-top: max(16px, env(safe-area-inset-top)); }
+  body.pixel-workspace .pixel-nav .hory-v17-sprite { width: 32px; height: 32px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.pixel-workspace .hory-v17-sprite,
+  body.pixel-workspace .pixel-nav-button[data-pixel-action='hory'] { animation: none !important; transition: none !important; transform: none !important; }
+}
+
+body.pixel-workspace .pixel-hory-form { min-height: calc(100dvh - 150px); }
+body.pixel-workspace .hori-composer { margin-top: auto; }
+
+/* Leave the two entry actions above the composer when the phone keyboard
+   reduces the visual viewport. The conversation itself remains scrollable. */
+@media (max-height: 600px) {
+  body.pixel-workspace .hory-v17-welcome { width: 64px; height: 64px; margin-block: 0 8px; }
+  body.pixel-workspace .hori-greeting { margin-bottom: 8px; font-size: 16px; }
+  body.pixel-workspace .shopping-conversation-choices { margin-block: 8px; gap: 6px; }
+  body.pixel-workspace .pixel-hory-form { gap: 8px; }
+}
