@@ -260,6 +260,46 @@ jobs:
             // Force a real cross-retailer race: hold the first GLOBUS root
             // response, switch to Lenta, then release the stale GLOBUS reply.
             // The published runtime must keep the newer retailer ownership.
+            for (const width of [1280, 390]) {
+              const nearby = await browser.newContext({
+                viewport:{width,height:844},
+                geolocation:{latitude:55.928776,longitude:38.003613,accuracy:10},
+                permissions:["geolocation"]
+              });
+              const check = await nearby.newPage();
+              check.setDefaultTimeout(15000);
+              let geocoderCalls = 0;
+              await check.route("**/*", route => {
+                const target = new URL(route.request().url());
+                if (target.pathname.endsWith("/functions/v1/nearby-address")) geocoderCalls++;
+                return ["zebrarectifier.github.io","cxpneczhczashanbetgj.supabase.co"].includes(target.hostname)
+                  && !target.pathname.startsWith("/functions/v1/") ? route.continue() : route.abort();
+              });
+              try {
+                await check.goto(url,{waitUntil:"domcontentloaded",timeout:30000});
+                await assertPublishedRuntime(check);
+                await chooseStore(check,"#retail-store-card");
+                await details(check,true);
+                await check.locator("#nearby-shopping").getByRole("button",{name:"📍 Найти магазины рядом",exact:true}).click();
+                const directory = check.waitForResponse(response =>
+                  new URL(response.url()).pathname.endsWith("/data/nearbyGroceryStores.json")
+                  && response.request().method() === "GET",{timeout:15000});
+                await check.locator("#nearby-locate").click();
+                assert((await directory).ok(),"Published nearby directory did not load");
+                await check.locator("#nearby-radius").selectOption("20");
+                const connected = check.locator("#nearby-connected-only");
+                if (await connected.isChecked()) await connected.uncheck();
+                const counts = [5,10,15,20];
+                const more = check.locator("#nearby-results").getByRole("button",{name:/Показать ещё/u});
+                for (const count of counts) {
+                  if (count !== 5) await more.press("Enter");
+                  await check.waitForFunction(count => document.querySelectorAll("#nearby-results article").length === count,
+                    count,{timeout:15000});
+                }
+                assert(geocoderCalls === 0,"Browser geolocation unexpectedly invoked the geocoder");
+                console.log("LIVE_NEARBY_PAGINATION_OK",JSON.stringify({width,counts}));
+              } finally { await nearby.close(); }
+            }
             const racePage = await browser.newPage({
               viewport: { width: 390, height: 844 }
             });
