@@ -1,6 +1,8 @@
 // Presentation only. The app owns navigation, selected addresses, catalogue
 // requests and every basket mutation; this shell only reuses their real nodes.
 import { findStoreSearchMatches } from './storeSearchIndex.mjs';
+import { nearbyRegionForPosition } from '../intelligence/nearbyRegions.mjs';
+import { compactRetailScope } from '../presentation/retailSurfaceCopy.mjs';
 
 export function createHoriCommerce({ document, main, shop, header, onOpenHory, onOpenAddress }) {
   const view = document.defaultView;
@@ -19,8 +21,14 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
 
   const home = node('section', 'pixel-store-home');
   home.id = 'pixel-store-home'; home.setAttribute('aria-labelledby', 'pixel-store-home-title');
-  const homeTitle = node('h1', '', 'Где ищем продукты?');
+  const homeTitle = node('h1', '', 'Сравнивай цены на продукты рядом');
   homeTitle.id = 'pixel-store-home-title'; homeTitle.tabIndex = -1;
+  const homeIntro = node('div', 'pixel-home-intro');
+  const homePortrait = node('span', 'hory-v17-sprite pixel-home-portrait');
+  homePortrait.setAttribute('aria-hidden', 'true');
+  const homeCopy = node('div', 'pixel-home-copy');
+  homeCopy.append(homeTitle, node('p', '', 'Выбери адрес, найди товары и сравни цены в магазинах поблизости.'));
+  homeIntro.append(homePortrait, homeCopy);
   const storeSearch = node('form', 'pixel-store-search');
   storeSearch.id = 'pixel-store-search-form'; storeSearch.setAttribute('role', 'search');
   const searchLabel = node('label', 'sr-only', 'Найти магазин'); searchLabel.htmlFor = 'pixel-store-search';
@@ -48,17 +56,10 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   exactCards.id = 'pixel-exact-address-cards';
   addressChooser.append(chooserTitle, chooserHint, chooserControls, exactCards, chooserActions);
   const stores = document.getElementById('retail-store-grid');
-  const publishedEntries = [
-    { id: 'okey', name: 'О’КЕЙ', selector: '[data-okey-official="true"]', aliases: 'окей okey o\'key',
-      scope: 'Акции Москвы · цена в конкретном магазине не подтверждена' },
-    { id: 'pyaterochka', name: 'Пятёрочка', selector: '#pyaterochka-published', aliases: 'пятерочка',
-      scope: 'Акции Москвы · цена в конкретном магазине не подтверждена' }
-  ];
-  const publishedButtons = new Map();
   const directorySearch = node('details', 'pixel-directory-search');
   const directorySummary = node('summary', '', 'Поиск по сетям и адресам');
   directorySearch.append(directorySummary, storeSearch, storeStatus, addressResults);
-  home.append(homeTitle, directorySearch, addressChooser);
+  home.append(homeIntro, directorySearch, addressChooser);
   if (stores) home.append(stores);
 
 
@@ -80,7 +81,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   // retailer. Chain-specific pickers appear only in an explicit storefront.
   const details = node('details', 'pixel-store-details'); details.id = 'pixel-store-details';
   let sharedDetailsOpen = false;
-  const summary = node('summary', '', 'Адрес и источники');
+  const summary = node('summary', '', 'Адрес магазина');
   const detailsContent = node('div', 'pixel-store-details-content');
   const pickers = node('div', 'pixel-store-pickers'); pickers.hidden = true;
   const scopeReference = node('p', 'field-help pixel-store-reference-scope'); scopeReference.hidden = true;
@@ -196,7 +197,13 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     openAddressChooser(event.detail.retailerId, event.detail.sourceButton);
   });
 
-  const location = node('button', 'hori-location pixel-location', '⌖ Москва и МО'); location.type = 'button';
+  const location = node('button', 'hori-location pixel-location', '⌖ Указать место'); location.type = 'button';
+  document.addEventListener('checkni:nearby-map-context', event => {
+    const region = nearbyRegionForPosition(event.detail?.position);
+    const label = region?.id === 'moscow-and-oblast' ? 'Москва и МО' : region?.label ?? 'Указать место';
+    location.textContent = `⌖ ${label}`;
+    location.setAttribute('aria-label', region ? `Изменить место поиска: ${label}` : 'Указать место поиска');
+  });
   const selected = node('button', 'hori-selected-store pixel-selected-store');
   selected.type = 'button'; selected.hidden = true; selected.addEventListener('click', () => action('root'));
   const headerControls = node('div', 'pixel-header-controls');
@@ -250,6 +257,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   else desktopNavigation.addListener(mountNavigation);
 
   let state = { stage: 'stores', view: 'shop', basketUnits: 0 }; let assistantOpen = false;
+  let priceScopeNote = null;
   function syncNavigation() {
     const active = assistantOpen ? 'hory' : state.view === 'basket' ? 'basket' : 'stores';
     for (const [name, button] of navButtons) {
@@ -266,12 +274,19 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
       const priceNote = node('details', 'hori-price-note');
       const priceSummary = node('summary', '', 'О ценах');
       priceSummary.setAttribute('aria-label', 'О ценах и источниках каталога');
-      priceNote.append(priceSummary, note); searchForm.append(priceNote);
+      priceScopeNote = node('p', 'field-help hori-price-scope');
+      const priceDetails = node('div', 'hori-price-details');
+      priceDetails.append(priceScopeNote, note);
+      priceNote.append(priceSummary, priceDetails); searchForm.append(priceNote);
+    }
+    if (priceScopeNote) {
+      priceScopeNote.textContent = typeof state.scopeLabel === 'string' ? state.scopeLabel : '';
+      priceScopeNote.hidden = !priceScopeNote.textContent;
     }
     for (const selector of ['#globus-store-picker', '#metro-store-picker', '#magnit-store-picker']) {
       const existing = document.querySelector(selector); if (existing && existing.parentElement !== pickers) pickers.append(existing);
     }
-    for (const selector of ['#beta-live-section', '#pyaterochka-published,.pyat-published', '.okey-directory', '.okey-delivery', '#stores-section']) {
+    for (const selector of ['#stores-section']) {
       for (const existing of document.querySelectorAll(selector)) {
         if (existing.parentElement !== detailsContent) detailsContent.append(existing);
       }
@@ -289,46 +304,6 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
         nearby.querySelector('#nearby-shopping-panel').hidden = false;
         nearby.querySelector(':scope > button').setAttribute('aria-expanded', 'true');
       }
-    }
-    ensurePublishedEntries();
-  }
-  // These entries reveal existing city-promotion readers. They do not select
-  // an exact store or create a new catalogue/price/comparison definition.
-  function ensurePublishedEntries() {
-    if (!stores) return;
-    for (const entry of publishedEntries) {
-      const target = document.querySelector(entry.selector);
-      if (!target) continue;
-      let button = publishedButtons.get(entry.id);
-      if (!button) {
-        button = node('button', 'retail-store-card pixel-published-store-card');
-        button.type = 'button'; button.id = `retail-store-card-${entry.id}`;
-        button.dataset.retailerId = entry.id; button.dataset.storeSearchAliases = entry.aliases;
-        button.setAttribute('aria-label', `${entry.name}: ${entry.scope}`);
-        button.setAttribute('aria-controls', target.id);
-        const logo = node('span', 'retail-store-logo', entry.name); logo.setAttribute('aria-hidden', 'true');
-        if (entry.id === 'pyaterochka') {
-          const image = node('img');
-          image.src = new URL('../img/logo-pyaterochka.png', import.meta.url).href;
-          image.alt = '';
-          image.addEventListener('error', () => { logo.textContent = entry.name; }, { once: true });
-          logo.replaceChildren(image);
-        }
-        const copy = node('span', 'retail-store-copy');
-        copy.append(node('span', 'retail-store-kicker', 'Акции Москвы'), node('strong', '', entry.name), node('span', '', entry.scope));
-        button.append(logo, copy, node('span', 'retail-store-total', 'Посмотреть акции'));
-        button.addEventListener('click', () => {
-          openDetails(); target.open = true;
-          view.requestAnimationFrame(() => {
-            if (!target.isConnected) return;
-            reveal(target); target.querySelector(':scope > summary')?.focus({ preventScroll: true });
-          });
-        });
-        target.addEventListener('toggle', () => button.setAttribute('aria-expanded', String(target.open)));
-        publishedButtons.set(entry.id, button);
-      }
-      button.setAttribute('aria-expanded', String(target.open));
-      if (button.parentElement !== stores) stores.append(button);
     }
   }
   function reveal(target) {
@@ -370,12 +345,12 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   });
 
   const selectableAddressIndex = new Map();
-  let addressQuery = '', addressesExpanded = false;
+  const ADDRESS_PAGE_SIZE = 5, ADDRESS_MAX_VISIBLE = 15;
+  let addressQuery = '', addressLimit = ADDRESS_PAGE_SIZE;
   function filterStores() {
     if (!stores) return;
-    ensurePublishedEntries();
     const query = searchInput.value.trim();
-    if (query !== addressQuery) { addressQuery = query; addressesExpanded = false; }
+    if (query !== addressQuery) { addressQuery = query; addressLimit = ADDRESS_PAGE_SIZE; }
     const pickerIds = { magnit: 'magnit-store-address', metro: 'metro-store-address', globus: 'globus-store-address' };
     const cards = [...stores.querySelectorAll('.retail-store-card')];
     const entries = cards.map(card => {
@@ -405,7 +380,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     });
     const firstKeys = new Set(firstByNetwork.map(row => `${row.retailerId}:${row.value}`));
     const ordered = [...firstByNetwork, ...addresses.filter(row => !firstKeys.has(`${row.retailerId}:${row.value}`))];
-    const shown = addressesExpanded ? ordered : ordered.slice(0, 4);
+    const shown = ordered.slice(0, addressLimit);
     if (shown.length) {
       const title = node('h2', 'pixel-store-address-title', 'Подходящие адреса');
       const list = node('div', 'pixel-store-address-list');
@@ -430,22 +405,25 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
         list.append(button);
       }
       addressResults.append(title, list);
-      if (addresses.length > 4) {
-        const toggle = node('button', 'pixel-store-address-toggle', addressesExpanded
-          ? 'Свернуть адреса' : `Показать все ${addresses.length} адресов`);
-        toggle.type = 'button'; toggle.setAttribute('aria-expanded', String(addressesExpanded));
+      if (addresses.length > shown.length && shown.length < ADDRESS_MAX_VISIBLE) {
+        const nextLimit = Math.min(addressLimit + ADDRESS_PAGE_SIZE, ADDRESS_MAX_VISIBLE, addresses.length);
+        const toggle = node('button', 'pixel-store-address-toggle', `Показать ещё ${nextLimit - shown.length}`);
+        toggle.type = 'button'; toggle.setAttribute('aria-expanded', 'false');
         toggle.addEventListener('click', () => {
-          addressesExpanded = !addressesExpanded;
+          addressLimit = nextLimit;
           filterStores();
           addressResults.querySelector('.pixel-store-address-toggle')?.focus({ preventScroll: true });
         });
         addressResults.append(toggle);
       }
+      if (addresses.length > shown.length && shown.length >= ADDRESS_MAX_VISIBLE) {
+        addressResults.append(node('p', 'pixel-store-address-refine', 'Слишком много совпадений. Уточните улицу или дом — либо выберите точку на карте.'));
+      }
     }
     addressResults.hidden = Boolean(pendingAddress) || !shown.length;
     storeStatus.textContent = query && !matches.length
       ? 'Магазин или адрес не найден. Уточните название или город.'
-      : query ? `Сетей: ${matches.length}${addresses.length ? ` · адресов: ${addresses.length}` : ''}`
+      : query ? `Подходящие сети: ${matches.length}`
         : `Сетей: ${cards.length}`;
   }
   storeSearch.addEventListener('submit', event => { event.preventDefault(); filterStores(); });
@@ -465,16 +443,20 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     if (inStore) closeAddressChooser({ preserveSelection: true });
     document.body.dataset.pixelStage = state.stage; document.body.dataset.pixelView = state.view;
     main.dataset.horiView = state.view === 'basket' ? 'basket' : state.stage;
-    home.hidden = inStore; storefront.hidden = !inStore; details.hidden = !inStore && !sharedDetailsOpen;
+    home.hidden = inStore; storefront.hidden = !inStore;
+    details.hidden = !sharedDetailsOpen && !(inStore && exactPickerIds[state.retailerId]);
     pickers.hidden = !inStore; selected.hidden = !inStore;
+    summary.textContent = sharedDetailsOpen ? 'Выбрать место' : 'Адрес магазина';
     const displayName = typeof state.displayName === 'string' ? state.displayName : 'Магазин';
     selected.textContent = displayName; selected.setAttribute('aria-label', `Категории магазина ${displayName}`);
     title.textContent = displayName; address.textContent = state.storeAddress || 'Выбрать адрес';
+    address.hidden = !exactPickerIds[state.retailerId];
     const fullScope = typeof state.scopeLabel === 'string' ? state.scopeLabel : '';
     const storeAddress = typeof state.storeAddress === 'string' ? state.storeAddress : '';
     const repeatedPrefix = storeAddress && [' · ', ' — ', ' | '].map(separator => storeAddress + separator)
       .find(prefix => fullScope.startsWith(prefix));
-    scope.textContent = repeatedPrefix ? fullScope.slice(repeatedPrefix.length) : fullScope;
+    const visibleScope = repeatedPrefix ? fullScope.slice(repeatedPrefix.length) : fullScope;
+    scope.textContent = compactRetailScope(state.retailerId, visibleScope);
     scope.hidden = !scope.textContent;
     scopeReference.textContent = inStore ? fullScope : ''; scopeReference.hidden = !inStore || !fullScope;
     const units = Number.isSafeInteger(state.basketUnits) && state.basketUnits >= 0 ? state.basketUnits : 0;

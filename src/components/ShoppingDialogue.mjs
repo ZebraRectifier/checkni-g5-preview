@@ -12,6 +12,25 @@ const MAX_REPLY_CHARACTERS = 6000;
 // set of validated advice exchanges for contextual provider questions.
 export function createShoppingDialogue({ form, input, output, fallback, onClear, onOpenBasket }) {
   const document = form.ownerDocument;
+  // A draft belongs to this tab. Never persist provider replies or location
+  // history along with it; sessionStorage survives reload without following
+  // the user into another session.
+  const draftKey = 'checkni.hory.draft.v1';
+  let draftRevision = 0;
+  let acceptedDraft = null;
+  function saveDraft() {
+    try {
+      const text = input.value;
+      if (!text || text === acceptedDraft) document.defaultView.sessionStorage.removeItem(draftKey);
+      else if (text.length <= 300) document.defaultView.sessionStorage.setItem(draftKey, JSON.stringify({ version: 1, text }));
+    } catch { /* The current input stays usable if tab storage is unavailable. */ }
+  }
+  try {
+    const draft = JSON.parse(document.defaultView.sessionStorage.getItem(draftKey));
+    if (!input.value && draft?.version === 1 && typeof draft.text === 'string' && draft.text.length <= 300) input.value = draft.text;
+  } catch { /* Ignore a damaged or unavailable saved draft. */ }
+  input.addEventListener('input', () => { draftRevision++; acceptedDraft = null; saveDraft(); });
+  document.defaultView.addEventListener('pagehide', saveDraft);
   const stylesheet = document.createElement("link");
   stylesheet.rel = "stylesheet";
   stylesheet.href = new URL("./shopping-dialogue.css", import.meta.url).href;
@@ -20,7 +39,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
   const root = document.createElement("section");
   root.id = "shopping-dialogue";
   root.className = "shopping-dialogue";
-  root.setAttribute("aria-label", "Переписка с помощником CHECKNI о покупках");
+  root.setAttribute("aria-label", "Переписка с Хорей о покупках");
   root.hidden = true;
 
   const header = document.createElement("div");
@@ -63,7 +82,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
 
   const previousNote = document.createElement("p");
   previousNote.className = "shopping-dialogue-note";
-  previousNote.textContent = "Это прошлые ответы. Цены и изменения корзины проверяй новым запросом.";
+  previousNote.textContent = "Цены в истории не обновляются.";
   previousNote.hidden = true;
 
   const user = document.createElement("p");
@@ -72,12 +91,12 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
   user.hidden = true;
   const speaker = document.createElement("span");
   speaker.className = "shopping-dialogue-speaker";
-  speaker.textContent = "Помощник CHECKNI";
+  speaker.textContent = "Хоря";
   speaker.hidden = true;
 
   const note = document.createElement("p");
   note.className = "shopping-dialogue-note";
-  note.textContent = "Переписка — до перезагрузки. Очистка не меняет корзину и предпочтения.";
+  note.textContent = "История — до перезагрузки. Корзина сохранится.";
   output.setAttribute("aria-atomic", "true");
   root.append(header, history, previousNote, user, speaker, output, fallback, note);
   form.prepend(root);
@@ -124,7 +143,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
       answer.className = "shopping-dialogue-answer";
       const label = document.createElement("span");
       label.className = "shopping-dialogue-speaker";
-      label.textContent = "Помощник CHECKNI · прежний ответ";
+      label.textContent = "Хоря · ранее";
       answer.append(label);
       for (const text of turn.reply) {
         const paragraph = document.createElement("p");
@@ -157,7 +176,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
     if (active?.pending && active.user === normalized) return;
     archiveActive();
     welcome.hidden = true;
-    active = { user: normalized, reply: [], pending: true };
+    active = { user: normalized, reply: [], pending: true, draftRevision };
     user.textContent = `Ты: ${normalized}`;
     user.hidden = false;
     speaker.hidden = false;
@@ -206,6 +225,7 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
     appendSources(output, state.presentation?.referenceKey);
     root.hidden = !active && !previous.length && !output.childElementCount;
     welcome.hidden = Boolean(active || previous.length || state.status !== 'idle');
+    if (help) help.hidden = Boolean(active || previous.length);
     clear.hidden = !active && !previous.length;
     speaker.hidden = !output.childElementCount;
     if (state.result?.guidedShopping) {
@@ -217,6 +237,11 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
     if (state.status === "idle") { archiveActive(); return; }
     active.pending = state.status === "loading";
     if (active.pending) return;
+    if (['success', 'partial', 'clarification'].includes(state.status)
+      && active.draftRevision === draftRevision && input.value.trim() === active.user) {
+      acceptedDraft = input.value;
+      saveDraft();
+    }
     active.referenceKey = state.presentation?.referenceKey;
     let remaining = MAX_REPLY_CHARACTERS;
     active.reply = [...output.querySelectorAll(".proposal-message, .proposal-detail, .proposal-preview-list li, .proposal-problems li, .shopping-selection-card, .guided-shopping-total, .guided-shopping-comparison")]
@@ -236,6 +261,8 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
     speaker.hidden = true;
     renderHistory();
     onClear();
+    acceptedDraft = null;
+    saveDraft();
     input.focus({ preventScroll: true });
   });
 

@@ -919,8 +919,11 @@ export function createShoppingConversationFlow(options) {
       }
       const reply = normalizeShoppingAdviceResponse(answer, input.context);
       const recovery = reply ? null : localShoppingAdvice(input);
+      const unavailableExplanation = adviceHistory.length
+        ? "Предыдущий совет и твои условия сохранены. Повтори вопрос или продолжим покупки."
+        : explanation;
       state = messageState(reply ? "Давай разберёмся." : recovery ? "Подскажу простой вариант." : "Сейчас могу опереться на твои условия.",
-        reply?.message ?? `Автоматический совет сейчас недоступен. ${recovery?.message ?? explanation}`);
+        reply?.message ?? `Автоматический совет сейчас недоступен. ${recovery?.message ?? unavailableExplanation}`);
       if ((reply || recovery) && normalizeShoppingAdviceResponse({ kind: "advice", message: state.presentation.message }, input.context)) {
         rememberAdvice(utterance, state.presentation.message);
       }
@@ -1087,10 +1090,17 @@ export function createShoppingConversationFlow(options) {
   }
   function setRetailer(retailer) {
     if (typeof retailer !== "string" || !retailer.trim() || retailer.length > 80) return state;
+    const retainedGuided = guidedShopping;
     invalidate();
     const updated = updateShoppingConversation(memory, { ...extractShoppingDelta(""),
       facts: { retailer: { value: retailer.trim(), scope: "goal" } } });
     if (!updated.overflow) setMemory(updated.state);
+    // Keep the requested meal plan across an explicit store choice, but never
+    // carry product rows, confirmation receipts or price quotes into that scope.
+    if (retainedGuided?.active()) {
+      guidedShopping = retainedGuided;
+      state = guidedShopping.scopeChanged();
+    }
     return state;
   }
   const checkCurrentComparisonExplanation = () => {

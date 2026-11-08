@@ -34,14 +34,14 @@ export function createAddressRecovery({request,now=Date.now,wait=ms=>new Promise
 
 // A directory point is an explicitly selected shop landmark, not a geocoded
 // home address. No fuzzy house-number substitution and no retailer requests.
-export function directoryAddressCandidates(stores,query){
+export function directoryAddressCandidates(stores,query,{acceptPosition=point=>point.lat>=54&&point.lat<=58&&point.lon>=35&&point.lon<=41}={}){
   const words=value=>String(value??'').toLocaleLowerCase('ru').replaceAll('ё','е').match(/[\p{L}\p{N}]+/gu)??[];
   const terms=words(query).filter(w=>!['г','ул','д','город','улица','дом'].includes(w));
   if(!terms.length)return [];
   const seen=new Set(),result=[];
   for(const row of Array.isArray(stores)?stores:[]){
     if(typeof row?.name!=='string'||typeof row.address!=='string'||!Number.isFinite(row.lat)||!Number.isFinite(row.lon)
-      ||row.lat<54||row.lat>58||row.lon<35||row.lon>41)continue;
+      ||!acceptPosition(row))continue;
     const tokens=words(row.name+' '+row.address);
     if(!terms.every(term=>tokens.some(token=>/\d/u.test(term)?token===term:token.startsWith(term))))continue;
     const label=row.name+' · '+row.address,key=JSON.stringify([label,row.lat,row.lon]);

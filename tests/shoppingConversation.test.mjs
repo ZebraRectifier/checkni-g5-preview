@@ -12,6 +12,16 @@ import { validateBasketProposal } from "../src/core/ai-basket-proposal.mjs";
 
 const update = (state, text) => updateShoppingConversation(state, extractShoppingDelta(text)).state;
 const catalog = SHOP_CATALOG;
+test('mixed pork refusal preserves unknown restrictions and filters named pork', () => {
+  const memory = update(createShoppingConversation(), 'Без свинины, что посоветуешь вместо неё?');
+  assert.ok(memory.rejected.pork);
+  assert.equal(memory.facts.unresolvedConstraints, undefined);
+  assert.equal(isShoppingProductRejected({ name: 'Фарш свиной' }, memory), true);
+  assert.equal(isShoppingProductRejected({ name: 'Филе куриное' }, memory), false);
+  const unknown = update(createShoppingConversation(), 'Без свинины и глютена');
+  assert.ok(unknown.rejected.pork);
+  assert.ok(unknown.facts.unresolvedConstraints);
+});
 const product = id => catalog.find(row => row.id === id);
 function session(extra = {}) {
   const basket = createBasketStore({ storage: null });

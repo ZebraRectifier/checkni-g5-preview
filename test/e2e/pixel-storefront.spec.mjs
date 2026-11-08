@@ -71,6 +71,201 @@ async function setup(page,{collections=false,expandedRoots=false}={}){
 }
 const savedBasket=page=>page.evaluate(()=>localStorage.getItem('checkni.surface.basket.v1'));
 
+test('Lenta populated categories remain usable beyond forty products and after a failed next page', async ({page}) => {
+ await setup(page);
+ const roots = [[25,'Макароны, крупы, мука',59],[77,'Заморозка',1],[3,'Молочные продукты, яйцо',1],
+  [4,'Напитки',1],[1028,'Сладости',1],[165,'Хлеб и выпечка',1]];
+ const category = (id,name,count,parent=null) => ({retailer_id:'lenta',store_id:'lenta-public-web',
+  category_id:id,name,product_count:count,parent_id:parent,root_id:parent??id,depth:parent?1:0,
+  source_url:`https://lenta.com/catalog/fixture-${id}/`});
+ const rootRows = [...roots.map(([id,name,count])=>category(id,name,count)),
+  ...Array.from({length:16},(_,i)=>category(1000+i,`Пустой раздел ${i+1}`,0))];
+ const childRows = [category(31,'Макароны',30,25),category(37,'Каши и хлопья',29,25),category(27,'Пустые крупы',0,25)];
+ const rows = Array.from({length:64},(_,i)=>({retailer_id:'lenta',store_id:'lenta-public-web',
+  store_name:'Лента · публичный каталог',locality_id:'country-ru-public-catalog',locality_name:'Россия',
+  source_product_id:String(800000+i),name:`Продукт ЛЕНТА ${String(i+1).padStart(2,'0')}, 500 г`,weight_text:'500 г',
+  main_category_id:i<30?31:i<59?37:roots[i-58][0],price_minor:4999+i,currency:'RUB',
+  price_condition:'loyalty-card-1',availability:'unknown',product_url:`https://lenta.com/product/fixture-${800000+i}/`,
+  source_url:'https://lenta.com/catalog/fixture-25/',image_url:null,observed_at:'2026-10-20T08:30:00Z'}));
+ let failNextPage=true;
+ const reads=[];
+ await page.route('**/rest/v1/retail_catalog_categories**',route=>{
+  const p=new URL(route.request().url()).searchParams;reads.push(Object.fromEntries(p));
+  // Deliberately return seed-only roots too, to test the defensive local filter.
+  return route.fulfill({json:p.get('retailer_id')==='eq.lenta'
+   ?p.get('parent_id')==='eq.25'?childRows:p.has('parent_id')?[]:rootRows:[]});
+ });
+ await page.route('**/rest/v1/retail_catalog_items**',route=>{
+  const p=new URL(route.request().url()).searchParams;reads.push(Object.fromEntries(p));
+  const offset=Number(p.get('offset')??0),limit=Number(p.get('limit')??40);
+  if(p.get('retailer_id')!=='eq.lenta')return route.fulfill({json:[]});
+  if(offset===24&&failNextPage){failNextPage=false;return route.fulfill({status:503,json:{error:'offline fixture'}});}
+  const id=p.get('main_category_id')?.replace('eq.','');
+  return route.fulfill({json:rows.filter(row=>!id||row.main_category_id===Number(id)).slice(offset,offset+limit)});
+ });
+ await page.locator('#retail-store-card-lenta').click();
+ const buttons=page.locator('#retail-category-grid [data-category-id]');
+ await expect(buttons).toHaveCount(6);
+ await expect(page.locator('#retail-category-grid')).not.toContainText('Пустой раздел');
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(24);
+ await page.locator('#retail-load-more').click();
+ await expect(page.locator('#retail-load-more')).toHaveText('Повторить загрузку');
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(24);
+ await page.locator('#retail-load-more').click();
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(48);
+ await page.locator('#retail-load-more').click();
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(64);
+ await expect(page.locator('#retail-load-more')).toHaveCount(0);
+ const ids=await page.locator('#product-grid .product-card').evaluateAll(nodes=>nodes.map(n=>n.dataset.productId));
+ expect(new Set(ids).size).toBe(64);
+ await page.locator('#retail-category-grid [data-category-id="25"]').click();
+ await expect(buttons).toHaveCount(2);
+ await expect(page.locator('#retail-category-grid')).not.toContainText('Пустые крупы');
+ await expect(page.locator('#search-status')).toHaveText('Выберите подкатегорию');
+ await expect(page.locator('#empty-search')).toBeHidden();
+ await expect(page.locator('#retail-category-note')).toHaveText('Выберите подкатегорию.');
+ await page.locator('#retail-category-grid [data-category-id="31"]').click();
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(30);
+ await expect(page.locator('#product-grid .product-card').first()).toContainText('По Карте №1');
+ await expect(page.locator('#retail-breadcrumbs .is-current')).toHaveText('Макароны');
+ await page.reload();
+ await expect(page.locator('#retail-breadcrumbs .is-current')).toHaveText('Макароны');
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(30);
+ expect(reads.filter(p=>p.depth||p.parent_id).every(p=>p.product_count==='gt.0')).toBe(true);
+ expect(reads.every(p=>p.store_id==='eq.lenta-public-web')).toBe(true);
+ await expectNoOverflow(page);
+});
+
+test('parent category guidance keeps product failures, empty leaves and empty search results distinct', async ({page}, testInfo) => {
+ await setup(page);
+ const category=(id,name,parent=null)=>({retailer_id:'lenta',store_id:'lenta-public-web',category_id:id,name,
+  product_count:1,parent_id:parent,root_id:parent??id,depth:parent?1:0,source_url:`https://lenta.com/catalog/fixture-${id}/`});
+ let failParent=true;
+ await page.route('**/rest/v1/retail_catalog_categories**',route=>{
+  const p=new URL(route.request().url()).searchParams;
+  return route.fulfill({json:p.get('retailer_id')!=='eq.lenta'?[]:p.get('parent_id')==='eq.25'
+   ?[category(31,'Макароны',25)]:p.has('parent_id')?[]:[category(25,'Макароны, крупы, мука')]});
+ });
+ await page.route('**/rest/v1/retail_catalog_items**',route=>{
+  const p=new URL(route.request().url()).searchParams;
+  if(p.get('main_category_id')==='eq.25'&&failParent){failParent=false;return route.fulfill({status:503,json:{error:'temporary fixture'}});}
+  return route.fulfill({json:[]});
+ });
+ await page.locator('#retail-store-card-lenta').click();
+ // A successful empty root is not hidden merely because it has categories.
+ await expect(page.locator('#empty-search h3')).toHaveText('Ничего не нашли');
+ await expect(page.locator('#empty-search')).toBeVisible();
+ await page.locator('#retail-category-grid [data-category-id="25"]').click();
+ await expect(page.locator('#retail-category-grid [data-category-id="31"]')).toBeVisible();
+ // A failed products request remains explicit even when the children loaded.
+ await expect(page.locator('#empty-search h3')).toHaveText('Не удалось загрузить товары');
+ await expect(page.locator('#catalog-search-retry')).toBeVisible();
+ await page.locator('#catalog-search-retry').click();
+ await expect(page.locator('#search-status')).toHaveText('Выберите подкатегорию');
+ await expect(page.locator('#empty-search')).toBeHidden();
+ await expect(page.locator('.catalog-section .section-heading')).toBeHidden();
+ await expect(page.locator('#retail-category-note')).toHaveText('Выберите подкатегорию.');
+ await page.screenshot({path:testInfo.outputPath('parent-category.png')});
+ // The existing category buttons remain keyboard operable.
+ const leaf=page.locator('#retail-category-grid [data-category-id="31"]');
+ await leaf.focus(); await page.keyboard.press('Enter');
+ await expect(page.locator('#retail-breadcrumbs .is-current')).toHaveText('Макароны');
+ await expect(page.locator('#empty-search')).toBeVisible();
+ await expect(page.locator('#empty-search h3')).toHaveText('Ничего не нашли');
+ await expect(page.locator('#empty-search')).toContainText('В этой категории пока нет данных о товарах');
+ await expect(page.locator('.catalog-section .section-heading')).toBeVisible();
+ await expect(page.locator('#catalog-search-retry')).toBeHidden();
+ // Search is separate from category navigation, including with a saved path.
+ await page.locator('#product-search').fill('Нет такого товара');
+ await page.locator('.catalog-search-submit').click();
+ await expect(page.locator('#empty-search')).toBeVisible();
+ await expect(page.locator('#empty-search h3')).toHaveText('Ничего не нашли');
+ await expect(page.locator('#search-status')).not.toHaveText('Выберите подкатегорию');
+ await expectNoOverflow(page);
+});
+
+test('failed main listing keeps its collection and exposes an exact retry above it', async ({page}, testInfo) => {
+ await setup(page,{collections:true});
+ let rootAttempts=0,releaseRetry;
+ const retryPending=new Promise(resolve=>{releaseRetry=resolve;});
+ await page.route('**/rest/v1/retail_catalog_items**',async route=>{
+  const p=new URL(route.request().url()).searchParams;
+  if(p.get('retailer_id')==='eq.globus'&&!p.has('main_category_id')&&!p.has('category_url')
+    &&!p.has('source_product_id')&&!p.has('name')&&p.get('limit')==='24'){
+   rootAttempts++;
+   if(rootAttempts===1)return route.fulfill({status:500,json:{error:'main listing fixture'}});
+   await retryPending;
+  }
+  return route.fallback();
+ });
+ await selectStore(page);
+ const notice=page.locator('#catalog-partial-notice');
+ await expect(page.locator('#pixel-collections .product-card')).toHaveCount(2);
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(0);
+ await expect(notice).toBeVisible();
+ await expect(notice).toContainText('Каталог загрузился не полностью. Подборка доступна.');
+ await expect(page.locator('#empty-search')).toBeHidden();
+ const first=page.locator('#pixel-collections .product-card').first();
+ await first.locator('.add-button').click();
+ const before=await savedBasket(page);
+ expect(JSON.parse(before).length).toBe(1);
+ const collectionIds=await page.locator('#pixel-collections .product-card').evaluateAll(nodes=>nodes.map(n=>n.dataset.productId));
+ await notice.scrollIntoViewIfNeeded();
+ expect(await notice.evaluate(node=>Boolean(node.compareDocumentPosition(document.getElementById('pixel-collections'))&Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+ await page.screenshot({path:testInfo.outputPath('main-listing-failed.png')});
+ const attemptsBeforeRetry=rootAttempts;
+ await notice.getByRole('button',{name:'Повторить загрузку',exact:true}).click();
+ await expect(notice).toContainText('Загружаем остальные товары');
+ await expect(notice.getByRole('button')).toBeDisabled();
+ expect(await savedBasket(page)).toBe(before);
+ expect(await page.locator('#pixel-collections .product-card').evaluateAll(nodes=>nodes.map(n=>n.dataset.productId))).toEqual(collectionIds);
+ releaseRetry();
+ await expect(notice).toBeHidden();
+ await expect(page.locator('#search-status')).toHaveText('Найдено товаров: 2');
+ expect(rootAttempts).toBe(attemptsBeforeRetry+1);
+ expect(await savedBasket(page)).toBe(before);
+ await expect(page.locator('#pixel-collections .product-card')).toHaveCount(2);
+ await expect(page.locator('#empty-search')).toBeHidden();
+ await expectNoOverflow(page);
+});
+
+test('METRO selected address exposes its forty-eighth root and retains that address when opening products', async ({page}) => {
+ await setup(page);
+ const storeId='metro-address-da224d',source='https://online.metro-cc.ru/products/fixture-eggs-10';
+ const address='141733,Московская обл., городской округ Лобня, Лобня г., промзона Горки Киовские ул., 15,1,Б,1,1-98,137-157';
+ const rows=Array.from({length:48},(_,i)=>({retailer_id:'metro',store_id:storeId,category_id:900000+i,root_id:900000+i,
+  name:i===47?'Яйца белые':`Категория ${String(i+1).padStart(2,'0')}`,parent_id:null,depth:0,product_count:1,
+  source_url:`https://online.metro-cc.ru/dynamic/fixture-${i+1}`}));
+ const reads=[];
+ await page.route('**/rest/v1/retail_catalog_categories**',route=>{
+  const p=new URL(route.request().url()).searchParams;reads.push(Object.fromEntries(p));
+  return route.fulfill({json:p.get('store_id')===`eq.${storeId}`&&!p.has('parent_id')?rows.slice(0,Number(p.get('limit'))):[]});
+ });
+ await page.route('**/rest/v1/retail_catalog_items**',route=>{
+  const p=new URL(route.request().url()).searchParams;reads.push(Object.fromEntries(p));
+  return route.fulfill({json:p.get('store_id')===`eq.${storeId}`&&p.get('main_category_id')==='eq.900047'?[{
+   retailer_id:'metro',store_id:storeId,binding_id:storeId,store_name:`METRO · ${address}`,
+   locality_id:'region-moscow-oblast',locality_name:'Московская область',source_product_id:'test-eggs-10',
+   name:'Яйца белые С1, 10 шт',weight_text:'10 шт',main_category_id:900047,price_minor:14990,currency:'RUB',
+   price_condition:'regular',availability:'unknown',sales_channel:'online',minimum_quantity:1,
+   scope_binding:'same-source',location_label:address,scope_evidence_url:source,product_url:source,source_url:source,
+   image_url:null,observed_at:'2026-10-20T08:30:00Z'}]:[]});
+ });
+ await page.locator('#retail-store-card-metro').click();
+ await page.locator('#metro-store-picker input[type=search]').fill('Лобня');
+ await page.locator('#pixel-address-chooser [data-store-id="1318"]').click();
+ await expect(page.locator('.pixel-store-address')).toContainText('Лобня');
+ await page.getByRole('button',{name:'Все категории',exact:true}).click();
+ await expect(page.locator('#retail-category-grid [data-category-id]')).toHaveCount(48);
+ await page.locator('#retail-category-grid [data-category-id="900047"]').click();
+ await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
+ await expect(page.locator('#product-grid')).toContainText('149,90 ₽');
+ await expect(page.locator('#retail-breadcrumbs .is-current')).toHaveText('Яйца белые');
+ expect(reads.find(p=>p.depth==='eq.0')?.limit).toBe('160');
+ expect(reads.every(p=>p.store_id===`eq.${storeId}`)).toBe(true);
+ await expectNoOverflow(page);
+});
+
 test('cold stores home and its local chain filter make no catalogue, global-search or AI requests',async({page})=>{
  const calls=await setup(page);
  await expect(page.locator('#pixel-storefront')).toBeHidden();
@@ -105,17 +300,19 @@ test('city search exposes only selectable exact addresses and opens their own ca
  const magnitAddresses=page.locator('#pixel-store-address-results button[data-retailer-id="magnit"]');
  const globusAddress=page.locator('#pixel-store-address-results button[data-retailer-id="globus"][data-store-id="5014"]');
  const addressChoices=page.locator('#pixel-store-address-results button[data-store-id]');
- await expect(addressChoices).toHaveCount(4);
+ await expect(addressChoices).toHaveCount(5);
  expect(await magnitAddresses.count()).toBeGreaterThan(0);
  await expect(globusAddress).toBeVisible();
  await expect(globusAddress).toContainText('Глобус Пушкино');
  await expect(globusAddress).not.toContainText('дата цен после выбора');
- const showAll=page.locator('.pixel-store-address-toggle');
- await showAll.click();
+ const showMore=page.locator('.pixel-store-address-toggle');
+ await expect(showMore).toHaveText('Показать ещё 5');
+ await showMore.click();
+ await expect(addressChoices).toHaveCount(10);
+ await page.locator('.pixel-store-address-toggle').click();
  await expect(addressChoices).toHaveCount(11);
- await showAll.click();
- await expect(addressChoices).toHaveCount(4);
- await expect(page.locator('#pixel-store-status')).toContainText('адресов:');
+ await expect(page.locator('.pixel-store-address-toggle')).toHaveCount(0);
+ await expect(page.locator('#pixel-store-status')).toHaveText('Подходящие сети: 2');
  expect(calls).toEqual({categories:[],items:[],global:0,ai:0});
 
  const magnitCode=await magnitAddresses.first().getAttribute('data-store-id');

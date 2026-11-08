@@ -67,3 +67,58 @@ test('saved basket compares its selected catalogues after reload and quantity/re
  await expect(page.locator('.basket-list')).toHaveText(remaining,{useInnerText:true});
  expect(ai).toBe(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+test('saved comparison distinguishes a fresh weight estimate from quantities that still require review',async({page,context})=>{
+ const now=Date.parse('2026-11-07T08:00:00Z');
+ await context.route('**/*',route=>['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready');
+ await page.evaluate(()=>{const host=document.createElement('section');host.id='saved-comparison-contract';document.body.append(host);});
+ const render=async change=>page.evaluate(async({now,change})=>{
+  const {renderSavedGuidedComparison}=await import('/src/components/SavedGuidedComparison.mjs');
+  const {compareCatalogDraftAlternatives}=await import('/src/core/catalogDraft.mjs');
+  const group={key:'bananas',label:'Бананы',dimension:'g',dailyAmount:100};
+  const drafts=['magnit','perekrestok'].map((retailerId,index)=>({
+   scope:{retailerId,storeId:retailerId+'-test',storeName:index?'Перекрёсток':'Магнит'},
+   rows:[{group,quantity:2,quantityReview:false,product:{id:retailerId+'-bananas',name:'Бананы',unit:'1 кг'},
+    card:{name:'Бананы',unit:'1 кг',catalogPurchaseBasis:'weighed-portion',priceMinor:index?15000:10000,
+     currency:'RUB',observedAt:new Date(now).toISOString(),sourceUrl:'https://example.com/source'}}]
+  }));
+  const result={kind:'catalog_comparison',drafts,request:{unresolvedGroupKeys:[]}};
+  if(change==='pending')result.request.unresolvedGroupKeys=['milk'];
+  if(change==='review')drafts[0].rows[0].quantityReview=true;
+  if(change==='unknown-pack')drafts[0].rows[0].card.unit='Неизвестная упаковка';
+  if(change==='stale')drafts[0].rows[0].card.observedAt=new Date(now-3600001).toISOString();
+  if(change==='missing')drafts[0].rows[0].card=null;
+  if(change==='tie')drafts[0].rows[0].card.priceMinor=15000;
+  if(change==='mismatched-intent')drafts.forEach((draft,index)=>{
+   draft.rows[0].card.catalogPurchaseBasis='piece';
+   draft.rows[0].quantityIntent={dimension:'g',amount:index?3000:2000};
+  });
+  const before=JSON.stringify(result),core=compareCatalogDraftAlternatives(drafts,{nowMs:now});
+  renderSavedGuidedComparison(document.querySelector('#saved-comparison-contract'),result,{nowMs:now});
+  return {core,unchanged:before===JSON.stringify(result)};
+ },{now,change});
+ const host=page.locator('#saved-comparison-contract'),status=host.locator('[role="status"]');
+ const fresh=await render('fresh');
+ expect(fresh.core).toMatchObject({kind:'fresh',estimated:true,sameProducts:false,includesFees:false,availability:'unknown'});
+ expect(fresh.unchanged).toBe(true);
+ await expect(status).toContainText('Ориентировочно:');
+ await expect(status).toContainText('ниже на 100,00');
+ await expect(status).not.toContainText('нужно уточнить');
+ await expect(host).toContainText('По количествам из списка');
+ await expect(host).toContainText('Доставка и сборы не включены');
+ const explanation=host.getByText('Как рассчитана сумма',{exact:true});await explanation.click();
+ await expect(host.getByText(/сумма может отличаться от первоначального подбора/)).toBeVisible();
+ await expect(host.getByText(/окончательная сумма зависит от взвешивания/)).toBeVisible();
+ const tie=await render('tie');expect(tie.core).toMatchObject({kind:'fresh',estimated:true,differenceMinor:0});
+ await expect(status).toContainText('Ориентировочно: суммы товаров в этих вариантах совпали');
+ for(const change of ['pending','review','unknown-pack','stale','missing','mismatched-intent']){
+  const result=await render(change);expect(result.unchanged).toBe(true);
+  await expect(status).not.toContainText('ниже на');
+  if(change==='review'||change==='unknown-pack')await expect(status).toContainText('нужно уточнить');
+  if(change==='stale')await expect(status).toContainText('старые или неизвестные цены');
+  if(change==='pending'||change==='missing')await expect(status).toContainText('неполный');
+  if(change==='mismatched-intent')await expect(status).toContainText('Не удалось сопоставить');
+ }
+});

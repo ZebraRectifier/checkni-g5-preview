@@ -68,6 +68,10 @@ export function createGuidedShoppingFlow(options) {
   }
   const current = (token, isCurrent) => token === version && isCurrent();
   async function load(isCurrent, retainedDrafts = []) {
+    if (plan.location?.requiresStoreSelection && options.hasAgreedStore?.() !== true) return state = view(
+      'Выберем магазин в Москве.',
+      'Москва — приблизительный ориентир, не точный адрес. Выбери магазин на сайте; условия списка сохраняю.',
+      { conversationChoices: choices(['Найти магазины рядом']) });
     if (options.getMemory().facts.unresolvedConstraints) return view('Сначала уточним ограничение.', 'В условиях есть непонятая часть. Уточни её или явно отмени перед подбором товаров.');
     let scope = options.getContext?.();
     const key = contextKey();
@@ -331,5 +335,13 @@ export function createGuidedShoppingFlow(options) {
     plan.requiresReview = true;
     return null;
   }
-  return { start, handle, confirm, hideReview: () => { if (plan) plan.requiresReview = true; }, getState: () => state, active: () => Boolean(plan) };
+  function scopeChanged() {
+    version++;
+    if (!plan) return null;
+    plan.rows = []; plan.drafts = []; plan.alternatives = []; plan.scope = null; plan.base = null;
+    quantityEdits = new Map();
+    plan.stage = 'intake';
+    return presentIntake();
+  }
+  return { start, handle, confirm, scopeChanged, hideReview: () => { if (plan) plan.requiresReview = true; }, getState: () => state, active: () => Boolean(plan) };
 }

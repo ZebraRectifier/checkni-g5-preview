@@ -40,6 +40,10 @@ async function fixture(page,theme,mobile,reducedMotion){
  });
  await expect(page.locator('.future-step')).toHaveCount(7);
  await expect(page.locator('#beta-live-section')).toBeVisible();
+ // Optional external services are now a collapsed disclosure. Open it through
+ // its actual control before checking links, hover colours and keyboard focus.
+ await page.locator('.aggregator-checks > summary').click();
+ await expect(page.locator('.aggregator-link').first()).toBeVisible();
  return externalRequests;
 }
 

@@ -8,5 +8,7 @@
 .nearby-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.nearby-actions label{display:flex;gap:6px;align-items:center}
 #nearby-address-candidates{display:grid;gap:8px}#nearby-address-candidates button{text-align:left;white-space:normal}
 #nearby-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.nearby-store{display:grid;align-content:start;gap:8px;border:1px solid var(--border,#49415f);padding:12px;border-radius:12px;overflow-wrap:anywhere}
+.nearby-store.is-selected{border-color:var(--accent,#9258f5);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent,#9258f5) 28%,transparent)}
+.nearby-result-sources{grid-column:1/-1}.nearby-result-sources a{display:inline-block;margin:6px 12px 0 0}
 #nearby-selected-store{display:grid;gap:8px;padding:12px;border:2px solid var(--accent,#9258f5);border-radius:12px}
 @media(max-width:620px){#nearby-results{grid-template-columns:1fr}.nearby-actions button{flex:1 1 160px}}

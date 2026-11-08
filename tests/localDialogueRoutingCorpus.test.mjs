@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {shoppingDialogueNeed,explicitFreezerAnswer,canContinueShoppingDialogue,isShoppingPlanningRequest} from '../src/intelligence/shoppingDialogueRecovery.mjs';
+const add=(name,fn)=>test(name,fn);
+for(const text of ['добавь молоко','добавить молоко','положи молоко','убери молоко','удали молоко','замени молоко','возьми молоко','купи молоко','закажи молоко','подтверждаю','применить','сбрось'])add('command: '+text,()=>assert.equal(canContinueShoppingDialogue(text),false));
+for(const text of ['какая цена','стоимость корзины','сколько стоит','почём молоко','где дешевле','есть в наличии','доставка','сравни корзину'])add('commercial: '+text,()=>assert.equal(canContinueShoppingDialogue(text),false));
+for(const text of ['почему','какие лучше','эти подойдут','расскажи подробнее','для супа','а для духовки','можно зелёные','чем отличаются'])add('followup: '+text,()=>assert.equal(canContinueShoppingDialogue(text),true));
+for(const text of ['есть морозилка','морозилка есть','У меня есть морозилка','Есть морозилка.'])add('freezer yes: '+text,()=>assert.equal(explicitFreezerAnswer(text),true));
+for(const text of ['нет морозилки','без морозилки','морозилка сломалась','морозилка не работает'])add('freezer no: '+text,()=>assert.equal(explicitFreezerAnswer(text),false));
+for(const text of ['есть морозилка?','если есть морозилка','допустим морозилка есть','предположим морозилка есть'])add('freezer uncertain: '+text,()=>assert.equal(explicitFreezerAnswer(text),null));
+for(const n of [1,2,3,4,5,6,7,8,9,10])add('people '+n,()=>assert.equal(shoppingDialogueNeed(String(n),[{role:'assistant',text:'На сколько человек нужна еда?'}]).facts.peopleCount.value,n));
+for(const n of [100,300,500,1000,1500,2000,3000,5000,10000,20000])add('budget '+n,()=>assert.equal(shoppingDialogueNeed(String(n),[{role:'assistant',text:'Какой общий бюджет?'}]).facts.budgetMinor.value,n*100));
+for(const text of ['почему?','Почему именно эти продукты?','а почему','почему-то не поняла'])add('why is not a price query: '+text,()=>assert.equal(canContinueShoppingDialogue(text),true));
+for(const text of ['А почём молоко?','ПОЧЕМ кефир','почему молоко дешевле'])add('price meaning preserved: '+text,()=>assert.equal(canContinueShoppingDialogue(text),false));

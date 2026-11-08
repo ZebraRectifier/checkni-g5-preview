@@ -1,14 +1,18 @@
+import { publicDataUrl } from './publicDataUrl.mjs';
 import{CATALOG_SEARCH_PUBLISHABLE_KEY}from'./catalogGatewayPort.mjs';
 import{readBoundedJsonResponse}from'./retailCatalogPort.mjs';
 import{createAddressRecovery,directoryAddressCandidates}from'./addressRecovery.mjs';
+import { nearbyCityQuery, nearbyRegionForPosition } from '../intelligence/nearbyRegions.mjs';
+import { withRegisteredMagnitCoordinates } from '../intelligence/nearbyShopping.mjs';
 export const NEARBY_ADDRESS_ENDPOINT='https://cxpneczhczashanbetgj.supabase.co/functions/v1/nearby-address';
 const regionalDirectories=new Set(['saint-petersburg','kazan','yekaterinburg','novosibirsk','nizhny-novgorod']);
 export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
   let cached=null,pending=null;
+  const regionalCache=new Map(),regionalPending=new Map();
   const address=createAddressRecovery({request:async query=>{
     try{
       const r=await fetchImpl(NEARBY_ADDRESS_ENDPOINT,{method:'POST',credentials:'omit',headers:{'content-type':'application/json',
-        apikey:CATALOG_SEARCH_PUBLISHABLE_KEY},body:JSON.stringify({query,consent:true}),signal:AbortSignal.timeout(10000)});
+        apikey:CATALOG_SEARCH_PUBLISHABLE_KEY},body:JSON.stringify({query,consent:true}),signal:AbortSignal.timeout(15000)});
       if(r.status===429){
         const rejection=await readBoundedJsonResponse(r,1024);
         return{kind:'limited',candidates:[],retryable:rejection?.version===1&&rejection.error==='busy'};
@@ -23,32 +27,52 @@ export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
   const port={
     async regionalDirectory(region){
       if(!regionalDirectories.has(region))throw Error('directory_invalid_region');
-      const url=new URL(`../data/nearby-regions/${region}.json`,import.meta.url);
-      const response=await fetchImpl(url,{credentials:'omit',signal:AbortSignal.timeout(10000)});
-      if(!response.ok)throw Error('directory_unavailable');
-      const data=await readBoundedJsonResponse(response,8*1024*1024);
-      if(data?.schemaVersion!==1||data.region!==region||data.exhaustive!==false||data.priceEvidence!==false
-        ||!Array.isArray(data.stores)||data.stores.length>25000||!Number.isFinite(Date.parse(data.observedAt))
-        ||data.stores.some(store=>!store||store.catalogBinding!=null))throw Error('directory_invalid');
-      return data;
+      if(regionalCache.has(region))return regionalCache.get(region);
+      if(!regionalPending.has(region))regionalPending.set(region,(async()=>{try{
+        const url=publicDataUrl(`nearby-regions/${region}.json`);
+        const response=await fetchImpl(url,{credentials:'omit',signal:AbortSignal.timeout(10000)});
+        if(!response.ok)throw Error('directory_unavailable');
+        const data=await readBoundedJsonResponse(response,8*1024*1024);
+        if(data?.schemaVersion!==1||data.region!==region||data.exhaustive!==false||data.priceEvidence!==false
+          ||!Array.isArray(data.stores)||data.stores.length>25000||!Number.isFinite(Date.parse(data.observedAt))
+          ||data.stores.some(store=>!store||store.catalogBinding!=null))throw Error('directory_invalid');
+        regionalCache.set(region,data);return data;
+      }finally{regionalPending.delete(region);}})());
+      return regionalPending.get(region);
     },
 
     clearAddressMemory(){address.clear();},
     async directory(){
       if(cached)return cached;
       if(!pending)pending=(async()=>{try{
-        const r=await fetchImpl(new URL('../data/nearbyGroceryStores.json',import.meta.url),{credentials:'omit',signal:AbortSignal.timeout(10000)});
+        const official=(async()=>{try{
+          // Coordinate/binding evidence travels with its reviewed code release;
+          // unlike price observations it is not a mutable publication feed.
+          const r=await fetchImpl(new URL('../data/magnitRegisteredCoordinates.json',import.meta.url),{credentials:'omit',signal:AbortSignal.timeout(5000)});
+          return r.ok?await readBoundedJsonResponse(r,2*1024*1024):null;
+        }catch{return null;}})();
+        const r=await fetchImpl(publicDataUrl('nearbyGroceryStores.json'),{credentials:'omit',signal:AbortSignal.timeout(10000)});
         if(!r.ok)throw Error('directory_unavailable');const d=await readBoundedJsonResponse(r,8*1024*1024);
         if(d?.schemaVersion!==1||d.region!=='moscow-and-oblast'||d.exhaustive!==false||d.priceEvidence!==false
           ||!Array.isArray(d.stores)||d.stores.length>25000||!Number.isFinite(Date.parse(d.observedAt)))throw Error('directory_invalid');
-        cached=d;return d;
+        cached=withRegisteredMagnitCoordinates(d,await official);return cached;
       }finally{pending=null;}})();return pending;
     },
     async address(query){
       if(typeof query!=='string'||query.trim().length<3||query.length>160)return{kind:'invalid',candidates:[]};
+      const city=nearbyCityQuery(query),expectedRegion=city?.region.id;
       const result=await address(query);
-      if(result.kind==='unavailable'||result.kind==='limited'){
-        try{const d=await port.directory(),candidates=directoryAddressCandidates(d.stores,query);
+      if(result.kind==='results')result.candidates=result.candidates.filter(candidate=>{
+        const region=nearbyRegionForPosition(candidate);
+        return region&&(!expectedRegion||region.id===expectedRegion)
+          &&typeof candidate.label==='string'&&candidate.label.length>0&&candidate.label.length<=500
+          &&['house','street','locality','city'].includes(candidate.precision);
+      });
+      if(result.kind==='unavailable'||result.kind==='limited'||result.kind==='results'&&!result.candidates.length&&expectedRegion&&expectedRegion!=='moscow-and-oblast'){
+        try{const region=expectedRegion??'moscow-and-oblast';
+          const d=region==='moscow-and-oblast'?await port.directory():await port.regionalDirectory(region);
+          const landmarkQuery=city?`${city.region.label} ${city.address}`:query;
+          const candidates=directoryAddressCandidates(d.stores,landmarkQuery,{acceptPosition:point=>nearbyRegionForPosition(point)?.id===region});
           if(candidates.length)return{kind:'directory',candidates};
         }catch{/* Keep the original failure and manual map path. */}
       }

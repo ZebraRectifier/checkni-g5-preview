@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { expectedLentaRoots, pinnedRuntimePrefix, pinnedLiveRuntimeProof } from '../tools/live-retail-smoke-contract.mjs';
+import { expectedLentaRoots, pinnedRuntimePrefix, pinnedLiveRuntimeProof, bindingCheckRuntimePrefix } from '../tools/live-retail-smoke-contract.mjs';
 
 const row = (id, count = 2) => ({ retailer_id: 'lenta', store_id: 'lenta-public-web',
   category_id: id, root_id: id, parent_id: null, depth: 0, name: `Category ${id}`,
@@ -54,4 +54,20 @@ test('runtime gate requires the immutable entry, not the mutable source tree', (
   for (const html of ['<script src="./src/app.mjs"></script>', tag + tag,
     '<script src="./releases/../src/app.mjs"></script>'])
     assert.throws(() => pinnedRuntimePrefix(html));
+});
+
+test('offline bindings admit a single source candidate without relaxing published runtime checks', async () => {
+  const source = '<script type="module" src="./src/app.mjs"></script>';
+  const prefix = `releases/${'c'.repeat(64)}/`;
+  const pinned = `<script type="module" src="./${prefix}src/app.mjs"></script>`;
+  assert.equal(bindingCheckRuntimePrefix(source, { sourceCandidate: true }), '');
+  assert.equal(bindingCheckRuntimePrefix(pinned, { sourceCandidate: true }), prefix);
+  assert.equal(bindingCheckRuntimePrefix(pinned), prefix);
+  assert.throws(() => bindingCheckRuntimePrefix(source));
+  await assert.rejects(() => pinnedLiveRuntimeProof({ baseUrl:'https://example.test/', files:['src/app.mjs'],
+    readFile:async()=>Buffer.from(source) }));
+  for (const invalid of [source + pinned, source + source, '', source.replace('./src/', '../src/'),
+    source.replace('app.mjs','priceCapture.mjs'), source.replace('./src/', 'https://example.test/src/')]) {
+    assert.throws(() => bindingCheckRuntimePrefix(invalid, { sourceCandidate: true }));
+  }
 });

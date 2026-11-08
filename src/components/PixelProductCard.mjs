@@ -1,4 +1,13 @@
 import { createProductCard } from './ProductCard.mjs';
+import { SOURCE_CATALOG_LIST_MAX_AGE_MS } from '../catalog/sourceCatalogListAdmission.mjs';
+
+// Presentation only: legacy reviewed identities may still enter a shopping
+// list. This warning neither admits their price nor changes that identity rule.
+export function hasDatedListPrice(product, nowMs = Date.now()) {
+  const observed = Date.parse(product?.observedAt);
+  return Number.isFinite(observed) && Number.isFinite(nowMs)
+    && nowMs - observed >= SOURCE_CATALOG_LIST_MAX_AGE_MS;
+}
 
 // Keep the existing identity/admission and add handler. This wrapper changes
 // only how that control and the already confirmed basket quantity are shown.
@@ -36,6 +45,14 @@ export function createPixelProductCard(product, options = {}) {
     // aria-label retains the full, established product-and-pack identity.
     add.textContent = '+';
     add.title = add.getAttribute('aria-label') || 'Добавить в список';
+    if (hasDatedListPrice(product)) {
+      add.classList.add('is-dated-list');
+      add.textContent = 'В список без цены';
+      add.setAttribute('aria-label', `Добавить ${product.name}, ${product.unit}, в список без цены`);
+      add.title = add.getAttribute('aria-label');
+      const stamp = card.querySelector('.product-observed-at');
+      if (stamp) stamp.textContent = stamp.textContent.replace(/^Цена от/u, 'Старая цена от');
+    }
     if (quantity > 0 && typeof options.onRemoveOne === 'function') {
       const remove = document.createElement('button');
       remove.type = 'button';

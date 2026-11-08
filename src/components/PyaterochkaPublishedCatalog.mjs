@@ -1,3 +1,4 @@
+import { publicDataUrl } from '../ports/publicDataUrl.mjs';
 import { watchCatalogMore } from './catalogMoreOnScroll.mjs';
 import{currentPyatProducts,pyatWeeklyCards}from'../observations/pyaterochkaPublishedPromotions.mjs';
 import{readBoundedJsonResponse}from'../ports/retailCatalogPort.mjs';
@@ -47,7 +48,7 @@ export function createPyaterochkaPublishedCatalog({document=globalThis.document,
   async function load(){
     if(!root.open||pending)return;
     if(bundle){void render();return;}pending=true;status.textContent='Загружаю акции…';
-    try{const r=await fetchImpl(new URL('../data/pyaterochkaPublishedPromotions.json',import.meta.url),{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(5000)});
+    try{const r=await fetchImpl(publicDataUrl('pyaterochkaPublishedPromotions.json'),{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(5000)});
       if(!r.ok)throw Error('unavailable');bundle=await readBoundedJsonResponse(r,262144);await render();
     }catch{status.textContent='Каталог сейчас не загрузился. Можно обновить его или продолжить с другими магазинами.';content.replaceChildren(retry());}finally{pending=false;}
   }
