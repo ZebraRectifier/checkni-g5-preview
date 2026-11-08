@@ -9378,6 +9378,46 @@
       "verification": "official-listed",
       "observedAt": "2026-11-07T05:32:44.883Z",
       "storeType": "MM"
+    },
+    {
+      "id": "official:lenta:0221",
+      "sourceStoreId": "0221",
+      "retailerId": "lenta",
+      "name": "Лента",
+      "city": "Казань",
+      "address": "Казань, улица Рихарда Зорге, 11Б",
+      "lat": 55.7646744,
+      "lon": 49.1854901,
+      "sourceUrl": "https://www.openstreetmap.org/relation/14069506",
+      "sourceType": "official-address-osm-exact-store-join",
+      "coordinateEvidence": "osm-relation-representative-point",
+      "officialAddressEvidenceUrl": "https://lenta.com/globalassets/skaters/exchange.pdf",
+      "currentTenantEvidenceUrl": "https://ud-group.com/proekty/tts-gorkipark/",
+      "verification": "official-listed-address-coordinate-corroborated",
+      "observedAt": "2026-11-08T08:03:44.717Z",
+      "coordinateObservedAt": "2026-04-05T22:00:29Z",
+      "coordinateObjectVersion": 12,
+      "coordinateAccuracy": "representative-point-not-entrance"
+    },
+    {
+      "id": "official:lenta:0307",
+      "sourceStoreId": "0307",
+      "retailerId": "lenta",
+      "name": "Лента",
+      "city": "Казань",
+      "address": "Казань, улица Павлюхина, 91",
+      "lat": 55.768875,
+      "lon": 49.1485024,
+      "sourceUrl": "https://www.openstreetmap.org/way/675361612",
+      "sourceType": "official-address-osm-containing-building-join",
+      "coordinateEvidence": "osm-way-representative-point",
+      "officialAddressEvidenceUrl": "https://lenta.com/globalassets/skaters/exchange.pdf",
+      "currentTenantEvidenceUrl": "https://kazanmall.com/shops/lenta/",
+      "verification": "official-listed-address-coordinate-corroborated",
+      "observedAt": "2026-11-08T08:03:44.717Z",
+      "coordinateObservedAt": "2026-02-11T15:52:20Z",
+      "coordinateObjectVersion": 21,
+      "coordinateAccuracy": "building-representative-point-not-entrance"
     }
   ],
   "sources": [
@@ -9410,10 +9450,21 @@
       "evidencePath": "evidence/regions-20261107/source-manifest.json",
       "exhaustive": false,
       "note": "Active offline food stores within administrative city boundary; catalogues and prices are not verified."
+    },
+    {
+      "retailerId": "lenta",
+      "type": "official-address-with-osm-coordinate-corroboration",
+      "sourceUrl": "https://lenta.com/info/shops/",
+      "officialAddressEvidenceUrl": "https://lenta.com/globalassets/skaters/exchange.pdf",
+      "observedAt": "2026-11-08T08:03:44.717Z",
+      "addedCount": 2,
+      "evidencePath": "evidence/lenta-kazan-20261108/receipt.json",
+      "exhaustive": false,
+      "note": "Physical-store address and stable official ID only. OSM representative points are not entrances; catalogues, stock and prices are not verified."
     }
   ],
   "license": "ODbL-1.0 for OSM-derived records",
   "attribution": "© OpenStreetMap contributors",
   "attributionUrl": "https://www.openstreetmap.org/copyright",
-  "updatedAt": "2026-11-07T05:32:49.007Z"
+  "updatedAt": "2026-11-08T08:03:44.717Z"
 }
