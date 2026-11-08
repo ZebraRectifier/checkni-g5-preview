@@ -2,6 +2,19 @@ import { publicDataUrl } from '../ports/publicDataUrl.mjs';
 import { watchCatalogMore } from './catalogMoreOnScroll.mjs';
 import{currentPyatProducts,pyatWeeklyCards}from'../observations/pyaterochkaPublishedPromotions.mjs';
 import{readBoundedJsonResponse}from'../ports/retailCatalogPort.mjs';
+const categoryLabels = {
+  'frukty-ovoshi-zelen': 'Овощи, фрукты и зелень',
+  'moloko-syr-yajca': 'Молочное, сыр и яйца',
+  'myaso-ryba-kolbasy': 'Мясо, рыба и колбасы',
+  'zamorozhennye-produkty': 'Замороженные продукты',
+  konservaciya: 'Консервы',
+  'makarony-krupy-muka': 'Макароны, крупы и мука',
+  'masla-sousy-specii': 'Масла, соусы и специи',
+  'sladosti-vypechka-hleb': 'Сладости, выпечка и хлеб',
+  'chaj-kofe-kakao': 'Чай, кофе и какао',
+  'voda-soki-napitki': 'Вода, соки и напитки',
+  'orehi-sneki': 'Орехи и снеки'
+};
 const rub=n=>new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB'}).format(n/100);
 export function createPyaterochkaPublishedCatalog({document=globalThis.document,fetchImpl=globalThis.fetch,now=Date.now,onBuild}={}){
   const el=(tag,text)=>{const e=document.createElement(tag);if(text)e.textContent=text;return e;};
@@ -28,8 +41,8 @@ export function createPyaterochkaPublishedCatalog({document=globalThis.document,
     const category=el('select');category.id=categoryLabel.htmlFor;
     category.append(el('option','Все категории'));
     category.firstElementChild.value='';
-    for(const name of [...new Set(products.map(product=>product.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'))){
-      const option=el('option',name);option.value=name;category.append(option);
+    for(const name of [...new Set(products.map(product=>product.category).filter(id=>Object.hasOwn(categoryLabels,id)))].sort((a,b)=>categoryLabels[a].localeCompare(categoryLabels[b],'ru'))){
+      const option=el('option',categoryLabels[name]);option.value=name;category.append(option);
     }
     const count=el('p');let limit=8;
     const loadMore=()=>{limit+=8;show();};
