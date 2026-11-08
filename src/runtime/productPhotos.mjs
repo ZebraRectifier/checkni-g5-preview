@@ -24,6 +24,17 @@ const MAX_NAME_LENGTH = 120;
 export const PHOTO_ATTRIBUTION =
   "Фото товаров: Open Food Facts (CC-BY-SA); для демо-каталога — пример похожего товара";
 
+// A city-promotion card already points to a specific published source
+// article. A name-only lookup may attach a different product, so this exact
+// scope keeps its neutral catalogue placeholder when no verified image exists.
+export function canRequestFallbackProductPhoto(product) {
+  return !(product?.retailerId === "pyaterochka"
+    && product?.storeId === "pyaterochka-moscow-proshoper"
+    && product?.publisher === "proshoper"
+    && product?.priceScope === "city-promotion"
+    && product?.catalogDisplayOnly === true);
+}
+
 function safeParse(raw) {
   try {
     const value = JSON.parse(raw);

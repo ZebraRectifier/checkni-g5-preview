@@ -35,7 +35,7 @@ import { WEB_SNAPSHOT_META } from "./data/webPriceSnapshot.mjs";
 import { compareWebSnapshot } from "./core/web-snapshot-comparison.mjs";
 import { PIXEL_ICONS } from "./components/pixelIcons.mjs";
 import { revealWinningBasketList } from "./runtime/listInspection.mjs";
-import { createProductPhotoLoader } from "./runtime/productPhotos.mjs";
+import { canRequestFallbackProductPhoto, createProductPhotoLoader } from "./runtime/productPhotos.mjs";
 import { requestCatalogPhotos } from "./ports/catalogPhotosPort.mjs";
 import { createStoresSection } from "./components/StoresMap.mjs";
 import { createMagnitStorePicker } from "./components/MagnitStorePicker.mjs";
@@ -422,6 +422,9 @@ const productPhotoLoader = createProductPhotoLoader({
 function loadProductPhoto(product) {
   if (typeof product?.imageUrl === "string" && product.imageUrl) {
     return Promise.resolve(product.imageUrl);
+  }
+  if (!canRequestFallbackProductPhoto(product)) {
+    return Promise.resolve(null);
   }
   if (product?.sourceBarcode) {
     return productPhotoLoader.load({ code: product.sourceBarcode });

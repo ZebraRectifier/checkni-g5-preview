@@ -46,3 +46,15 @@ test('city catalogue → household → partial real-pack table → explicit bask
   await expect(page.locator('#basket-view')).toContainText('Му-у');await expect(page.locator('#basket-view')).toContainText('925 мл');
   expect(ai).toBe(0);
 });
+
+test('city promotion keeps neutral fallbacks without requesting unrelated name photos',async({page})=>{
+  await isolate(page);let photoLookups=0;
+  await page.route('**/functions/v1/catalog-photos',route=>{photoLookups++;return route.abort();});
+  await page.route('**/src/data/pyaterochkaPublishedPromotions.json',r=>r.fulfill({json:parsePyatCatalogue(raw)}));
+  await page.goto('/?comparison=observed&catalog=retail#shop');await page.locator('#retail-store-card-pyaterochka').click();
+  const cards=page.locator('#product-grid .product-card');await expect(cards).toHaveCount(24);
+  await expect(cards.first().locator('.retail-photo-fallback')).toContainText('Фото товара');
+  await expect(cards.locator('img.product-photo')).toHaveCount(0);
+  // The previous generic loader sent its first name batch after four seconds.
+  await page.waitForTimeout(4500);expect(photoLookups).toBe(0);
+});
