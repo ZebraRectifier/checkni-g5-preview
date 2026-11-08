@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "pilotState": "address-only-not-enabled",
+  "retailerId": "magnit",
+  "cityId": "kazan",
+  "city": "Казань",
+  "sourceStoreId": "010852",
+  "storeId": "magnit-010852",
+  "name": "Магнит",
+  "address": "Респ Татарстан, г Казань, ул Академика Глушко, д 5А",
+  "lat": 55.778891,
+  "lon": 49.234856,
+  "storeType": "MM",
+  "sourceUrl": "https://magnit.ru/shops",
+  "sourceType": "official-store-directory",
+  "coordinateEvidence": "official-roster",
+  "verification": "official-listed",
+  "observedAt": "2026-11-07T05:32:49.007Z",
+  "catalogEvidence": null,
+  "priceEvidence": false
+}

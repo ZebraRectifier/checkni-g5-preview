@@ -455,6 +455,11 @@ function magnitRow(overrides = {}) {
     main_category_id: 63963,
     source_url:
       "https://magnit.ru/catalog/63963-testmmmolochnyy_prilavok?shopCode=777312&shopType=1",
+    location_label: "г Москва, аллея Берёзовая, д 17 к 2",
+    scope_binding: "public-store-product-page",
+    binding_id: "magnit-shopcode-777312",
+    scope_evidence_url:
+      "https://magnit.ru/catalog/63963-testmmmolochnyy_prilavok?shopCode=777312&shopType=1",
     observed_at: "2026-10-06T12:14:07.392Z",
     ...overrides
   };
@@ -1330,6 +1335,10 @@ test("Magnit client can be bound to a directory-verified Moscow address", async 
     product_url:
       "https://magnit.ru/product/1899800733-moloko_prostokvashino_pasterizovannoe_2_5_930ml?shopCode=303857&shopType=1",
     source_url:
+      "https://magnit.ru/product/1899800733-moloko_prostokvashino_pasterizovannoe_2_5_930ml?shopCode=303857&shopType=1",
+    location_label: store.address,
+    binding_id: "magnit-shopcode-303857",
+    scope_evidence_url:
       "https://magnit.ru/product/1899800733-moloko_prostokvashino_pasterizovannoe_2_5_930ml?shopCode=303857&shopType=1"
   });
   let requestedUrl;
