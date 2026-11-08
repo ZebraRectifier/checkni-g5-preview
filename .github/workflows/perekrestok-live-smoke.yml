@@ -112,6 +112,34 @@ jobs:
               executablePath: process.env.CHROME_BIN,
               args: ["--no-sandbox"]
             });
+            const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+            const pageErrors = [];
+            page.on("pageerror", (error) => pageErrors.push(error.message));
+
+            let published = false;
+            for (let attempt = 0; attempt < 20; attempt += 1) {
+              await page.goto(base + "&perekrestokMass=16298513&attempt=" + attempt, {
+                waitUntil: "domcontentloaded",
+                timeout: 30000
+              });
+              await page.waitForTimeout(1500);
+              const text = await storeFacts(page.locator("#retail-store-card-perekrestok"))
+                .catch(() => "");
+              if (
+                text.includes("Перекрёсток · Доставка · Москва")
+                && text.includes("Каталог выбранного адреса")
+                && await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src") === runtimePrefix + "src/app.mjs"
+                && await runtime.matchesPublished(attempt)
+              ) {
+                published = true;
+                break;
+              }
+              await page.waitForTimeout(2500);
+            }
+            assert(published, "Published Pages artifact does not expose mass Perekrestok");
+            assert(await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src")
+              === runtimePrefix + "src/app.mjs", "Browser Perekrestok runtime differs from byte-verified release");
+
             for (const viewport of [{width:1280,height:900},{width:390,height:844}]) {
               const check = await browser.newPage({viewport});
               const allowedHosts = new Set(["zebrarectifier.github.io", "cxpneczhczashanbetgj.supabase.co"]);
@@ -142,7 +170,9 @@ jobs:
                 return check.locator(cards).evaluateAll(nodes => nodes.map(node => node.dataset.productId));
               };
               try {
-                await check.goto(base, {waitUntil:"domcontentloaded",timeout:30000});
+                const paginationUrl = new URL(base);
+                paginationUrl.searchParams.set("checkniRelease", runtime.prefix.split("/")[1]);
+                await check.goto(paginationUrl.href, {waitUntil:"domcontentloaded",timeout:30000});
                 assert(await check.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src")
                   === runtimePrefix + "src/app.mjs", "Pagination browser runtime differs from the published release");
                 await chooseStore(check, "#retail-store-card-perekrestok");
@@ -161,34 +191,6 @@ jobs:
                 console.log("PEREKRESTOK_PAGED_SEARCH_LIVE", JSON.stringify({width:viewport.width,first:24,total:48}));
               } finally { await check.close(); }
             }
-            const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
-            const pageErrors = [];
-            page.on("pageerror", (error) => pageErrors.push(error.message));
-
-            let published = false;
-            for (let attempt = 0; attempt < 20; attempt += 1) {
-              await page.goto(base + "&perekrestokMass=16298513&attempt=" + attempt, {
-                waitUntil: "domcontentloaded",
-                timeout: 30000
-              });
-              await page.waitForTimeout(1500);
-              const text = await storeFacts(page.locator("#retail-store-card-perekrestok"))
-                .catch(() => "");
-              if (
-                text.includes("Перекрёсток · Доставка · Москва")
-                && text.includes("Каталог выбранного адреса")
-                && await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src") === runtimePrefix + "src/app.mjs"
-                && await runtime.matchesPublished(attempt)
-              ) {
-                published = true;
-                break;
-              }
-              await page.waitForTimeout(2500);
-            }
-            assert(published, "Published Pages artifact does not expose mass Perekrestok");
-            assert(await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src")
-              === runtimePrefix + "src/app.mjs", "Browser Perekrestok runtime differs from byte-verified release");
-
             const store = page.locator("#retail-store-card-perekrestok");
             const rootResponse = page.waitForResponse(response => {
               const url = new URL(response.url());
