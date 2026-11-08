@@ -4,6 +4,10 @@ import {reviewedCrossSourceCounterpart} from '../catalog/reviewedCrossSourcePair
 
 export const savedComparisonStoreLabel = scope => scope.retailerId==='magnit'?'Магнит':'Перекрёсток · доставка';
 
+export const savedComparisonQuantityBasis = result => result?.request?.version===1
+  ?'Считаем объём сохранённой корзины. В другом магазине может понадобиться больше упаковок.'
+  :'По количествам из списка.';
+
 export function savedComparisonUsesAlternatives(result) {
   const bindings=result?.request?.bindings;
   if(!Array.isArray(bindings)||!bindings.length||!Array.isArray(result?.drafts))return false;
@@ -74,7 +78,7 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
   if(result.request?.unresolvedGroupKeys?.length)parent.append(el('p','Сравниваем только выбранные позиции. В исходном подборе ещё '+result.request.unresolvedGroupKeys.length+' поз. без подтверждённых товаров.'));
   parent.append(status);
   if(usesAlternatives)parent.append(el('p','В сравнении есть альтернативные марки или фасовки. Разница относится к показанным вариантам.'));
-  parent.append(el('p','По количествам из списка. Доставка и сборы не включены; наличие неизвестно.'));
+  parent.append(el('p',savedComparisonQuantityBasis(result)+' Доставка и сборы не включены. Наличие неизвестно.'));
   const calculation=el('details');calculation.className='future-step';
   calculation.append(el('summary','Как рассчитана сумма'),el('p','Сравниваем количества в сохранённом списке. Для фасованных товаров учитываем целые упаковки, поэтому сумма может отличаться от первоначального подбора на людей и дни.'));
   if(quotes.some(quote=>quote.hasEstimates))calculation.append(el('p','Весовые количества примерные: окончательная сумма зависит от взвешивания.'));
