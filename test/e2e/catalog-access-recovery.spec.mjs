@@ -67,6 +67,15 @@ const openOkey = async page => {
 };
 const basketValue = page => page.evaluate(() => localStorage.getItem('checkni.surface.basket.v1'));
 
+test('a full raw page with no admitted cards has a finite honest browser state', async ({ page }) => {
+  await page.goto('/test/support/catalog-pagination-harness.html?raw=40&admitted=0');
+  await expect(page.getByRole('heading', { name: 'Нет актуальных товаров' })).toBeVisible();
+  await expect(page.locator('#result')).toContainText(
+    'Источник ответил, но свежих проверенных карточек в этой выдаче нет.'
+  );
+  await expect(page.getByRole('button', { name: 'Показать ещё' })).toHaveCount(0);
+});
+
 test('cold stores include existing city catalogues and fold spelling without a data request', async ({ page }) => {
   const calls = await setup(page);
   for (const [query, id] of [['окей', 'okey'], ["o'key", 'okey'], ['пятерочка', 'pyaterochka'], ['Перекресток', 'perekrestok']]) {
