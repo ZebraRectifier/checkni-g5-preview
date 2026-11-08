@@ -713,17 +713,17 @@ jobs:
             await allCategories(page);
             await page.waitForFunction(() => (
               document.querySelector("#magnit-store-address")?.value === "771878"
-              && document.querySelector("#retail-store-card-magnit")
+              && document.querySelector(".pixel-store-reference-scope")
                 ?.textContent?.includes("Дмитровское")
             ), null, { timeout: 15000 });
-            const magnitText = await storeFacts(magnit);
+            const magnitText = await page.locator(".pixel-store-reference-scope").textContent();
             assert(
               magnitText.includes("Дмитровское"),
-              "Magnit selector has the wrong selected address"
+              "Magnit storefront has the wrong selected address"
             );
             assert(
               magnitText.includes("наличие неизвестно"),
-              "Magnit selector must not claim stock availability"
+              "Magnit storefront must not claim stock availability"
             );
             assert(
               !magnitText.includes("Краснодар"),
