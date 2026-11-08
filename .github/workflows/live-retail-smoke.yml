@@ -761,7 +761,8 @@ jobs:
               );
             }
 
-            await page.getByRole("button", { name: /Молочный прилавок/ }).click();
+            // Use a leaf with observations admitted for this exact address.
+            await magnitCategories.filter({ hasText: /Рыба и морепродукты/u }).click();
             await page.waitForFunction(() => (
               document.querySelectorAll("#product-grid .product-card").length > 0
             ), null, { timeout: 15000 });
