@@ -815,9 +815,14 @@ jobs:
             // to each fetched row, not the date/count of an archived deployment.
             const da = page.locator("#retail-store-card-da");
             assert(await da.count() === 1, "DA network entry must remain discoverable");
-            assert((await storeFacts(da)).includes("Публичный промо-каталог"),
-              "DA entry lost its public-network scope");
+            assert((await storeFacts(da)).includes("ДА! · Акции"),
+              "DA entry lost its compact promotion label");
             await chooseStore(page, "#retail-store-card-da");
+            assert(
+              (await page.locator(".pixel-store-reference-scope").textContent())
+                .includes("Публичный промо-каталог"),
+              "DA storefront lost its complete public-network scope"
+            );
             const daCategory = page.locator(
               "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
             ).first();
@@ -885,9 +890,8 @@ jobs:
                   "#retail-store-card-auchan"
                 )).catch(() => "");
                 if (
-                  liveAuchanText.includes("АШАН · Москва · публичный промо-каталог")
+                  liveAuchanText.includes("АШАН · Акции")
                   && liveAuchanText.includes("1 категория · 312 товаров")
-                  && liveAuchanText.includes("промо 1–14 октября")
                 ) {
                   auchanPublished = true;
                   break;
@@ -906,6 +910,11 @@ jobs:
 
               const auchanStore = page.locator("#retail-store-card-auchan");
               await chooseStore(page, "#retail-store-card-auchan");
+              assert(
+                (await page.locator(".pixel-store-reference-scope").textContent())
+                  .includes("промо 1–14 октября"),
+                "Published Auchan storefront lost the dated Moscow promo scope"
+              );
               await page.waitForFunction(() => (
                 document.querySelector("#retail-store-card-auchan")
                   ?.getAttribute("aria-pressed") === "true"
