@@ -129,7 +129,9 @@ test('manual reviewed products from both networks add and survive edits, Back an
 test('manual twenty-egg pack is compared with two ten-egg delivery packs without AI',async({page,context})=>{
  const {rows:retained}=JSON.parse(await readFile(new URL('../../tests/fixtures/weekly-retail/magnit-eggs-777885-20261102.json',import.meta.url),'utf8'));
  const source=retained.map(row=>({...row,retailer_id:'magnit',store_id:'magnit-777885',store_name:'Магнит · г Москва, ул Большая Татарская, д 36',
-   locality_id:'city-moscow',locality_name:'Москва',currency:'RUB',availability:'unknown',price_condition:'public-online',source_url:row.product_url}));
+   locality_id:'city-moscow',locality_name:'Москва',currency:'RUB',availability:'unknown',price_condition:'public-online',
+   location_label:'г Москва, ул Большая Татарская, д 36',scope_binding:'public-store-product-page',
+   binding_id:'magnit-shopcode-777885',source_url:row.product_url,scope_evidence_url:row.product_url}));
  const dataset=[...rows,...source];let ai=0;
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
  await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
