@@ -931,9 +931,9 @@ export function createRetailCatalogClient(options = {}) {
       url.searchParams.set("p_limit", String(limit));
       url.searchParams.set("p_offset", String(offset));
     }
-    // PostgREST RPC ordering needs the ordered column in the projection.
+    // PostgREST RPC filters and ordering need their columns in the projection.
     // updated_at is transport ordering metadata, never price freshness.
-    url.searchParams.set("select", boundedSearch ? `${SELECT_FIELDS},updated_at` : SELECT_FIELDS);
+    url.searchParams.set("select", boundedSearch ? `${SELECT_FIELDS},updated_at,active` : SELECT_FIELDS);
     url.searchParams.set("retailer_id", `eq.${definition.retailerId}`);
     url.searchParams.set("store_id", `eq.${definition.storeId}`);
     url.searchParams.set("locality_id", `eq.${definition.localityId}`);

@@ -518,3 +518,89 @@ test('provider 503 offers local basket without another AI request', async ({page
  expect(requests).toBe(1);
  expect(await savedBasket(page)).toBe(before);
 });
+
+
+test('allergy claim blocks automated advice and preserves basket',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ const before=await savedBasket(page);
+ await submit(page,'Аллергия на рис');
+ await expect(status(page)).toContainText(/уточн|не распозн|аллерги/iu);
+ await submit(page,'Собери недорогую корзину');
+ await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
+ expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});
+
+
+test('allergy survives new goal, ordinary reset and without-restrictions reply',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ const before=await savedBasket(page);
+ for(const turn of ['Аллергия на рис','Новая корзина','без ограничений','забудь все предпочтения','Собери недорогую корзину']) {
+  await submit(page,turn);
+ }
+ await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
+ expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});
+
+
+test('allergy persists after reload and explicit cancellation reaches UI',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ const before=await savedBasket(page);await submit(page,'Аллергия на рис');
+ await page.reload();await openHory(page);await submit(page,'Новая корзина');
+ await submit(page,'без ограничений');await submit(page,'Собери недорогую корзину');
+ await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
+ await submit(page,'отменяю ограничение аллергии');
+ await expect(status(page)).toContainText('Чтобы отменить их все');
+ await submit(page,'отменяю все ограничения аллергии и непереносимости');
+ const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(stored??'').not.toMatch(/аллерг/i);
+ expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});
+
+
+test('multiple allergy conditions require explicit all-clear confirmation',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ const before=await savedBasket(page);
+ for(const text of ['Аллергия на рис','Непереносимость молока','отменяю ограничение аллергии'])await submit(page,text);
+ await expect(status(page)).toContainText('Чтобы отменить их все');
+ const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(stored).toMatch(/аллерг/iu);expect(stored).toMatch(/непереносим/iu);
+ await submit(page,'отменяю все ограничения аллергии и непереносимости');
+ const cleared=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(cleared??'').not.toMatch(/аллерг|непереносим/iu);
+ expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});
+
+
+test('one allergy statement listing two allergens is not cleared ambiguously',async({page})=>{
+ await page.route('**/functions/v1/ai-basket-proposal',r=>r.abort());
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ const before=await savedBasket(page);await submit(page,'Аллергия на рис и молоко');
+ await submit(page,'отменяю ограничение аллергии');
+ await expect(status(page)).toContainText('Чтобы отменить их все');
+ const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(stored).toMatch(/рис и молоко/iu);expect(await savedBasket(page)).toBe(before);
+});
+
+
+test('undo cannot erase later allergy or modify basket',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=demo#shop');await openHory(page);const before=await savedBasket(page);
+ await submit(page,'без свинины');await submit(page,'аллергия на рис');
+ await submit(page,'отмени последнее');
+ await expect(status(page)).toContainText('Откат пока недоступен');
+ const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(stored).toMatch(/аллерг/iu);expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});
+
+
+test('retail undo cannot erase later allergy',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);const before=await savedBasket(page);
+ await submit(page,'без свинины');await submit(page,'аллергия на рис');await submit(page,'отмени последнее');
+ const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(stored).toMatch(/аллерг/iu);expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});

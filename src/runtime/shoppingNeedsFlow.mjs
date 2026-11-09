@@ -153,7 +153,7 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
     // Recognized preferences belong to conversation memory before commas can
     // turn its product names into purchases. Explicit needs edits keep their
     // existing atomic removal/quantity workflow.
-    if(delta.newGoal||unresolvedRefusal||(conversationUpdate&&!compoundMutation)||shoppingAdviceTopic(text)==='advice'||isShoppingPlanningRequest(text)||/^пп[.!?]*$/iu.test(text)) {
+    if(delta.clearAllergy||delta.clearAllAllergies||delta.unresolved.some(item=>/(?:аллерги|непереносимост)/iu.test(item))||delta.newGoal||unresolvedRefusal||(conversationUpdate&&!compoundMutation)||shoppingAdviceTopic(text)==='advice'||isShoppingPlanningRequest(text)||/^пп[.!?]*$/iu.test(text)) {
       ownsView=false;selectionActive=false;
       await delegate.run(text);
       if(token!==epoch)return getState();

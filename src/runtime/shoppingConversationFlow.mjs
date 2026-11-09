@@ -611,6 +611,22 @@ export function createShoppingConversationFlow(options) {
     }
     const planning = isShoppingPlanningRequest(text);
     const control = extractShoppingDelta(text);
+    if (control.clearAllergy || control.clearAllAllergies) {
+      const conditions = memory.facts.unresolvedConstraints?.value ?? [];
+      const allergies = conditions.filter(value => /(?:аллерги|непереносимост)/iu.test(value));
+      if (control.clearAllergy && allergies.length > 0) {
+        state = messageState("Уточни отмену.", "Сохранены ограничения аллергии или непереносимости. Чтобы отменить их все, напиши: «Отменяю все ограничения аллергии и непереносимости». До этого ограничения сохраняются.");
+        return state;
+      }
+      const updated = updateShoppingConversation(memory, control);
+      if (updated.overflow) {
+        state = messageState("Не удалось обновить условие.", "Прежние ограничения сохранены.");
+      } else {
+        setMemory(updated.state);
+        state = messageState("Ограничение отменено.", "Отменила только сохранённое ограничение аллергии или непереносимости. Другие условия и корзина сохранены.");
+      }
+      return state;
+    }
     if (control.reset || control.newGoal || control.undo) guidedShopping = null;
     if (/^сравни мой список[.!?]*$/iu.test(text)) {
       guidedShopping?.hideReview();
@@ -975,6 +991,10 @@ export function createShoppingConversationFlow(options) {
     if (useConversation || (rebuild && activeMemory())) {
       hybrid.invalidate(); pending = null;
       if (delta.undo) {
+        if ((memory.facts.unresolvedConstraints?.value ?? []).some(value => /(?:аллерги|непереносимост)/iu.test(value))) {
+          state = messageState('Сначала уточним ограничение.', 'Откат пока недоступен: сохранено условие об аллергии или непереносимости. Корзина и условие сохранены.');
+          return state;
+        }
         if (!checkpoint) { state = messageState("Отменять пока нечего.", "Текущая корзина сохранена."); return state; }
         const old = checkpoint;
         checkpoint = null;

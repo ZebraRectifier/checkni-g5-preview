@@ -544,3 +544,39 @@ test('draft rejection filter keeps allowed foods and does not infer exclusions',
  const filtered=createGuidedShoppingPlan(goal,[],noPork);
  assert.deepEqual(filtered.groups.map(row=>row.key).sort(),['bread','rice']);
 });
+
+
+test('explicit allergy cancellation reaches the real shopping-needs wrapper',async()=>{
+ const s=needsSession(async()=>({kind:'unavailable'}));
+ await s.send('Аллергия на рис');
+ assert.ok(s.flow.getConversation().facts.unresolvedConstraints);
+ await s.send('Новая корзина');await s.send('без ограничений');
+ assert.ok(s.flow.getConversation().facts.unresolvedConstraints);
+ await s.send('отменяю ограничение аллергии');
+ assert.ok(s.flow.getConversation().facts.unresolvedConstraints);
+ await s.send('отменяю все ограничения аллергии и непереносимости');
+ assert.equal(s.flow.getConversation().facts.unresolvedConstraints,undefined);
+ assert.deepEqual(s.basket.getSnapshot(),[]);assert.deepEqual(s.proposals,[]);
+});
+
+
+test('undo of a checkpoint cannot erase a later allergy condition',async()=>{
+ const s=session(async()=>({kind:'unavailable'}));
+ await s.send('без свинины');
+ await s.send('аллергия на рис');
+ assert.ok(s.flow.getConversation().facts.unresolvedConstraints);
+ const before=s.basket.getSnapshot();
+ const undo=await s.send('отмени последнее');
+ assert.match(undo.presentation.message,/Откат пока недоступен/u);
+ assert.ok(s.flow.getConversation().facts.unresolvedConstraints.value.some(x=>/аллерг/u.test(x)));
+ assert.deepEqual(s.basket.getSnapshot(),before);assert.deepEqual(s.proposals,[]);
+});
+
+
+test('retail needs wrapper cannot undo away an allergy condition',async()=>{
+ const s=needsSession(async()=>({kind:'unavailable'}));
+ await s.send('без свинины');await s.send('аллергия на рис');
+ const before=s.basket.getSnapshot();await s.send('отмени последнее');
+ assert.ok(s.flow.getConversation().facts.unresolvedConstraints?.value.some(x=>/аллерг/u.test(x)));
+ assert.deepEqual(s.basket.getSnapshot(),before);
+});
