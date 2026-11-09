@@ -499,7 +499,7 @@ test('failed shopping advice offers local guided continuation without a second p
   const s=session(async()=>({kind:'unavailable',code}),{searchGuidedCatalog:async()=>({kind:'catalog',products:[]})});
   const first=await s.send('Нужна еда на две недели для троих без свинины');
   const choice=first.presentation.conversationChoices.find(x=>x.text==='Собери корзину');
-  assert.ok(choice,code);assert.equal(s.advice.length,1);
+  assert.ok(choice,JSON.stringify({code,first}));assert.equal(s.advice.length,1);
   const before=s.basket.getSnapshot();
   const next=await s.send(choice.text);
   assert.equal(s.advice.length,1);assert.deepEqual(s.proposals,[]);assert.deepEqual(s.basket.getSnapshot(),before);
@@ -516,5 +516,5 @@ test('unrelated advice failures and absent guided catalog do not offer offline b
  assert.ok(!first.presentation.conversationChoices.some(x=>x.text==='Собери корзину'));
  const unrelated=session(async()=>({kind:'unavailable',code:'provider_timeout'}),{searchGuidedCatalog:async()=>({kind:'catalog',products:[]})});
  const second=await unrelated.send('Посоветуй рыбу на ужин');
- assert.ok(!second.presentation.conversationChoices.some(x=>x.text==='Собери корзину'));
+ assert.ok(!(second.presentation.conversationChoices??[]).some(x=>x.text==='Собери корзину'));
 });
