@@ -93,12 +93,13 @@ test.afterEach(async ({ page }, info) => {
 test('saved 12-minute catalogue prices expire at original hour; manual fresh retry preserves basket', async ({ page }, info) => {
   const state = {}; const counts = await fixtures(page, state); const result = await selectedBasket(page);
   await expect(result).toContainText('Сохранённые цены METRO');
+  await expect(result.getByText(/Цены по товарам/u)).toBeVisible();
   await expect(result).toContainText('19:48 UTC'); await expect(result).toContainText('1 час от наблюдения');
   await expect(result).not.toContainText('Экономия');
   await page.screenshot({ path: info.outputPath('saved-prices.png'), fullPage: true });
   await pause(page); const reads = counts.exactReads;
   await runTo(page, START + 48 * 60000); await expect(result).toContainText('446,00 ₽');
-  await page.clock.runFor(1); await expired(page); expect(counts.exactReads).toBe(reads);
+  await page.clock.runFor(1); await expired(page); await expect(page.getByText(/Цены по товарам/u)).toHaveCount(0); expect(counts.exactReads).toBe(reads);
   state.catalogAt = new Date(START + 48 * 60000 + 1).toISOString();
   await page.locator('#compare-basket').click(); await expect(result).toContainText('446,00 ₽');
   expect(counts.exactReads).toBe(reads + 1);

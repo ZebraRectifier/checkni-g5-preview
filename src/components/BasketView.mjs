@@ -182,7 +182,7 @@ export function renderBasketView(container, items, actions) {
         details.append(source);
       }
     } else {
-      observation.textContent = 'Цена не сохранена';
+      observation.textContent = 'Цена в списке не сохранена';
     }
     info.append(observation);
 

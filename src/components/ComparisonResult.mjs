@@ -306,6 +306,17 @@ export function buildObservedResultModel(result, { nowMs = Date.now() } = {}) {
   const conditionLabel = priceConditionLabel(candidate);
   const conditionDetails = priceConditionDetails(candidate);
   const channelLabel = salesChannelLabel(candidate);
+  const linePrices = confirmedObservedPrices(candidate, result.basket);
+  // Core's savings is relative to its second comparison-ready candidate.
+  // Only identify that candidate when exactly two are eligible and the Core
+  // totals prove the relationship; never infer it from a partial offer.
+  const ready = Array.isArray(result?.candidates)
+    ? result.candidates.filter(entry => entry?.completeComparisonReadyCoverage === true && entry?.contextCoherent === true)
+    : [];
+  const other = conclusion.kind === OBSERVED_COMPARISON_CONCLUSION.CHEAPEST_PROVEN && ready.length === 2
+    ? ready.find(entry => entry.candidateId !== conclusion.candidateId) : null;
+  const otherTotal = other && Number.isSafeInteger(other.totalMinor) && Number.isSafeInteger(conclusion.savingsMinor)
+    && other.totalMinor === conclusion.totalMinor + conclusion.savingsMinor ? formatRubMinor(other.totalMinor) : null;
 
   return Object.freeze({
     ...freshness,
@@ -315,6 +326,8 @@ export function buildObservedResultModel(result, { nowMs = Date.now() } = {}) {
     totalLabel,
     coverageLabel: formattedCoverage,
     savingsLabel,
+    ...(linePrices.length ? { linePrices } : {}),
+    ...(otherTotal ? { otherCandidate: { title: observedCandidateName(other), totalLabel: otherTotal } } : {}),
     sourceLabel: sourceLabel(candidate),
     geographyLabel: geographyLabel(candidate),
     ...(conditionLabel ? { priceConditionLabel: conditionLabel } : {}),
@@ -495,7 +508,27 @@ export function createObservedComparisonResult(result) {
     ? "Это реальная наблюдаемая сумма, но сопоставимых полных вариантов пока недостаточно, чтобы назвать её самой дешёвой."
     : "«Дешевле» показано только среди полных сопоставимых наблюдений в одной географии и на одном уровне точности.";
 
-  section.append(facts, provenance, note);
+  const other = model.otherCandidate ? document.createElement('p') : null;
+  if (other) {
+    other.className = 'comparison-provenance';
+    other.textContent = `${model.otherCandidate.title}: ${model.otherCandidate.totalLabel} · наблюдаемая сумма`;
+  }
+  section.append(facts);
+  if (other) section.append(other);
+  section.append(provenance, note);
+  if (model.linePrices?.length) {
+    const details = document.createElement('details');
+    const summary = document.createElement('summary');
+    summary.textContent = `Цены по товарам · ${model.title}`;
+    const list = document.createElement('ul');
+    for (const line of model.linePrices) {
+      const item = document.createElement('li');
+      item.textContent = `${line.productLabel ?? 'Товар'}: ${line.priceLabel} за единицу`
+        + (line.observedAtLabel ? ` · наблюдение ${line.observedAtLabel}` : '');
+      list.append(item);
+    }
+    details.append(summary, list); section.append(details);
+  }
 
   if (model.navigation) {
     const action = document.createElement("a");

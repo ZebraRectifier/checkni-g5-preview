@@ -80,6 +80,13 @@ test('explicit address and peer lead to ten editable lines, saved basket and act
  await apply.click();await expect(page.locator('#basket-view')).toBeVisible();
  const result=page.getByLabel('Результат по наблюдаемым ценам');
  await expect(result).toContainText('10 из 10 позиций');await expect(result).toContainText('Экономия');
+ await expect(result).toContainText('Глобус Красногорск');
+ await expect(result).toContainText('Глобус Медведково');
+ await expect(result).toContainText('наблюдаемая сумма');
+ await expect(page.locator('.basket-row').first()).toContainText('Цена в списке не сохранена');
+ await result.getByText('Цены по товарам · Глобус Красногорск').click();
+ await expect(result.locator('details')).toContainText('за единицу · наблюдение');
+ await expect(result.locator('details li')).toHaveCount(10);
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')).length)).toBe(10);
  await expect(result).toContainText('Наличие не подтверждено');
  await page.reload();await expect(page.locator('#basket-view')).toContainText('Фарш');

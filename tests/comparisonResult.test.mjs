@@ -144,6 +144,17 @@ function observedCandidate(overrides = {}) {
   };
 }
 
+test('second observed total appears only for the two comparison-ready candidates confirmed by Core', () => {
+  const winner = observedCandidate({candidateId:'a', storeName:'Первый', totalMinor:10000, completeComparisonReadyCoverage:true, contextCoherent:true});
+  const peer = observedCandidate({candidateId:'b', storeName:'Второй', totalMinor:11500, completeComparisonReadyCoverage:true, contextCoherent:true});
+  const conclusion = {kind:'cheapest-proven', candidateId:'a', totalMinor:10000, savingsMinor:1500};
+  const build = candidates => buildObservedResultModel({candidates, conclusion});
+  assert.deepEqual(build([winner,peer]).otherCandidate, {title:'Второй',totalLabel:'115,00 ₽'});
+  assert.equal(build([winner,{...peer,completeComparisonReadyCoverage:false}]).otherCandidate, undefined);
+  assert.equal(build([winner,{...peer,totalMinor:11600}]).otherCandidate, undefined);
+  assert.equal(build([winner,peer,{...peer,candidateId:'c'}]).otherCandidate, undefined);
+});
+
 test("builds cheapest-proven observed presentation only from Core conclusion", () => {
   const model = buildObservedResultModel({
     kind: "observed-price-comparison",
