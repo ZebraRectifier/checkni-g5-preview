@@ -6,6 +6,8 @@ test('weekly alternatives keep delivery separate, require confirmation, persist,
   // Controlled freshness only. Real network acceptance is recorded separately.
   const at='2026-11-02T08:00:00Z';await page.clock.setFixedTime(new Date(at));let ai=0,deliveryReads=0;
   await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
+  const html=(await readFile('index.html','utf8')).replaceAll(/\.\/releases\/[a-f0-9]{64}\//g,'./');
+  await page.route('**/?comparison=observed&catalog=retail',r=>r.fulfill({status:200,contentType:'text/html',body:html}));
   await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
   await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
   await page.route('**/rest/v1/**retail_catalog_items**',r=>{
@@ -27,7 +29,8 @@ test('weekly alternatives keep delivery separate, require confirmation, persist,
   await expect(page.locator('#basket-proposal-status')).toContainText('Какие продукты исключить');await say('Ограничений нет');
   const variants=page.locator('.guided-shopping-stores');await expect(variants).toContainText('15/15 позиций');
   await expect(variants).toContainText('Доставка и сборы не включены');
-  await expect(variants).toContainText('разница');
+  await expect(variants).toContainText('Доставка Перекрёстка по выбранному адресу не подтверждена');
+  await expect(variants).not.toContainText('разница');
   expect(deliveryReads).toBe(2);
   await variants.getByRole('button',{name:'Показать Магнит',exact:true}).click();
   const buckwheat=page.locator('.guided-shopping-table tbody tr').filter({hasText:/греч/iu});
@@ -39,7 +42,8 @@ test('weekly alternatives keep delivery separate, require confirmation, persist,
   // Same requested 7.2 kg, not the original two packs or nine smaller packs.
   await expect(buckwheat).toContainText('18 × 400');
   await say('сравни с другим магазином');
-  await expect(variants).toContainText('разница');
+  await expect(variants).toContainText('Доставка Перекрёстка по выбранному адресу не подтверждена');
+  await expect(variants).not.toContainText('разница');
   await say('а в Магните?');
   await expect(buckwheat).toContainText('9 × 800');
   await say('а в Перекрёстке?');
