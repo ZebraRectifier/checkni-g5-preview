@@ -105,12 +105,14 @@ export function createShoppingConversation() {
   return deepFreeze({ revision: 0, goal: 0, facts: {}, rejected: {}, exceptions: {}, wishes: {}, hypotheses: [] });
 }
 const fact = (value, turn, scope = "goal", origin = "explicit", confidence = "high") => ({ value, scope, origin, confidence, evidenceTurn: turn });
+const isAllergyCondition = value => /(?:аллерги|непереносимост)/u.test(normalizeShoppingText(value));
 const active = values => Object.fromEntries(Object.entries(values).filter(([, value]) => value.scope !== "turn"));
 const persistent = values => Object.fromEntries(Object.entries(values).filter(([, value]) => value.scope === "conversation"));
 
 export function extractShoppingDelta(text) {
   const value = normalizeShoppingText(text);
   const delta = { facts: {}, unset: [], reject: [], rejectScopes: {}, allow: [], want: [], reset: false, newGoal: false, undo: false, dissatisfaction: false, directions: null, unresolved: [], clearUnresolved: /отменяю непонят\S* условие|забудь нераспознан\S* условие/u.test(value) };
+  if (/^отменяю ограничение (?:аллергии|непереносимости)[.!?]*$/u.test(value)) delta.clearAllergy = true;
   if (/^(?:забудь (?:все|мои) предпочтения|сбрось предпочтения|начнем с чистого листа)$/u.test(value)) delta.reset = true;
   if (/^(?:отмени последнее|откат|верни как было)$/u.test(value)) delta.undo = true;
   if (/новая корзина|новая задача|другая корзина|для гостей|на праздник/u.test(value)) delta.newGoal = true;
@@ -146,7 +148,7 @@ export function extractShoppingDelta(text) {
   const clauses = shoppingClauses(value);
   // Allergy and intolerance claims require ingredient-level evidence that the
   // catalog cannot prove. Keep them unresolved until explicitly clarified.
-  for (const clause of clauses) if (/(?:аллерги|непереносимост)/u.test(clause)) {
+  for (const clause of clauses) if (!delta.clearAllergy && isAllergyCondition(clause)) {
     const condition = clause.trim().slice(0, 80);
     if (condition && !delta.unresolved.includes(condition)) delta.unresolved.push(condition);
   }
@@ -230,14 +232,18 @@ export function extractShoppingDelta(text) {
     }
   }
   delta.rejectionScope = /никогда|вообще не ем|всегда без/u.test(value) ? "conversation" : "goal";
-  delta.recognized = delta.reset || delta.undo || delta.newGoal || delta.clearUnresolved || delta.dissatisfaction || Boolean(delta.directions)
+  delta.recognized = delta.reset || delta.undo || delta.newGoal || delta.clearUnresolved || delta.clearAllergy || delta.dissatisfaction || Boolean(delta.directions)
     || delta.unset.length > 0 || Object.keys(delta.facts).length > 0 || delta.reject.length > 0 || delta.allow.length > 0 || delta.want.length > 0 || delta.unresolved.length > 0;
   return deepFreeze(delta);
 }
 
 export function updateShoppingConversation(current, delta) {
   const turn = current.revision + 1;
-  if (delta.reset) return { state: deepFreeze({ ...createShoppingConversation(), revision: turn, goal: current.goal + 1 }), overflow: false };
+  if (delta.reset) {
+    const kept = (current.facts.unresolvedConstraints?.value ?? []).filter(isAllergyCondition);
+    return { state: deepFreeze({ ...createShoppingConversation(), revision: turn, goal: current.goal + 1,
+      facts: kept.length ? { unresolvedConstraints: fact(kept, turn, 'conversation') } : {} }), overflow: false };
+  }
   const next = {
     revision: turn, goal: current.goal + Number(delta.newGoal),
     facts: delta.newGoal ? persistent(current.facts) : active(current.facts),
@@ -246,8 +252,13 @@ export function updateShoppingConversation(current, delta) {
     wishes: delta.newGoal ? persistent(current.wishes) : active(current.wishes), hypotheses: delta.newGoal || delta.directions ? [] : current.hypotheses.filter(entry => entry.value === "structure_mismatch" && turn - entry.evidenceTurn < 4)
   };
   if (next.facts.cookingEffort?.origin === "inferred") delete next.facts.cookingEffort;
-  if (delta.clearUnresolved) delete next.facts.unresolvedConstraints;
-  if (delta.unresolved.length) next.facts.unresolvedConstraints = fact([...new Set([...(next.facts.unresolvedConstraints?.value ?? []), ...delta.unresolved])], turn);
+  let conditions = next.facts.unresolvedConstraints?.value ?? [];
+  if (delta.clearUnresolved) conditions = conditions.filter(isAllergyCondition);
+  if (delta.clearAllergy) conditions = conditions.filter(value => !isAllergyCondition(value));
+  conditions = [...new Set([...conditions, ...delta.unresolved])];
+  if (conditions.length) next.facts.unresolvedConstraints = fact(conditions, turn,
+    conditions.some(isAllergyCondition) ? 'conversation' : 'goal');
+  else delete next.facts.unresolvedConstraints;
   for (const [key, entry] of Object.entries(delta.facts)) next.facts[key] = fact(entry.value, turn, entry.scope);
   for (const key of delta.unset ?? []) delete next.facts[key];
   for (const target of delta.reject) {

@@ -506,3 +506,15 @@ test('allergy claim blocks automated advice and preserves basket',async({page})=
  await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
  expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
 });
+
+
+test('allergy survives new goal, ordinary reset and without-restrictions reply',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ const before=await savedBasket(page);
+ for(const turn of ['Аллергия на рис','Новая корзина','без ограничений','забудь все предпочтения','Собери недорогую корзину']) {
+  await submit(page,turn);
+ }
+ await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
+ expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});

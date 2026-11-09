@@ -167,3 +167,25 @@ test('allergy and intolerance require clarification instead of guessing safety',
   assert.ok(delta.unresolved.length,text);
  }
 });
+
+
+test('allergy signal persists through a new goal, ordinary reset and no-restrictions answer',async()=>{
+ const {createShoppingConversation,updateShoppingConversation}=await import('../src/intelligence/shoppingConversation.mjs');
+ let memory=createShoppingConversation();
+ const turn=text=>{memory=updateShoppingConversation(memory,extractShoppingDelta(text)).state;};
+ turn('Аллергия на рис');assert.ok(memory.facts.unresolvedConstraints?.value.some(x=>/аллерг/u.test(x)));
+ for(const text of ['Новая корзина','без ограничений','забудь все предпочтения','отменяю непонятное условие']) {
+  turn(text);assert.ok(memory.facts.unresolvedConstraints?.value.some(x=>/аллерг/u.test(x)),text);
+ }
+ turn('отменяю ограничение аллергии');assert.equal(memory.facts.unresolvedConstraints,undefined);
+});
+
+test('explicit allergy cancellation preserves other unresolved restrictions',async()=>{
+ const {createShoppingConversation,updateShoppingConversation}=await import('../src/intelligence/shoppingConversation.mjs');
+ let m=createShoppingConversation();
+ m=updateShoppingConversation(m,extractShoppingDelta('Аллергия на рис')).state;
+ m=updateShoppingConversation(m,extractShoppingDelta('без глютена')).state;
+ m=updateShoppingConversation(m,extractShoppingDelta('отменяю ограничение аллергии')).state;
+ assert.ok(m.facts.unresolvedConstraints?.value.some(x=>/глютен/u.test(x)));
+ assert.ok(!m.facts.unresolvedConstraints.value.some(x=>/аллерг/u.test(x)));
+});
