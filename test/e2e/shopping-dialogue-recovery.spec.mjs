@@ -281,3 +281,25 @@ test('retail unresolved food refusals clarify locally and preserve the saved nee
   expect(await page.evaluate(() => localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needsBefore);
   expect(await savedBasket(page)).toBe(before);
 });
+
+
+test('advice rejection lets a buyer defer budget without losing the goal', async ({page}) => {
+  const requests = [];
+  await page.route('**/functions/v1/ai-basket-proposal', route => {
+    requests.push(route.request().postDataJSON());
+    return route.fulfill({ status: 503, json: { kind: 'unavailable', code: 'provider_advice_commercial_claim' } });
+  });
+  await page.goto('/?comparison=demo#shop');
+  await openHory(page);
+  const before = await savedBasket(page);
+  await submit(page, 'Нужна еда на две недели для троих');
+  await expect(status(page)).toContainText('Какой общий бюджет');
+  await submit(page, 'Бюджет пока не решил');
+  await expect(status(page)).toContainText('Какие продукты особенно хочется включить');
+  await expect(status(page)).not.toContainText('Какой общий бюджет');
+  expect(requests).toHaveLength(2);
+  expect(requests[1].context.peopleCount).toBe(3);
+  expect(requests[1].context.shoppingDays).toBe(14);
+  expect(requests[1].history[1].text).toContain('Какой общий бюджет');
+  expect(await savedBasket(page)).toBe(before);
+});
