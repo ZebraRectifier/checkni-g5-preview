@@ -772,3 +772,51 @@ test('clearing search in a category restores that category and preserves the bas
   expect(await basketValue(page)).toBe(basket);
   expect(calls.ai).toBe(0);
 });
+
+
+test('clearing a search during category loading restores that category after the old response', async ({ page }) => {
+  const { calls } = await setup(page, { history: true });
+  await addButton(page.locator('#product-grid .product-card').first()).click();
+  const basket = await basketValue(page);
+  const grid = page.locator('#retail-category-grid');
+  await grid.getByRole('button', { name: /Молочные продукты, сыр, яйца/ }).click();
+  await grid.getByRole('button', { name: /Молоко и молочные продукты/ }).click();
+  let release;
+  const hold = new Promise(resolve => { release = resolve; });
+  let seen;
+  const requested = new Promise(resolve => { seen = resolve; });
+  let childRequests = 0;
+  await page.route('**/rest/v1/retail_catalog_categories**', async route => {
+    const params = new URL(route.request().url()).searchParams;
+    if (params.get('parent_id') === 'eq.3979002' && ++childRequests === 1) {
+      seen();
+      await hold;
+    }
+    await route.fallback();
+  });
+  await grid.getByRole('button', { name: /^Молоко(?:\s|$)/ }).click();
+  await requested;
+  try {
+    await search(page).fill('рис');
+    await submit(page).click();
+    await expect.poll(() => calls.retail.length).toBe(1);
+    await search(page).fill('');
+    await expect.poll(() => childRequests).toBeGreaterThanOrEqual(2);
+    await expect(page.locator('#retail-category-title')).toHaveText('Молоко');
+    await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
+    await expect(page.locator('#product-grid')).toContainText('Молоко Parmalat');
+    const oldResponse = page.waitForResponse(response => {
+      const url = new URL(response.url());
+      return url.pathname.endsWith('/rest/v1/retail_catalog_categories')
+        && url.searchParams.get('parent_id') === 'eq.3979002';
+    });
+    release();
+    await (await oldResponse).finished();
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
+    await expect(page.locator('#product-grid')).toContainText('Молоко Parmalat');
+    expect(await basketValue(page)).toBe(basket);
+  } finally {
+    release();
+  }
+});

@@ -3628,6 +3628,8 @@ elements.clearSearch.addEventListener("click", () => {
     const category = retailBrowserState.path.at(-1);
     if (category && retailBrowserState.status === "ready") {
       void loadRetailCategoryProducts(category, { scrollToProducts: false });
+    } else if (category && retailBrowserState.status === "loading") {
+      void loadRetailChildren(category, retailBrowserState.path, { scrollToProducts: false });
     } else {
       void loadInitialRetailCatalog();
     }
