@@ -1,0 +1,65 @@
+name: Hosted immutable stage proof
+on:
+  pull_request:
+    paths:
+      - 'tools/browser-release/hosted-release-generator.mjs'
+      - '.github/workflows/hosted-stage-proof.yml'
+permissions:
+  contents: read
+jobs:
+  build-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          path: site
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: ZebraRectifier/checkni-g5-preview
+          ref: 95ae45b8fd90ed4edf7b732083e800c948783ae5
+          persist-credentials: false
+          path: source
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Check generator bytes
+        working-directory: site
+        run: |
+          echo '6ce5ea877d5d809f4ff8b309f337ccb9248116b4f6fdc5c0245dab03ea3ef42e  tools/browser-release/hosted-release-generator.mjs' | sha256sum -c -
+          echo '6940fd3cc665ffbd764c566d9609403d5a009b03ceb631ce93bf772ba14d4387  tools/security/scan-public-secrets.mjs' | sha256sum -c -
+      - name: Build isolated immutable release
+        working-directory: site
+        env:
+          OUT: ${{ runner.temp }}/checkni-stage-proof
+        run: |
+          set -euo pipefail
+          test "$(git -C ../source rev-parse HEAD)" = '95ae45b8fd90ed4edf7b732083e800c948783ae5'
+          node tools/browser-release/hosted-release-generator.mjs stage ../source 95ae45b8fd90ed4edf7b732083e800c948783ae5 "$OUT"
+          node tools/security/scan-public-secrets.mjs "$OUT"
+      - name: Verify staged tree and retained runtime paths
+        working-directory: site
+        env:
+          OUT: ${{ runner.temp }}/checkni-stage-proof
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs/promises';
+          import {verifyLocal} from './tools/browser-release/verify.mjs';
+          const ids=await fs.readdir(process.env.OUT+'/releases');
+          if(ids.length!==1)throw Error('unexpected_release_count');
+          const m=await verifyLocal(process.env.OUT,ids[0]);
+          if(m.sourceCommit!=='95ae45b8fd90ed4edf7b732083e800c948783ae5')throw Error('source_mismatch');
+          const previous=JSON.parse(await fs.readFile('releases/a66ab7aa146097ef9320ac363489eb23ef02eb8f4f11a587b7811ef48e6d2a1c/manifest.json','utf8'));
+          const paths=x=>x.entries.map(e=>e.file).sort();
+          if(JSON.stringify(paths(m))!==JSON.stringify(paths(previous)))throw Error('runtime_file_set_changed');
+          console.log(JSON.stringify({sourceCommit:m.sourceCommit,releaseId:m.releaseId,files:m.entries.length,immutableVerified:true}));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hosted-stage-proof
+          path: ${{ runner.temp }}/checkni-stage-proof/
+          if-no-files-found: error
+          retention-days: 2
