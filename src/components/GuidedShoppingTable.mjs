@@ -29,6 +29,13 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
   if (model.alternatives?.length) {
     const coverage = document.createElement('section'); coverage.className = 'guided-shopping-stores'; coverage.setAttribute('aria-label', model.location?.landmark?'Проверенные магазины в радиусе':'Проверенные каталоги');
     const title = document.createElement('strong'); title.textContent = 'Варианты по твоему списку'; coverage.append(title);
+    if(model.quantityMismatch){
+      const note=document.createElement('p');note.className='guided-shopping-warning';note.setAttribute('role','status');
+      const format=(amount,dimension)=>dimension==='g'?(amount>=1000?`${amount/1000} кг`:`${amount} г`):dimension==='ml'?(amount>=1000?`${amount/1000} л`:`${amount} мл`):`${amount} шт.`;
+      const differences=(model.quantityDifferences??[]).map(item=>`${item.label}: ${item.totals.map(total=>`${total.storeName} — ${format(total.amount,item.dimension)}`).join('; ')}`).join('. ');
+      note.textContent='Из-за разных упаковок итоговое количество отличается. Суммы напрямую не сравниваем.';coverage.append(note);
+      if(differences)addInformation(`Разница по продуктам: ${differences}.`);
+    }
     const cards = document.createElement('div'); cards.className = 'guided-store-options'; coverage.append(cards);
     for (const store of model.alternatives) {
       const card = document.createElement('article'); card.className = 'guided-store-option'; card.dataset.selected = String(Boolean(store.selected));
@@ -58,13 +65,6 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
     const summary = document.createElement('p'); summary.className = 'guided-shopping-conditions';
     summary.textContent = 'Марки и фасовки различаются. ' + (model.quote.hasEstimates ? 'Количества примерные. ' : '') + 'Наличие не подтверждено.';
     coverage.append(summary);
-    if(model.quantityMismatch){
-      const note=document.createElement('p');note.className='guided-shopping-warning';note.setAttribute('role','status');
-      const format=(amount,dimension)=>dimension==='g'?(amount>=1000?`${amount/1000} кг`:`${amount} г`):dimension==='ml'?(amount>=1000?`${amount/1000} л`:`${amount} мл`):`${amount} шт.`;
-      const differences=(model.quantityDifferences??[]).map(item=>`${item.label}: ${item.totals.map(total=>`${total.storeName} — ${format(total.amount,item.dimension)}`).join('; ')}`).join('. ');
-      note.textContent='Из-за разных упаковок итоговое количество отличается. Суммы напрямую не сравниваем.';coverage.append(note);
-      if(differences)addInformation(`Разница по продуктам: ${differences}.`);
-    }
     if(model.alternatives.some(store=>store.priceScope==='delivery-catalog')){
       summary.textContent += ' Доставка Перекрёстка по выбранному адресу не подтверждена. Сравнение недоступно. Доставка и сборы не включены.';
       summary.classList.add('guided-shopping-warning'); summary.setAttribute('role','status');

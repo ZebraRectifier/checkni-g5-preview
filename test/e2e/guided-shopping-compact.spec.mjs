@@ -43,6 +43,7 @@ test('guided variants show products early and retain scope, warnings and keyboar
   await expect(guided.locator('.guided-shopping-conditions')).toContainText('Доставка и сборы не включены');
   await expect(guided.locator('.guided-shopping-warning').filter({hasText:'итоговое количество отличается'})).toBeVisible();
   await expect(guided.locator('.guided-shopping-warning').filter({hasText:'Суммы напрямую не сравниваем'})).toBeVisible();
+  expect(await variants.evaluate(node => Boolean(node.querySelector('.guided-shopping-warning').compareDocumentPosition(node.querySelector('.guided-store-options')) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
   for (const card of await cards.all()) {
     const address = await card.locator('.guided-store-address').innerText();
     expect((await card.innerText()).split(address)).toHaveLength(2);
