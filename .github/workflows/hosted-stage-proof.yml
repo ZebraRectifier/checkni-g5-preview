@@ -30,7 +30,7 @@ jobs:
         working-directory: site
         run: |
           echo '6ce5ea877d5d809f4ff8b309f337ccb9248116b4f6fdc5c0245dab03ea3ef42e  tools/browser-release/hosted-release-generator.mjs' | sha256sum -c -
-          echo '6940fd3cc665ffbd764c566d9609403d5a009b03ceb631ce93bf772ba14d4387  tools/security/scan-public-secrets.mjs' | sha256sum -c -
+          echo 'fd1c43bd6bb8d5a3a664c16bfa089c7bddcc4893fcb5dfbccedccff5a08b669c  tools/security/scan-public-secrets.mjs' | sha256sum -c -
       - name: Build isolated immutable release
         working-directory: site
         env:
