@@ -497,8 +497,8 @@ test('provider failure does not repeat budget after the buyer defers it', async 
 test('failed shopping advice offers local guided continuation without a second provider call', async () => {
  for (const code of ['provider_timeout','provider_upstream_unavailable','provider_advice_commercial_claim']) {
   const s=session(async()=>({kind:'unavailable',code}),{searchGuidedCatalog:async()=>({kind:'catalog',products:[]})});
-  const first=await s.send('Нужна еда на две недели для троих без свинины');
-  const choice=first.presentation.conversationChoices.find(x=>x.text==='Собери корзину');
+  const first=await s.send('Слушай, нужна еда на две недели для троих без свинины. Что посоветуешь?');
+  const choice=first.presentation.conversationChoices.find(x=>x.text==='Собрать');
   assert.ok(choice,JSON.stringify({code,first}));assert.equal(s.advice.length,1);
   const before=s.basket.getSnapshot();
   const next=await s.send(choice.text);
@@ -513,8 +513,8 @@ test('failed shopping advice offers local guided continuation without a second p
 test('unrelated advice failures and absent guided catalog do not offer offline basket', async () => {
  const noCatalog=session(async()=>({kind:'unavailable',code:'provider_timeout'}));
  const first=await noCatalog.send('Нужна еда на две недели для троих');
- assert.ok(!first.presentation.conversationChoices.some(x=>x.text==='Собери корзину'));
+ assert.ok(!first.presentation.conversationChoices.some(x=>x.text==='Собрать'));
  const unrelated=session(async()=>({kind:'unavailable',code:'provider_timeout'}),{searchGuidedCatalog:async()=>({kind:'catalog',products:[]})});
  const second=await unrelated.send('Посоветуй рыбу на ужин');
- assert.ok(!(second.presentation.conversationChoices??[]).some(x=>x.text==='Собери корзину'));
+ assert.ok(!(second.presentation.conversationChoices??[]).some(x=>x.text==='Собрать'));
 });

@@ -553,7 +553,7 @@ export function createShoppingConversationFlow(options) {
       // a second provider request. The existing guided flow retains memory.
       if (typeof options.searchGuidedCatalog === 'function' && (planning
           || adviceHistory.some(row => row.role === 'user' && isShoppingPlanningRequest(row.text))))
-        state.presentation.conversationChoices.push({ label: 'Собрать корзину', text: 'Собери корзину' });
+        state.presentation.conversationChoices.push({ label: 'Собрать корзину', text: 'Собрать' });
     }
     else if (typeof options.searchGuidedCatalog === "function" && (isShoppingPlanningRequest(text)
         || adviceHistory.some(row => row.role === "user" && isShoppingPlanningRequest(row.text)))) {
