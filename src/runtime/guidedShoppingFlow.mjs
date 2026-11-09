@@ -61,12 +61,12 @@ export function createGuidedShoppingFlow(options) {
     const quantityMismatch=plan.drafts?.length===2 && compareCatalogDraftAlternatives(plan.drafts,{nowMs:options.now?.()??Date.now()}).kind==='different_quantity';
     const quantityDifferences=quantityMismatch ? plan.drafts[0].rows.flatMap((row,index)=>{
       const pair=plan.drafts.map(draft=>draft.rows[index]);
-      if(!pair.every(item=>item?.quantityIntent && item.card && !item.quantityReview && Number.isFinite(item.quantity)))return [];
+      if(!pair.every(item=>item?.card && !item.quantityReview && Number.isFinite(item.quantity)))return [];
       const units=pair.map(item=>catalogPurchaseUnit(item.card));
-      if(!units.every(unit=>unit && !unit.approximate && unit.dimension===row.quantityIntent.dimension))return [];
+      if(!units.every(unit=>unit && !unit.approximate && unit.dimension===row.group.dimension))return [];
       const totals=pair.map((item,i)=>units[i].amount*item.quantity);
       if(Math.abs(totals[0]-totals[1])<=Number.EPSILON*Math.max(1,...totals)*4)return [];
-      return [{label:row.group.label,dimension:row.quantityIntent.dimension,totals:totals.map((amount,i)=>({amount,storeName:plan.drafts[i].scope.storeName}))}];
+      return [{label:row.group.label,dimension:row.group.dimension,totals:totals.map((amount,i)=>({amount,storeName:plan.drafts[i].scope.storeName}))}];
     }) : [];
     state = view(plan.stage === 'confirmed' ? 'Корзина собрана. Посмотрим магазины?' : 'Посмотри, что получилось.',
       `${messageText}${quantityNote()}${budget}${missing.length ? ` Ещё нужно подобрать ${missing.length} поз. — список под таблицей.` : ''} Цены показаны на дату наблюдения; наличие неизвестно.`, {
@@ -178,11 +178,11 @@ export function createGuidedShoppingFlow(options) {
     // Delivery coverage is unknown; never use its prices to select a cheaper
     // option for a location. Keep the explicitly selected source first.
     const deliveryUnconfirmed = drafts.some(draft => draft.scope.retailerId === 'perekrestok');
-    const quantityMismatch = drafts.length===2 && compareCatalogDraftAlternatives(drafts,{nowMs:options.now?.()??Date.now()}).kind==='different_quantity';
-    const ranked = deliveryUnconfirmed || quantityMismatch
+    const comparable = drafts.length!==2 || compareCatalogDraftAlternatives(drafts,{nowMs:options.now?.()??Date.now()}).kind==='fresh';
+    const ranked = deliveryUnconfirmed || !comparable
       ? drafts.map(draft => ({...draft, quote:quoteCatalogDraft(draft.rows, {nowMs:options.now?.()??Date.now()})}))
       : rankCatalogDrafts(drafts, { nowMs: options.now?.() ?? Date.now() });
-    const selected = deliveryUnconfirmed || quantityMismatch
+    const selected = deliveryUnconfirmed || !comparable
       ? ranked.find(draft => draft.scope.storeId === scope?.storeId) ?? ranked[0]
       : ranked[0];
     if (nearby.length) {

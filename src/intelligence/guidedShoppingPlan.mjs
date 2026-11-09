@@ -20,7 +20,7 @@ const GROUPS = [
   ['bananas', 'Бананы', 'банан', /банан/u, 100, 'g'],
   ['curd', 'Творог', 'творог', /творог/u, 80, 'g'],
   ['cheese', 'Сыр', 'сыр', /(?:^|\s)сыр(?:а|у|ом|ы)?(?=$|[\s,.])/u, 30, 'g'],
-  ['potatoes', 'Картофель', 'картоф', /картоф/u, 180, 'g'],
+  ['potatoes', 'Картофель', 'картоф', /картоф|картош/u, 180, 'g'],
   ['carrots', 'Морковь', 'морков', /морков/u, 40, 'g'],
   ['onions', 'Лук', 'лук', /(?:^|\s)лук/u, 30, 'g'],
   ['cabbage', 'Капуста', 'капуст', /капуст/u, 100, 'g'],
@@ -81,13 +81,14 @@ export function createGuidedShoppingPlan(goal, history, memory) {
 export function guidedExplicitMass(text) {
   const input=clean(text);
   const mentioned=GROUPS.filter(group=>group.pattern.test(input));
-  const hasQuantity=/(?:\d|полкило|поллитра|один|одна|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|двадцать)\s*(?:кг|килограмм(?:а|ов)?|грамм(?:а|ов)?|гр?\.?|литр(?:а|ов)?|л|мл|штук|шт\.?)?(?=$|[\s,.!])/u.test(input);
-  if (!mentioned.length || !hasQuantity) return null;
+  const quantityText=input.replace(/(?:\d+(?:[.,]\d+)?|один|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|двадцать)\s*(?:дн(?:я|ей)?|недел(?:ю|и|ь)|человек(?:а)?|людей|персон(?:ы)?)(?=$|[^\p{L}])/gu,' ');
+  const hasQuantity=/(?:\d|полкило|поллитра|один|одна|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|двадцать)\s*(?:кг|килограмм(?:а|ов)?|грамм(?:а|ов)?|гр?\.?|литр(?:а|ов)?|л|мл|штук|шт\.?)?(?=$|[\s,.!])/u.test(quantityText);
+  if (!(mentioned.length || /куриц/u.test(input)) || !hasQuantity) return null;
   const clause=input.replace(/^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а|ся|ась)?)(?:\s+пока)?[,;.]\s*(?:но\s+)?/u,'');
   if(!/^(?:хочу|нужно|надо|добавь)\s/u.test(clause)) return /^(?:не|без)\s/u.test(clause)?{issue:true}:null;
   if(/(?:^|\s)(?:не|без|кроме|или|и)(?=$|[\s,.])/u.test(clause)) return {issue:true};
   const parsed=parseNeedLine(clause);
-  const names={mince:/^фарш(?:а)?$/u,potatoes:/^картоф(?:ель|еля|ели|елю|елем)$/u,apples:/^яблок(?:о|а|и)?$/u,
+  const names={mince:/^фарш(?:а)?$/u,potatoes:/^(?:картоф(?:ель|еля|ели|елю|елем)|картошк(?:а|и|у|ой))$/u,apples:/^яблок(?:о|а|и)?$/u,
     milk:/^молок(?:о|а|у)$/u,eggs:/^яйц(?:о|а|ы)?$|^яиц$/u};
   const group=parsed && GROUPS.find(row=>names[row.key]?.test(clean(parsed.requestedName)));
   if(!group||parsed.resolution.status!=='unresolved'||!parsed.quantity.explicit||parsed.packageSize) return {issue:true};

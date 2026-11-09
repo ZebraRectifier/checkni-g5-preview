@@ -54,7 +54,7 @@ test('saved basket survives edits and reload when delivery comparison is unconfi
  expect(ai).toBe(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
-test('saved comparison distinguishes a fresh weight estimate from quantities that still require review',async({page,context})=>{
+test('saved comparison blocks a winner for estimated weights and unresolved quantities',async({page,context})=>{
  const now=Date.parse('2026-11-07T08:00:00Z');
  await context.route('**/*',route=>['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
  await page.goto('/?comparison=observed&catalog=retail#shop');
@@ -77,6 +77,7 @@ test('saved comparison distinguishes a fresh weight estimate from quantities tha
   if(change==='stale')drafts[0].rows[0].card.observedAt=new Date(now-3600001).toISOString();
   if(change==='missing')drafts[0].rows[0].card=null;
   if(change==='tie')drafts[0].rows[0].card.priceMinor=15000;
+  if(change==='unequal')drafts.forEach((draft,index)=>{draft.rows[0].card.catalogPurchaseBasis='piece';draft.rows[0].card.unit=index?'900 г':'400 г';draft.rows[0].quantity=index?4:8;});
   if(change==='mismatched-intent')drafts.forEach((draft,index)=>{
    draft.rows[0].card.catalogPurchaseBasis='piece';
    draft.rows[0].quantityIntent={dimension:'g',amount:index?3000:2000};
@@ -87,18 +88,19 @@ test('saved comparison distinguishes a fresh weight estimate from quantities tha
  },{now,change});
  const host=page.locator('#saved-comparison-contract'),status=host.locator('[role="status"]');
  const fresh=await render('fresh');
- expect(fresh.core).toMatchObject({kind:'fresh',estimated:true,sameProducts:false,includesFees:false,availability:'unknown'});
+ expect(fresh.core).toMatchObject({kind:'incompatible'});
  expect(fresh.unchanged).toBe(true);
- await expect(status).toContainText('Ориентировочно:');
- await expect(status).toContainText('ниже на 100,00');
- await expect(status).not.toContainText('нужно уточнить');
+ await expect(status).not.toContainText('ниже на');
+ await expect(status).toContainText('нужно уточнить');
  await expect(host).toContainText('Считаем объём сохранённой корзины. В другом магазине может понадобиться больше упаковок.');
  await expect(host).toContainText('Доставка и сборы не включены');
  const explanation=host.getByText('Как рассчитана сумма',{exact:true});await explanation.click();
  await expect(host.getByText(/сумма может отличаться от первоначального подбора/)).toBeVisible();
  await expect(host.getByText(/окончательная сумма зависит от взвешивания/)).toBeVisible();
- const tie=await render('tie');expect(tie.core).toMatchObject({kind:'fresh',estimated:true,differenceMinor:0});
- await expect(status).toContainText('Ориентировочно: суммы товаров в этих вариантах совпали');
+ const unequal=await render('unequal');expect(unequal.core).toMatchObject({kind:'different_quantity'});
+ await expect(status).toContainText('итоговое количество отличается');await expect(status).not.toContainText('ниже на');
+ const tie=await render('tie');expect(tie.core).toMatchObject({kind:'incompatible'});
+ await expect(status).not.toContainText('суммы товаров в этих вариантах совпали');
  for(const change of ['pending','review','unknown-pack','stale','missing','mismatched-intent']){
   const result=await render(change);expect(result.unchanged).toBe(true);
   await expect(status).not.toContainText('ниже на');

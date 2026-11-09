@@ -73,7 +73,7 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
     }
     if(quotes.some(quote=>!quote.complete))messages.push('Список неполный. Выгоду пока не определяем.');
     if(quotes.some(quote=>!quote.allRecent))messages.push('Есть старые или неизвестные цены.');
-    if(quotes.some(quote=>quote.lines.some(line=>line.quantityReview || (line.card && !line.unit))))
+    if(quotes.some(quote=>quote.lines.some(line=>line.quantityReview || (line.card && (!line.unit || line.unit.approximate)))))
       messages.push('Количество весовых товаров или упаковку нужно уточнить.');
   }
   status.textContent=messages.join(' ');

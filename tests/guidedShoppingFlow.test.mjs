@@ -348,3 +348,11 @@ test('excluding a product after review clears its stale intent and retains the e
  assert.equal(flow.getState().presentation.guidedShopping,undefined);
  assert.deepEqual(basket.getSnapshot(),[]);
 });
+
+test('household duration is not mistaken for product weight and colloquial product is handled safely', async()=>{
+ const {guidedExplicitMass}=await import('../src/intelligence/guidedShoppingPlan.mjs');
+ assert.equal(guidedExplicitMass('хочу продукты на 7 дней для 3 человек, побольше фарша'),null);
+ assert.equal(guidedExplicitMass('хочу фарш на 3 дня'),null);
+ assert.deepEqual(guidedExplicitMass('хочу 2 кг картошки'),{key:'potatoes',intent:{dimension:'g',amount:2000}});
+ assert.deepEqual(guidedExplicitMass('хочу 2 кг курицы'),{issue:true});
+});

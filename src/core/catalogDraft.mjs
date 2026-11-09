@@ -91,18 +91,20 @@ export function compareCatalogDraftAlternatives(drafts, options) {
   for (let i = 0; i < drafts[0].rows.length; i++) {
     const pair = drafts.map(draft => draft.rows[i]);
     if (pair.some(row => row.quantityReview === true)) return { kind: 'incompatible' };
-    if (!pair.some(row => row.quantityIntent != null)) continue;
-    const intent = pair[0].quantityIntent;
-    if (!validQuantityIntent(intent) || pair.some(row => !validQuantityIntent(row.quantityIntent)
-      || row.quantityIntent.dimension !== intent.dimension || row.quantityIntent.amount !== intent.amount))
-      return { kind: 'incompatible' };
-    for (const row of pair) {
-      const suggested = suggestedCatalogQuantityForIntent(row.card, intent);
-      // Both offers cover the same request with the smallest whole-pack quantity.
-      // An unrelated extra package is not a saving or an equivalent basket.
-      if (suggested.quantityReview || row.quantity !== suggested.quantity) return { kind: 'incompatible' };
+    if (pair.some(row => !row.card)) return {kind:'incomplete'};
+    const units=pair.map(row=>catalogPurchaseUnit(row.card));
+    if (units.some((unit,index)=>!unit || unit.approximate || unit.dimension!==pair[index].group?.dimension
+      || !Number.isSafeInteger(pair[index].quantity) || pair[index].quantity<1)) return {kind:'incompatible'};
+    if (pair.some(row => row.quantityIntent != null)) {
+      const intent = pair[0].quantityIntent;
+      if (!validQuantityIntent(intent) || pair.some(row => !validQuantityIntent(row.quantityIntent)
+        || row.quantityIntent.dimension !== intent.dimension || row.quantityIntent.amount !== intent.amount)) return { kind: 'incompatible' };
+      for (const row of pair) {
+        const suggested = suggestedCatalogQuantityForIntent(row.card, intent);
+        if (suggested.quantityReview || row.quantity !== suggested.quantity) return { kind: 'incompatible' };
+      }
     }
-    const totals=pair.map(row=>catalogPurchaseUnit(row.card).amount*row.quantity);
+    const totals=pair.map((row,index)=>units[index].amount*row.quantity);
     if(Math.abs(totals[0]-totals[1])>Number.EPSILON*Math.max(1,...totals)*4) return {kind:'different_quantity'};
   }
   const quotes=drafts.map(d=>({...d,quote:quoteCatalogDraft(d.rows,options)}));

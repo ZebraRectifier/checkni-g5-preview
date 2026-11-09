@@ -395,3 +395,12 @@ test('503 then guided draft retains explicit mass without changing saved basket'
  await expect(status(page)).toContainText('Фарш: 2 кг');
  expect(await savedBasket(page)).toBe(before);expect(calls).toBe(1);
 });
+
+test('household duration is not mistaken for product quantity and unsupported chicken is clarified',async({page})=>{
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ await submit(page,'хочу продукты на 7 дней для 3 человек, побольше фарша');
+ await expect(status(page)).not.toContainText('Уточни отдельно продукт и точное количество');
+ await submit(page,'хочу 2 кг курицы');
+ await expect(status(page)).toContainText('Уточни отдельно продукт и точное количество');
+ expect(await savedBasket(page)).toBeNull();
+});

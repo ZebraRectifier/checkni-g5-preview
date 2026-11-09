@@ -81,3 +81,20 @@ test('different whole-pack excess cannot produce a cheaper-store winner',()=>{
  assert.equal(a.card.unit,'400 г');assert.equal(a.quantity,8);assert.equal(b.card.unit,'900 г');assert.equal(b.quantity,4);
  assert.equal(a.card.priceMinor*a.quantity,80000);assert.equal(b.card.priceMinor*b.quantity,40000);
 });
+
+test('all rows require matching actual mass even without requested quantity intent',()=>{
+ const naked=(unit,quantity)=>{const r=row(unit,quantity);delete r.quantityIntent;return r;};
+ assert.deepEqual(compareCatalogDraftAlternatives(drafts(naked('400 г',8),naked('900 г',4)),{nowMs}),{kind:'different_quantity'});
+ assert.equal(compareCatalogDraftAlternatives(drafts(naked('500 г',2),naked('1 кг',1)),{nowMs}).kind,'fresh');
+ for(const b of [naked('упаковка',1),{...naked('500 г',2),card:{...card('500 г'),catalogPurchaseBasis:'weighed-portion'}}])
+  assert.notEqual(compareCatalogDraftAlternatives(drafts(naked('500 г',2),b),{nowMs}).kind,'fresh');
+});
+
+test('comparable actual units must agree for volume and item counts',()=>{
+ const make=(unit,quantity,dimension)=>({group:{key:'test',dimension,dailyAmount:1},quantity,card:card(unit)});
+ assert.equal(compareCatalogDraftAlternatives(drafts(make('1 л',2,'ml'),make('500 мл',4,'ml')),{nowMs}).kind,'fresh');
+ assert.equal(compareCatalogDraftAlternatives(drafts(make('1 л',2,'ml'),make('500 мл',5,'ml')),{nowMs}).kind,'different_quantity');
+ assert.equal(compareCatalogDraftAlternatives(drafts(make('10 шт',2,'piece'),make('20 шт',1,'piece')),{nowMs}).kind,'fresh');
+ assert.equal(compareCatalogDraftAlternatives(drafts(make('10 шт',2,'piece'),make('12 шт',2,'piece')),{nowMs}).kind,'different_quantity');
+ assert.equal(compareCatalogDraftAlternatives(drafts(make('10 шт',2,'piece'),make('1 л',2,'piece')),{nowMs}).kind,'incompatible');
+});
