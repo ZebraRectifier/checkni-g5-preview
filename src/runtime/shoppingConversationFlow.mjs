@@ -604,6 +604,16 @@ export function createShoppingConversationFlow(options) {
     }
     const planning = isShoppingPlanningRequest(text);
     const control = extractShoppingDelta(text);
+    if (control.clearAllergy) {
+      const updated = updateShoppingConversation(memory, control);
+      if (updated.overflow) {
+        state = messageState("Не удалось обновить условие.", "Прежние ограничения сохранены.");
+      } else {
+        setMemory(updated.state);
+        state = messageState("Ограничение отменено.", "Отменила только сохранённое ограничение аллергии или непереносимости. Другие условия и корзина сохранены.");
+      }
+      return state;
+    }
     if (control.reset || control.newGoal || control.undo) guidedShopping = null;
     if (/^сравни мой список[.!?]*$/iu.test(text)) {
       guidedShopping?.hideReview();

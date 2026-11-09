@@ -231,6 +231,8 @@ export function extractShoppingDelta(text) {
       delta.want.push(...targets);
     }
   }
+  // This is a generic answer, not an unknown food; it never clears a saved allergy.
+  delta.unresolved = delta.unresolved.filter(item => normalizeShoppingText(item) !== 'без ограничений');
   delta.rejectionScope = /никогда|вообще не ем|всегда без/u.test(value) ? "conversation" : "goal";
   delta.recognized = delta.reset || delta.undo || delta.newGoal || delta.clearUnresolved || delta.clearAllergy || delta.dissatisfaction || Boolean(delta.directions)
     || delta.unset.length > 0 || Object.keys(delta.facts).length > 0 || delta.reject.length > 0 || delta.allow.length > 0 || delta.want.length > 0 || delta.unresolved.length > 0;
