@@ -3603,6 +3603,10 @@ elements.searchForm.addEventListener("submit", (event) => {
 
 elements.searchInput.addEventListener("input", () => {
   invalidateHybridForManualTakeover();
+  if (!elements.searchInput.value.trim() && activeQuery.trim()) {
+    elements.clearSearch.click();
+    return;
+  }
   syncSearchDraft();
 });
 
@@ -3621,7 +3625,12 @@ elements.clearSearch.addEventListener("click", () => {
   };
   elements.clearSearch.hidden = true;
   if (publicRetailCatalogMode) {
-    void loadInitialRetailCatalog();
+    const category = retailBrowserState.path.at(-1);
+    if (category && retailBrowserState.status === "ready") {
+      void loadRetailCategoryProducts(category, { scrollToProducts: false });
+    } else {
+      void loadInitialRetailCatalog();
+    }
   } else {
     renderCatalog();
   }

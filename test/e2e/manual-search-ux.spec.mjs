@@ -168,7 +168,7 @@ test('empty and whitespace submissions never reload the initial catalogue', asyn
 });
 
 for (const method of ['keyboard', 'native input event']) {
-test(`${method} clearing offers an explicit route back to the catalogue without an input request`, async ({ page }) => {
+test(`${method} clearing automatically restores the catalogue`, async ({ page }) => {
   const { calls } = await setup(page);
   await search(page).fill('молоко');
   await submit(page).click();
@@ -187,16 +187,11 @@ test(`${method} clearing offers an explicit route back to the catalogue without 
   }
   await expect(search(page)).toHaveValue('');
   await expect(submit(page)).toBeDisabled();
-  await expect(page.locator('#catalog-search-prompt')).toContainText('Введите запрос или вернитесь к каталогу.');
-  await expect(page.locator('#empty-search')).toBeHidden();
-  await expect(page.locator('#search-status')).toHaveText('Введите запрос или нажмите «Показать каталог».');
-  expect(calls.browse).toBe(initialBrowse);
-  expect(calls.gateway).toHaveLength(0);
-  expect(calls.retail).toHaveLength(1);
-  await page.getByRole('button', { name: 'Показать каталог', exact: true }).click();
   await expect(page.locator('#product-grid .product-card')).toHaveCount(2);
   await expect(page.locator('#catalog-search-prompt')).toBeHidden();
   await expect(search(page)).toBeFocused();
+  expect(calls.gateway).toHaveLength(0);
+  expect(calls.retail).toHaveLength(1);
   expect(calls.browse).toBe(initialBrowse + 1);
 });
 }
@@ -756,3 +751,24 @@ for (const first of ['globus', 'magnit']) {
     });
   }
 }
+
+
+test('clearing search in a category restores that category and preserves the basket', async ({ page }) => {
+  const { calls } = await setup(page, { history: true });
+  await addButton(page.locator('#product-grid .product-card').first()).click();
+  const basket = await basketValue(page);
+  const grid = page.locator('#retail-category-grid');
+  await grid.getByRole('button', { name: /Молочные продукты, сыр, яйца/ }).click();
+  await grid.getByRole('button', { name: /Молоко и молочные продукты/ }).click();
+  await grid.getByRole('button', { name: /^Молоко(?:\s|$)/ }).click();
+  await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
+  await search(page).fill('рис');
+  await submit(page).click();
+  await expect.poll(() => calls.retail.length).toBe(1);
+  await search(page).fill('');
+  await expect(page.locator('#retail-category-title')).toHaveText('Молоко');
+  await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
+  await expect(page.locator('#product-grid')).toContainText('Молоко');
+  expect(await basketValue(page)).toBe(basket);
+  expect(calls.ai).toBe(0);
+});
