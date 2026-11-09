@@ -502,7 +502,7 @@ test('failed shopping advice offers local guided continuation without a second p
   assert.ok(choice,JSON.stringify({code,first}));assert.equal(s.advice.length,1);
   const before=s.basket.getSnapshot();
   const next=await s.send(choice.text);
-  assert.equal(s.advice.length,2);assert.deepEqual(s.proposals,[]);assert.deepEqual(s.basket.getSnapshot(),before);
+  assert.equal(s.advice.length,1);assert.deepEqual(s.proposals,[]);assert.deepEqual(s.basket.getSnapshot(),before);
   assert.equal(s.flow.getConversation().facts.peopleCount.value,3);
   assert.equal(s.flow.getConversation().facts.shoppingDays.value,14);
   assert.ok(s.flow.getConversation().rejected.pork);
