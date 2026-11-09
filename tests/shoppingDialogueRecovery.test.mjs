@@ -520,11 +520,14 @@ test('unrelated advice failures and absent guided catalog do not offer offline b
 });
 
 
-test('offline guided continuation keeps explicit product wishes when provider fails', async()=>{
- const {createGuidedShoppingPlan}=await import('../src/intelligence/guidedShoppingPlan.mjs');
- const {createShoppingConversation}=await import('../src/intelligence/shoppingConversation.mjs');
- const goal='Составь меню на неделю для троих с рисом и хлебом';
- const plan=createGuidedShoppingPlan(goal,[{role:'user',text:goal},{role:'assistant',text:'Сервис советов сейчас не ответил. Какой общий бюджет?'}],createShoppingConversation());
- assert.ok(plan.groups.some(row=>row.key==='rice'),'rice lost');
- assert.ok(plan.groups.some(row=>row.key==='bread'),'bread lost');
+test('offline guided continuation keeps explicit products and restrictions in the draft', async()=>{
+ const s=session(async()=>({kind:'unavailable',code:'provider_upstream_unavailable'}),{searchGuidedCatalog:async()=>({kind:'catalog',products:[]})});
+ const first=await s.send('Составь меню на неделю для троих с рисом и хлебом, без свинины');
+ const choice=first.presentation.conversationChoices.find(x=>x.text==='Собрать');assert.ok(choice);
+ await s.send(choice.text);await s.send('Без лимита');
+ assert.match(s.flow.getState().presentation.message,/Рис/u);
+ assert.match(s.flow.getState().presentation.message,/Хлеб/u);
+ assert.ok(s.flow.getConversation().rejected.pork);
+ assert.equal(s.flow.getConversation().facts.peopleCount.value,3);
+ assert.equal(s.advice.length,1);assert.deepEqual(s.basket.getSnapshot(),[]);
 });

@@ -636,8 +636,11 @@ export function createShoppingConversationFlow(options) {
           searchCatalog: options.searchGuidedCatalog,
           onGuidedBasketConfirmed: options.onGuidedBasketConfirmed,
           compareBasket: options.compareGuidedBasket });
-        state = guidedShopping.start(directGuidedBuild ? text : adviceHistory.find(row => row.role === "user")?.text ?? text,
-          directGuidedBuild ? [] : adviceHistory);
+        // A failure notice is not a food recommendation. Rebuild an offline
+        // draft from user turns; accepted assistant suggestions are not facts.
+        const guidedHistory = lastAdviceFailure ? adviceHistory.filter(row => row.role === 'user') : adviceHistory;
+        state = guidedShopping.start(directGuidedBuild ? text : guidedHistory.find(row => row.role === "user")?.text ?? text,
+          directGuidedBuild ? [] : guidedHistory);
       } else state = guidedShopping.getState();
       pending = null; suspendedDraft = null; hybrid.invalidate();
       return state;
