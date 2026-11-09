@@ -14,3 +14,7 @@ export function requireCompletePrFiles(files){
  if(!Array.isArray(files)||files.length>=3000)throw Error('pr_files_possibly_truncated');
  return files;
 }
+
+export function requireSnapshotMatch(expected,actual){
+ if(!/^[a-f0-9]{64}$/.test(expected??'')||expected!==actual)throw Error('snapshot_changed');
+}
