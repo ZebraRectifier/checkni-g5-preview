@@ -25,5 +25,12 @@ const done=child=>new Promise((resolve,reject)=>{child.once('error',reject);chil
 await Promise.all([pipeline(source.stdout,dest.stdin),done(source),done(dest)]);
 for(const id of list)await verifyLocal(root,id);
 const active=await activationState(root);if(!active||!list.includes(active))throw Error('missing_active');
+for(const page of ['index.html','prices.html']){
+ const html=await fs.readFile(path.join(root,page),'utf8');
+ for(const m of html.matchAll(/(?:src|href)\s*=\s*["']\.\/releases\/([a-f0-9]{64})\/([^"'?#\s]+)(?:[?#][^"']*)?["']/gu)){
+   if(!list.includes(m[1])||m[2].split('/').some(p=>p==='..'||p==='.'||!p))throw Error('invalid_root_release_url');
+   if(!(await fs.stat(path.join(root,'releases',m[1],m[2]))).isFile())throw Error('missing_root_release_url');
+ }
+}
 if(!(await fs.stat(path.join(root,'.nojekyll'))).isFile())throw Error('missing_nojekyll');
 console.log(JSON.stringify({result:'compact_proof_verified',sha,active,retained:list,trackedFiles:names.length}));
