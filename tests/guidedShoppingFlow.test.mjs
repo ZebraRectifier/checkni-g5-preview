@@ -277,3 +277,34 @@ for(const scenario of [
  assert.equal(quote.winner,null);assert.deepEqual(basket.getSnapshot(),[]);assert.equal(calls(),1);
  assert.ok(quote.lines.every(row=>row.card.observedAt===new Date(now-scenario.age).toISOString()));
 });
+
+test('explicit mince mass survives budget deferral and stays a draft through an unavailable provider', async () => {
+ const {flow,basket}=setup({requestShoppingAdvice:async()=>({kind:'unavailable'})});
+ await flow.run('Нужна еда на 3 дня для троих'); await flow.run('Ну собери');
+ await flow.run('не знаю, но хочу фарш 2 кг');
+ assert.match(flow.getState().presentation.message,/Фарш: 2 кг/u);
+ await flow.run('Ограничений нет'); await flow.run('Подобрать товары и цены');
+ const line=flow.getState().presentation.guidedShopping.quote.lines.find(row=>row.group.key==='mince');
+ assert.equal(line.quantity,4); assert.deepEqual(line.quantityIntent,{dimension:'g',amount:2000});
+ assert.deepEqual(basket.getSnapshot(),[]);
+});
+
+test('ambiguous or negative mass asks rather than modifying the draft and basket', async () => {
+ for (const request of ['не знаю, но не хочу фарш 2 кг','не знаю, но хочу фарш 2 кг и яблоки']) {
+  const {flow,basket}=setup(); await flow.run('Нужна еда на 3 дня для троих');await flow.run('Ну собери');
+  await flow.run(request); assert.match(flow.getState().presentation.message,/Уточни отдельно/u);
+  assert.deepEqual(basket.getSnapshot(),[]);
+ }
+});
+
+test('mass intent converts grams and requires review for an unknown package', async () => {
+ for (const [unit, expected, review] of [['900 г',3,false],['упаковка',1,true]]) {
+  const searchGuidedCatalog=async query=>({kind:'catalog',products:fixtures.filter(row=>row[0]===query).map(row=>card(row,query==='фарш'?{unit}:{}))});
+  const {flow,basket}=setup({searchGuidedCatalog});
+  await flow.run('Нужна еда на 3 дня для троих'); await flow.run('Ну собери');
+  await flow.run('не знаю, но хочу фарш 2000 г'); await flow.run('Ограничений нет'); await flow.run('Подобрать товары и цены');
+  const line=flow.getState().presentation.guidedShopping.quote.lines.find(row=>row.group.key==='mince');
+  if (!review) assert.equal(line.quantity,expected); assert.equal(line.quantityReview,review); assert.deepEqual(line.quantityIntent,{dimension:'g',amount:2000});
+  if(review){await flow.run('Добавить найденное');assert.deepEqual(basket.getSnapshot(),[]);}
+ }
+});

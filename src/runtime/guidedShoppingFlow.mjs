@@ -1,4 +1,4 @@
-import { createGuidedShoppingPlan, advanceGuidedIntake, guidedIntakeView, guidedEditGroups, guidedGroupMatches, guidedGroupAllowed,weeklyRetailerRequest } from '../intelligence/guidedShoppingPlan.mjs';
+import { createGuidedShoppingPlan, advanceGuidedIntake, guidedIntakeView, guidedEditGroups, guidedGroupMatches, guidedGroupAllowed,applyGuidedQuantityIntent,weeklyRetailerRequest } from '../intelligence/guidedShoppingPlan.mjs';
 import { validWeeklyCardSource,createWeeklyRetailCatalogPort,PEREKRESTOK_WEEKLY_SCOPE } from '../ports/weeklyRetailCatalogPort.mjs';
 import { extractShoppingDelta, isShoppingProductRejected } from '../intelligence/shoppingConversation.mjs';
 import { retailSelectionUrl } from '../intelligence/retailProductSelection.mjs';
@@ -20,10 +20,12 @@ export function createGuidedShoppingFlow(options) {
   const contextKey = () => { try { const scope = options.getContext?.();
     return JSON.stringify([scope?.retailerId ?? null, scope?.storeId ?? null, options.getRetailContextKey?.() ?? null]);
   } catch { return null; } };
+  const commitIntent = result => { if (result.quantityIntent && applyGuidedQuantityIntent(plan, result.quantityIntent)) quantityEdits.delete(result.quantityIntent.key); };
+  const quantityNote = () => plan.quantityIntents?.mince ? ` Фарш: ${plan.quantityIntents.mince.amount >= 1000 ? `${plan.quantityIntents.mince.amount / 1000} кг` : `${plan.quantityIntents.mince.amount} г`}. Помню до перезагрузки страницы.` : '';
   const presentIntake = () => {
     const presentation = guidedIntakeView(plan, options.getMemory());
     if (!plan.question) plan.stage = 'outline';
-    state = view(presentation.headline, presentation.message, { locationRequested:plan.question==='location',conversationChoices: choices(presentation.conversationChoices) });
+    state = view(presentation.headline, presentation.message + quantityNote(), { locationRequested:plan.question==='location',conversationChoices: choices(presentation.conversationChoices) });
     return state;
   };
   const table = (message = '', comparison = null) => {
@@ -45,7 +47,7 @@ export function createGuidedShoppingFlow(options) {
     const messageText = message || `Вот конкретные варианты из каталога ${plan.storeName}. Количества — мой предварительный вариант; меняй их в таблице.`;
     const deliveryAlternatives=plan.alternatives?.some(a=>a.retailerId==='perekrestok');
     state = view(plan.stage === 'confirmed' ? 'Корзина собрана. Посмотрим магазины?' : 'Посмотри, что получилось.',
-      `${messageText}${budget}${missing.length ? ` Ещё нужно подобрать ${missing.length} поз. — список под таблицей.` : ''} Цены показаны на дату наблюдения; наличие неизвестно.`, {
+      `${messageText}${quantityNote()}${budget}${missing.length ? ` Ещё нужно подобрать ${missing.length} поз. — список под таблицей.` : ''} Цены показаны на дату наблюдения; наличие неизвестно.`, {
         guidedShopping: { quote, comparison, storeName: plan.storeName, confirmed: plan.stage === 'confirmed',
           draftComparison:deliveryAlternatives?{kind:'delivery_unconfirmed'}:null,
           mode: plan.mode, location: plan.location, alternatives: plan.alternatives ?? [],
@@ -62,8 +64,9 @@ export function createGuidedShoppingFlow(options) {
     plan = createGuidedShoppingPlan(goal, history, options.getMemory());
     if(options.hasAgreedStore?.()===true&&!plan.location&&!plan.retailers.length)plan.useCurrentStore=true;
     const intake = advanceGuidedIntake(plan, goal, options.getMemory());
-    if (!intake.issue) options.updateMemory(intake.delta);
-    else return state = view('Уточню условия.', intake.issue);
+    if (intake.issue) return state = view('Уточню условия.', intake.issue);
+    if (!options.updateMemory(intake.delta)) return state = view('Уточним условия.', 'Напиши условия короче.');
+    commitIntent(intake);
     return presentIntake();
   }
   const current = (token, isCurrent) => token === version && isCurrent();
@@ -176,9 +179,9 @@ export function createGuidedShoppingFlow(options) {
   }
   function makeRow(group, cards, card) {
     const reviewed = getReviewedRetailBasketProduct(card);
-    const edit = quantityEdits.get(group.key);
+    const edit = quantityEdits.get(group.key) ?? (plan.quantityIntents?.[group.key] ? {intent:plan.quantityIntents[group.key]} : null);
     const edited = edit ? editedQuantity(edit,card) : null;
-    return { group, cards, card, quantity: edited?.quantity ?? (card ? suggestedCatalogQuantity(group, card, plan.people, plan.days) : 1),
+    return { group, cards, card, quantity: edited ? edited.quantity : (card ? suggestedCatalogQuantity(group, card, plan.people, plan.days) : 1),
       ...(edit?.intent ? {quantityIntent:edit.intent} : {}),
       quantityReview: Boolean(edit && card && edited.quantityReview),
       product: card ? reviewed ?? { id: card.id, name: card.name, unit: catalogPurchaseUnit(card)?.approximate?catalogPurchaseUnit(card).label:card.unit } : null };
@@ -232,6 +235,7 @@ export function createGuidedShoppingFlow(options) {
       const result = advanceGuidedIntake(plan, text, options.getMemory());
       if (!options.updateMemory(result.delta)) return view('Уточним условия.', 'Условий уже много. Предыдущие сохранились; напиши уточнение короче.');
       if (result.issue || options.getMemory().facts.unresolvedConstraints) return view('Уточню один момент.', result.issue ?? 'Есть непонятое ограничение. Уточни его перед подбором.');
+      commitIntent(result);
       const next = presentIntake();
       return plan.mode === 'economy' && !plan.question ? load(isCurrent) : next;
     }
@@ -258,16 +262,20 @@ export function createGuidedShoppingFlow(options) {
     if (/завет(?:ы|ах|ов)\s+ильича|^текущий магазин$/u.test(value)||weeklyRetailerRequest(value).length) {
       const result = advanceGuidedIntake(plan, text, options.getMemory());
       if (!options.updateMemory(result.delta)) return view('Уточним условия.', 'Напиши условия короче.');
+      if (result.issue) return view('Уточню условия.', result.issue);
+      commitIntent(result);
       plan.rows = []; plan.stage = 'intake'; return presentIntake();
     }
     if (extractShoppingNeedContext(text).recognized || Object.hasOwn(delta.facts, 'budgetMinor') || delta.unset.includes('budgetMinor')
       || Object.hasOwn(delta.facts, 'cookingEffort') || delta.unset.includes('cookingEffort')) {
       const result = advanceGuidedIntake(plan, text, options.getMemory());
       if (result.issue || !options.updateMemory(result.delta)) return view('Уточним условия.', result.issue ?? 'Предыдущие условия сохранились. Напиши уточнение короче.');
+      commitIntent(result);
       plan.rows = []; plan.alternatives = []; plan.stage = 'outline'; return presentIntake();
     }
     if (value === 'изменить список') return view('Давай поправим.', `Сейчас в списке: ${plan.groups.map(row => row.label).join(', ')}. Напиши, например, «убери молоко», «добавь бананы» или «замени куриное филе на фарш».`, { conversationChoices: choices(['Подобрать товары и цены']) });
     if (guidedEditGroups(plan, text)) {
+      for (const key of Object.keys(plan.quantityIntents ?? {})) if (!plan.groups.some(group => group.key === key)) { delete plan.quantityIntents[key]; quantityEdits.delete(key); }
       if (delta.reject.length || delta.allow.length) options.updateMemory(delta);
       return presentIntake();
     }

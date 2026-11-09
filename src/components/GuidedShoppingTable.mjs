@@ -105,7 +105,11 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
       product.append(photo);
     }
     const title = document.createElement('strong'); title.textContent = `${EMOJI[row.group.key] ?? '🛒'} ${row.card?.name ?? `${row.group.label} — требуется подбор`}`; product.append(title);
-    const unit = document.createElement('p'); unit.textContent = row.unit ? `${row.quantity} × ${row.unit.label.replace(/^цена за\s+/iu, '')}` : 'Количество и упаковку уточним'; product.append(unit);
+    const unit = document.createElement('p');
+    const requested = row.quantityIntent?.dimension === 'g' ? `Запрос: ${row.quantityIntent.amount >= 1000 ? `${row.quantityIntent.amount / 1000} кг` : `${row.quantityIntent.amount} г`}. ` : '';
+    const totalWeight = !row.quantityReview && row.unit?.dimension === 'g' && Number.isFinite(row.quantity) ? row.unit.amount * row.quantity : null;
+    const excess = totalWeight != null && row.quantityIntent?.dimension === 'g' && totalWeight > row.quantityIntent.amount ? ` (получится ${totalWeight >= 1000 ? `${totalWeight / 1000} кг` : `${totalWeight} г`})` : '';
+    unit.textContent = requested + (row.quantityReview ? 'Уточни фасовку' : row.unit ? `${row.quantity} × ${row.unit.label.replace(/^цена за\s+/iu, '')}${excess}` : 'Количество и упаковку уточним'); product.append(unit);
     const controls = document.createElement('details'); const edit = document.createElement('summary'); edit.textContent = `Изменить: ${row.group.label}`; controls.append(edit);
     if (!model.confirmed && row.cards.length > 1) {
       const select = document.createElement('select'); select.setAttribute('aria-label', `Вариант: ${row.group.label}`);
@@ -116,7 +120,7 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
     }
     const count = document.createElement('div');
     if (row.card && !model.confirmed) {
-      const input = document.createElement('input'); input.type = 'number'; input.min = '1'; input.max = '99'; input.step = '1'; input.value = String(row.quantity);
+      const input = document.createElement('input'); input.type = 'number'; input.min = '1'; input.max = '99'; input.step = '1'; input.value = row.quantity == null ? '' : String(row.quantity);
       input.setAttribute('aria-label', `Количество: ${row.group.label}`);
       const button = document.createElement('button'); button.type = 'button'; button.textContent = 'Изменить'; button.setAttribute('aria-label', `Изменить количество: ${row.group.label}`);
       button.addEventListener('click', () => { if (input.checkValidity()) send(`Количество ${index + 1}: ${input.value}`); else input.reportValidity(); });

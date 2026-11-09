@@ -2,6 +2,7 @@ import { extractShoppingNeedContext } from './shoppingNeedContext.mjs';
 import { extractShoppingDelta, isShoppingProductRejected } from './shoppingConversation.mjs';
 import { shoppingDialogueNeed } from './shoppingDialogueRecovery.mjs';
 import { shoppingLocationRequest } from '../data/shoppingLocations.mjs';
+import { parseNeedLine } from './shoppingNeeds.mjs';
 
 const clean = value => String(value ?? '').normalize('NFKC').toLowerCase().replaceAll('ё', 'е').replace(/\s+/gu, ' ').trim().replace(/[.!?]+$/u, '');
 // Culinary starting amounts, presented for review; never nutrition requirements,
@@ -72,13 +73,31 @@ export function createGuidedShoppingPlan(goal, history, memory) {
     ...(economy&&row.key==='chicken'&&!/филе/u.test(clean(user))?{label:'Курица',query:'цыпл',allowPoultryCuts:true}:{}) })), retailers, stage: 'intake', mode: economy ? 'economy' : 'balanced',
     location: shoppingLocationRequest(goal), freezer: /морозилк/u.test(clean(goal)) ? true : null,
     question: null, people: memory.facts.peopleCount?.value ?? null, days: memory.facts.shoppingDays?.value ?? null,
-    budgetMinor: memory.facts.budgetMinor?.value ?? (economy ? null : undefined), constraintsReviewed: false, rows: [], base: null, scope: null };
+    budgetMinor: memory.facts.budgetMinor?.value ?? (economy ? null : undefined), constraintsReviewed: false, rows: [], base: null, scope: null,quantityIntents:{} };
+}
+
+// Narrow, explicitly positive single-product statement only. More complex
+// quantities are never converted to packages by guessing the target.
+export function guidedExplicitMass(text) {
+  const input=clean(text);
+  if (!/фарш/u.test(input) || !/(?:\d|полкило|один|одна|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять)\s*(?:кг|килограмм|грамм|гр?\.?)(?=$|[\s,.!])/u.test(input)) return null;
+  const clause=input.replace(/^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а|ся|ась)?)(?:\s+пока)?[,;.]\s*(?:но\s+)?/u,'');
+  if(!/^(?:хочу|нужно|надо|добавь)\s/u.test(clause)||/(?:^|\s)(?:не|без|кроме|или|и)(?=$|[\s,.])/u.test(clause)) return {issue:true};
+  const parsed=parseNeedLine(clause);
+  if(!parsed||!/^фарш(?:а)?$/u.test(clean(parsed.requestedName))||parsed.resolution.status!=='unresolved'
+    ||!parsed.quantity.explicit||!['kg','g'].includes(parsed.quantity.unit)||parsed.packageSize) return {issue:true};
+  const amount=Number(parsed.quantity.value)*(parsed.quantity.unit==='kg'?1000:1);
+  if(!Number.isSafeInteger(amount)||amount<=0||amount>1000000)return {issue:true};
+  return {key:'mince',intent:{dimension:'g',amount}};
 }
 
 export function advanceGuidedIntake(plan, text, memory) {
   const value = clean(text), need = shoppingDialogueNeed(text, [{ role: 'assistant', text:
     plan.question === 'people' ? 'На сколько человек?' : plan.question === 'budget' ? 'Какой общий бюджет?' : '' }]),
     delta = JSON.parse(JSON.stringify(extractShoppingDelta(text)));
+  const mass=guidedExplicitMass(text);
+  if(mass?.issue)return {issue:'Уточни отдельно продукт и точный вес, например «хочу фарш 2 кг». Прежние условия и список сохранены.',delta:extractShoppingDelta('')};
+  if(mass && !guidedGroupAllowed(GROUPS.find(group=>group.key===mass.key), memory)) return {issue:'Фарш ранее исключён. Уточни, добавить его обратно?',delta:extractShoppingDelta('')};
   const location = shoppingLocationRequest(text);
   const retailers=weeklyRetailerRequest(text);
   if(retailers.length){plan.retailers=retailers;plan.useCurrentStore=true;
@@ -98,7 +117,7 @@ export function advanceGuidedIntake(plan, text, memory) {
   const deferredRest = deferBudget ? clean(need.text).replace(/^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а|ся|ась)?)(?:\s+пока)?[,.!]?\s*/u,'') : '';
   const deferredClauses = deferredRest.replace(/\s+и\s+(?=не\s|без\s|хочу\s)/gu,', ')
     .replace(/\s+но\s+(?=не\s|без\s|хочу\s)/gu,', ')
-    .split(/[,;]/u).map(part=>part.trim().replace(/^но\s+/u,'')).filter(Boolean);
+    .split(/(?<!\d),(?!\d)|(?<=\d),(?!\d)|(?<!\d),(?=\d)|[;]/u).map(part=>part.trim().replace(/^но\s+/u,'')).filter(Boolean);
   const positiveGroups=new Set(),negativeGroups=new Set();
   for (const clause of deferredClauses) {
     const negated=/^(?:не|без|хочу\s+(?:не|без))\s/u.test(clause);
@@ -194,7 +213,14 @@ export function advanceGuidedIntake(plan, text, memory) {
   plan.budgetMinor = delta.unset.includes('budgetMinor') ? null : delta.facts.budgetMinor?.value ?? memory.facts.budgetMinor?.value ?? plan.budgetMinor;
   if (plan.question === 'constraints' && (/^(?:ограничений нет|без ограничений|все можно|нет|ничего|ничего не исключать)$/u.test(value)
       || delta.reject.length || delta.allow.length || delta.unresolved.length)) plan.constraintsReviewed = true;
-  return { delta };
+  return { delta,...(mass?{quantityIntent:mass}:{}) };
+}
+
+export function applyGuidedQuantityIntent(plan, quantity) {
+  if(!quantity||quantity.key!=='mince'||quantity.intent?.dimension!=='g'||!Number.isSafeInteger(quantity.intent.amount)||quantity.intent.amount<=0||quantity.intent.amount>1000000)return false;
+  plan.quantityIntents??={};plan.quantityIntents[quantity.key]={...quantity.intent};
+  if(!plan.groups.some(group=>group.key===quantity.key))plan.groups.push({...GROUPS.find(group=>group.key===quantity.key)});
+  return true;
 }
 
 export function guidedIntakeView(plan, memory) {
