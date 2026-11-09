@@ -1,0 +1,38 @@
+name: Synthetic catalog index experiment
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'tools/research/synthetic-search-index.sql'
+      - '.github/workflows/synthetic-search-index.yml'
+permissions:
+  contents: read
+jobs:
+  synthetic-index:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3
+        env:
+          POSTGRES_PASSWORD: disposable-fixture-only
+          POSTGRES_DB: checkni_fixture
+        options: >-
+          --health-cmd "pg_isready -U postgres -d checkni_fixture"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Compare plans on disposable PostgreSQL
+        env:
+          SERVICE_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          set -euo pipefail
+          test -n "$SERVICE_CONTAINER"
+          docker exec -i "$SERVICE_CONTAINER" psql -X -U postgres -d checkni_fixture -v ON_ERROR_STOP=1 < tools/research/synthetic-search-index.sql
