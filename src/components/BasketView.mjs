@@ -317,6 +317,8 @@ export function renderBasketView(container, items, actions) {
       ?'Подберём варианты для твоих количеств. Марки и фасовки могут отличаться; доставка и сборы не включены, наличие неизвестно.'
       :manual.kind==='choose_magnit'
       ?'Для списка доставки выбери конкретный Магнит. Сам список и количества сохранятся.'
+      :manual.reason==='delivery_unconfirmed'
+      ?'Доставка Перекрёстка по выбранному адресу пока не подтверждена. Список сохранён.'
       :manual.reason==='request_limit'
       ?'В одном сравнении пока поддерживается до 64 позиций. Весь список сохранён.'
       :manual.reason==='different_magnit_addresses'
