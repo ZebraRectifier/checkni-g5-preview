@@ -532,3 +532,15 @@ test('duplicate house suggestions appear once while distinct houses remain selec
   await buttons.first().click();
   await expect(page.locator('#nearby-results article').first()).toBeVisible();
 });
+test('denied geolocation and an empty geocoder still open the exact Moscow directory store',async({page})=>{
+ await isolateRegional(page);
+ await page.addInitScript(()=>Object.defineProperty(navigator,'geolocation',{configurable:true,value:{getCurrentPosition(ok,fail){fail({code:1});}}}));
+ await page.route('**/functions/v1/nearby-address',r=>r.fulfill({json:{version:1,candidates:[]}}));
+ await page.goto('/?comparison=observed&catalog=retail#shop');await selectStore(page);await openStoreDetails(page);
+ const nearby=page.locator('#nearby-shopping');await nearby.getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
+ await page.locator('#nearby-locate').click();await expect(page.locator('#nearby-status')).toContainText('Доступ к геолокации закрыт');
+ await page.locator('#nearby-address').fill('Москва, Ленинградское шоссе, 71Г');await page.locator('#nearby-address-search').click();
+ const candidate=page.locator('#nearby-address-candidates').getByRole('button');await expect(candidate).toContainText('магазин-ориентир');await candidate.click();
+ const row=page.locator('#nearby-results article').filter({has:page.getByText('Москва, Ленинградское шоссе, 71Г',{exact:true})});
+ await expect(row).toBeVisible();await row.getByRole('button',{name:'Открыть товары'}).click();await expect(page.locator('#metro-store-address')).toHaveValue('10');
+});
