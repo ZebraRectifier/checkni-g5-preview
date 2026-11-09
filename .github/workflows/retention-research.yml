@@ -2,21 +2,50 @@ name: Research retention policy
 on:
   pull_request:
     paths:
-      - 'tools/browser-release/retention-plan.mjs'
-      - 'tools/browser-release/retention-plan.test.mjs'
+      - 'tools/browser-release/retention-*'
+      - 'tools/browser-release/recovery-proof.mjs'
       - '.github/workflows/retention-research.yml'
 permissions:
   contents: read
 jobs:
-  unit:
+  proof:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: '22'
           package-manager-cache: false
-      - run: node --test tools/browser-release/retention-plan.test.mjs
+      - name: Run planner unit tests
+        run: node --test tools/browser-release/retention-plan.test.mjs
+      - name: Inventory literal release URLs outside release trees
+        shell: bash
+        run: |
+          set -euo pipefail
+          { git grep -I -o -h -E 'releases/[a-f0-9]{64}' HEAD -- . ':!releases/**' || true; } | sort -u
+          echo 'Literal scan only; dynamic and external URLs are not covered.'
+      - name: Recover an old version in runner scratch and validate hashes
+        shell: bash
+        env:
+          RECOVERY_RELEASE_ID: f620add99e38219906f83f503b4ac6fb802a9bc5fd81c592e65579aff3845602
+          RECOVERY_ROOT: ${{ runner.temp }}/checkni-recovery-proof
+        run: |
+          set -euo pipefail
+          node tools/browser-release/recovery-proof.mjs
+          if node tools/browser-release/recovery-proof.mjs; then
+            echo 'Recovery overwrote an existing target' >&2
+            exit 1
+          fi
+          git diff --exit-code
+          git diff --cached --exit-code
+      - name: Upload isolated recovery proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: recovered-f620-proof
+          path: ${{ runner.temp }}/checkni-recovery-proof/
+          if-no-files-found: error
+          retention-days: 2
