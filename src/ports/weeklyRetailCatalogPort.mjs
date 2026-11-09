@@ -41,10 +41,11 @@ export function validWeeklyCardSource(card,scope) {
     &&normalize(card.name)===normalize(unit.name.replace(/^БЗМЖ\s+/u,''));
 }
 export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,createMagnitClient=createRetailCatalogClient,now=Date.now}={}) {
-  let deliveryPending=null,deliveryChecked=-Infinity;
+  let deliveryPending=null,deliveryChecked=-Infinity,deliveryFailed=false;
   function deliveryRows(){
     if(deliveryPending&&now()-deliveryChecked<30000)return deliveryPending;
     deliveryChecked=now();
+    deliveryFailed=false;
     const client=createMagnitClient({retailerId:'perekrestok',fetchImpl});
     // A reviewed card selected by the shopper is a valid reload anchor even
     // when it is intentionally absent from the weekly discovery corpus. Keep
@@ -59,7 +60,9 @@ export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,create
         if(results.some(r=>r?.kind!=='catalog'))return {kind:'unavailable'};
         return {kind:'catalog',products:results.flatMap(r=>r.products)};
       }).catch(()=>({kind:'unavailable'}));
-    return deliveryPending;
+    const request=deliveryPending;
+    void request.then(result=>{if(deliveryPending===request)deliveryFailed=result.kind!=='catalog';});
+    return request;
   }
   let cached=null,inFlight=null,checkedAt=0;
   let pyatCached=null,pyatPending=null,pyatChecked=0;
@@ -84,6 +87,9 @@ export function createWeeklyRetailCatalogPort({fetchImpl=globalThis.fetch,create
     })();return inFlight;
   }
   return {
+    retryUnavailableDelivery() {
+      if (deliveryFailed) deliveryPending=null;
+    },
     async bySourceProductIds(ids,{scope}={}) {
       if(!Array.isArray(ids)||!ids.length||ids.length>40||ids.some(id=>typeof id!=='string'||!/^[A-Za-z0-9_-]{1,80}$/u.test(id)))return {kind:'unavailable'};
       if(scope?.retailerId==='perekrestok'&&scope.storeId===PEREKRESTOK_WEEKLY_SCOPE.storeId){

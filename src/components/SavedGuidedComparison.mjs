@@ -54,6 +54,11 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
   // Estimated weights must not turn a fresh comparison into a review request.
   const status=el('p');status.setAttribute('role','status');
   const messages=[];
+  const unavailable = result.drafts.filter(draft => result.unavailableRetailers?.includes(draft.scope.retailerId));
+  if (unavailable.length) {
+    const names = unavailable.map(draft => savedComparisonStoreLabel(draft.scope));
+    messages.push((names.length === 1 ? names[0] + ' не ответил.' : 'Магазины не ответили.') + ' Корзина сохранена.');
+  }
   const pendingCount=result.request?.unresolvedGroupKeys?.length??0;
   const usesAlternatives=savedComparisonUsesAlternatives(result);
   const lowerScope=result.drafts.find(draft=>draft.scope.storeId===comparison.lowerStoreId)?.scope;

@@ -2924,7 +2924,10 @@ function renderComparisonState({ focusResult = false } = {}) {
     const needsSelection=(basketProposalFlow.getUnresolvedNeeds?.().length??0)>0;
     compareButton.disabled=loading||needsSelection;
     compareButton.setAttribute('aria-busy',String(loading));
-    compareButton.textContent=loading?'Проверяем выбранные магазины…':needsSelection?'Сначала выбери оставшиеся товары':'Сравнить выбранные магазины';
+    const retry = savedCatalogComparison?.result?.kind === 'unavailable'
+      || savedCatalogComparison?.result?.unavailableRetailers?.length > 0;
+    compareButton.textContent=loading?'Проверяем выбранные магазины…':needsSelection?'Сначала выбери оставшиеся товары'
+      :retry?'Повторить проверку':'Сравнить выбранные магазины';
     output.replaceChildren();
     if(loading){const p=document.createElement('p');p.textContent='Заново читаем цены выбранных магазинов…';output.append(p);}
     else if(savedCatalogComparison?.result)renderSavedGuidedComparison(output,savedCatalogComparison.result,{onChooseProducts:returnToShop});
@@ -3135,6 +3138,7 @@ function renderBasket() {
     onChooseManualMagnit:chooseManualMagnitCatalogue,
     onClearGuidedComparison:()=>{const result=savedGuidedComparisonStore.clear();invalidateSavedCatalogComparison();comparisonFlow.invalidate();renderBasket();if(!result.saved)showToast('Не удалось убрать сохранённый выбор: запись недоступна. После перезагрузки он может вернуться.');},
     onCompare: () => {
+      weeklyRetailCatalog.retryUnavailableDelivery();
       invalidateHybridForManualTakeover();
       if(currentManualCatalogComparison()?.kind==='ready')startManualCatalogComparison();
       else if(publicRetailCatalogMode&&savedGuidedComparisonStore.read())void compareSavedGuidedBasket();else void handleCompare();

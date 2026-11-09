@@ -66,6 +66,7 @@ test('an incomplete single-store Hory draft keeps missing needs through explicit
  expect(ai).toBe(0);expect(errors).toEqual([]);
 });
 test('manual reviewed products from both networks add and survive edits, Back and reload without AI',async({page,context})=>{
+ let perekrestokTimesOut=false;
  let ai=0;const errors=[];page.on('pageerror',e=>errors.push(e.message));
  // Keep external requests offline without sending every local module through
  // a Node route.continue round-trip on each of this journey's reloads.
@@ -74,6 +75,7 @@ test('manual reviewed products from both networks add and survive edits, Back an
  await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({json:[]}));
  await page.route('**/rest/v1/**retail_catalog_items**',r=>{
   const q=new URL(r.request().url()).searchParams,store=q.get('store_id')?.replace('eq.','');
+  if (perekrestokTimesOut && store?.startsWith('perekrestok-')) return r.abort('timedout');
   const name=(q.get('name') ?? (q.has('p_query') ? 'ilike.*'+q.get('p_query').replaceAll(' ','*')+'*' : null))?.replace(/^ilike\.\*|\*$/gu,'').replaceAll('*',' ').toLowerCase();
    const ids=q.get('source_product_id')?.slice(4,-1).split(',');
   return r.fulfill({json:rows.filter(p=>p.store_id===store&&(!ids||ids.includes(p.source_product_id))&&(!name||p.name.toLowerCase().includes(name))).slice(0,Number(q.get('limit')??40))});
@@ -100,7 +102,19 @@ test('manual reviewed products from both networks add and survive edits, Back an
  await expect(page.locator('#basket-dock-copy')).toHaveText('2 поз.');
  expect(await page.evaluate(()=>localStorage.getItem('checkni.guided-comparison-request.v1'))).toBeNull();
  await expect(page.locator('#compare-basket')).toHaveText('Сравнить Магнит и Перекрёсток');
- await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
+ const originalBasket=await page.locator('.basket-list').innerText();
+ perekrestokTimesOut=true;
+ await page.locator('#compare-basket').click();
+ const output=page.locator('#comparison-output');
+ await expect(output.getByRole('status')).toContainText('Перекрёсток · доставка не ответил. Корзина сохранена.');
+ await expect(output.getByRole('status')).not.toContainText(/ниже на|совпали/u);
+ await expect(output.locator('.saved-catalog-variant').filter({hasText:'Магнит'})).toContainText('₽');
+ await expect(page.locator('.basket-list')).toHaveText(originalBasket,{useInnerText:true});
+ perekrestokTimesOut=false;
+ await page.getByRole('button',{name:'Повторить проверку'}).click();
+ await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
+ await expect(output.getByRole('status')).not.toContainText('не ответил');
+ await expect(page.locator('.basket-list')).toHaveText(originalBasket,{useInnerText:true});
  await expect(page.locator('#comparison-output')).toContainText('Доставка и сборы не включены');
  const selectedDelivery=page.locator('.saved-catalog-variant').filter({hasText:'Перекрёсток'});await selectedDelivery.locator('summary').click();
  await expect(selectedDelivery.locator('tbody')).toContainText('Медальон');
