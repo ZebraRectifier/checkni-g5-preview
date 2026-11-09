@@ -44,8 +44,10 @@ for(const [retailer,raw,addressId,query] of [['globus',globus,'5011','Новор
   await expect(card.locator('.product-observed-at')).toContainText('Старая цена от');
   await expect(card.locator('.product-observed-at')).toHaveAttribute('datetime',new Date(raw.observed_at).toISOString());
   const readonly=page.locator(`[data-product-id="retail:${retailer}:${raw.store_id}:900000001"] .add-button`);
-  await expect(readonly).toBeDisabled();await expect(readonly).toHaveText('Пока только просмотр');
+  await expect(readonly).toBeDisabled();
+  await expect(readonly).toHaveText(retailer === 'magnit' ? 'Цена устарела · просмотр' : 'Пока только просмотр');
   if (retailer === 'magnit') {
+   await expect(readonly).toHaveAttribute('aria-label', /цена устарела, только просмотр/u);
    await expect(page.locator(`[data-product-id="retail:${retailer}:${raw.store_id}:900000001"] .product-observed-at`))
      .toHaveText(/^Старая цена от/u);
   }
@@ -65,8 +67,13 @@ for(const [retailer,raw,addressId,query] of [['globus',globus,'5011','Новор
   await openBasket(page);await expect(page.locator('#basket-content')).toContainText('требует проверки');
   await page.reload();await expect(page.locator('#basket-view')).toBeVisible();
   expect(await page.evaluate(k=>JSON.parse(localStorage.getItem(k)),key)).toEqual(persisted);
-  await page.locator('#compare-basket').click();
-  await expect(page.locator('#comparison-output')).toContainText(/Недостаточно|не удалось|Не удалось|не найдены|Нет.*данных|проверить|подтвержд/u);
+  if (retailer === 'magnit') {
+   await expect(page.locator('#compare-basket')).toBeDisabled();
+   await expect(page.locator('#basket-content')).toContainText('Доставка Перекрёстка по выбранному адресу пока не подтверждена');
+  } else {
+   await page.locator('#compare-basket').click();
+   await expect(page.locator('#comparison-output')).toContainText(/Недостаточно|не удалось|Не удалось|не найдены|Нет.*данных|проверить|подтвержд/u);
+  }
   await expect(page.locator('#comparison-output')).not.toContainText(/Экономия|Дешевле на|Самый дешёвый/u);
   expect(ai).toBe(0);await expectNoOverflow(page);
  });

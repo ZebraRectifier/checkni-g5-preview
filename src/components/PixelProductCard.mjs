@@ -45,12 +45,16 @@ export function createPixelProductCard(product, options = {}) {
     if (stamp) stamp.textContent = stamp.textContent.replace(/^Цена от/u, 'Старая цена от');
   }
   if (add.disabled) {
-    add.title = add.textContent;
-    add.textContent = lentaObservationStatus === 'stale'
+    const staleMagnitPrice = product.retailerId === 'magnit' && datedPrice;
+    add.textContent = staleMagnitPrice
+      ? 'Цена устарела · просмотр'
+      : lentaObservationStatus === 'stale'
       ? 'Старая цена · просмотр'
       : lentaObservationStatus === 'unknown'
         ? 'Дата цены неизвестна'
         : 'Пока только просмотр';
+    if (staleMagnitPrice) add.setAttribute('aria-label', `${product.name}: цена устарела, только просмотр`);
+    add.title = add.textContent;
     actions.classList.add('is-view-only');
   } else {
     // aria-label retains the full, established product-and-pack identity.
