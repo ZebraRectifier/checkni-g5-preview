@@ -1115,16 +1115,16 @@ export function createShoppingConversationFlow(options) {
     if (next.validation?.basket?.length) { lastPlan = rowsOf(next.validation); referencePlan = copy(lastPlan); }
     return state;
   }
-  function run(text) {
+  function safetyPreflight(text) {
     // Derive only a boolean before preflight; never save rejected raw input.
     const normalized = typeof text === 'string' ? text.normalize('NFKC').toLocaleLowerCase('ru-RU').replaceAll('ё', 'е').trim() : '';
     const cancellation = /^отменяю (?:ограничение (?:аллергии|непереносимости)|все ограничения аллергии и непереносимости)[.!?]*$/u.test(normalized);
     const signalsAllergy = !cancellation && /(?:аллерги|непереносимост)/u.test(normalized);
-    if (signalsAllergy) volatileAllergy = true;
+    if (signalsAllergy && memory.facts.allergySafety?.value !== true) volatileAllergy = true;
     const unavailable = () => {
       invalidate();
       state = messageState('Не удаётся сохранить условия.', 'Автоматический подбор остановлен: сохранение условий недоступно. Проверь доступ к хранилищу браузера и повтори; корзина сохранена.');
-      return Promise.resolve(state);
+      return state;
     };
     if (persistentSafetyRequired && !preferenceStore.probe()) return unavailable();
     if (volatileAllergy && !cancellation) {
@@ -1136,6 +1136,11 @@ export function createShoppingConversationFlow(options) {
       if (persistentSafetyRequired && !saved) return unavailable();
       volatileAllergy = false;
     }
+    return null;
+  }
+  function run(text) {
+    const blocked = safetyPreflight(text);
+    if (blocked) return Promise.resolve(blocked);
     if (typeof text !== "string" || !text.trim() || text.trim().length > 300) {
       invalidate(); state = { status: "rejected", inputReason: text?.trim?.() ? "too_long" : "empty" }; return Promise.resolve(state);
     }
@@ -1177,7 +1182,7 @@ export function createShoppingConversationFlow(options) {
     state = messageState("Сравнение нужно обновить.", localShoppingComparisonExplanation("Почему этот магазин дешевле?", basket.getSnapshot()));
     return true;
   };
-  const delegate = Object.freeze({ run, confirm, invalidate, edit, rememberLocationConstraint, preload: hybrid.preload, getState: () => state, checkCurrentComparisonExplanation,
+  const delegate = Object.freeze({ run, safetyPreflight, confirm, invalidate, edit, rememberLocationConstraint, preload: hybrid.preload, getState: () => state, checkCurrentComparisonExplanation,
     hasActiveShoppingSelection: () => Boolean(productSelection || pending || suspendedDraft || retailList || mealNeed || adviceFocus || referenceAction || guidedShopping?.active()),
     hasActiveGuidedShopping: () => Boolean(guidedShopping?.active()),
     isEditingGuidedShopping: () => Boolean(guidedShopping?.active() && guidedShopping.isEditing()),

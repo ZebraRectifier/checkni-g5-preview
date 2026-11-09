@@ -84,6 +84,8 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
     return state;
   }
   async function run(input, metadata={}) {
+    const blocked=delegate.safetyPreflight(input);
+    if(blocked){ownsView=false;state=blocked;return blocked;}
     const token=++epoch;
     if(typeof input!=='string'||!input.trim()||input.trim().length>300) {ownsView=false;return delegate.run(input);}
     store.refresh();

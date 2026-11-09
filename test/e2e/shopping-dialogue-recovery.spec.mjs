@@ -653,3 +653,14 @@ test('read-only preference storage blocks automatic shopping and recovers safely
  await submit(page,'Собери недорогую корзину');await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
  expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
 });
+
+
+test('retail unsupported order preserves allergy marker before early return',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);const before=await savedBasket(page);
+ await submit(page,'Закажи продукты, аллергия на рис');
+ const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(stored).toMatch(/allergySafety/);await submit(page,'Новая корзина');
+ await submit(page,'Собери недорогую корзину');await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
+ expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});
