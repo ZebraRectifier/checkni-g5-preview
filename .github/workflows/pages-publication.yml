@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    paths: ['.github/workflows/pages-publication.yml', '.github/workflows/okey-public-data.yml', '.github/workflows/pyaterochka-public-data.yml', 'tools/browser-release/publication-guard.mjs', 'tools/browser-release/one-shot-*.mjs', 'tools/browser-release/one-shot-inventory.json', 'tests/dataPublication.test.mjs']
+    paths: ['.github/workflows/pages-publication.yml', '.github/workflows/okey-public-data.yml', '.github/workflows/pyaterochka-public-data.yml', 'tools/browser-release/publication-guard.mjs', 'tools/browser-release/one-shot-*.mjs', 'tools/browser-release/one-shot-inventory.json', 'tools/browser-release/dynamic-*.mjs', 'tests/dataPublication.test.mjs']
   workflow_dispatch:
     inputs:
       site_commit:
@@ -37,6 +37,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       site_commit: ${{ steps.scope.outputs.commit }}
+      retention_digest: ${{ steps.retention.outputs.digest }}
     env:
       PAGES_COMMIT: ${{ inputs.site_commit || github.event.pull_request.head.sha || github.sha }}
       PAGES_BASE_COMMIT: ${{ inputs.base_commit }}
@@ -50,14 +51,14 @@ jobs:
         with:
           repository: ZebraRectifier/checkni-g5-preview
           ref: ${{ inputs.site_commit || github.event.pull_request.head.sha || github.sha }}
-          fetch-depth: 2
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: '22'
           package-manager-cache: false
       - name: Verify publication guard regressions
-        run: node --test tests/dataPublication.test.mjs tools/browser-release/one-shot-snapshot.test.mjs
+        run: node --test tests/dataPublication.test.mjs tools/browser-release/one-shot-snapshot.test.mjs tools/browser-release/dynamic-retention.test.mjs
       - name: Verify the exact checkout and data-only boundary
         id: scope
         shell: bash
@@ -68,17 +69,24 @@ jobs:
       - name: Require the exact event SHA and current main before packaging
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: node tools/browser-release/publication-guard.mjs --deployment
-      - name: Guard reviewed one-shot live and open PR snapshot
+      - name: Capture dynamic retention snapshot
+        id: retention
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: node tools/browser-release/one-shot-guard.mjs
-      - name: Package reviewed one-shot compact tree
+          RETENTION_SNAPSHOT: ${{ runner.temp }}/checkni-retention.json
+        run: |
+          set -euo pipefail
+          node tools/browser-release/dynamic-snapshot.mjs --write
+          echo "digest=$(node -p "require(process.env.RETENTION_SNAPSHOT).digest")" >> "$GITHUB_OUTPUT"
+      - name: Package dynamic retained tree
+        env:
+          RETENTION_SNAPSHOT: ${{ runner.temp }}/checkni-retention.json
         shell: bash
         run: |
           set -euo pipefail
           export PROOF_SOURCE_SHA="$(git rev-parse HEAD)"
           export PROOF_OUTPUT_ROOT="$PWD/_site"
-          export PROOF_RELEASE_IDS="$(node -e "console.log(require('./tools/browser-release/one-shot-inventory.json').releases.join(','))")"
+          export PROOF_RELEASE_IDS="$(node -p "require(process.env.RETENTION_SNAPSHOT).ids.join(',')")"
           node tools/browser-release/one-shot-compact.mjs
       - name: Check every packaged immutable release
         shell: bash
@@ -116,7 +124,7 @@ jobs:
         with:
           repository: ZebraRectifier/checkni-g5-preview
           ref: ${{ needs.build.outputs.site_commit }}
-          fetch-depth: 2
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
@@ -128,10 +136,11 @@ jobs:
           PAGES_BASE_COMMIT: ${{ inputs.base_commit }}
           PAGES_FEED: ${{ inputs.feed }}
         run: node tools/browser-release/publication-guard.mjs --deployment
-      - name: Recheck reviewed live and open PR snapshot after queue
+      - name: Recheck dynamic retention snapshot after queue
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: node tools/browser-release/one-shot-guard.mjs
+          RETENTION_DIGEST: ${{ needs.build.outputs.retention_digest }}
+        run: node tools/browser-release/dynamic-snapshot.mjs --check
       - name: Publish verified tree
         id: deployment
         uses: actions/deploy-pages@v5
