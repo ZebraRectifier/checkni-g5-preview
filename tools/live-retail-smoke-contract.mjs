@@ -1,6 +1,21 @@
 import assert from 'node:assert/strict';
 import { readFile as readLocalFile } from 'node:fs/promises';
 
+// Installed in each fresh browser context. Preserve the native callbacks while
+// recording completion; a previous result must not satisfy a new request.
+export function installGeolocationProbe() {
+  const original = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation);
+  const state = window.__checkniGeoProbe = { calls: 0, success: 0, failure: 0 };
+  navigator.geolocation.getCurrentPosition = (onSuccess, onError, options) => {
+    const id = ++state.calls;
+    return original(value => { onSuccess(value); state.success = id; },
+      error => { onError?.(error); state.failure = id; }, options);
+  };
+  window.__checkniGeoReady = before => state.success > before
+    && /Моё место · точность ≈10 м.*найдено:/u.test(
+      document.querySelector('#nearby-status')?.textContent || '');
+}
+
 // Store selection can advance asynchronously as a previously allowed browser
 // location resolves. Accept either the manual chooser or the already selected
 // storefront, but never accept an unrelated storefront or hide a click error.

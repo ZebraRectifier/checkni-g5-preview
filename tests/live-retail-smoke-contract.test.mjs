@@ -1,11 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { expectedLentaRoots, pinnedRuntimePrefix, pinnedLiveRuntimeProof, settleExactStoreSelection } from '../tools/live-retail-smoke-contract.mjs';
+import vm from 'node:vm';
+import { expectedLentaRoots, pinnedRuntimePrefix, pinnedLiveRuntimeProof, settleExactStoreSelection, installGeolocationProbe } from '../tools/live-retail-smoke-contract.mjs';
 
 const row = (id, count = 2) => ({ retailer_id: 'lenta', store_id: 'lenta-public-web',
   category_id: id, root_id: id, parent_id: null, depth: 0, name: `Category ${id}`,
   product_count: count, source_url: `https://lenta.com/catalog/category-${id}/` });
+
+test('geolocation probe rejects old visible results until the new callback succeeds', () => {
+  let callback;
+  const window = {};
+  const navigator = { geolocation: { getCurrentPosition: success => { callback = success; } } };
+  const document = { querySelector: () => ({ textContent: 'Моё место · точность ≈10 м · найдено: 5' }) };
+  vm.runInNewContext('(' + installGeolocationProbe.toString() + ')()', { window, navigator, document });
+  navigator.geolocation.getCurrentPosition(() => {});
+  callback({});
+  const before = window.__checkniGeoProbe.calls;
+  navigator.geolocation.getCurrentPosition(() => {});
+  assert.equal(window.__checkniGeoReady(before), false);
+  callback({});
+  assert.equal(window.__checkniGeoReady(before), true);
+});
 
 function selectionFixture(stages, { clickError = false, pressed = 'true' } = {}) {
   let clicks = 0, choices = 0;
