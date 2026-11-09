@@ -9,3 +9,8 @@ export function selectRetention({inventory,baseline,added,active,live,references
  for(const id of selected)if(!all.has(id))throw Error('required_release_missing');
  return [...selected].sort();
 }
+
+export function requireCompletePrFiles(files){
+ if(!Array.isArray(files)||files.length>=3000)throw Error('pr_files_possibly_truncated');
+ return files;
+}
