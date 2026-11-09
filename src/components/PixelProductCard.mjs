@@ -1,6 +1,7 @@
 import { createProductCard } from './ProductCard.mjs';
 import { SOURCE_CATALOG_LIST_MAX_AGE_MS } from '../catalog/sourceCatalogListAdmission.mjs';
 import { getLentaObservationStatus } from '../catalog/lentaObservationPolicy.mjs';
+import { METRO_CATALOG_PRICE_MAX_AGE_MS } from '../observations/retailCatalogFreshnessPolicy.mjs';
 
 // Presentation only: legacy reviewed identities may still enter a shopping
 // list. This warning neither admits their price nor changes that identity rule.
@@ -40,23 +41,32 @@ export function createPixelProductCard(product, options = {}) {
   const actions = document.createElement('div');
   actions.className = 'pixel-product-actions';
   const datedPrice = hasDatedListPrice(product);
-  if (datedPrice && (!add.disabled || product.retailerId === 'magnit')) {
+  const staleObservedPrice = datedPrice && Number.isSafeInteger(product.priceMinor) && product.priceMinor > 0;
+  if (datedPrice && (!add.disabled || staleObservedPrice)) {
     const stamp = card.querySelector('.product-observed-at');
     if (stamp) stamp.textContent = stamp.textContent.replace(/^Цена от/u, 'Старая цена от');
   }
   if (add.disabled) {
-    const staleMagnitPrice = product.retailerId === 'magnit' && datedPrice;
+    const staleReadonlyPrice = staleObservedPrice && !lentaObservationStatus;
+    const observedAt = Date.parse(product.observedAt);
+    const metroNeedsFreshPrice = product.retailerId === 'metro'
+      && Number.isSafeInteger(product.priceMinor) && product.priceMinor > 0
+      && Number.isFinite(observedAt) && Date.now() - observedAt > METRO_CATALOG_PRICE_MAX_AGE_MS;
     add.title = add.textContent;
-    add.textContent = staleMagnitPrice
+    add.textContent = staleReadonlyPrice
       ? 'Цена устарела · просмотр'
+      : metroNeedsFreshPrice
+        ? 'Для сравнения нужна свежая цена'
       : lentaObservationStatus === 'stale'
       ? 'Старая цена · просмотр'
       : lentaObservationStatus === 'unknown'
         ? 'Дата цены неизвестна'
         : 'Пока только просмотр';
-    if (staleMagnitPrice) {
+    if (staleReadonlyPrice) {
       add.setAttribute('aria-label', `${product.name}: цена устарела, только просмотр`);
-      add.title = add.textContent;
+      if (product.retailerId === 'magnit') add.title = add.textContent;
+    } else if (metroNeedsFreshPrice) {
+      add.setAttribute('aria-label', `${product.name}: для сравнения нужна свежая цена`);
     }
     actions.classList.add('is-view-only');
   } else {
