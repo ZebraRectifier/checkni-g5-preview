@@ -518,3 +518,15 @@ test('provider 503 offers local basket without another AI request', async ({page
  expect(requests).toBe(1);
  expect(await savedBasket(page)).toBe(before);
 });
+
+
+test('allergy claim blocks automated advice and preserves basket',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ const before=await savedBasket(page);
+ await submit(page,'Аллергия на рис');
+ await expect(status(page)).toContainText(/уточн|не распозн|аллерги/iu);
+ await submit(page,'Собери недорогую корзину');
+ await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
+ expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});

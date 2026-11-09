@@ -196,3 +196,11 @@ test('rice declensions preserve food refusals and allergy is never silently acce
   if(delta.reject.includes('rice')) assert.ok(!createGuidedShoppingPlan('Хлеб и рис',[],memory).groups.some(g=>g.key==='rice'),text);
  }
 });
+
+
+test('allergy and intolerance require clarification instead of guessing safety',()=>{
+ for(const text of ['аллергия на рис','АЛЛЕРГИЯ НА РИС','непереносимость риса','аллергия','нет аллергии на рис']) {
+  const delta=extractShoppingDelta(text);
+  assert.ok(delta.unresolved.length,text);
+ }
+});
