@@ -1127,6 +1127,7 @@ export function createShoppingConversationFlow(options) {
   const delegate = Object.freeze({ run, confirm, invalidate, edit, rememberLocationConstraint, preload: hybrid.preload, getState: () => state, checkCurrentComparisonExplanation,
     hasActiveShoppingSelection: () => Boolean(productSelection || pending || suspendedDraft || retailList || mealNeed || adviceFocus || referenceAction || guidedShopping?.active()),
     hasActiveGuidedShopping: () => Boolean(guidedShopping?.active()),
+    isEditingGuidedShopping: () => Boolean(guidedShopping?.active() && guidedShopping.isEditing()),
     setRetailer, getConversation: () => memory, getMartenPreferences: () => projectMartenConversation(memory) });
   return options.needsStore ? createShoppingNeedsFlow({ ...options, delegate }) : delegate;
 }

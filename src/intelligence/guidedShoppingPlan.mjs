@@ -308,6 +308,23 @@ export function guidedGroupMatches(group, card) {
   return families[group.key]?.test(title) ?? false;
 }
 
+// Narrow edit commands: every product is an exact known family; mixed
+// refusals, quantities and free-form additions need clarification.
+export function guidedListEdit(text) {
+  const value=clean(text), match=value.match(/^(добавь|включи|убери|исключи|замени)\s+(.+)$/u);
+  if(!match)return null;
+  const names={mince:/^фарш(?:а)?$/u,milk:/^молок(?:о|а)$/u,eggs:/^яйц(?:а|о|ы)$|^яиц$/u,
+    apples:/^яблок(?:и|о|а)$/u,bananas:/^банан(?:ы|а|ов)?$/u,buckwheat:/^гречк(?:а|у|и)$/u,
+    pasta:/^макарон(?:ы|ов)?$/u,potatoes:/^(?:картоф(?:ель|еля)|картошк(?:у|а|и))$/u,
+    tomatoes:/^(?:томат(?:ы|ов)?|помидор(?:ы|ов)?)$/u,chicken:/^куриное филе$/u};
+  const keyFor=value=>Object.keys(names).find(key=>names[key].test(value));
+  const action=match[1], pieces=action==='замени'?match[2].split(/\s+на\s+/u):[match[2]];
+  if(pieces.length!==(action==='замени'?2:1))return {issue:true};
+  const keys=pieces.map(keyFor);
+  if(keys.some(key=>!key) || new Set(keys).size!==keys.length)return {issue:true};
+  return {action,keys};
+}
+
 export function guidedEditGroups(plan, text) {
   const value = clean(text);
   if (!/^(?:убери|исключи|добавь|включи|замени)\s/u.test(value)) return false;

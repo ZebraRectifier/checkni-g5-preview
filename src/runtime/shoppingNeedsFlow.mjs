@@ -126,7 +126,7 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
     // A question is not a list of products even if it contains punctuation.
     if(/^(?:проверь|есть ли)(?:\s|,|$)/iu.test(text)) {ownsView=false;selectionActive=false;await delegate.run(text);return delegate.getState();}
     if(selectionActive&&!ownsView&&delegate.hasActiveGuidedShopping?.()
-      && (guidedExplicitMass(text) || !/^(?:хочу|добавь|купи|запиши)\s/iu.test(text))) return select(text,token);
+      && (guidedExplicitMass(text) || delegate.isEditingGuidedShopping?.() && /^(?:добавь|включи|убери|исключи|замени)\s/iu.test(text) || !/^(?:хочу|добавь|купи|запиши)\s/iu.test(text))) return select(text,token);
     // Household/time qualifiers apply to the complete request, not just the
     // last comma-separated product. Preserve the existing reviewed journey.
     if(extractShoppingNeedContext(text).recognized) {

@@ -3568,9 +3568,16 @@ elements.proposalInput.addEventListener("input", () => {
   }
 });
 
+// Coalesce duplicate submissions of the same unchanged message while its
+// handler is in flight. A newly edited message gets its own submission.
+const pendingProposalSubmissions = new Set();
 elements.proposalForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  void handleBasketProposal();
+  if (!elements.proposalInput.value.trim()) return;
+  const key = JSON.stringify([proposalInputRevision, elements.proposalInput.value]);
+  if (pendingProposalSubmissions.has(key)) return;
+  pendingProposalSubmissions.add(key);
+  void handleBasketProposal().finally(() => pendingProposalSubmissions.delete(key));
 });
 
 elements.proposalFallback.addEventListener("click", () => {

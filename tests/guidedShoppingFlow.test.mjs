@@ -369,3 +369,24 @@ test('unrecognised measured food in active guided draft asks instead of silently
  assert.match(flow.getState().presentation.message,/Пока не умею учитывать количество этого продукта/u);
  assert.deepEqual(basket.getSnapshot(),[]);
 });
+
+test('guided edit refuses absent replacement and full 16-group additions without claiming success',async()=>{
+ let memory=createShoppingConversation();
+ const basket=createBasketStore({storage:null});
+ const flow=createGuidedShoppingFlow({basket,getMemory:()=>memory,updateMemory:delta=>{memory=updateShoppingConversation(memory,delta).state;return true;}});
+ const goal='Собери продукты на неделю для троих: фарш, куриное филе, гречка, макароны, молоко, сметана, яйца, томаты, яблоки, творог, сыр, картофель, морковь, лук, капуста, овсяные хлопья';
+ flow.start(goal,[]);await flow.handle('на 3');await flow.handle('на неделю');await flow.handle('Без лимита');await flow.handle('Ограничений нет');
+ await flow.handle('Изменить список');
+ const invalid=await flow.handle('замени бананы на молоко');assert.match(invalid.presentation.message,/Исходного продукта нет/u);
+ const full=await flow.handle('добавь бананы');assert.match(full.presentation.message,/до 16 групп/u);
+ const existing=await flow.handle('добавь молоко');assert.match(existing.presentation.message,/уже есть/u);
+ assert.deepEqual(basket.getSnapshot(),[]);
+});
+
+test('leaving guided edit for product selection clears edit mode',async()=>{
+ let memory=createShoppingConversation();const basket=createBasketStore({storage:null});
+ const flow=createGuidedShoppingFlow({basket,getMemory:()=>memory,updateMemory:delta=>{memory=updateShoppingConversation(memory,delta).state;return true;}});
+ flow.start('Собери продукты на неделю для троих',[]);await flow.handle('Без лимита');await flow.handle('Ограничений нет');
+ await flow.handle('Изменить список');assert.equal(flow.isEditing(),true);
+ await flow.handle('Подобрать товары и цены');assert.equal(flow.isEditing(),false);assert.deepEqual(basket.getSnapshot(),[]);
+});
