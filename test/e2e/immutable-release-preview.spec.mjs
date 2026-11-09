@@ -97,9 +97,11 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
       expect(dataPaths).not.toContain('/'+coordinateFile);
     }
     const addressCss='src/components/pixel-storefront.css';
+    const sharedPlace=(await fs.readFile(path.join(root,'releases',id,'src/app.mjs'),'utf8')).includes('nearbyShopping.openNetwork');
     if((await fs.readFile(path.join(root,'releases',id,addressCss),'utf8')).includes('grid-template-columns: minmax(0,1fr); gap: 6px;')){
       await page.locator('[data-pixel-action="stores"]').click();
       await page.locator('#retail-store-card').click();
+      if(sharedPlace) await page.getByRole('button',{name:'Выбрать магазин вручную'}).click();
       const chooser=page.locator('#pixel-address-chooser');
       await expect(chooser.getByRole('heading')).toHaveText('Магазины · Глобус');
       await expect(chooser.getByText(/адресов в официальном справочнике/u)).toBeHidden();
@@ -126,6 +128,14 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
       }}));
       await page.goto(base+`releases/${id}/index.html?comparison=observed&catalog=retail#shop`);
       await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready');
+      if(sharedPlace){
+        await page.locator('#retail-store-card').click();
+        await expect(page.locator('.pixel-store-address')).toContainText('Пролетарский');
+        await expect(page.locator('#pixel-address-chooser')).toBeHidden();
+        await page.locator('.pixel-store-address').click();
+        await expect(page.locator('#pixel-address-chooser')).toBeVisible();
+        await page.goto(base+`releases/${id}/index.html?comparison=observed&catalog=retail#shop`);
+      }
       await page.locator('#nearby-locate').click();
       await expect(page.locator('#nearby-results article').first()).toBeVisible();
       await page.getByRole('button',{name:'Выбрать точку на карте',exact:true}).click();
