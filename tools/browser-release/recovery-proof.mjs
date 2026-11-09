@@ -11,6 +11,8 @@ if(!/^[a-f0-9]{64}$/.test(id??'')||!root||!path.isAbsolute(root)) throw Error('i
 const candidate=path.join(root,'releases',id);
 try { await fs.lstat(candidate); throw Error('recovery_target_exists'); } catch(e) { if(e.code!=='ENOENT')throw e; }
 await fs.mkdir(root,{recursive:true});
+const listing=execFileSync('git',['ls-tree','-r','-z','HEAD','--',`releases/${id}/`],{maxBuffer:4*1024*1024}).toString('utf8').split('\0').filter(Boolean);
+if(!listing.length || listing.some(row=>!/^100644 blob [a-f0-9]{40}\t/.test(row) || !row.slice(row.indexOf('\t')+1).startsWith(`releases/${id}/`) || row.includes('..'))) throw Error('unsafe_git_tree');
 const tar=execFileSync('git',['archive','--format=tar','HEAD','--',`releases/${id}`],{maxBuffer:128*1024*1024});
 execFileSync('tar',['-xf','-','-C',root],{input:tar,maxBuffer:1024*1024});
 const result=await verifyLocal(root,id);
