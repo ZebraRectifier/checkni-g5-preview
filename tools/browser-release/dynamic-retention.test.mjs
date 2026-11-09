@@ -13,3 +13,5 @@ test('keeps baseline even after live and active move',()=>{const v=s();v.live=[c
 test('rejects PR file responses at GitHub 3000 file limit',()=>{assert.equal(requireCompletePrFiles(Array(2999).fill({})).length,2999);assert.throws(()=>requireCompletePrFiles(Array(3000).fill({})),/possibly_truncated/);});
 
 test('rejects changed or invalid snapshot after deploy queue',()=>{const a='a'.repeat(64),b='b'.repeat(64);assert.doesNotThrow(()=>requireSnapshotMatch(a,a));assert.throws(()=>requireSnapshotMatch(a,b),/snapshot_changed/);assert.throws(()=>requireSnapshotMatch('',a),/snapshot_changed/);});
+
+test('new staged release remains selected when only the live release changes',()=>{const v=s();v.live=[c,c];v.active=c;assert.ok(selectRetention(v).includes(b));});
