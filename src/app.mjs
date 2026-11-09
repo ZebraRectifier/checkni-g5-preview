@@ -960,15 +960,15 @@ function renderRetailStoreButtons() {
         void navigateRetailPath([]);
         return;
       }
-      // A network card has no user-confirmed address yet. Keep the stores
-      // surface and let the existing exact-address picker choose the store;
-      // the registered defaults are implementation state, not a location.
       if (awaitsAddress) {
-        document.dispatchEvent(new CustomEvent('checkni:shop-action', {
+        const chooseAddress = () => document.dispatchEvent(new CustomEvent('checkni:shop-action', {
           detail: { action: 'choose-address', retailerId, sourceButton: button }
         }));
+        if (nearbyShopping) void nearbyShopping.openNetwork(retailerId, chooseAddress);
+        else chooseAddress();
         return;
       }
+      nearbyShopping?.cancelNetwork();
       void selectRetailer(retailerId);
     });
     elements.retailStoreGrid.append(button);
@@ -3459,6 +3459,7 @@ const preloadHybridInterpreter = () => {
 };
 
 document.addEventListener('checkni:shop-action', event => {
+  if (['stores', 'basket', 'choose-address'].includes(event.detail?.action)) nearbyShopping?.cancelNetwork();
   if (!publicRetailCatalogMode) return;
   const action = event.detail?.action;
   if (action === 'basket') { navigate(VIEW.BASKET); return; }

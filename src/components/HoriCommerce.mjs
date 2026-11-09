@@ -191,7 +191,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     exactAddressLimit = EXACT_ADDRESS_PAGE_SIZE;
     pendingAddress = { retailerId, sourceButton, select, search, originalValue: select.value };
     select.dataset.pixelOriginalAddress = select.value;
-    const name = sourceButton.querySelector('.retail-store-copy strong')?.textContent || retailerId;
+    const name = sourceButton.querySelector('.retail-store-copy strong')?.textContent || state.displayName || retailerId;
     chooserTitle.textContent = `Магазины · ${name}`;
     addressChooser.hidden = false;
     storeSearch.hidden = true; storeStatus.hidden = true;
@@ -358,7 +358,15 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     const input = document.getElementById('nearby-address');
     input?.scrollIntoView({ block: 'center' }); input?.focus({ preventScroll: true });
   }
-  address.addEventListener('click', focusAddress); location.addEventListener('click', focusAddress);
+  address.addEventListener('click', () => {
+    const retailerId = state.retailerId;
+    action('stores');
+    queueMicrotask(() => {
+      const card = [...(stores?.children ?? [])].find(item => item.dataset.retailerId === retailerId);
+      openAddressChooser(retailerId, card ?? address);
+    });
+  });
+  location.addEventListener('click', focusAddress);
   document.addEventListener('checkni:shop-action', event => {
     if (event.detail?.action !== 'stores') return;
     sharedDetailsOpen = false;
@@ -478,6 +486,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     selected.textContent = displayName; selected.setAttribute('aria-label', `Категории магазина ${displayName}`);
     title.textContent = displayName; address.textContent = state.storeAddress || 'Выбрать адрес';
     address.hidden = !exactPickerIds[state.retailerId];
+    if (!address.hidden && state.storeAddress) address.textContent = state.storeAddress + ' · Сменить магазин';
     const fullScope = typeof state.scopeLabel === 'string' ? state.scopeLabel : '';
     const storeAddress = typeof state.storeAddress === 'string' ? state.storeAddress : '';
     const repeatedPrefix = storeAddress && [' · ', ' — ', ' | '].map(separator => storeAddress + separator)
