@@ -489,3 +489,24 @@ test("a shop with only gaps is included; unknown identities and full coverage do
   assert.deepEqual(build([{productId:"unknown",status:"unknown-price"}]).confirmedCandidates,[]);
   assert.equal(build([{productId:"a",status:"priced-observation",unitPriceMinor:100}]).confirmedCandidates[0].unconfirmedItems,undefined);
 });
+
+
+test("partial UI uses a collapsed per-store disclosure with text-only product names", async () => {
+  const {createObservedComparisonResult}=await import("../src/components/ComparisonResult.mjs");
+  const original=globalThis.document;
+  class Element {
+    constructor(tag){this.tag=tag;this.children=[];this.textContent="";}
+    append(...nodes){this.children.push(...nodes);}
+    setAttribute(){}
+  }
+  globalThis.document={createElement:tag=>new Element(tag)};
+  try {
+    const result={basket:[{product:{id:"a",name:"<img src=x>"}},{product:{id:"b",name:"Хлеб"}}],
+      candidates:[observedCandidate({storeName:"Магазин",lines:[{productId:"a",status:"unknown-price"},{productId:"b",status:"conflict-observation"}]})],
+      conclusion:{kind:"insufficient-coverage",reason:"no_complete_candidate"}};
+    const section=createObservedComparisonResult(result), details=section.children.find(node=>node.tag==="details");
+    assert.ok(details);assert.equal(details.open,undefined);
+    assert.match(details.children[0].textContent,/Нет подтверждённой цены · Магазин · 2/u);
+    assert.deepEqual(details.children[1].children.map(node=>node.textContent),["<img src=x>","Хлеб"]);
+  } finally {globalThis.document=original;}
+});
