@@ -352,7 +352,8 @@ for(const [answer,included,excluded] of [
  await expect(status(page)).toContainText(included);await expect(status(page)).not.toContainText(excluded);
 });
 
-for(const answer of ['не знаю, хочу все кроме молока','не знаю, не только яблоки, но и молоко','не знаю, хочу яблоки, молоко и бананы'])
+for(const answer of ['не знаю, хочу все кроме молока','не знаю, не только яблоки, но и молоко','не знаю, хочу яблоки, молоко и бананы',
+ 'не знаю, хочу яблоки но молоко нет','не знаю, хочу молоко и не хочу молоко'])
  test(`ambiguous budget reply preserves list and asks for clarification: ${answer}`,async({page})=>{
   await page.goto('/?comparison=observed&catalog=retail#shop');
   await page.evaluate(()=>localStorage.setItem('checkni.surface.basket.v1',JSON.stringify([{id:'milk-25-900',name:'Молоко 2,5%',unit:'900 мл',quantity:1}])));

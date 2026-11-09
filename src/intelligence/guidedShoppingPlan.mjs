@@ -99,7 +99,18 @@ export function advanceGuidedIntake(plan, text, memory) {
   const deferredClauses = deferredRest.replace(/\s+и\s+(?=не\s|без\s|хочу\s)/gu,', ')
     .replace(/\s+но\s+(?=не\s|без\s|хочу\s)/gu,', ')
     .split(/[,;]/u).map(part=>part.trim().replace(/^но\s+/u,'')).filter(Boolean);
-  const ambiguousFood = deferBudget && (/(?:^|\s)(?:кроме|не только)(?=$|[\s,])/u.test(deferredRest)
+  const positiveGroups=new Set(),negativeGroups=new Set();
+  for (const clause of deferredClauses) {
+    const negated=/^(?:не|без|хочу\s+(?:не|без))\s/u.test(clause);
+    const positive=/^(?:хочу|а)\s/u.test(clause)&&!negated;
+    for (const group of GROUPS) if(group.pattern.test(clause)) {
+      if(negated)negativeGroups.add(group.key);if(positive)positiveGroups.add(group.key);
+    }
+  }
+  const contradictory=[...positiveGroups].some(key=>negativeGroups.has(key));
+  const ambiguousFood = deferBudget && (contradictory
+    || (/(?:^|[\s,])нет(?=$|[\s,.!])/u.test(deferredRest) && GROUPS.some(group=>group.pattern.test(deferredRest)))
+    || /(?:^|\s)(?:кроме|не только)(?=$|[\s,])/u.test(deferredRest)
     || deferredClauses.some(clause=>GROUPS.some(group=>group.pattern.test(clause))
       && !/^(?:хочу|не|без|а)\s/u.test(clause)));
   if (ambiguousFood) return {issue:'Уточни отдельно, какие продукты добавить, а какие исключить. Прежние условия и список сохранены.',delta:extractShoppingDelta('')};

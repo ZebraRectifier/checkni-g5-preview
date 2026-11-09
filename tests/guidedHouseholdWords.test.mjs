@@ -151,7 +151,8 @@ test('adjacent wishes and refusals keep their food scopes separate',()=>{
 
 test('ambiguous food lists request clarification without mutating saved conditions',()=>{
  const memory={facts:{budgetMinor:{value:100000}},rejected:[],wishes:[],exceptions:[]};
- for(const text of ['не знаю, хочу все кроме молока','не знаю, не только яблоки, но и молоко','не знаю, хочу яблоки, молоко и бананы']){
+ for(const text of ['не знаю, хочу все кроме молока','не знаю, не только яблоки, но и молоко','не знаю, хочу яблоки, молоко и бананы',
+   'не знаю, хочу яблоки но молоко нет','не знаю, хочу молоко и не хочу молоко']){
   const plan={question:'budget',groups:[{key:'milk'},{key:'apples'}],people:4,days:10,budgetMinor:100000};
   const before=structuredClone(plan);const result=advanceGuidedIntake(plan,text,memory);
   assert.match(result.issue,/Уточни отдельно/u,text);assert.deepEqual(plan,before,text);
