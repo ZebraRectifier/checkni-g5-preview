@@ -159,3 +159,11 @@ test('ambiguous food lists request clarification without mutating saved conditio
   assert.deepEqual(result.delta.reject,[],text);assert.deepEqual(result.delta.want,[],text);assert.deepEqual(result.delta.unset,[],text);
  }
 });
+
+
+test('allergy and intolerance require clarification instead of guessing safety',()=>{
+ for(const text of ['аллергия на рис','АЛЛЕРГИЯ НА РИС','непереносимость риса','аллергия','нет аллергии на рис']) {
+  const delta=extractShoppingDelta(text);
+  assert.ok(delta.unresolved.length,text);
+ }
+});
