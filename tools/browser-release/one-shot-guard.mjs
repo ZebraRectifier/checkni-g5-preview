@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {activationState,verifyLocal} from './verify.mjs';
+import {checkSnapshot} from './one-shot-snapshot.mjs';
 const inv=JSON.parse(await fs.readFile('tools/browser-release/one-shot-inventory.json','utf8'));
 const pattern=/^[a-f0-9]{64}$/;
 if(inv.schemaVersion!==1||!Array.isArray(inv.releases)||!inv.releases.every(x=>pattern.test(x))||
@@ -27,12 +28,15 @@ for(let page=1;page<=10;page++){
 }
 prs.sort((a,b)=>a.number-b.number);
 if(JSON.stringify(prs)!==JSON.stringify(inv.openPRs))throw Error('open_pr_snapshot_changed');
+const observed=[];
 for(const page of ['index.html','prices.html']){
  const res=await fetch('https://zebrarectifier.github.io/checkni-g5-preview/'+page,{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(15000),redirect:'error'});
  if(!res.ok)throw Error('live_root_unavailable');
  const html=await res.text(), ids=[...new Set([...html.matchAll(/\.\/releases\/([a-f0-9]{64})\/src\//g)].map(x=>x[1]))];
  if(ids.length!==1||ids[0]!==inv.live)throw Error('live_snapshot_changed');
+ observed.push(ids[0]);
 }
+checkSnapshot({inventory:inv,active,parent:process.env.GITHUB_REF==='refs/heads/main'?execFileSync('git',['rev-parse','HEAD^'],{encoding:'utf8'}).trim():null,main:process.env.GITHUB_REF==='refs/heads/main',prs,live:observed});
 let matches='';
 try{matches=execFileSync('git',['grep','-I','-o','-h','-E','releases/[a-f0-9]{64}','HEAD','--','.',':!releases/**'],{encoding:'utf8',maxBuffer:8*1024*1024});}
 catch(e){if(e.status!==1)throw e;}
