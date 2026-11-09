@@ -184,3 +184,15 @@ test('guided groups recognize exact grammatical rice forms, not irises or adject
   assert.ok(!plan.groups.some(row=>row.key==='rice'),form);
  }
 });
+
+
+test('rice declensions preserve food refusals and allergy is never silently accepted',async()=>{
+ const {createShoppingConversation,updateShoppingConversation,extractShoppingDelta}=await import('../src/intelligence/shoppingConversation.mjs');
+ const {createGuidedShoppingPlan}=await import('../src/intelligence/guidedShoppingPlan.mjs');
+ for(const text of ['без риса','БЕЗ РИСА','не хочу рис','аллергия на рис']) {
+  const delta=extractShoppingDelta(text);
+  assert.ok(delta.reject.includes('rice')||delta.unresolved.length,text);
+  const memory=updateShoppingConversation(createShoppingConversation(),delta).state;
+  if(delta.reject.includes('rice')) assert.ok(!createGuidedShoppingPlan('Хлеб и рис',[],memory).groups.some(g=>g.key==='rice'),text);
+ }
+});
