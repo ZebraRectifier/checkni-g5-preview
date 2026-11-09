@@ -531,3 +531,16 @@ test('offline guided continuation keeps explicit products and restrictions in th
  assert.equal(s.flow.getConversation().facts.peopleCount.value,3);
  assert.equal(s.advice.length,1);assert.deepEqual(s.basket.getSnapshot(),[]);
 });
+
+
+test('draft rejection filter keeps allowed foods and does not infer exclusions', async()=>{
+ const {createGuidedShoppingPlan}=await import('../src/intelligence/guidedShoppingPlan.mjs');
+ const {createShoppingConversation,updateShoppingConversation,extractShoppingDelta}=await import('../src/intelligence/shoppingConversation.mjs');
+ const goal='Составь меню на неделю: свинина, рис и хлеб';
+ const empty=createShoppingConversation();
+ const allowed=createGuidedShoppingPlan(goal,[],empty);
+ assert.deepEqual(allowed.groups.map(row=>row.key).sort(),['bread','pork','rice']);
+ const noPork=updateShoppingConversation(empty,extractShoppingDelta('Без свинины')).state;
+ const filtered=createGuidedShoppingPlan(goal,[],noPork);
+ assert.deepEqual(filtered.groups.map(row=>row.key).sort(),['bread','rice']);
+});
