@@ -29,8 +29,12 @@ export function createPixelProductCard(product, options = {}) {
   const actions = document.createElement('div');
   actions.className = 'pixel-product-actions';
   if (add.disabled) {
+    const observedAt = Date.parse(product.observedAt);
+    const staleMagnitPrice = product.retailerId === 'magnit'
+      && Number.isFinite(observedAt) && Date.now() - observedAt >= 24 * 60 * 60 * 1000;
+    add.textContent = staleMagnitPrice ? 'Цена устарела · просмотр' : 'Пока только просмотр';
+    if (staleMagnitPrice) add.setAttribute('aria-label', `${product.name}: цена устарела, только просмотр`);
     add.title = add.textContent;
-    add.textContent = 'Пока только просмотр';
     actions.classList.add('is-view-only');
   } else {
     // aria-label retains the full, established product-and-pack identity.
