@@ -427,3 +427,14 @@ test('standalone add without a guided edit still writes the separate shopping ne
  await submit(page,'добавь бананы');await expect(status(page)).toContainText('Записано в список');await expect(status(page)).toContainText('бананы');
  expect(await savedBasket(page)).toBeNull();
 });
+
+test('leaving guided edit prevents later additions from changing the old draft',async({page})=>{
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ await submit(page,'Собери продукты на неделю для четверых');await submit(page,'Без лимита');await submit(page,'Ограничений нет');
+ await status(page).getByRole('button',{name:'Изменить список',exact:true}).click();
+ await submit(page,'замени бананы на молоко');await expect(status(page)).toContainText('Исходного продукта нет');
+ await status(page).getByRole('button',{name:'Подобрать товары и цены',exact:true}).click();
+ await expect(status(page)).toContainText('Открой каталог');
+ await submit(page,'добавь бананы');await expect(status(page)).toContainText('Записано в список');
+ await expect(status(page)).not.toContainText('Список обновлён');expect(await savedBasket(page)).toBeNull();
+});
