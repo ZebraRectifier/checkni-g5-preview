@@ -322,6 +322,7 @@ test('METRO selected address exposes its forty-eighth root and retains that addr
    image_url:null,observed_at:'2026-10-20T08:30:00Z'}]:[]});
  });
  await page.locator('#retail-store-card-metro').click();
+ await page.getByRole('button',{name:'Выбрать магазин вручную',exact:true}).click();
  await page.locator('#metro-store-picker input[type=search]').fill('Лобня');
  await page.locator('#pixel-address-chooser [data-store-id="1318"]').click();
  await expect(page.locator('.pixel-store-address')).toContainText('Лобня');

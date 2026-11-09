@@ -33,6 +33,7 @@ for(const [retailer,raw,addressId,query] of [['globus',globus,'5011','Новор
   });
   await page.goto('/?comparison=observed&catalog=retail#shop');
   await page.locator(retailer==='globus'?'#retail-store-card':'#retail-store-card-magnit').click();
+  await page.getByRole('button',{name:'Выбрать магазин вручную',exact:true}).click();
   await expect(page.locator('#pixel-address-chooser')).toBeVisible();
   await page.locator(`#${retailer}-store-picker input[type=search]`).fill(query);
   await page.locator(`#pixel-address-chooser [data-store-id="${addressId}"]`).click();

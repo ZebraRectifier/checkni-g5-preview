@@ -294,12 +294,18 @@ function currentManualCatalogComparison() {
       ?'magnit-'+selectedMagnitStore.shopCode:null
   });
 }
+function openExactStoreChooser(retailerId,sourceButton) {
+  document.dispatchEvent(new CustomEvent('checkni:shop-action', {
+    detail: { action: 'choose-address', retailerId, sourceButton }
+  }));
+}
+
 function chooseManualMagnitCatalogue() {
   // Follow the same explicit network/address entry as the store cards. Direct
   // selectRetailer would bypass the public address chooser and use a default.
   document.dispatchEvent(new CustomEvent('checkni:shop-action',{detail:{action:'stores'}}));
   const card=document.getElementById('retail-store-card-magnit');
-  if(card)card.click();
+  if(card)openExactStoreChooser('magnit',card);
   else showToast('Выбор Магнита временно недоступен. Корзина сохранена.');
 }
 function startManualCatalogComparison() {
@@ -961,9 +967,7 @@ function renderRetailStoreButtons() {
         return;
       }
       if (awaitsAddress) {
-        const chooseAddress = () => document.dispatchEvent(new CustomEvent('checkni:shop-action', {
-          detail: { action: 'choose-address', retailerId, sourceButton: button }
-        }));
+        const chooseAddress = () => openExactStoreChooser(retailerId,button);
         if (nearbyShopping) void nearbyShopping.openNetwork(retailerId, chooseAddress);
         else chooseAddress();
         return;
@@ -3166,7 +3170,7 @@ function renderBasket() {
         document.dispatchEvent(new CustomEvent('checkni:shop-action', { detail: { action: 'stores' } }));
         const card = document.getElementById(retailerId === DEFAULT_RETAILER_ID
           ? 'retail-store-card' : `retail-store-card-${retailerId}`);
-        if (card) card.click();
+        if (card) openExactStoreChooser(retailerId,card);
         else showToast('Выбор адреса временно недоступен. Корзина сохранена.');
       } : undefined
     });
