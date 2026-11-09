@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {activationState} from './verify.mjs';
-import {selectRetention,requireCompletePrFiles} from './dynamic-retention.mjs';
+import {selectRetention,requireCompletePrFiles,requireSnapshotMatch} from './dynamic-retention.mjs';
 
 const inv=JSON.parse(await fs.readFile('tools/browser-release/one-shot-inventory.json','utf8'));
 const sha=/^[a-f0-9]{40}$/; if(!sha.test(inv.priorMain??''))throw Error('invalid_base');
@@ -64,6 +64,6 @@ if(action==='--write'){
  await fs.writeFile(out,JSON.stringify({digest,ids})+'\n',{flag:'wx'});
  console.log(JSON.stringify({result:'snapshot_written',digest,retained:ids.length,openPRs:prs.length}));
 }else if(action==='--check'){
- const expected=process.env.RETENTION_DIGEST;if(!/^[a-f0-9]{64}$/.test(expected??'')||expected!==digest)throw Error('snapshot_changed');
+ const expected=process.env.RETENTION_DIGEST;requireSnapshotMatch(expected,digest);
  console.log(JSON.stringify({result:'snapshot_unchanged',digest}));
 }else throw Error('invalid_action');
