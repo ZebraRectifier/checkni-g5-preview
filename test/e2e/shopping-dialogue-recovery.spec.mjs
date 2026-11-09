@@ -640,3 +640,16 @@ test('allergy in rejected injection retains only generic safety state',async({pa
  expect(stored).toMatch(/allergySafety/);expect(stored).not.toMatch(/игнорируй/iu);
  expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
 });
+
+
+test('read-only preference storage blocks automatic shopping and recovers safely',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.addInitScript(()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(window.__denySafetyStorage&&String(k).includes('checkni.shopping.preferences.v1'))throw Error('denied');return original.call(this,k,v);};});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);const before=await savedBasket(page);
+ await submit(page,'Аллергия на рис');await page.reload();await openHory(page);
+ await page.evaluate(()=>{window.__denySafetyStorage=true});
+ await submit(page,'Собери недорогую корзину');await expect(status(page)).toContainText('сохранение условий недоступно');
+ await page.evaluate(()=>{window.__denySafetyStorage=false});
+ await submit(page,'Собери недорогую корзину');await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
+ expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});

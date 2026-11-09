@@ -56,6 +56,18 @@ export function createShoppingPreferenceStore({ storage } = {}) {
   let failed = false;
   let lastRaw = null;
   const available = () => Boolean(storage?.getItem && storage?.setItem && storage?.removeItem);
+  function probe() {
+    if (!available()) return false;
+    // Use only a fresh task-specific key and remove exactly that key.
+    const key = `${SHOPPING_PREFERENCE_STORAGE_KEY}.probe.${Math.random().toString(36).slice(2)}`;
+    try {
+      if (storage.getItem(key) !== null) return false;
+      storage.setItem(key, '1');
+      storage.removeItem(key);
+      failed = false;
+      return true;
+    } catch { failed = true; return false; }
+  }
   function read() {
     if (!available()) return createShoppingConversation();
     try {
@@ -88,5 +100,5 @@ export function createShoppingPreferenceStore({ storage } = {}) {
       return true;
     } catch { failed = true; return false; }
   }
-  return Object.freeze({ read, write, status: () => ({ available: available(), saved, failed }) });
+  return Object.freeze({ read, write, probe, status: () => ({ available: available(), saved, failed }) });
 }

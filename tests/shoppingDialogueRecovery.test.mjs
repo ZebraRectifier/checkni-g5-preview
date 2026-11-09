@@ -593,8 +593,8 @@ test('rejected preflight never saves unsafe text but retains allergy safety for 
 });
 
 test('failed storage blocks automatic guidance until persistence recovers',async()=>{
- let blocked=true,raw=null;
- const storage={getItem:()=>raw,setItem:(_k,v)=>{if(blocked)throw Error('denied');raw=v;},removeItem:()=>{if(blocked)throw Error('denied');raw=null;}};
+ let blocked=true;const values=new Map();
+ const storage={getItem:k=>values.get(k)??null,setItem:(k,v)=>{if(blocked)throw Error('denied');values.set(k,v);},removeItem:k=>{if(blocked)throw Error('denied');values.delete(k);}};
  const s=session(async()=>({kind:'advice',message:'не должно вызываться'}),{preferenceStorage:storage,searchGuidedCatalog:async()=>({kind:'catalog',products:[]})});
  const first=await s.send('Аллергия на рис');assert.match(first.presentation.message,/сохранение условий недоступно/u);
  const next=await s.send('Собери недорогую корзину');assert.match(next.presentation.message,/сохранение условий недоступно/u);
@@ -602,4 +602,17 @@ test('failed storage blocks automatic guidance until persistence recovers',async
  blocked=false;await s.send('Собери недорогую корзину');
  assert.equal(s.flow.getConversation().facts.allergySafety?.value,true);
  assert.ok(s.flow.getConversation().facts.unresolvedConstraints);assert.equal(s.advice.length,0);
+});
+
+
+test('read-only storage after reload blocks guidance and recovery keeps allergy',async()=>{
+ const values=new Map();let blocked=false;
+ const storage={getItem:k=>values.get(k)??null,setItem:(k,v)=>{if(blocked)throw Error('denied');values.set(k,v);},removeItem:k=>{if(blocked)throw Error('denied');values.delete(k);}};
+ const options={preferenceStorage:storage,searchGuidedCatalog:async()=>({kind:'catalog',products:[]})};
+ const initial=session(async()=>({kind:'unavailable'}),options);await initial.send('Аллергия на рис');
+ blocked=true;const reloaded=session(async()=>({kind:'advice',message:'не должно вызываться'}),options);
+ const stopped=await reloaded.send('Собери недорогую корзину');assert.match(stopped.presentation.message,/сохранение условий недоступно/u);
+ assert.equal(reloaded.advice.length,0);assert.deepEqual(reloaded.basket.getSnapshot(),[]);
+ blocked=false;await reloaded.send('Собери недорогую корзину');
+ assert.equal(reloaded.flow.getConversation().facts.allergySafety?.value,true);assert.ok(reloaded.flow.getConversation().facts.unresolvedConstraints);
 });

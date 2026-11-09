@@ -1126,10 +1126,7 @@ export function createShoppingConversationFlow(options) {
       state = messageState('Не удаётся сохранить условия.', 'Автоматический подбор остановлен: сохранение условий недоступно. Проверь доступ к хранилищу браузера и повтори; корзина сохранена.');
       return Promise.resolve(state);
     };
-    const storageState = preferenceStore.status();
-    if (persistentSafetyRequired && (!storageState.available || storageState.failed)) {
-      if (!preferenceStore.write(memory)) return unavailable();
-    }
+    if (persistentSafetyRequired && !preferenceStore.probe()) return unavailable();
     if (volatileAllergy && !cancellation) {
       const safety = { ...extractShoppingDelta(''), facts: { allergySafety: { value: true, scope: 'conversation' } },
         unresolved: ['Неуточнённая аллергия или непереносимость'] };
