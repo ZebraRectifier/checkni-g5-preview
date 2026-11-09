@@ -15,6 +15,8 @@ export async function selectStore(page, retailerId = 'globus') {
   await openStores(page);
   await page.locator(retailerId === 'globus' ? '#retail-store-card' : `#retail-store-card-${retailerId}`).click({ noWaitAfter: true });
   if (['magnit', 'globus', 'metro'].includes(retailerId)) {
+    const manualAddress = page.getByRole('button', { name: 'Выбрать магазин вручную' });
+    if (await manualAddress.isVisible()) await manualAddress.click();
     const chooser = page.locator('#pixel-address-chooser');
     await expect(chooser).toBeVisible();
     const select = page.locator(`#${retailerId}-store-address`);

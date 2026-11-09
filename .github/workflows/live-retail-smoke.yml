@@ -182,6 +182,8 @@ jobs:
               "#retail-store-card-metro": "metro"
             }[selector];
             if (exactRetailer) {
+              const manualAddress = page.getByRole("button",{name:"Выбрать магазин вручную"});
+              if (await manualAddress.isVisible()) await manualAddress.click();
               const chooser = page.locator("#pixel-address-chooser");
               await chooser.waitFor({state:"visible"});
               const select = page.locator(`#${exactRetailer}-store-address`);
@@ -365,6 +367,8 @@ jobs:
               bounds:document.querySelector("#retail-store-card")?.getBoundingClientRect().toJSON()
             })));
             await racePage.locator("#retail-store-card").click({noWaitAfter:true});
+            const manualRaceAddress = racePage.getByRole("button",{name:"Выбрать магазин вручную"});
+            if (await manualRaceAddress.isVisible()) await manualRaceAddress.click();
             const raceChooser = racePage.locator("#pixel-address-chooser");
             await raceChooser.waitFor({state:"visible"});
             const raceSelect = racePage.locator("#globus-store-address");

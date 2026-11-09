@@ -15,6 +15,7 @@ test.beforeEach(async ({ page }) => {
 for (const store of exactStores) {
   test(`${store.retailer}: a network card waits for an explicit exact address and restores it on reload`, async ({ page }) => {
     await page.locator(`.retail-store-card[data-retailer-id="${store.retailer}"]`).click({ noWaitAfter: true });
+    await page.getByRole('button', { name: 'Выбрать магазин вручную' }).click();
     const chooser = page.locator('#pixel-address-chooser');
     await expect(chooser).toBeVisible();
     await expect(page.locator('#pixel-store-details')).toBeHidden();
@@ -36,6 +37,7 @@ for (const store of exactStores) {
 
 test('backing out of an unconfirmed address returns to the networks without selecting one', async ({ page }) => {
   await page.locator('.retail-store-card[data-retailer-id="magnit"]').click({ noWaitAfter: true });
+  await page.getByRole('button', { name: 'Выбрать магазин вручную' }).click();
   await expect(page.locator('#pixel-address-chooser')).toBeVisible();
   await expect(page.locator('#pixel-store-details')).toBeHidden();
   await page.locator('#pixel-address-chooser').getByRole('button', { name: 'К сетям' }).click();
@@ -47,6 +49,7 @@ test('backing out of an unconfirmed address returns to the networks without sele
 test('mobile retry action stays readable when a selected exact catalogue is unavailable', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'mobile layout only');
   await page.locator('.retail-store-card[data-retailer-id="magnit"]').click({ noWaitAfter: true });
+  await page.getByRole('button', { name: 'Выбрать магазин вручную' }).click();
   const label = await page.locator('#magnit-store-address option[value="777312"]').textContent();
   await page.locator('#magnit-store-picker input').fill(label);
   await page.locator('#pixel-address-chooser [data-store-id="777312"]').click({ noWaitAfter: true });
