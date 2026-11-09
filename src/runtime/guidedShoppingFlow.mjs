@@ -1,4 +1,4 @@
-import { createGuidedShoppingPlan, advanceGuidedIntake, guidedIntakeView, guidedEditGroups, guidedGroupMatches, guidedGroupAllowed,applyGuidedQuantityIntent,guidedExplicitMass,weeklyRetailerRequest } from '../intelligence/guidedShoppingPlan.mjs';
+import { createGuidedShoppingPlan, advanceGuidedIntake, guidedIntakeView, guidedEditGroups, guidedGroupMatches, guidedGroupAllowed,guidedGroupByKey,applyGuidedQuantityIntent,guidedExplicitMass,guidedListEdit,weeklyRetailerRequest } from '../intelligence/guidedShoppingPlan.mjs';
 import { validWeeklyCardSource,createWeeklyRetailCatalogPort,PEREKRESTOK_WEEKLY_SCOPE } from '../ports/weeklyRetailCatalogPort.mjs';
 import { extractShoppingDelta, isShoppingProductRejected } from '../intelligence/shoppingConversation.mjs';
 import { retailSelectionUrl } from '../intelligence/retailProductSelection.mjs';
@@ -12,7 +12,7 @@ const view = (headline, message, extra = {}) => ({ status: 'clarification', resu
   presentation: { headline, message, items: [], primaryAction: 'Написать уточнение', mascotState: 'curious', ...extra } });
 
 export function createGuidedShoppingFlow(options) {
-  let plan = null, state = null, version = 0;
+  let plan = null, state = null, version = 0, editingGroups = false;
   let quantityEdits = new Map();
   const editedQuantity = (edit,card) => edit.intent ? suggestedCatalogQuantityForIntent(card,edit.intent)
     : card?.id===edit.cardId ? {quantity:edit.quantity,quantityReview:false} : {quantity:null,quantityReview:true};
@@ -82,6 +82,7 @@ export function createGuidedShoppingFlow(options) {
   };
   function start(goal, history) {
     version++;
+    editingGroups = false;
     quantityEdits = new Map();
     plan = createGuidedShoppingPlan(goal, history, options.getMemory());
     if(options.hasAgreedStore?.()===true&&!plan.location&&!plan.retailers.length)plan.useCurrentStore=true;
@@ -262,6 +263,18 @@ export function createGuidedShoppingFlow(options) {
       const next = presentIntake();
       return plan.mode === 'economy' && !plan.question ? load(isCurrent) : next;
     }
+    const listEdit=editingGroups ? guidedListEdit(text) : null;
+    if(listEdit){
+      if(listEdit.issue)return view('Уточни изменение.', 'Напиши одно понятное действие, например «добавь бананы» или «убери молоко». Прежний список и корзина сохранены.');
+      const target=listEdit.keys.at(-1), adding=['добавь','включи','замени'].includes(listEdit.action);
+      const targetGroup=plan.groups.find(group=>group.key===target) ?? guidedGroupByKey(target);
+      if(adding && !guidedGroupAllowed(targetGroup,options.getMemory()))return view('Уточним ограничение.', 'Этот продукт раньше был исключён. Сначала уточни, можно ли его добавить обратно; список сохранён.');
+      if((delta.reject.length||delta.allow.length) && !options.updateMemory(delta)) return view('Уточним условия.', 'Напиши изменение короче; корзина не изменилась.');
+      if(!guidedEditGroups(plan,text))return view('Уточни изменение.', 'Не удалось безопасно изменить список. Прежний список и корзина сохранены.');
+      for(const key of Object.keys(plan.quantityIntents ?? {}))if(!plan.groups.some(group=>group.key===key)){delete plan.quantityIntents[key];quantityEdits.delete(key);}
+      editingGroups=false;
+      const result=presentIntake(); result.presentation.message += ` Список обновлён: ${plan.groups.filter(group=>guidedGroupAllowed(group,options.getMemory())).map(group=>group.label).join(', ')}.`; return result;
+    }
     const quantityRequest = guidedExplicitMass(text);
     if (quantityRequest) {
       const result=advanceGuidedIntake(plan,text,options.getMemory());
@@ -310,7 +323,7 @@ export function createGuidedShoppingFlow(options) {
       commitIntent(result);
       plan.rows = []; plan.alternatives = []; plan.stage = 'outline'; return presentIntake();
     }
-    if (value === 'изменить список') return view('Давай поправим.', `Сейчас в списке: ${plan.groups.map(row => row.label).join(', ')}. Напиши, например, «убери молоко», «добавь бананы» или «замени куриное филе на фарш».`, { conversationChoices: choices(['Подобрать товары и цены']) });
+    if (value === 'изменить список') { editingGroups=true; return view('Давай поправим.', `Сейчас в списке: ${plan.groups.map(row => row.label).join(', ')}. Напиши, например, «убери молоко», «добавь бананы» или «замени куриное филе на фарш».`, { conversationChoices: choices(['Подобрать товары и цены']) }); }
     if (guidedEditGroups(plan, text)) {
       for (const key of Object.keys(plan.quantityIntents ?? {})) if (!plan.groups.some(group => group.key === key)) { delete plan.quantityIntents[key]; quantityEdits.delete(key); }
       if (delta.reject.length || delta.allow.length) options.updateMemory(delta);
@@ -390,11 +403,12 @@ export function createGuidedShoppingFlow(options) {
   }
   function scopeChanged() {
     version++;
+    editingGroups = false;
     if (!plan) return null;
     plan.rows = []; plan.drafts = []; plan.alternatives = []; plan.scope = null; plan.base = null;
     quantityEdits = new Map();
     plan.stage = 'intake';
     return presentIntake();
   }
-  return { start, handle, confirm, scopeChanged, hideReview: () => { if (plan) plan.requiresReview = true; }, getState: () => state, active: () => Boolean(plan) };
+  return { start, handle, confirm, scopeChanged, isEditing:()=>editingGroups, hideReview: () => { if (plan) plan.requiresReview = true; }, getState: () => state, active: () => Boolean(plan) };
 }

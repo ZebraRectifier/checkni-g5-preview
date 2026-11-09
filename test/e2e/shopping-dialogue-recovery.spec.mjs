@@ -406,3 +406,24 @@ test('household duration is not mistaken for product quantity and unsupported ch
  await expect(status(page)).toContainText('Пока не умею учитывать количество этого продукта');
  expect(await savedBasket(page)).toBeNull();
 });
+
+test('editing guided list changes the draft rather than creating separate shopping needs',async({page})=>{
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ const before=await savedBasket(page);const needsBefore=await page.evaluate(()=>localStorage.getItem('checkni.shopping-needs.v1'));
+ await submit(page,'Собери продукты на неделю для четверых');await submit(page,'Без лимита');await submit(page,'Ограничений нет');
+ await status(page).getByRole('button',{name:'Изменить список',exact:true}).click();
+ await submit(page,'добавь бананы');await expect(status(page)).toContainText('Список обновлён');await expect(status(page)).toContainText('Бананы');
+ await expect(status(page)).toContainText('Фарш');await expect(status(page)).not.toContainText('Записано в список');
+ await status(page).getByRole('button',{name:'Изменить список',exact:true}).click();
+ await submit(page,'добавь яблоки и бананы');await expect(status(page)).toContainText('Уточни изменение');
+ await submit(page,'убери молоко');await expect(status(page)).toContainText('Список обновлён');await expect(status(page)).not.toContainText('Молоко');
+ await expect(status(page)).toContainText('Бананы');expect(await savedBasket(page)).toBe(before);
+ expect(await page.evaluate(()=>localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needsBefore);
+ await page.reload();await openHory(page);await expect(status(page)).not.toContainText('Список обновлён');expect(await savedBasket(page)).toBe(before);
+});
+
+test('standalone add without a guided edit still writes the separate shopping need',async({page})=>{
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ await submit(page,'добавь бананы');await expect(status(page)).toContainText('Записано в список');await expect(status(page)).toContainText('бананы');
+ expect(await savedBasket(page)).toBeNull();
+});
