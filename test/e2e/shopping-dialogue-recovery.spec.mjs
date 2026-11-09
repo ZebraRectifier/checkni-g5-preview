@@ -438,3 +438,59 @@ test('leaving guided edit prevents later additions from changing the old draft',
  await submit(page,'добавь бананы');await expect(status(page)).toContainText('Записано в список');
  await expect(status(page)).not.toContainText('Список обновлён');expect(await savedBasket(page)).toBeNull();
 });
+
+
+test('duplicate synchronous click or submit is coalesced without mutating basket or separate needs',async({page})=>{
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ await page.evaluate(()=>localStorage.setItem('checkni.surface.basket.v1',JSON.stringify([{id:'milk-25-900',name:'Молоко 2,5%',unit:'900 мл',quantity:1}])));
+ await page.reload();await openHory(page);const before=await savedBasket(page),needs=await page.evaluate(()=>localStorage.getItem('checkni.shopping-needs.v1'));
+ await submit(page,'Собери продукты на неделю для четверых');await submit(page,'Без лимита');await submit(page,'Ограничений нет');
+ await status(page).getByRole('button',{name:'Изменить список',exact:true}).click();
+ await page.locator('#basket-proposal-input').fill('добавь бананы');
+ await page.evaluate(()=>{document.querySelector('#basket-proposal-submit').click();document.querySelector('#basket-proposal-submit').click();});
+ await expect(status(page)).toContainText('Список обновлён');await expect(status(page)).toContainText('Бананы');
+ expect(await page.evaluate(()=>localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needs);expect(await savedBasket(page)).toBe(before);
+ await status(page).getByRole('button',{name:'Изменить список',exact:true}).click();
+ await page.locator('#basket-proposal-input').fill('убери молоко');
+ await page.evaluate(()=>{const form=document.querySelector('#basket-proposal-form');form.requestSubmit();form.requestSubmit();});
+ await expect(status(page)).toContainText('Список обновлён');await expect(status(page)).not.toContainText('Молоко');
+ expect(await page.evaluate(()=>localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needs);expect(await savedBasket(page)).toBe(before);
+});
+
+test('duplicate submission outside guided mode records only one shopping need',async({page})=>{
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ const before=await savedBasket(page);await page.locator('#basket-proposal-input').fill('добавь бананы');
+ await page.evaluate(()=>{const form=document.querySelector('#basket-proposal-form');form.requestSubmit();form.requestSubmit();});
+ await expect(status(page)).toContainText('Записано в список');
+ const saved=JSON.parse(await page.evaluate(()=>localStorage.getItem('checkni.shopping-needs.v1')));
+ expect(saved.lines).toHaveLength(1);expect(saved.receipts).toHaveLength(1);expect(await savedBasket(page)).toBe(before);
+});
+
+
+test('rapid Enter repeat does not leak guided edit to the separate list',async({page})=>{
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ await submit(page,'Собери продукты на неделю для четверых');await submit(page,'Без лимита');await submit(page,'Ограничений нет');
+ await status(page).getByRole('button',{name:'Изменить список',exact:true}).click();
+ const needs=await page.evaluate(()=>localStorage.getItem('checkni.shopping-needs.v1'));
+ await page.locator('#basket-proposal-input').fill('добавь бананы');
+ await Promise.all([page.keyboard.press('Enter'),page.keyboard.press('Enter')]);
+ await expect(status(page)).toContainText('Список обновлён');
+ expect(await page.evaluate(()=>localStorage.getItem('checkni.shopping-needs.v1'))).toBe(needs);
+});
+
+
+test('a new distinct message is not blocked while the previous provider request waits',async({page})=>{
+ let releaseFirst;const firstGate=new Promise(resolve=>{releaseFirst=resolve});const requests=[];
+ await page.route('**/functions/v1/ai-basket-proposal',async route=>{
+  requests.push(route.request().postDataJSON());
+  if(requests.length===1)await firstGate;
+  await route.fulfill({json:{kind:'advice',message:'Поняла, давай обсудим покупку.'}}).catch(()=>{});
+ });
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ const before=await savedBasket(page);
+ await submit(page,'Посоветуй рыбу на ужин, чтобы быстро приготовить.');
+ await expect.poll(()=>requests.length).toBe(1);
+ await submit(page,'Посоветуй овощи для лёгкого ужина.');
+ await expect(page.locator('#shopping-dialogue-history').locator('..')).toContainText('Посоветуй овощи для лёгкого ужина.');
+ releaseFirst();expect(await savedBasket(page)).toBe(before);
+});
