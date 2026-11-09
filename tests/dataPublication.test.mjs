@@ -174,14 +174,20 @@ test('the shared publisher packages releases, validates activation and rechecks 
   assert.match(workflow, /cancel-in-progress: false/);
   assert.match(workflow, /node tools\/browser-release\/one-shot-compact\.mjs/);
   assert.match(workflow, /PROOF_SOURCE_SHA=.*git rev-parse HEAD/);
-  assert.match(workflow, /PROOF_RELEASE_IDS=.*one-shot-inventory\.json/);
+  assert.match(workflow, /PROOF_RELEASE_IDS=.*RETENTION_SNAPSHOT/);
   const compact = await fs.readFile(new URL('../tools/browser-release/one-shot-compact.mjs', import.meta.url), 'utf8');
   for (const required of ['.nojekyll','index.html','prices.html','deployment.json','src','release','artifacts']) {
     assert.ok(compact.includes(`'${required}'`), `missing fixed path ${required}`);
   }
   assert.match(compact, /for\(const id of list\)await verifyLocal\(root,id\)/);
   assert.match(compact, /await activationState\(root\)/);
-  assert.equal((workflow.match(/node tools\/browser-release\/one-shot-guard\.mjs/g)||[]).length,2);
+  assert.match(workflow, /dynamic-snapshot\.mjs --write/);
+  assert.match(workflow, /dynamic-snapshot\.mjs --check/);
+  assert.match(workflow, /RETENTION_DIGEST: \$\{\{ needs\.build\.outputs\.retention_digest \}\}/);
+  const dynamic = await fs.readFile(new URL('../tools/browser-release/dynamic-snapshot.mjs', import.meta.url), 'utf8');
+  assert.match(dynamic, /open_pr_changed_during_scan/);
+  assert.match(dynamic, /requireCompletePrFiles/);
+  assert.match(dynamic, /requireSnapshotMatch\(expected,digest\)/);
   assert.match(workflow, /if \(!await activationState\('_site'\)\) throw Error\('active_release_required'\)/);
   assert.equal((workflow.match(/inputs\.site_commit \|\| github\.event\.pull_request\.head\.sha \|\| github\.sha/g) || []).length, 2);
   assert.equal((workflow.match(/publication-guard\.mjs --deployment/g) || []).length, 2);
