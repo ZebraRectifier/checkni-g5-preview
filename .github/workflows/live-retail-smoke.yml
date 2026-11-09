@@ -267,7 +267,7 @@ jobs:
               check.on("requestfailed", request => {
                 const target = new URL(request.url());
                 if (["zebrarectifier.github.io","cxpneczhczashanbetgj.supabase.co"].includes(target.hostname))
-                  startupErrors.push({type:"requestfailed", origin:target.origin, path:target.pathname, failure:request.failure()?.errorText});
+                  startupErrors.push({type:"requestfailed", origin:target.origin, path:target.pathname});
               });
               // Observe from navigation onward: automatic location can cache the directory.
               check.on("response", response => {
