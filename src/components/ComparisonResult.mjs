@@ -55,6 +55,18 @@ function formatObservedAt(value) {
   }).format(new Date(timestamp)) + " UTC";
 }
 
+function candidateObservedAtLabel(candidate) {
+  const range = observedAtRange(candidate);
+  if (!range) return null;
+  const first = formatObservedAt(range.oldest), last = formatObservedAt(range.newest);
+  return first && last ? first === last ? first : `${first} — ${last}` : null;
+}
+
+function candidateAddress(candidate) {
+  return typeof candidate?.locationLabel === 'string' && candidate.locationLabel.trim()
+    ? candidate.locationLabel.trim() : null;
+}
+
 function truthLevelLabel(level) {
   if (level === "store") return "точка магазина";
   if (level === "city") return "населённый пункт";
@@ -317,17 +329,20 @@ export function buildObservedResultModel(result, { nowMs = Date.now() } = {}) {
     ? ready.find(entry => entry.candidateId !== conclusion.candidateId) : null;
   const otherTotal = other && Number.isSafeInteger(other.totalMinor) && Number.isSafeInteger(conclusion.savingsMinor)
     && other.totalMinor === conclusion.totalMinor + conclusion.savingsMinor ? formatRubMinor(other.totalMinor) : null;
+  const otherAddress = candidateAddress(other), otherObservedAt = candidateObservedAtLabel(other);
 
   return Object.freeze({
     ...freshness,
     kind: conclusion.kind,
     candidateId: candidate.candidateId,
     title: observedCandidateName(candidate),
+    ...(candidateAddress(candidate) ? { addressLabel: candidateAddress(candidate) } : {}),
     totalLabel,
     coverageLabel: formattedCoverage,
     savingsLabel,
     ...(linePrices.length ? { linePrices } : {}),
-    ...(otherTotal ? { otherCandidate: { title: observedCandidateName(other), totalLabel: otherTotal } } : {}),
+    ...(otherTotal ? { otherCandidate: { title: observedCandidateName(other), totalLabel: otherTotal,
+      ...(otherAddress ? { addressLabel: otherAddress } : {}), ...(otherObservedAt ? { observedAtLabel: otherObservedAt } : {}) } } : {}),
     sourceLabel: sourceLabel(candidate),
     geographyLabel: geographyLabel(candidate),
     ...(conditionLabel ? { priceConditionLabel: conditionLabel } : {}),
@@ -431,6 +446,10 @@ export function createObservedComparisonResult(result) {
   const heading = document.createElement("h2");
   heading.textContent = model.title;
   section.append(heading);
+  if (model.addressLabel) {
+    const address = document.createElement('p'); address.className = 'comparison-provenance';
+    address.textContent = model.addressLabel; section.append(address);
+  }
 
   for (const label of model.catalogueFreshnessLabels ?? []) {
     const freshness = document.createElement("p");
@@ -511,11 +530,13 @@ export function createObservedComparisonResult(result) {
   const other = model.otherCandidate ? document.createElement('p') : null;
   if (other) {
     other.className = 'comparison-provenance';
-    other.textContent = `${model.otherCandidate.title}: ${model.otherCandidate.totalLabel} · наблюдаемая сумма`;
+    other.textContent = [model.otherCandidate.title, model.otherCandidate.addressLabel,
+      `${model.otherCandidate.totalLabel} · наблюдаемая сумма`,
+      model.otherCandidate.observedAtLabel ? `Наблюдения: ${model.otherCandidate.observedAtLabel}` : null].filter(Boolean).join(' · ');
   }
-  section.append(facts);
+  section.append(facts, provenance);
   if (other) section.append(other);
-  section.append(provenance, note);
+  section.append(note);
   if (model.linePrices?.length) {
     const details = document.createElement('details');
     const summary = document.createElement('summary');

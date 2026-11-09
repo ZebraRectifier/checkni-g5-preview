@@ -3,6 +3,24 @@ import {selectStore,openStoreDetails,expectNoOverflow} from './helpers/pixel-sur
 import {readFile} from 'node:fs/promises';
 const weeklyRows=JSON.parse(await readFile(new URL('../../tests/fixtures/weekly-route.json',import.meta.url),'utf8'));
 
+test('same-name stores retain their own address and observation time in the result',async({page})=>{
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ await page.evaluate(async()=>{
+  const {createObservedComparisonResult}=await import('/src/components/ComparisonResult.mjs');
+  const candidate=(id,address,total,at)=>({candidateId:id,storeName:'Глобус',locationLabel:address,
+   totalMinor:total,completeComparisonReadyCoverage:true,contextCoherent:true,
+   priceCoverage:{coveredItems:1,totalItems:1},lines:[{observedAt:at}]});
+  const root=document.createElement('div');root.id='same-store-result';
+  root.append(createObservedComparisonResult({candidates:[candidate('a','Адрес А',10000,'2026-11-09T04:00:00Z'),candidate('b','Адрес Б',11000,'2026-11-09T04:05:00Z')],
+   conclusion:{kind:'cheapest-proven',candidateId:'a',totalMinor:10000,savingsMinor:1000}}));
+  document.body.append(root);
+ });
+ const result=page.locator('#same-store-result');
+ await expect(result).toContainText('Адрес А');
+ await expect(result).toContainText('Глобус · Адрес Б · 110,00 ₽ · наблюдаемая сумма · Наблюдения: 09.11.2026, 04:05 UTC');
+ await expect(result).toContainText('Наблюдения: 09.11.2026, 04:00 UTC');
+});
+
 // Synthetic HTTP fixtures exercise the actual normalizers, basket and Core.
 // They are never production evidence of current retailer prices.
 async function setup(page,baseURL,state){
@@ -70,6 +88,7 @@ test('rice alternative stays unavailable when the second exact address lacks its
 });
 test('explicit address and peer lead to ten editable lines, saved basket and actual Core comparison across reload',async({page,baseURL})=>{
  test.setTimeout(60_000);
+ await page.clock.install({time:new Date()});
  const state={mode:'fresh'};await setup(page,baseURL,state);
  const section=page.locator('#weekly-route'),apply=section.getByRole('button',{name:'Добавить и сравнить',exact:true});
  await expect(apply).toBeEnabled();await expect(section.locator('#weekly-route-addresses')).toContainText('Широкая, 2а');
@@ -91,6 +110,10 @@ test('explicit address and peer lead to ten editable lines, saved basket and act
  await expect(result).toContainText('Наличие не подтверждено');
  await page.reload();await expect(page.locator('#basket-view')).toContainText('Фарш');
  await page.locator('#compare-basket').click();await expect(result).toContainText('10 из 10 позиций');
+ await page.clock.runFor(3600001);
+ await expect(result).toHaveCount(0);
+ await expect(page.locator('#comparison-output')).toContainText('Цены устарели');
+ await expect(page.locator('#comparison-output')).not.toContainText('наблюдаемая сумма');
  await page.locator('#back-to-shop').click();await expect(section).toBeVisible();await expectNoOverflow(page);
 });
 test('a delayed current-price response still completes the recipe within the bounded network window',async({page,baseURL})=>{
