@@ -69,7 +69,7 @@ export function createNearbyShoppingPort({fetchImpl=globalThis.fetch}={}){
           &&typeof candidate.label==='string'&&candidate.label.length>0&&candidate.label.length<=500
           &&['house','street','locality','city'].includes(candidate.precision);
       });
-      if(result.kind==='unavailable'||result.kind==='limited'||result.kind==='results'&&!result.candidates.length&&expectedRegion&&expectedRegion!=='moscow-and-oblast'){
+      if(result.kind==='unavailable'||result.kind==='limited'||result.kind==='results'&&!result.candidates.length&&expectedRegion){
         try{const region=expectedRegion??'moscow-and-oblast';
           const d=region==='moscow-and-oblast'?await port.directory():await port.regionalDirectory(region);
           const landmarkQuery=city?`${city.region.label} ${city.address}`:query;
