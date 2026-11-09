@@ -51,6 +51,9 @@ test('guided variants show products early and retain scope, warnings and keyboar
     await expect(card.locator('button')).toHaveCSS('min-height', '44px');
     expect((await card.locator('button').boundingBox()).height).toBeGreaterThanOrEqual(44);
   }
+  const initialAmounts = await cards.locator('.guided-store-amount').allTextContents();
+  expect(initialAmounts).toHaveLength(2);
+  expect(initialAmounts.every(amount => /₽/u.test(amount))).toBe(true);
   const disclosure = guided.locator('.guided-shopping-information');
   await expect(disclosure).not.toHaveAttribute('open', '');
   await guided.evaluate(node => node.scrollIntoView({ block: 'start' }));
@@ -82,6 +85,9 @@ test('guided variants show products early and retain scope, warnings and keyboar
   await delivery.focus();
   await page.keyboard.press('Enter');
   await expect(delivery).toHaveAttribute('aria-pressed', 'true');
+  expect(await cards.locator('.guided-store-amount').allTextContents()).toEqual(initialAmounts);
+  await expect(guided.locator('.guided-shopping-difference')).toHaveCount(0);
+  await expect(guided.locator('.guided-shopping-warning').filter({hasText:'Суммы напрямую не сравниваем'})).toBeVisible();
   await expect(guided.locator('caption')).toHaveText('Список на проверку · Перекрёсток');
   await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
   // Exercise the scoped palette in both real theme states, including the
