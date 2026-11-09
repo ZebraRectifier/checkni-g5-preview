@@ -125,6 +125,7 @@ test('small and keyboard-height viewports keep optional input and store/address 
  await openStoreDetails(page);
  await expect(page.locator('#globus-store-address')).toBeVisible();
  await page.locator('.pixel-store-address').click();
+  await page.locator('#pixel-address-chooser').getByRole('button', { name: 'Магазины рядом' }).click();
   await expect(page.locator('#nearby-address')).toBeVisible();
  await expectNoOverflow(page);
 });
