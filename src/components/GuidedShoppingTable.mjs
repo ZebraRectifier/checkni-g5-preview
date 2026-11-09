@@ -60,12 +60,14 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
     coverage.append(summary);
     if(model.alternatives.some(store=>store.priceScope==='delivery-catalog')){
       summary.textContent += ' Доставка не подтверждена. Доставка и сборы не включены.';
+      const unconfirmed=document.createElement('p');unconfirmed.className='guided-shopping-warning';unconfirmed.setAttribute('role','status');
+      unconfirmed.textContent='Доставка Перекрёстка по выбранному адресу не подтверждена. Сравнение недоступно, список можно сохранить.';coverage.append(unconfirmed);
       addInformation('Перекрёсток: подключённый каталог доставки в Москве. Доставка по твоему адресу не подтверждена. Цены в физическом магазине могут отличаться.');
       if(!model.alternatives.every(store=>store.complete&&store.allRecent)){
         const missing=document.createElement('p');missing.className='guided-shopping-warning';missing.setAttribute('role','status');missing.textContent='Сравнение свежих сумм пока недоступно: есть пропуски или цены старше часа.';coverage.append(missing);
         addInformation('Старую цену не считаем сегодняшней. Недостающая карточка не доказывает отсутствие товара в магазине.');
       }
-      if(model.draftComparison?.kind==='fresh'){
+      if(model.draftComparison?.kind==='fresh' && !model.alternatives.some(store=>store.retailerId==='perekrestok')){
         const comparison=document.createElement('p');comparison.className='guided-shopping-difference';comparison.setAttribute('role','status');
         const lowerStore = model.alternatives.find(store => store.storeName === model.draftComparison.lowerStoreName);
         comparison.textContent=model.draftComparison.differenceMinor===0?'Суммы товаров в этих вариантах совпали.':
@@ -73,7 +75,9 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
         coverage.append(comparison);
       }
     }
-    addInformation('В магазинах могут быть разные марки и упаковки. Приоритет полному списку и свежим наблюдениям, затем меньшей сумме среди полученных карточек. Это не сравнение одинаковых SKU и не доказательство самого дешёвого магазина района.');
+    addInformation(model.draftComparison?.kind==='delivery_unconfirmed'
+      ? 'Варианты показаны для просмотра. Доставка по выбранному адресу не подтверждена.'
+      : 'В магазинах могут быть разные марки и упаковки. Приоритет полному списку и свежим наблюдениям, затем меньшей сумме среди полученных карточек. Это не сравнение одинаковых SKU и не доказательство самого дешёвого магазина района.');
     coverage.append(information); root.append(coverage);
   } else if (information.childElementCount > 1) {
     root.append(information);

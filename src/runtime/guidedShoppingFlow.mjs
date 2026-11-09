@@ -3,7 +3,7 @@ import { validWeeklyCardSource,createWeeklyRetailCatalogPort,PEREKRESTOK_WEEKLY_
 import { extractShoppingDelta, isShoppingProductRejected } from '../intelligence/shoppingConversation.mjs';
 import { retailSelectionUrl } from '../intelligence/retailProductSelection.mjs';
 import { getReviewedRetailBasketProduct } from '../catalog/reviewedRetailBasket.mjs';
-import { quoteCatalogDraft, suggestedCatalogQuantity, suggestedCatalogQuantityForIntent, catalogPurchaseUnit, economicalCatalogCards, rankCatalogDrafts, compareCatalogDraftAlternatives } from '../core/catalogDraft.mjs';
+import { quoteCatalogDraft, suggestedCatalogQuantity, suggestedCatalogQuantityForIntent, catalogPurchaseUnit, economicalCatalogCards, rankCatalogDrafts } from '../core/catalogDraft.mjs';
 import { extractShoppingNeedContext } from '../intelligence/shoppingNeedContext.mjs';
 
 const clean = value => String(value ?? '').toLowerCase().replaceAll('ё', 'е').replace(/\s+/gu, ' ').trim().replace(/[.!?]+$/u, '');
@@ -47,7 +47,7 @@ export function createGuidedShoppingFlow(options) {
     state = view(plan.stage === 'confirmed' ? 'Корзина собрана. Посмотрим магазины?' : 'Посмотри, что получилось.',
       `${messageText}${budget}${missing.length ? ` Ещё нужно подобрать ${missing.length} поз. — список под таблицей.` : ''} Цены показаны на дату наблюдения; наличие неизвестно.`, {
         guidedShopping: { quote, comparison, storeName: plan.storeName, confirmed: plan.stage === 'confirmed',
-          draftComparison:deliveryAlternatives?compareCatalogDraftAlternatives(plan.drafts,{nowMs:options.now?.()??Date.now()}):null,
+          draftComparison:deliveryAlternatives?{kind:'delivery_unconfirmed'}:null,
           mode: plan.mode, location: plan.location, alternatives: plan.alternatives ?? [],
           people: plan.people, days: plan.days },
         conversationChoices: choices(plan.stage === 'confirmed' ? [deliveryAlternatives?'Сравнить варианты':'Сравнить магазины', 'Изменить список']
@@ -150,8 +150,15 @@ export function createGuidedShoppingFlow(options) {
     if (key !== contextKey()) { plan.rows = []; plan.stage = 'outline'; return state = view('Магазин изменился.', 'Заново подберём товары для выбранного адреса.', { conversationChoices: choices(['Подобрать товары и цены']) }); }
     drafts.push({ scope: candidateScope, rows });
     }
-    const ranked = rankCatalogDrafts(drafts, { nowMs: options.now?.() ?? Date.now() });
-    const selected = ranked[0];
+    // Delivery coverage is unknown; never use its prices to select a cheaper
+    // option for a location. Keep the explicitly selected source first.
+    const deliveryUnconfirmed = drafts.some(draft => draft.scope.retailerId === 'perekrestok');
+    const ranked = deliveryUnconfirmed
+      ? drafts.map(draft => ({...draft, quote:quoteCatalogDraft(draft.rows, {nowMs:options.now?.()??Date.now()})}))
+      : rankCatalogDrafts(drafts, { nowMs: options.now?.() ?? Date.now() });
+    const selected = deliveryUnconfirmed
+      ? ranked.find(draft => draft.scope.storeId === scope?.storeId) ?? ranked[0]
+      : ranked[0];
     if (nearby.length) {
       if (typeof options.selectStore !== 'function' || options.selectStore(selected.scope) !== true) return state = view('Выберем адрес.', 'Не удалось переключить адрес каталога. Старые карточки не добавлены; список сохранился.');
       scope = options.getContext?.();
@@ -317,7 +324,7 @@ export function createGuidedShoppingFlow(options) {
         plan.alternatives=[];return table('Корзина изменилась после подбора. Старые варианты больше не описывают её состав; обнови подбор перед сравнением.');
       }
       if(plan.alternatives?.some(a=>a.retailerId==='perekrestok'))
-        return table('Сопоставляю варианты по одним продуктовым группам. Марки и фасовки могут отличаться — открой каждый вариант перед добавлением. Доставку и сборы в сумму не включаю.');
+        return table('Доставка Перекрёстка по выбранному адресу пока не подтверждена, поэтому сравнить магазины нельзя. Варианты и список сохранены.');
       const quote = quoteCatalogDraft(plan.rows, { nowMs: options.now?.() ?? Date.now() });
       if (!quote.basket.length) return table('Для сравнения пока нет точно выбранных товаров.');
       const token = version, scope = contextKey(), base = JSON.stringify(options.basket.getSnapshot());

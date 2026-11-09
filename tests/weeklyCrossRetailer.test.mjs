@@ -41,11 +41,17 @@ test('explicit two-network request preserves address and delivery source, and re
   await flow.handle('Ограничений нет');
   let model=flow.getState().presentation.guidedShopping;
   assert.equal(model.alternatives.length,2);assert.equal(model.people,3);assert.equal(model.days,7);
+  assert.equal(model.draftComparison.kind,'delivery_unconfirmed');
+  assert.match(model.storeName,/Магнит/u);
   assert.ok(calls.length>0&&calls.every(s=>s.storeId===delivery.storeId));
   assert.equal(basket.getSnapshot().length,0);
+  await flow.handle('Сравнить варианты');
+  assert.match(flow.getState().presentation.message,/доставка Перекрёстка.*не подтверждена/iu);
+  assert.equal(flow.getState().presentation.guidedShopping.draftComparison.kind,'delivery_unconfirmed');
   await flow.handle('Показать вариант perekrestok');
   model=flow.getState().presentation.guidedShopping;
   assert.equal(model.storeName,delivery.storeName);
+  assert.equal(model.draftComparison.kind,'delivery_unconfirmed');
   assert.ok(model.quote.lines.every(r=>!r.card||r.card.retailerId==='perekrestok'));
   await flow.handle('Добавить показанное');
   assert.ok(basket.getSnapshot().length>0);

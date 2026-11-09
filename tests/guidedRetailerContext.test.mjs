@@ -89,7 +89,7 @@ test('unknown packs cannot inherit a different SKU count or enter a comparable d
   await flow.handle('а в Перекрёстке?');
   const row=model(flow).quote.lines.find(row=>row.group.key==='buckwheat');
   assert.equal(row.quantityReview,true);assert.notEqual(row.quantity,9);
-  assert.equal(model(flow).draftComparison.kind,'incompatible');
+  assert.equal(model(flow).draftComparison.kind,'delivery_unconfirmed');
   assert.match(flow.getState().presentation.message,/фасовки отличаются/u);
   await flow.handle('Добавить показанное');assert.deepEqual(basket.getSnapshot(),[]);
   await flow.handle('а в Магните?');
