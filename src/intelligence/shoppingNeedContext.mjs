@@ -10,8 +10,8 @@ const count = `(?:${Object.keys(words).join("|")}|${numeric})`;
 const collectivePeople = {двое:2,трое:3,четверо:4,пятеро:5,шестеро:6,семеро:7,восьмеро:8,девятеро:9,десятеро:10};
 const otherCountUnit = '(?:минут[а-я]*|час[а-я]*|день|дня|дней|недел[а-я]*|месяц[а-я]*|кг|грамм[а-я]*|килограмм[а-я]*|литр[а-я]*|мл|л|упаков[а-я]*|штук[а-я]*)';
 const peopleNoun = "(?:человек(?:а)?|людей|персон(?:ы)?|чел\\.?|взрослых)";
-const people = new RegExp(`(?<![а-яa-z0-9])(?:(?:на|для)\\s+((?:одного|одну|двоих|двух|троих|трех|четверых|четырех|пятерых|пяти|шестерых|шести)(?:\\s+${peopleNoun})?|${numeric}\\s+${peopleNoun})|нас\\s+(${Object.keys(collectivePeople).join('|')}|${numeric})(?:\\s+${peopleNoun})?(?!\\s+${otherCountUnit}(?=$|[\\s,;.!?])))(?=$|[\\s,;.!?])`, "giu");
-const period = new RegExp(`(?<![а-яa-z0-9])(?:на\\s+(${count})\\s+(день|дня|дней|неделю|недели|недель|недельку|недельки|неделек)|(?:на|всю)\\s+(неделю|недельку))(?=$|[\\s,;.!?])`, "giu");
+const people = new RegExp(`(?<![а-яa-z0-9])(?:(?:на|для)\\s+((?:одного|одну|двоих|двух|троих|трех|четверых|четырех|пятерых|пяти|шестерых|шести)(?:\\s+${peopleNoun})?|${numeric}\\s+${peopleNoun})|нас\\s+(${Object.keys(collectivePeople).join('|')}|${numeric})(?:\\s+${peopleNoun})?(?!\\s+${otherCountUnit}(?=$|[\\s,:;.!?])))(?=$|[\\s,:;.!?])`, "giu");
+const period = new RegExp(`(?<![а-яa-z0-9])(?:на\\s+(${count})\\s+(день|дня|дней|неделю|недели|недель|недельку|недельки|неделек)|(?:на|всю)\\s+(неделю|недельку))(?=$|[\\s,:;.!?])`, "giu");
 const number = value => words[value] ?? collectivePeople[value] ?? Number(value.replace(",", "."));
 
 export function extractShoppingNeedContext(text) {

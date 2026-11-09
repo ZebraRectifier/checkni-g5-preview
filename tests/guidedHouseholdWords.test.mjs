@@ -159,3 +159,28 @@ test('ambiguous food lists request clarification without mutating saved conditio
   assert.deepEqual(result.delta.reject,[],text);assert.deepEqual(result.delta.want,[],text);assert.deepEqual(result.delta.unset,[],text);
  }
 });
+
+
+test('colon separates explicit household and period from the following list',async()=>{
+ const {extractShoppingNeedContext}=await import('../src/intelligence/shoppingNeedContext.mjs');
+ for(const input of ['на неделю для троих: рис и хлеб','для троих: рис на неделю','на 7 дней: для 3 человек: рис']) {
+  const result=extractShoppingNeedContext(input);
+  assert.equal(result.facts.peopleCount?.value,3,input);assert.equal(result.facts.shoppingDays?.value,7,input);
+ }
+ for(const input of ['нас 3 кг: рис','на 2 дня: продукты','ирис для троихлетних'])
+  assert.equal(extractShoppingNeedContext(input).facts.peopleCount,undefined,input);
+ assert.ok(extractShoppingNeedContext('для троих: для четверых: рис').clarification);
+});
+
+test('guided groups recognize exact grammatical rice forms, not irises or adjectives',async()=>{
+ const {createGuidedShoppingPlan}=await import('../src/intelligence/guidedShoppingPlan.mjs');
+ const {createShoppingConversation}=await import('../src/intelligence/shoppingConversation.mjs');
+ for(const form of ['рис','риса','рису','рисом','рисе']) {
+  const plan=createGuidedShoppingPlan('Меню: хлеб с '+form,[],createShoppingConversation());
+  assert.ok(plan.groups.some(row=>row.key==='rice'),form);
+ }
+ for(const form of ['ирис','ириса','рисовый','рисование','кипарис']) {
+  const plan=createGuidedShoppingPlan('Меню: хлеб и '+form,[],createShoppingConversation());
+  assert.ok(!plan.groups.some(row=>row.key==='rice'),form);
+ }
+});
