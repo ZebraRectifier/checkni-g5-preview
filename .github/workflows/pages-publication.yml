@@ -97,7 +97,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     permissions:
       contents: read
       pages: write
@@ -125,3 +125,5 @@ jobs:
       - name: Publish verified tree
         id: deployment
         uses: actions/deploy-pages@v5
+        with:
+          timeout: 1800000
