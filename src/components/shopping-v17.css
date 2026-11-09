@@ -245,3 +245,35 @@ body.pixel-workspace .catalog-empty-actions button {
 }
 body.pixel-workspace .catalog-empty-actions button:hover { border-color: var(--accent); }
 body.pixel-workspace .catalog-empty-actions .text-button { color: var(--accent); }
+
+body.pixel-workspace #pixel-storefront #retail-category-grid.is-expanded {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 8px;
+  overflow: visible;
+  scroll-margin-top: 80px;
+}
+
+body.pixel-workspace #pixel-storefront #retail-category-grid.is-expanded .retail-category-button {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 8px;
+  min-height: 48px;
+  height: auto;
+  padding: 8px 10px;
+  text-align: start;
+}
+
+body.pixel-workspace #pixel-storefront #retail-category-grid.is-expanded .retail-category-button strong {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+body.pixel-workspace #pixel-storefront #retail-category-grid.is-expanded .retail-category-button > span:not(.pixel-category-image) {
+  grid-column: 2;
+}
+
+body.pixel-workspace #pixel-storefront #retail-category-grid.is-expanded .retail-category-arrow {
+  display: none;
+}

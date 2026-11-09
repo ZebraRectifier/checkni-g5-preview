@@ -328,6 +328,14 @@ test('METRO selected address exposes its forty-eighth root and retains that addr
  await expect(page.locator('.pixel-store-address')).toContainText('Лобня');
  await page.getByRole('button',{name:'Все категории',exact:true}).click();
  await expect(page.locator('#retail-category-grid [data-category-id]')).toHaveCount(48);
+ const categories = page.locator('#retail-category-grid');
+ await expect(categories.locator('button').first()).toBeFocused();
+ const layout = await categories.evaluate(grid => ({
+   rows: new Set([...grid.querySelectorAll('button')].map(button => button.offsetTop)).size,
+   overflow: grid.scrollWidth > grid.clientWidth
+ }));
+ expect(layout.rows).toBeGreaterThan(1);
+ expect(layout.overflow).toBe(false);
  await page.locator('#retail-category-grid [data-category-id="900047"]').click();
  await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
  await expect(page.locator('#product-grid')).toContainText('149,90 ₽');
