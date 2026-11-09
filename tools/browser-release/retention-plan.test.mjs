@@ -10,3 +10,8 @@ test('requires confirmed live and previous deployments',()=>{for(const key of ['
 test('stage before activation retains both old and new',()=>{const s=sample();s.active=b;assert.ok(planRetention(s).keep.includes(a));});
 test('unknown release after stage blocks filtering',()=>{const s=sample();s.inventory.push(id(6));assert.throws(()=>planRetention(s));});
 test('rejects duplicate and malformed ids',()=>{for(const change of [s=>s.inventory.push(a),s=>s.active='bad']){const s=sample();change(s);assert.throws(()=>planRetention(s));}});
+
+test('retains rollback even if it is not active or directly referenced',()=>{const s=sample();s.references=[];assert.ok(planRetention(s).keep.includes(c));});
+test('previous distinct from actual live retained across activation',()=>{const s=sample();s.active=a;s.deployed=b;s.previous=c;const p=planRetention(s);assert.ok([a,b,c].every(v=>p.keep.includes(v)));});
+test('cannot omit an explicit reference after publication',()=>{const s=sample();assert.ok(planRetention(s).keep.includes(e));});
+test('refuses duplicate staged or published lifecycle entries',()=>{for(const key of ['staged','published']){const s=sample();s[key].push(s[key][0]);assert.throws(()=>planRetention(s));}});
