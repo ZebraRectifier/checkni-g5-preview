@@ -405,6 +405,7 @@ test('guided amount plus no restrictions preserves previous household and does n
  assert.equal(memory.facts.shoppingDays.value,14);
  await flow.run('Без лимита');
  await flow.run('Подобрать товары и цены');
+ assert.ok(flow.getState().presentation.guidedShopping, JSON.stringify(flow.getState().presentation));
  const line=flow.getState().presentation.guidedShopping.quote.lines.find(row=>row.group.key==='mince');
  assert.deepEqual(line.quantityIntent,{dimension:'g',amount:2000});
  assert.equal(line.quantity,4);
