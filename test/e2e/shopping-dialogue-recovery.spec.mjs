@@ -510,6 +510,7 @@ test('provider 503 offers local basket without another AI request', async ({page
  await expect(status(page)).not.toContainText('Сервис советов сейчас не ответил');
  await expect(status(page)).toContainText(/бюджет|магазин|продукт/u);
  await submit(page,'Без лимита');
+ await submit(page,'Без свинины');
  await expect(status(page)).toContainText('Рис');
  await expect(status(page)).toContainText('Хлеб');
  await expect(status(page)).not.toContainText('Свинина');
