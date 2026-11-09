@@ -547,7 +547,14 @@ export function createShoppingConversationFlow(options) {
     state.result.providerAccepted = Boolean(reply);
     rememberAdvice(text, message);
     lastAdviceFailure = reply ? null : { text, message, history: retryHistory };
-    if (!reply) state.presentation.conversationChoices = [{ label: 'Повторить вопрос', text }];
+    if (!reply) {
+      state.presentation.conversationChoices = [{ label: 'Повторить вопрос', text }];
+      // When advice is down, let a shopping goal continue locally without
+      // a second provider request. The existing guided flow retains memory.
+      if (typeof options.searchGuidedCatalog === 'function' && (newGoal
+          || adviceHistory.some(row => row.role === 'user' && isShoppingPlanningRequest(row.text))))
+        state.presentation.conversationChoices.push({ label: 'Собрать корзину', text: 'Собрать' });
+    }
     else if (typeof options.searchGuidedCatalog === "function" && (isShoppingPlanningRequest(text)
         || adviceHistory.some(row => row.role === "user" && isShoppingPlanningRequest(row.text)))) {
       state.presentation.headline = "Давай подберём продукты.";

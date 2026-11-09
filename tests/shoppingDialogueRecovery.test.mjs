@@ -492,3 +492,39 @@ test('provider failure does not repeat budget after the buyer defers it', async 
   assert.equal(s.flow.getConversation().facts.shoppingDays.value, 14);
   assert.deepEqual(s.basket.getSnapshot(), []);
 });
+
+
+test('failed shopping advice offers local guided continuation without a second provider call', async () => {
+ for (const code of ['provider_timeout','provider_upstream_unavailable','provider_advice_commercial_claim']) {
+  const s=session(async()=>({kind:'unavailable',code}),{searchGuidedCatalog:async()=>({kind:'catalog',products:[]})});
+  const first=await s.send('Составь меню на две недели для троих без свинины');
+  const choice=first.presentation.conversationChoices.find(x=>x.text==='Собрать');
+  assert.ok(choice,JSON.stringify({code,first}));assert.equal(s.advice.length,1);
+  const before=s.basket.getSnapshot();
+  const next=await s.send(choice.text);
+  assert.equal(s.advice.length,1);assert.deepEqual(s.proposals,[]);assert.deepEqual(s.basket.getSnapshot(),before);
+  assert.equal(s.flow.getConversation().facts.peopleCount.value,3);
+  assert.equal(s.flow.getConversation().facts.shoppingDays.value,14);
+  assert.ok(s.flow.getConversation().rejected.pork);
+  assert.notEqual(next.status,'loading');
+ }
+});
+
+test('unrelated advice failures and absent guided catalog do not offer offline basket', async () => {
+ const noCatalog=session(async()=>({kind:'unavailable',code:'provider_timeout'}));
+ const first=await noCatalog.send('Нужна еда на две недели для троих');
+ assert.ok(!first.presentation.conversationChoices.some(x=>x.text==='Собрать'));
+ const unrelated=session(async()=>({kind:'unavailable',code:'provider_timeout'}),{searchGuidedCatalog:async()=>({kind:'catalog',products:[]})});
+ const second=await unrelated.send('Посоветуй рыбу на ужин');
+ assert.ok(!(second.presentation.conversationChoices??[]).some(x=>x.text==='Собрать'));
+});
+
+
+test('offline guided continuation keeps explicit product wishes when provider fails', async()=>{
+ const {createGuidedShoppingPlan}=await import('../src/intelligence/guidedShoppingPlan.mjs');
+ const {createShoppingConversation}=await import('../src/intelligence/shoppingConversation.mjs');
+ const goal='Составь меню на неделю для троих с рисом и хлебом';
+ const plan=createGuidedShoppingPlan(goal,[{role:'user',text:goal},{role:'assistant',text:'Сервис советов сейчас не ответил. Какой общий бюджет?'}],createShoppingConversation());
+ assert.ok(plan.groups.some(row=>row.key==='rice'),'rice lost');
+ assert.ok(plan.groups.some(row=>row.key==='bread'),'bread lost');
+});
