@@ -186,6 +186,7 @@ test('the shared publisher packages releases, validates activation and rechecks 
   assert.match(workflow, /RETENTION_DIGEST: \$\{\{ needs\.build\.outputs\.retention_digest \}\}/);
   const dynamic = await fs.readFile(new URL('../tools/browser-release/dynamic-snapshot.mjs', import.meta.url), 'utf8');
   assert.match(dynamic, /open_pr_changed_during_scan/);
+  assert.match(dynamic, /requireCompletePrFiles/);
   assert.match(dynamic, /requireSnapshotMatch\(expected,digest\)/);
   assert.match(workflow, /if \(!await activationState\('_site'\)\) throw Error\('active_release_required'\)/);
   assert.equal((workflow.match(/inputs\.site_commit \|\| github\.event\.pull_request\.head\.sha \|\| github\.sha/g) || []).length, 2);
