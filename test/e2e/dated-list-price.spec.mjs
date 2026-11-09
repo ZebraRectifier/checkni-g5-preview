@@ -45,7 +45,8 @@ for(const [retailer,raw,addressId,query] of [['globus',globus,'5011','Новор
   await expect(card.locator('.product-observed-at')).toHaveAttribute('datetime',new Date(raw.observed_at).toISOString());
   const readonly=page.locator(`[data-product-id="retail:${retailer}:${raw.store_id}:900000001"] .add-button`);
   await expect(readonly).toBeDisabled();
-  await expect(readonly).toHaveText(retailer === 'magnit' ? 'Цена устарела · просмотр' : 'Пока только просмотр');
+  await expect(readonly).toHaveText('Цена устарела · просмотр');
+  await expect(readonly).toHaveAttribute('aria-label', /цена устарела, только просмотр/u);
   if (retailer === 'magnit') {
    await expect(readonly).toHaveAttribute('aria-label', /цена устарела, только просмотр/u);
    await expect(page.locator(`[data-product-id="retail:${retailer}:${raw.store_id}:900000001"] .product-observed-at`))
