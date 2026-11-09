@@ -65,9 +65,15 @@ export function shoppingDialogueRecoveryQuestion(memory, code, turn = null) {
   const onTopic = turn && !isShoppingPlanningRequest(turn.text) && (specific(turn.text)
     || !previousQuestions.some(row => isShoppingPlanningRequest(row.text)) && previousQuestions.some(row => specific(row.text)));
   if (onTopic) return `${notice} Вопрос и контекст сохранены. Можно повторить вопрос или продолжить уточнять эту же тему.`;
+  const history = turn?.history ?? [];
+  const budgetDeferred = history.some((row, index) =>
+    row.role === 'assistant' && /бюджет|лимит/iu.test(row.text)
+    && /не знаю|не решил|не решила|пока не определ|ещ[её] не определ|без бюджета|не важен/iu.test(
+      index + 1 < history.length ? history[index + 1]?.text ?? '' : turn?.text ?? ''
+    ));
   const question = !memory.facts.peopleCount ? 'На сколько человек нужна еда?'
     : !memory.facts.shoppingDays ? 'На сколько дней планируем покупки?'
-      : !memory.facts.budgetMinor ? 'Какой общий бюджет на весь срок?'
+      : !memory.facts.budgetMinor && !budgetDeferred ? 'Какой общий бюджет на весь срок?'
         : 'Какие продукты особенно хочется включить, а какие исключить?';
   return `${notice} Твои условия сохранила. Продолжим: ${question}`;
 }

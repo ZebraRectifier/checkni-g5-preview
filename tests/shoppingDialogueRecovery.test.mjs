@@ -480,3 +480,15 @@ test('a conversational turn preserves the persistent needs record across reload'
   assert.deepEqual(s.basket.getSnapshot(), []);
   assert.deepEqual(restored.basket.getSnapshot(), []);
 });
+
+test('provider failure does not repeat budget after the buyer defers it', async () => {
+  const s = session(async () => ({ kind: 'unavailable', code: 'provider_advice_commercial_claim' }));
+  const first = await s.send('Нужна еда на две недели для троих');
+  assert.match(first.presentation.message, /бюджет/u);
+  const second = await s.send('Бюджет пока не решил');
+  assert.doesNotMatch(second.presentation.message, /Какой общий бюджет/u);
+  assert.match(second.presentation.message, /Какие продукты/u);
+  assert.equal(s.flow.getConversation().facts.peopleCount.value, 3);
+  assert.equal(s.flow.getConversation().facts.shoppingDays.value, 14);
+  assert.deepEqual(s.basket.getSnapshot(), []);
+});
