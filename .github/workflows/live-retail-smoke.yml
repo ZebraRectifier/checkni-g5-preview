@@ -237,7 +237,7 @@ jobs:
 
           (async () => {
             const { readFileSync } = require("node:fs");
-            const { pinnedRuntimePrefix } = await import("./tools/live-retail-smoke-contract.mjs");
+            const { pinnedRuntimePrefix, installGeolocationProbe } = await import("./tools/live-retail-smoke-contract.mjs");
             const runtimePrefix = pinnedRuntimePrefix(readFileSync("index.html", "utf8"));
             async function assertPublishedRuntime(page) {
               const entry = await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src");
@@ -261,7 +261,13 @@ jobs:
               });
               const check = await nearby.newPage();
               check.setDefaultTimeout(15000);
-              let geocoderCalls = 0;
+              let geocoderCalls = 0, directorySuccesses = 0;
+              // Observe from navigation onward: automatic location can cache the directory.
+              check.on("response", response => {
+                if (new URL(response.url()).pathname.endsWith("/data/nearbyGroceryStores.json")
+                    && response.request().method() === "GET" && response.ok()) directorySuccesses++;
+              });
+              await check.addInitScript(installGeolocationProbe);
               await check.route("**/*", route => {
                 const target = new URL(route.request().url());
                 if (target.pathname.endsWith("/functions/v1/nearby-address")) geocoderCalls++;
@@ -274,11 +280,10 @@ jobs:
                 await chooseStore(check,"#retail-store-card");
                 await details(check,true);
                 await check.locator("#nearby-shopping").getByRole("button",{name:"📍 Найти магазины рядом",exact:true}).click();
-                const directory = check.waitForResponse(response =>
-                  new URL(response.url()).pathname.endsWith("/data/nearbyGroceryStores.json")
-                  && response.request().method() === "GET",{timeout:15000});
+                const beforeGeo = await check.evaluate(() => window.__checkniGeoProbe.calls);
                 await check.locator("#nearby-locate").click();
-                assert((await directory).ok(),"Published nearby directory did not load");
+                await check.waitForFunction(before => window.__checkniGeoReady(before), beforeGeo, {timeout:15000});
+                assert(directorySuccesses > 0,"Published nearby directory did not load successfully");
                 await check.locator("#nearby-radius").selectOption("20");
                 const connected = check.locator("#nearby-connected-only");
                 if (await connected.isChecked()) await connected.uncheck();
