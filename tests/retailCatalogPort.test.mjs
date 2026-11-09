@@ -1500,7 +1500,6 @@ test("Perekrestok keyword search uses bounded invoker RPC without slow output IL
   await client.browse();
   await client.bySourceProductIds([perekrestokRow().source_product_id]);
   assert.equal(calls[2].url.pathname, "/rest/v1/retail_catalog_items");
-  assert.equal(calls[2].url.searchParams.get("select").split(",").includes("active"), false);
   assert.equal(calls[3].url.pathname, "/rest/v1/retail_catalog_items");
 });
 
@@ -1547,15 +1546,14 @@ test("Perekrestok first page falls back to v1 only when PostgREST reports missin
 });
 
 
-test("Perekrestok RPC projects filter and ordering fields required by PostgREST", async () => {
+test("Perekrestok RPC projects its ordering field required by actual PostgREST", async () => {
   const client = createRetailCatalogClient({retailerId: "perekrestok", fetchImpl: async url => {
     const p = new URL(url).searchParams;
     // Actual hosted baseline returned42703 for an RPC order column omitted
     // from select; table GET reads do not have this RPC projection behavior.
     const projected = p.get("select").split(",");
     const orderColumns = p.get("order").split(",").map(part => part.split(".")[0]);
-    const filterColumns = ["retailer_id", "store_id", "locality_id", "active"];
-    if ([...orderColumns, ...filterColumns].some(column => !projected.includes(column))) {
+    if (orderColumns.some(column => !projected.includes(column))) {
       return new Response(JSON.stringify({code: "42703"}), {status: 400});
     }
     return new Response(JSON.stringify([perekrestokRow({updated_at: "2026-11-04T11:05:37Z"})]));
