@@ -1,0 +1,7 @@
+# Follow-up after one-shot deployment: draft design
+
+Do not merge #288 until this follow-up is implemented, reviewed, tested, and ready to ship immediately after its deployment. #288 deliberately pins first parent, live root and open PR inventory; any later feed commit would fail its one-shot guard.
+
+The successor must retain the seven reviewed trees, dynamically include every tree added to main since d68e6482a7ebfce01e4f54287f5e40cb259ab99b, both actual live root IDs and the current main active ID, explicit tracked URL IDs, and IDs referenced by all open PRs when those trees exist on main. It must reject incomplete API pagination, unknown PR head, inaccessible live, mismatched root pages, missing manifests, and any changed snapshot between build and deploy. Include stage candidates before CDN validation; preserve both old live and new active across activation and CDN propagation. Source and Git history stay unchanged. Existing data-only feed guard and both current-main checks remain in force.
+
+A new, independently reviewed retention policy with exact-head CI must replace the one-shot guard; simply deleting it or falling back to the old full archive can reintroduce stale or timed-out deployments. Validate feed-triggered build and deploy guards without mutating feeds; demonstrate staging and rollback in an isolated preview. External old release URLs omitted from the artifact can still break. This branch currently contains no implementation and must not be merged.
