@@ -494,3 +494,19 @@ test('a new distinct message is not blocked while the previous provider request 
  await expect(page.locator('#shopping-dialogue-history').locator('..')).toContainText('Посоветуй овощи для лёгкого ужина.');
  releaseFirst();expect(await savedBasket(page)).toBe(before);
 });
+
+
+test('provider 503 offers local basket without another AI request', async ({page}) => {
+ let requests=0;
+ await page.route('**/functions/v1/ai-basket-proposal',route=>{requests++;return route.fulfill({status:503,json:{kind:'unavailable',code:'provider_upstream_unavailable'}})});
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ await openHory(page);
+ const before=await savedBasket(page);
+ await submit(page,'Нужна еда на две недели для троих без свинины');
+ await expect(status(page)).toContainText('бюджет');
+ await status(page).getByRole('button',{name:'Собрать корзину',exact:true}).click();
+ await expect(status(page)).not.toContainText('Сервис советов сейчас не ответил');
+ await expect(status(page)).toContainText(/бюджет|магазин|продукт/u);
+ expect(requests).toBe(1);
+ expect(await savedBasket(page)).toBe(before);
+});
