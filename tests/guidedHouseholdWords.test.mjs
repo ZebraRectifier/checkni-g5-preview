@@ -132,3 +132,19 @@ test('mixed explicit or ambiguous budget amount is kept or explicitly clarified,
  const result=advanceGuidedIntake(plan,'не знаю, но бюджет 5000 рублей',memory);
  assert.equal(result.issue,undefined);assert.equal(plan.budgetMinor,500000);
 });
+
+test('adjacent wishes and refusals keep their food scopes separate',()=>{
+ const memory={facts:{},rejected:[],wishes:[],exceptions:[]};
+ for(const [text,wanted,rejected] of [
+  ['не знаю, хочу яблоки и не хочу молоко','apples','milk'],
+  ['не знаю, но без яблок, хочу молоко','milk','apples'],
+  ['не знаю, без яблок и хочу молоко','milk','apples'],
+  ['не знаю, хочу яблоки, но не молоко','apples','milk']
+ ]){
+  const plan={question:'budget',groups:[],people:4,days:10,budgetMinor:undefined};
+  const result=advanceGuidedIntake(plan,text,memory);
+  assert.equal(result.issue,undefined,text);assert.equal(plan.budgetMinor,null,text);
+  assert.ok(result.delta.reject.includes(rejected),text);assert.ok(!result.delta.reject.includes(wanted),text);
+  assert.ok(plan.groups.some(g=>g.key===wanted),text);assert.ok(!plan.groups.some(g=>g.key===rejected),text);
+ }
+});

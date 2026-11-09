@@ -100,21 +100,27 @@ export function advanceGuidedIntake(plan, text, memory) {
     delta.unresolved = delta.unresolved.filter(row => !/бюджет|лимит/u.test(row));
   }
   if (deferBudget) {
-    // Remove household fragments before extracting exclusions, so «без рыбы,
-    // нас 3» does not turn the household into an unknown food constraint.
-    delta.unresolved = extractShoppingDelta(need.text).unresolved;
-    let wish = /(?:^|[,;])\s*(?:но\s+)?хочу\s+([^.!;]+)/u.exec(value)?.[1];
-    const contrast = wish && /^не\s+(.+?),\s*а\s+(.+)$/u.exec(wish);
-    if (contrast) {
-      const refusal=extractShoppingDelta('не хочу '+contrast[1]);
-      for(const key of refusal.reject) if(!delta.reject.includes(key)){delta.reject.push(key);delta.rejectScopes[key]='goal';}
-      wish=contrast[2];
+    // Parse individual positive/negative clauses: a refusal must not absorb
+    // an adjacent wish. Household fragments are removed by the existing
+    // context parser before inspecting food constraints.
+    const rest=clean(need.text).replace(/^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а|ся|ась)?)(?:\s+пока)?[,.!]?\s*/u,'');
+    const clauses=rest.replace(/\s+и\s+(?=не\s|без\s|хочу\s)/gu,', ')
+      .replace(/\s+но\s+(?=не\s|без\s|хочу\s)/gu,', ')
+      .split(/[,;]/u).map(part=>part.trim().replace(/^но\s+/u,'')).filter(Boolean);
+    delta.reject=[];delta.rejectScopes={};delta.want=[];delta.unresolved=[];
+    const wantedGroups=[];
+    for(let clause of clauses){
+      clause=clause.replace(/^хочу\s+не\s+/u,'не хочу ').replace(/^хочу\s+без\s+/u,'без ')
+        .replace(/^а\s+/u,'хочу ').replace(/^не\s+(?!хочу\s)/u,'не хочу ');
+      const part=extractShoppingDelta(clause);
+      for(const key of part.reject)if(!delta.reject.includes(key)){delta.reject.push(key);delta.rejectScopes[key]=part.rejectScopes[key]??'goal';}
+      for(const key of part.want)if(!delta.want.includes(key))delta.want.push(key);
+      for(const item of part.unresolved)if(!delta.unresolved.includes(item))delta.unresolved.push(item);
+      if(/^хочу\s/u.test(clause)) wantedGroups.push(...GROUPS.filter(group=>group.pattern.test(clause)));
     }
-    if (wish && /^(?:без|не)\s/u.test(wish)) wish='';
-    if (wish) wish=wish.split(/\s+(?:но\s+)?без\s+/u)[0];
     delta.want=delta.want.filter(key=>!delta.reject.includes(key));
     plan.groups=plan.groups.filter(group=>!delta.reject.includes(group.key));
-    if (wish) for (const group of GROUPS.filter(group => group.pattern.test(wish)))
+    for (const group of wantedGroups)
       if (!delta.reject.includes(group.key) && !plan.groups.some(existing => existing.key === group.key)) plan.groups.push({...group});
     plan.groups = plan.groups.slice(0,16);
   }

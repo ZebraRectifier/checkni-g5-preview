@@ -338,7 +338,10 @@ test('compound deferred budget with fish exclusion proceeds without inventing a 
 
 for(const [answer,included,excluded] of [
  ['не знаю, но хочу не яблоки, а молоко','Молоко','Яблоки'],
- ['не знаю, но хочу без молока','Яблоки','Молоко']
+ ['не знаю, но хочу без молока','Яблоки','Молоко'],
+ ['не знаю, хочу яблоки и не хочу молоко','Яблоки','Молоко'],
+ ['не знаю, но без яблок, хочу молоко','Молоко','Яблоки'],
+ ['не знаю, хочу яблоки, но не молоко','Яблоки','Молоко']
 ]) test(`budget deferral preserves explicit food exclusion: ${answer}`,async({page})=>{
  await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
  await submit(page,'Собери продукты на неделю для четверых');await expect(status(page)).toContainText('общий бюджет');
