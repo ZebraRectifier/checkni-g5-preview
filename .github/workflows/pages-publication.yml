@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    paths: ['.github/workflows/pages-publication.yml', '.github/workflows/okey-public-data.yml', '.github/workflows/pyaterochka-public-data.yml', 'tools/browser-release/publication-guard.mjs', 'tests/dataPublication.test.mjs']
+    paths: ['.github/workflows/pages-publication.yml', '.github/workflows/okey-public-data.yml', '.github/workflows/pyaterochka-public-data.yml', 'tools/browser-release/publication-guard.mjs', 'tools/browser-release/one-shot-*.mjs', 'tools/browser-release/one-shot-inventory.json', 'tests/dataPublication.test.mjs']
   workflow_dispatch:
     inputs:
       site_commit:
@@ -25,6 +25,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'production' }}
@@ -56,7 +57,7 @@ jobs:
           node-version: '22'
           package-manager-cache: false
       - name: Verify publication guard regressions
-        run: node --test tests/dataPublication.test.mjs
+        run: node --test tests/dataPublication.test.mjs tools/browser-release/one-shot-snapshot.test.mjs
       - name: Verify the exact checkout and data-only boundary
         id: scope
         shell: bash
@@ -67,14 +68,18 @@ jobs:
       - name: Require the exact event SHA and current main before packaging
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: node tools/browser-release/publication-guard.mjs --deployment
-      - name: Package tracked website files without build and test tooling
+      - name: Guard reviewed one-shot live and open PR snapshot
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node tools/browser-release/one-shot-guard.mjs
+      - name: Package reviewed one-shot compact tree
         shell: bash
         run: |
           set -euo pipefail
-          mkdir _site
-          git archive --format=tar HEAD -- .nojekyll index.html prices.html deployment.json src releases release artifacts | tar -xf - -C _site
-          test -f _site/index.html
-          test -f _site/prices.html
+          export PROOF_SOURCE_SHA="$(git rev-parse HEAD)"
+          export PROOF_OUTPUT_ROOT="$PWD/_site"
+          export PROOF_RELEASE_IDS="$(node -e "console.log(require('./tools/browser-release/one-shot-inventory.json').releases.join(','))")"
+          node tools/browser-release/one-shot-compact.mjs
       - name: Check every packaged immutable release
         shell: bash
         run: |
@@ -102,6 +107,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
+      pull-requests: read
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -122,6 +128,10 @@ jobs:
           PAGES_BASE_COMMIT: ${{ inputs.base_commit }}
           PAGES_FEED: ${{ inputs.feed }}
         run: node tools/browser-release/publication-guard.mjs --deployment
+      - name: Recheck reviewed live and open PR snapshot after queue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node tools/browser-release/one-shot-guard.mjs
       - name: Publish verified tree
         id: deployment
         uses: actions/deploy-pages@v5

@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "excludedPullRequest": 288,
+  "priorMain": "d68e6482a7ebfce01e4f54287f5e40cb259ab99b",
+  "live": "717cf6f5050bd7ffb9a2daf67e1eddf0c1f28630e063a61e01cdbab8e959906b",
+  "previous": "f620add99e38219906f83f503b4ac6fb802a9bc5fd81c592e65579aff3845602",
+  "releases": [
+    "a66ab7aa146097ef9320ac363489eb23ef02eb8f4f11a587b7811ef48e6d2a1c",
+    "717cf6f5050bd7ffb9a2daf67e1eddf0c1f28630e063a61e01cdbab8e959906b",
+    "f620add99e38219906f83f503b4ac6fb802a9bc5fd81c592e65579aff3845602",
+    "462f19c4f123ae04b28d59753776fc7b739bd777c353e7ed0ea24eb298001c84",
+    "e254f5d3f3e61e0924dad1b4627a9aaaf26445226e63e6717feeb6c25d6ddf1d",
+    "a9a95cd7ef0839e1416c3cfc7bc8015e269b448646c5e1a2f2a9164017427bd5",
+    "6c286a5daf51ebef2380a7fa7d7c5587379a222dc63041a54b22030097c31fc1"
+  ],
+  "openPRs": [
+    {
+      "number": 1,
+      "head": "364c9814be25dc0d548b2642da9d857cd029f064"
+    },
+    {
+      "number": 15,
+      "head": "c01c8f9c52d16f6654ba8baccf8d2cb218ec19af"
+    },
+    {
+      "number": 146,
+      "head": "4be5e17695adc18b4217d664c60f7f27b16ad1d3"
+    },
+    {
+      "number": 157,
+      "head": "f3f24fa91ae7db8dcdaed3d048558c8e6e5f5b38"
+    },
+    {
+      "number": 160,
+      "head": "dd9172d0c1614c725a34e75e7015b50a8ce69efc"
+    },
+    {
+      "number": 185,
+      "head": "95d1c7c9a776168708da0a316a027e1af4bbb817"
+    },
+    {
+      "number": 194,
+      "head": "373d1d41d35d4e66b5cbb1dca6721af794e7ed94"
+    },
+    {
+      "number": 196,
+      "head": "3d7e409da4ff70fd91b62e9457b6b955abc08c26"
+    },
+    {
+      "number": 256,
+      "head": "532d25460049cda154f9c6f66eb1e1021abeb904"
+    },
+    {
+      "number": 257,
+      "head": "c0b5b2644230d9b58fac9ce71542d7a6c3c3da45"
+    },
+    {
+      "number": 258,
+      "head": "82a6e3cc0f306a32a69bd3cee262f1a89ed55af0"
+    },
+    {
+      "number": 263,
+      "head": "66589b1291bb7e8d07f5c45d6bf4afa79fd2d7cf"
+    },
+    {
+      "number": 266,
+      "head": "6d756584a81f28a7678346cc118e80d78e9d8f75"
+    },
+    {
+      "number": 269,
+      "head": "967830cb780e3b50092ef194cbd8bf186ce8fab2"
+    },
+    {
+      "number": 284,
+      "head": "388a8c6f0dfc7240031d63f1c5901cb196d2e595"
+    },
+    {
+      "number": 287,
+      "head": "4082e7b1506c9baded2db365d0e7d4e286ae2cc1"
+    },
+    {
+      "number": 289,
+      "head": "a92136f1b938ff75ab7d4a1d78cd291ad8eebaab"
+    }
+  ]
+}

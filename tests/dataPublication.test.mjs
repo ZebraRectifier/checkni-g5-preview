@@ -172,7 +172,16 @@ test('the shared publisher packages releases, validates activation and rechecks 
   assert.match(workflow, /workflow_dispatch:\s+inputs:/);
   assert.match(workflow, /group: pages-.*'production'/);
   assert.match(workflow, /cancel-in-progress: false/);
-  assert.match(workflow, /git archive .* HEAD -- .* src releases release artifacts/);
+  assert.match(workflow, /node tools\/browser-release\/one-shot-compact\.mjs/);
+  assert.match(workflow, /PROOF_SOURCE_SHA=.*git rev-parse HEAD/);
+  assert.match(workflow, /PROOF_RELEASE_IDS=.*one-shot-inventory\.json/);
+  const compact = await fs.readFile(new URL('../tools/browser-release/one-shot-compact.mjs', import.meta.url), 'utf8');
+  for (const required of ['.nojekyll','index.html','prices.html','deployment.json','src','release','artifacts']) {
+    assert.ok(compact.includes(`'${required}'`), `missing fixed path ${required}`);
+  }
+  assert.match(compact, /for\(const id of list\)await verifyLocal\(root,id\)/);
+  assert.match(compact, /await activationState\(root\)/);
+  assert.equal((workflow.match(/node tools\/browser-release\/one-shot-guard\.mjs/g)||[]).length,2);
   assert.match(workflow, /if \(!await activationState\('_site'\)\) throw Error\('active_release_required'\)/);
   assert.equal((workflow.match(/inputs\.site_commit \|\| github\.event\.pull_request\.head\.sha \|\| github\.sha/g) || []).length, 2);
   assert.equal((workflow.match(/publication-guard\.mjs --deployment/g) || []).length, 2);
