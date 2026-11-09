@@ -31,7 +31,10 @@ export function createShoppingConversationFlow(options) {
   if (!basket?.replaceReviewedBasket || !basket?.getSnapshot) throw new TypeError("conversation requires a reviewed basket store");
   const preferenceStore = createShoppingPreferenceStore({ storage: options.preferenceStorage });
   let memory = preferenceStore.read();
-  function setMemory(next) { memory = next; preferenceStore.write(memory); }
+  function setMemory(next) { memory = next; return preferenceStore.write(memory); }
+  // An unpersisted signal must not disappear behind an overflow or failed write.
+  let volatileAllergy = false;
+  const persistentSafetyRequired = options.preferenceStorage !== null;
   let checkpoint = null;
   let managed = [];
   let lastPlan = [];
@@ -1113,6 +1116,29 @@ export function createShoppingConversationFlow(options) {
     return state;
   }
   function run(text) {
+    // Derive only a boolean before preflight; never save rejected raw input.
+    const normalized = typeof text === 'string' ? text.normalize('NFKC').toLocaleLowerCase('ru-RU').replaceAll('ё', 'е').trim() : '';
+    const cancellation = /^отменяю (?:ограничение (?:аллергии|непереносимости)|все ограничения аллергии и непереносимости)[.!?]*$/u.test(normalized);
+    const signalsAllergy = !cancellation && /(?:аллерги|непереносимост)/u.test(normalized);
+    if (signalsAllergy) volatileAllergy = true;
+    const unavailable = () => {
+      invalidate();
+      state = messageState('Не удаётся сохранить условия.', 'Автоматический подбор остановлен: сохранение условий недоступно. Проверь доступ к хранилищу браузера и повтори; корзина сохранена.');
+      return Promise.resolve(state);
+    };
+    const storageState = preferenceStore.status();
+    if (persistentSafetyRequired && (!storageState.available || storageState.failed)) {
+      if (!preferenceStore.write(memory)) return unavailable();
+    }
+    if (volatileAllergy && !cancellation) {
+      const safety = { ...extractShoppingDelta(''), facts: { allergySafety: { value: true, scope: 'conversation' } },
+        unresolved: ['Неуточнённая аллергия или непереносимость'] };
+      const updated = updateShoppingConversation(memory, safety);
+      if (updated.overflow) return unavailable();
+      const saved = setMemory(updated.state);
+      if (persistentSafetyRequired && !saved) return unavailable();
+      volatileAllergy = false;
+    }
     if (typeof text !== "string" || !text.trim() || text.trim().length > 300) {
       invalidate(); state = { status: "rejected", inputReason: text?.trim?.() ? "too_long" : "empty" }; return Promise.resolve(state);
     }
