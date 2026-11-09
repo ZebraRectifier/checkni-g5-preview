@@ -571,3 +571,12 @@ test('undo cannot erase later allergy or modify basket',async({page})=>{
  const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
  expect(stored).toMatch(/аллерг/iu);expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
 });
+
+
+test('retail undo cannot erase later allergy',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);const before=await savedBasket(page);
+ await submit(page,'без свинины');await submit(page,'аллергия на рис');await submit(page,'отмени последнее');
+ const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(stored).toMatch(/аллерг/iu);expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});

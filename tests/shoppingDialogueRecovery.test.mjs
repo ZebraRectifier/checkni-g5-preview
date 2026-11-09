@@ -519,3 +519,12 @@ test('undo of a checkpoint cannot erase a later allergy condition',async()=>{
  assert.ok(s.flow.getConversation().facts.unresolvedConstraints.value.some(x=>/аллерг/u.test(x)));
  assert.deepEqual(s.basket.getSnapshot(),before);assert.deepEqual(s.proposals,[]);
 });
+
+
+test('retail needs wrapper cannot undo away an allergy condition',async()=>{
+ const s=needsSession(async()=>({kind:'unavailable'}));
+ await s.send('без свинины');await s.send('аллергия на рис');
+ const before=s.basket.getSnapshot();await s.send('отмени последнее');
+ assert.ok(s.flow.getConversation().facts.unresolvedConstraints?.value.some(x=>/аллерг/u.test(x)));
+ assert.deepEqual(s.basket.getSnapshot(),before);
+});
