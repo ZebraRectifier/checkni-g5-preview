@@ -502,7 +502,7 @@ test('provider 503 offers local basket without another AI request', async ({page
  await page.goto('/?comparison=observed&catalog=retail#shop');
  await openHory(page);
  const before=await savedBasket(page);
- await submit(page,'Составь меню на две недели для троих с рисом и хлебом, без свинины');
+ await submit(page,'Составь меню на две недели для троих: рис и хлеб, без свинины');
  await expect(status(page)).toContainText('бюджет');
  console.log('offline-status',JSON.stringify(await status(page).innerText()),'requests',requests);
  await expect(status(page).getByRole('button',{name:'Собрать корзину',exact:true})).toBeVisible({timeout:5000});
@@ -511,6 +511,7 @@ test('provider 503 offers local basket without another AI request', async ({page
  await expect(status(page)).toContainText(/бюджет|магазин|продукт/u);
  await submit(page,'Без лимита');
  await submit(page,'Без свинины');
+ await submit(page,'Изменить список');
  await expect(status(page)).toContainText('Рис');
  await expect(status(page)).toContainText('Хлеб');
  await expect(status(page)).not.toContainText('Свинина');

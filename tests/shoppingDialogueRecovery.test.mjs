@@ -522,9 +522,9 @@ test('unrelated advice failures and absent guided catalog do not offer offline b
 
 test('offline guided continuation keeps explicit products and restrictions in the draft', async()=>{
  const s=session(async()=>({kind:'unavailable',code:'provider_upstream_unavailable'}),{searchGuidedCatalog:async()=>({kind:'catalog',products:[]})});
- const first=await s.send('Составь меню на неделю для троих с рисом и хлебом, без свинины');
+ const first=await s.send('Составь меню на неделю для троих: рис и хлеб, без свинины');
  const choice=first.presentation.conversationChoices.find(x=>x.text==='Собрать');assert.ok(choice);
- await s.send(choice.text);await s.send('Без лимита');await s.send('Без свинины');
+ await s.send(choice.text);await s.send('Без лимита');await s.send('Без свинины');await s.send('Изменить список');
  assert.match(s.flow.getState().presentation.message,/Рис/u);
  assert.match(s.flow.getState().presentation.message,/Хлеб/u);
  assert.ok(s.flow.getConversation().rejected.pork);
