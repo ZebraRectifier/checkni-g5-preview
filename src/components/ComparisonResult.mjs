@@ -186,7 +186,7 @@ function unconfirmedObservedItems(candidate, basket) {
     .map(item => [item.product.id, item.product.name.trim()]));
   const seen = new Set();
   return Object.freeze(candidate.lines.flatMap(line => {
-    if (!line || line.status === "priced-observation" || typeof line.productId !== "string"
+    if (!line || !["unknown-price", "conflict-observation"].includes(line.status) || typeof line.productId !== "string"
         || !names.has(line.productId) || seen.has(line.productId)) return [];
     seen.add(line.productId);
     return [names.get(line.productId)];
