@@ -401,6 +401,8 @@ test('household duration is not mistaken for product quantity and unsupported ch
  await submit(page,'хочу продукты на 7 дней для 3 человек, побольше фарша');
  await expect(status(page)).not.toContainText('Уточни отдельно продукт и точное количество');
  await submit(page,'хочу 2 кг курицы');
- await expect(status(page)).toContainText('Уточни отдельно продукт и точное количество');
+ await expect(status(page)).toContainText('Пока не умею учитывать количество этого продукта');
+ await submit(page,'хочу 2 литра сока');
+ await expect(status(page)).toContainText('Пока не умею учитывать количество этого продукта');
  expect(await savedBasket(page)).toBeNull();
 });

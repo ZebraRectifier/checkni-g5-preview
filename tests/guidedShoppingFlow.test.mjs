@@ -354,5 +354,18 @@ test('household duration is not mistaken for product weight and colloquial produ
  assert.equal(guidedExplicitMass('хочу продукты на 7 дней для 3 человек, побольше фарша'),null);
  assert.equal(guidedExplicitMass('хочу фарш на 3 дня'),null);
  assert.deepEqual(guidedExplicitMass('хочу 2 кг картошки'),{key:'potatoes',intent:{dimension:'g',amount:2000}});
- assert.deepEqual(guidedExplicitMass('хочу 2 кг курицы'),{issue:true});
+ assert.deepEqual(guidedExplicitMass('хочу 2 кг курицы'),{issue:'unsupported'});
+ assert.deepEqual(guidedExplicitMass('хочу 2 литра сока'),{issue:'unsupported'});
+ assert.deepEqual(guidedExplicitMass('2 литра сока'),{issue:'unsupported'});
+ assert.deepEqual(guidedExplicitMass('2 кг картошки'),{key:'potatoes',intent:{dimension:'g',amount:2000}});
+ assert.equal(guidedExplicitMass('хочу продукты на 2 недели для 3 человек'),null);
+ assert.equal(guidedExplicitMass('хочу продукты на 7 дней для 3 человек'),null);
+});
+
+
+test('unrecognised measured food in active guided draft asks instead of silently discarding quantity',async()=>{
+ const {flow,basket}=setup();await flow.run('Собери продукты на неделю для четверых');
+ await flow.run('хочу 2 литра сока');
+ assert.match(flow.getState().presentation.message,/Пока не умею учитывать количество этого продукта/u);
+ assert.deepEqual(basket.getSnapshot(),[]);
 });

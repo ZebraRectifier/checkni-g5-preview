@@ -83,15 +83,20 @@ export function guidedExplicitMass(text) {
   const mentioned=GROUPS.filter(group=>group.pattern.test(input));
   const quantityText=input.replace(/(?:\d+(?:[.,]\d+)?|один|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|двадцать)\s*(?:дн(?:я|ей)?|недел(?:ю|и|ь)|человек(?:а)?|людей|персон(?:ы)?)(?=$|[^\p{L}])/gu,' ');
   const hasQuantity=/(?:\d|полкило|поллитра|один|одна|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|двадцать)\s*(?:кг|килограмм(?:а|ов)?|грамм(?:а|ов)?|гр?\.?|литр(?:а|ов)?|л|мл|штук|шт\.?)?(?=$|[\s,.!])/u.test(quantityText);
-  if (!(mentioned.length || /куриц/u.test(input)) || !hasQuantity) return null;
+  const explicitUnit=/(?:\d+(?:[.,]\d+)?|один|одна|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|двадцать|полкило|поллитра)\s*(?:кг|килограмм(?:а|ов)?|грамм(?:а|ов)?|гр?\.?|литр(?:а|ов)?|л|мл|штук|шт\.?)(?=$|[^\p{L}])/u.test(quantityText);
+  if (!hasQuantity || !(mentioned.length || /куриц/u.test(input) || explicitUnit)) return null;
   const clause=input.replace(/^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а|ся|ась)?)(?:\s+пока)?[,;.]\s*(?:но\s+)?/u,'');
-  if(!/^(?:хочу|нужно|надо|добавь)\s/u.test(clause)) return /^(?:не|без)\s/u.test(clause)?{issue:true}:null;
+  if(!/^(?:хочу|нужно|надо|добавь)\s/u.test(clause)) {
+    if(/^(?:не|без)\s/u.test(clause)) return {issue:true};
+    if(!explicitUnit)return null;
+  }
   if(/(?:^|\s)(?:не|без|кроме|или|и)(?=$|[\s,.])/u.test(clause)) return {issue:true};
   const parsed=parseNeedLine(clause);
   const names={mince:/^фарш(?:а)?$/u,potatoes:/^(?:картоф(?:ель|еля|ели|елю|елем)|картошк(?:а|и|у|ой))$/u,apples:/^яблок(?:о|а|и)?$/u,
     milk:/^молок(?:о|а|у)$/u,eggs:/^яйц(?:о|а|ы)?$|^яиц$/u};
   const group=parsed && GROUPS.find(row=>names[row.key]?.test(clean(parsed.requestedName)));
-  if(!group||parsed.resolution.status!=='unresolved'||!parsed.quantity.explicit||parsed.packageSize) return {issue:true};
+  if(!group)return {issue:'unsupported'};
+  if(parsed.resolution.status!=='unresolved'||!parsed.quantity.explicit||parsed.packageSize) return {issue:true};
   const dimensions={kg:['g',1000],g:['g',1],l:['ml',1000],ml:['ml',1],piece:['piece',1]};
   const unit=dimensions[parsed.quantity.unit];
   if(!unit||unit[0]!==group.dimension) return {issue:true};
@@ -105,7 +110,7 @@ export function advanceGuidedIntake(plan, text, memory) {
     plan.question === 'people' ? 'На сколько человек?' : plan.question === 'budget' ? 'Какой общий бюджет?' : '' }]),
     delta = JSON.parse(JSON.stringify(extractShoppingDelta(text)));
   const mass=guidedExplicitMass(text);
-  if(mass?.issue)return {issue:'Уточни отдельно продукт и точное количество, например «хочу фарш 2 кг». Прежние условия и список сохранены.',delta:extractShoppingDelta('')};
+  if(mass?.issue)return {issue:mass.issue==='unsupported'?'Пока не умею учитывать количество этого продукта в подборе. Попробуй другой продукт или найди этот товар вручную. Список сохранён.':'Уточни отдельно продукт и точное количество, например «хочу фарш 2 кг». Прежние условия и список сохранены.',delta:extractShoppingDelta('')};
   if(mass && !guidedGroupAllowed(GROUPS.find(group=>group.key===mass.key), memory)) return {issue:'Этот продукт ранее исключён. Уточни, добавить его обратно?',delta:extractShoppingDelta('')};
   const location = shoppingLocationRequest(text);
   const retailers=weeklyRetailerRequest(text);
