@@ -506,3 +506,16 @@ test('explicit allergy cancellation reaches the real shopping-needs wrapper',asy
  assert.equal(s.flow.getConversation().facts.unresolvedConstraints,undefined);
  assert.deepEqual(s.basket.getSnapshot(),[]);assert.deepEqual(s.proposals,[]);
 });
+
+
+test('undo of a checkpoint cannot erase a later allergy condition',async()=>{
+ const s=session(async()=>({kind:'unavailable'}));
+ await s.send('без свинины');
+ await s.send('аллергия на рис');
+ assert.ok(s.flow.getConversation().facts.unresolvedConstraints);
+ const before=s.basket.getSnapshot();
+ const undo=await s.send('отмени последнее');
+ assert.match(undo.presentation.message,/Откат пока недоступен/u);
+ assert.ok(s.flow.getConversation().facts.unresolvedConstraints.value.some(x=>/аллерг/u.test(x)));
+ assert.deepEqual(s.basket.getSnapshot(),before);assert.deepEqual(s.proposals,[]);
+});

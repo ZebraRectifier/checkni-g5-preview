@@ -560,3 +560,14 @@ test('one allergy statement listing two allergens is not cleared ambiguously',as
  const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
  expect(stored).toMatch(/рис и молоко/iu);expect(await savedBasket(page)).toBe(before);
 });
+
+
+test('undo cannot erase later allergy or modify basket',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=demo#shop');await openHory(page);const before=await savedBasket(page);
+ await submit(page,'без свинины');await submit(page,'аллергия на рис');
+ await submit(page,'отмени последнее');
+ await expect(status(page)).toContainText('Откат пока недоступен');
+ const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(stored).toMatch(/аллерг/iu);expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});

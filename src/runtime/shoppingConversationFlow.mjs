@@ -981,6 +981,10 @@ export function createShoppingConversationFlow(options) {
     if (useConversation || (rebuild && activeMemory())) {
       hybrid.invalidate(); pending = null;
       if (delta.undo) {
+        if ((memory.facts.unresolvedConstraints?.value ?? []).some(value => /(?:аллерги|непереносимост)/iu.test(value))) {
+          state = messageState('Сначала уточним ограничение.', 'Откат пока недоступен: сохранено условие об аллергии или непереносимости. Корзина и условие сохранены.');
+          return state;
+        }
         if (!checkpoint) { state = messageState("Отменять пока нечего.", "Текущая корзина сохранена."); return state; }
         const old = checkpoint;
         checkpoint = null;
