@@ -492,3 +492,15 @@ test('provider failure does not repeat budget after the buyer defers it', async 
   assert.equal(s.flow.getConversation().facts.shoppingDays.value, 14);
   assert.deepEqual(s.basket.getSnapshot(), []);
 });
+
+
+test('explicit allergy cancellation reaches the real shopping-needs wrapper',async()=>{
+ const s=needsSession(async()=>({kind:'unavailable'}));
+ await s.send('Аллергия на рис');
+ assert.ok(s.flow.getConversation().facts.unresolvedConstraints);
+ await s.send('Новая корзина');await s.send('без ограничений');
+ assert.ok(s.flow.getConversation().facts.unresolvedConstraints);
+ await s.send('отменяю ограничение аллергии');
+ assert.equal(s.flow.getConversation().facts.unresolvedConstraints,undefined);
+ assert.deepEqual(s.basket.getSnapshot(),[]);assert.deepEqual(s.proposals,[]);
+});
