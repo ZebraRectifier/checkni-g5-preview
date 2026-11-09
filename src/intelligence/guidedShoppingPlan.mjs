@@ -80,15 +80,23 @@ export function createGuidedShoppingPlan(goal, history, memory) {
 // quantities are never converted to packages by guessing the target.
 export function guidedExplicitMass(text) {
   const input=clean(text);
-  if (!/фарш/u.test(input) || !/(?:\d|полкило|один|одна|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять)\s*(?:кг|килограмм|грамм|гр?\.?)(?=$|[\s,.!])/u.test(input)) return null;
+  const mentioned=GROUPS.filter(group=>group.pattern.test(input));
+  const hasQuantity=/(?:\d|полкило|поллитра|один|одна|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|двадцать)\s*(?:кг|килограмм(?:а|ов)?|грамм(?:а|ов)?|гр?\.?|литр(?:а|ов)?|л|мл|штук|шт\.?)?(?=$|[\s,.!])/u.test(input);
+  if (!mentioned.length || !hasQuantity) return null;
   const clause=input.replace(/^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а|ся|ась)?)(?:\s+пока)?[,;.]\s*(?:но\s+)?/u,'');
-  if(!/^(?:хочу|нужно|надо|добавь)\s/u.test(clause)||/(?:^|\s)(?:не|без|кроме|или|и)(?=$|[\s,.])/u.test(clause)) return {issue:true};
+  if(!/^(?:хочу|нужно|надо|добавь)\s/u.test(clause)) return /^(?:не|без)\s/u.test(clause)?{issue:true}:null;
+  if(/(?:^|\s)(?:не|без|кроме|или|и)(?=$|[\s,.])/u.test(clause)) return {issue:true};
   const parsed=parseNeedLine(clause);
-  if(!parsed||!/^фарш(?:а)?$/u.test(clean(parsed.requestedName))||parsed.resolution.status!=='unresolved'
-    ||!parsed.quantity.explicit||!['kg','g'].includes(parsed.quantity.unit)||parsed.packageSize) return {issue:true};
-  const amount=Number(parsed.quantity.value)*(parsed.quantity.unit==='kg'?1000:1);
+  const names={mince:/^фарш(?:а)?$/u,potatoes:/^картоф(?:ель|еля|ели|елю|елем)$/u,apples:/^яблок(?:о|а|и)?$/u,
+    milk:/^молок(?:о|а|у)$/u,eggs:/^яйц(?:о|а|ы)?$|^яиц$/u};
+  const group=parsed && GROUPS.find(row=>names[row.key]?.test(clean(parsed.requestedName)));
+  if(!group||parsed.resolution.status!=='unresolved'||!parsed.quantity.explicit||parsed.packageSize) return {issue:true};
+  const dimensions={kg:['g',1000],g:['g',1],l:['ml',1000],ml:['ml',1],piece:['piece',1]};
+  const unit=dimensions[parsed.quantity.unit];
+  if(!unit||unit[0]!==group.dimension) return {issue:true};
+  const amount=Number(parsed.quantity.value)*unit[1];
   if(!Number.isSafeInteger(amount)||amount<=0||amount>1000000)return {issue:true};
-  return {key:'mince',intent:{dimension:'g',amount}};
+  return {key:group.key,intent:{dimension:unit[0],amount}};
 }
 
 export function advanceGuidedIntake(plan, text, memory) {
@@ -96,8 +104,8 @@ export function advanceGuidedIntake(plan, text, memory) {
     plan.question === 'people' ? 'На сколько человек?' : plan.question === 'budget' ? 'Какой общий бюджет?' : '' }]),
     delta = JSON.parse(JSON.stringify(extractShoppingDelta(text)));
   const mass=guidedExplicitMass(text);
-  if(mass?.issue)return {issue:'Уточни отдельно продукт и точный вес, например «хочу фарш 2 кг». Прежние условия и список сохранены.',delta:extractShoppingDelta('')};
-  if(mass && !guidedGroupAllowed(GROUPS.find(group=>group.key===mass.key), memory)) return {issue:'Фарш ранее исключён. Уточни, добавить его обратно?',delta:extractShoppingDelta('')};
+  if(mass?.issue)return {issue:'Уточни отдельно продукт и точное количество, например «хочу фарш 2 кг». Прежние условия и список сохранены.',delta:extractShoppingDelta('')};
+  if(mass && !guidedGroupAllowed(GROUPS.find(group=>group.key===mass.key), memory)) return {issue:'Этот продукт ранее исключён. Уточни, добавить его обратно?',delta:extractShoppingDelta('')};
   const location = shoppingLocationRequest(text);
   const retailers=weeklyRetailerRequest(text);
   if(retailers.length){plan.retailers=retailers;plan.useCurrentStore=true;
@@ -217,7 +225,8 @@ export function advanceGuidedIntake(plan, text, memory) {
 }
 
 export function applyGuidedQuantityIntent(plan, quantity) {
-  if(!quantity||quantity.key!=='mince'||quantity.intent?.dimension!=='g'||!Number.isSafeInteger(quantity.intent.amount)||quantity.intent.amount<=0||quantity.intent.amount>1000000)return false;
+  const group=GROUPS.find(row=>row.key===quantity?.key);
+  if(!group||quantity.intent?.dimension!==group.dimension||!Number.isSafeInteger(quantity.intent.amount)||quantity.intent.amount<=0||quantity.intent.amount>1000000)return false;
   plan.quantityIntents??={};plan.quantityIntents[quantity.key]={...quantity.intent};
   if(!plan.groups.some(group=>group.key===quantity.key))plan.groups.push({...GROUPS.find(group=>group.key===quantity.key)});
   return true;

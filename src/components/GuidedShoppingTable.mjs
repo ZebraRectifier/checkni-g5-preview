@@ -58,6 +58,12 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
     const summary = document.createElement('p'); summary.className = 'guided-shopping-conditions';
     summary.textContent = 'Марки и фасовки различаются. ' + (model.quote.hasEstimates ? 'Количества примерные. ' : '') + 'Наличие не подтверждено.';
     coverage.append(summary);
+    if(model.quantityMismatch){
+      const note=document.createElement('p');note.className='guided-shopping-warning';note.setAttribute('role','status');
+      const format=(amount,dimension)=>dimension==='g'?(amount>=1000?`${amount/1000} кг`:`${amount} г`):dimension==='ml'?(amount>=1000?`${amount/1000} л`:`${amount} мл`):`${amount} шт.`;
+      const differences=(model.quantityDifferences??[]).map(item=>`${item.label}: ${item.totals.map(total=>`${total.storeName} — ${format(total.amount,item.dimension)}`).join('; ')}`).join('. ');
+      note.textContent=`Из-за разных упаковок итоговое количество отличается${differences?`: ${differences}`:''}. Суммы напрямую не сравниваем.`;coverage.append(note);
+    }
     if(model.alternatives.some(store=>store.priceScope==='delivery-catalog')){
       summary.textContent += ' Доставка Перекрёстка по выбранному адресу не подтверждена. Сравнение недоступно. Доставка и сборы не включены.';
       summary.classList.add('guided-shopping-warning'); summary.setAttribute('role','status');
@@ -76,7 +82,7 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
     }
     addInformation(model.draftComparison?.kind==='delivery_unconfirmed'
       ? 'Варианты показаны для просмотра. Доставка по выбранному адресу не подтверждена.'
-      : 'В магазинах могут быть разные марки и упаковки. Приоритет полному списку и свежим наблюдениям, затем меньшей сумме среди полученных карточек. Это не сравнение одинаковых SKU и не доказательство самого дешёвого магазина района.');
+      : model.quantityMismatch ? 'Количество продуктов в вариантах отличается из-за упаковок; суммы напрямую не сравниваются.' : 'В магазинах могут быть разные марки и упаковки. Приоритет полному списку и свежим наблюдениям, затем меньшей сумме среди полученных карточек. Это не сравнение одинаковых SKU и не доказательство самого дешёвого магазина района.');
     coverage.append(information); root.append(coverage);
   } else if (information.childElementCount > 1) {
     root.append(information);
@@ -106,7 +112,8 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
     }
     const title = document.createElement('strong'); title.textContent = `${EMOJI[row.group.key] ?? '🛒'} ${row.card?.name ?? `${row.group.label} — требуется подбор`}`; product.append(title);
     const unit = document.createElement('p');
-    const requested = row.quantityIntent?.dimension === 'g' ? `Запрос: ${row.quantityIntent.amount >= 1000 ? `${row.quantityIntent.amount / 1000} кг` : `${row.quantityIntent.amount} г`}. ` : '';
+    const intent=row.quantityIntent;
+    const requested = intent ? `Запрос: ${intent.dimension === 'g' ? (intent.amount >= 1000 ? `${intent.amount / 1000} кг` : `${intent.amount} г`) : intent.dimension === 'ml' ? (intent.amount >= 1000 ? `${intent.amount / 1000} л` : `${intent.amount} мл`) : `${intent.amount} шт.`}. ` : '';
     const totalWeight = !row.quantityReview && row.unit?.dimension === 'g' && Number.isFinite(row.quantity) ? row.unit.amount * row.quantity : null;
     const excess = totalWeight != null && row.quantityIntent?.dimension === 'g' && totalWeight > row.quantityIntent.amount ? ` (получится ${totalWeight >= 1000 ? `${totalWeight / 1000} кг` : `${totalWeight} г`})` : '';
     unit.textContent = requested + (row.quantityReview ? 'Уточни фасовку' : row.unit ? `${row.quantity} × ${row.unit.label.replace(/^цена за\s+/iu, '')}${excess}` : 'Количество и упаковку уточним'); product.append(unit);

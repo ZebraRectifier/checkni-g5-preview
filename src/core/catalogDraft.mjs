@@ -102,6 +102,8 @@ export function compareCatalogDraftAlternatives(drafts, options) {
       // An unrelated extra package is not a saving or an equivalent basket.
       if (suggested.quantityReview || row.quantity !== suggested.quantity) return { kind: 'incompatible' };
     }
+    const totals=pair.map(row=>catalogPurchaseUnit(row.card).amount*row.quantity);
+    if(Math.abs(totals[0]-totals[1])>Number.EPSILON*Math.max(1,...totals)*4) return {kind:'different_quantity'};
   }
   const quotes=drafts.map(d=>({...d,quote:quoteCatalogDraft(d.rows,options)}));
   if(quotes.some(d=>!d.quote.complete))return {kind:'incomplete'};

@@ -1,9 +1,9 @@
-import { createGuidedShoppingPlan, advanceGuidedIntake, guidedIntakeView, guidedEditGroups, guidedGroupMatches, guidedGroupAllowed,applyGuidedQuantityIntent,weeklyRetailerRequest } from '../intelligence/guidedShoppingPlan.mjs';
+import { createGuidedShoppingPlan, advanceGuidedIntake, guidedIntakeView, guidedEditGroups, guidedGroupMatches, guidedGroupAllowed,applyGuidedQuantityIntent,guidedExplicitMass,weeklyRetailerRequest } from '../intelligence/guidedShoppingPlan.mjs';
 import { validWeeklyCardSource,createWeeklyRetailCatalogPort,PEREKRESTOK_WEEKLY_SCOPE } from '../ports/weeklyRetailCatalogPort.mjs';
 import { extractShoppingDelta, isShoppingProductRejected } from '../intelligence/shoppingConversation.mjs';
 import { retailSelectionUrl } from '../intelligence/retailProductSelection.mjs';
 import { getReviewedRetailBasketProduct } from '../catalog/reviewedRetailBasket.mjs';
-import { quoteCatalogDraft, suggestedCatalogQuantity, suggestedCatalogQuantityForIntent, catalogPurchaseUnit, economicalCatalogCards, rankCatalogDrafts } from '../core/catalogDraft.mjs';
+import { quoteCatalogDraft, suggestedCatalogQuantity, suggestedCatalogQuantityForIntent, catalogPurchaseUnit, economicalCatalogCards, rankCatalogDrafts, compareCatalogDraftAlternatives } from '../core/catalogDraft.mjs';
 import { extractShoppingNeedContext } from '../intelligence/shoppingNeedContext.mjs';
 
 const clean = value => String(value ?? '').toLowerCase().replaceAll('ё', 'е').replace(/\s+/gu, ' ').trim().replace(/[.!?]+$/u, '');
@@ -21,7 +21,15 @@ export function createGuidedShoppingFlow(options) {
     return JSON.stringify([scope?.retailerId ?? null, scope?.storeId ?? null, options.getRetailContextKey?.() ?? null]);
   } catch { return null; } };
   const commitIntent = result => { if (result.quantityIntent && applyGuidedQuantityIntent(plan, result.quantityIntent)) quantityEdits.delete(result.quantityIntent.key); };
-  const quantityNote = () => plan.quantityIntents?.mince ? ` Фарш: ${plan.quantityIntents.mince.amount >= 1000 ? `${plan.quantityIntents.mince.amount / 1000} кг` : `${plan.quantityIntents.mince.amount} г`}. Помню до перезагрузки страницы.` : '';
+  const quantityNote = () => {
+    const notes=Object.entries(plan.quantityIntents ?? {}).map(([key,intent])=>{
+      const group=plan.groups.find(row=>row.key===key); if (!group) return '';
+      const amount=intent.dimension==='g' ? (intent.amount>=1000?`${intent.amount/1000} кг`:`${intent.amount} г`)
+        : intent.dimension==='ml' ? (intent.amount>=1000?`${intent.amount/1000} л`:`${intent.amount} мл`):`${intent.amount} шт.`;
+      return `${group.label}: ${amount}`;
+    }).filter(Boolean);
+    return notes.length?` ${notes.join('; ')}. Помню до перезагрузки страницы.`:'';
+  };
   const presentIntake = () => {
     for (const key of Object.keys(plan.quantityIntents ?? {})) {
       const group = plan.groups.find(row => row.key === key);
@@ -50,10 +58,20 @@ export function createGuidedShoppingFlow(options) {
         : quote.complete ? ' По указанным наблюдениям список укладывается в бюджет.' : ' Весь список по бюджету ещё не проверен.' : '';
     const messageText = message || `Вот конкретные варианты из каталога ${plan.storeName}. Количества — мой предварительный вариант; меняй их в таблице.`;
     const deliveryAlternatives=plan.alternatives?.some(a=>a.retailerId==='perekrestok');
+    const quantityMismatch=plan.drafts?.length===2 && compareCatalogDraftAlternatives(plan.drafts,{nowMs:options.now?.()??Date.now()}).kind==='different_quantity';
+    const quantityDifferences=quantityMismatch ? plan.drafts[0].rows.flatMap((row,index)=>{
+      const pair=plan.drafts.map(draft=>draft.rows[index]);
+      if(!pair.every(item=>item?.quantityIntent && item.card && !item.quantityReview && Number.isFinite(item.quantity)))return [];
+      const units=pair.map(item=>catalogPurchaseUnit(item.card));
+      if(!units.every(unit=>unit && !unit.approximate && unit.dimension===row.quantityIntent.dimension))return [];
+      const totals=pair.map((item,i)=>units[i].amount*item.quantity);
+      if(Math.abs(totals[0]-totals[1])<=Number.EPSILON*Math.max(1,...totals)*4)return [];
+      return [{label:row.group.label,dimension:row.quantityIntent.dimension,totals:totals.map((amount,i)=>({amount,storeName:plan.drafts[i].scope.storeName}))}];
+    }) : [];
     state = view(plan.stage === 'confirmed' ? 'Корзина собрана. Посмотрим магазины?' : 'Посмотри, что получилось.',
       `${messageText}${quantityNote()}${budget}${missing.length ? ` Ещё нужно подобрать ${missing.length} поз. — список под таблицей.` : ''} Цены показаны на дату наблюдения; наличие неизвестно.`, {
         guidedShopping: { quote, comparison, storeName: plan.storeName, confirmed: plan.stage === 'confirmed',
-          draftComparison:deliveryAlternatives?{kind:'delivery_unconfirmed'}:null,
+          draftComparison:deliveryAlternatives?{kind:'delivery_unconfirmed'}:quantityMismatch?{kind:'different_quantity'}:null, quantityMismatch, quantityDifferences,
           mode: plan.mode, location: plan.location, alternatives: plan.alternatives ?? [],
           people: plan.people, days: plan.days },
         conversationChoices: choices(plan.stage === 'confirmed' ? [deliveryAlternatives?'Сравнить варианты':'Сравнить магазины', 'Изменить список']
@@ -160,10 +178,11 @@ export function createGuidedShoppingFlow(options) {
     // Delivery coverage is unknown; never use its prices to select a cheaper
     // option for a location. Keep the explicitly selected source first.
     const deliveryUnconfirmed = drafts.some(draft => draft.scope.retailerId === 'perekrestok');
-    const ranked = deliveryUnconfirmed
+    const quantityMismatch = drafts.length===2 && compareCatalogDraftAlternatives(drafts,{nowMs:options.now?.()??Date.now()}).kind==='different_quantity';
+    const ranked = deliveryUnconfirmed || quantityMismatch
       ? drafts.map(draft => ({...draft, quote:quoteCatalogDraft(draft.rows, {nowMs:options.now?.()??Date.now()})}))
       : rankCatalogDrafts(drafts, { nowMs: options.now?.() ?? Date.now() });
-    const selected = deliveryUnconfirmed
+    const selected = deliveryUnconfirmed || quantityMismatch
       ? ranked.find(draft => draft.scope.storeId === scope?.storeId) ?? ranked[0]
       : ranked[0];
     if (nearby.length) {
@@ -243,6 +262,20 @@ export function createGuidedShoppingFlow(options) {
       const next = presentIntake();
       return plan.mode === 'economy' && !plan.question ? load(isCurrent) : next;
     }
+    const quantityRequest = guidedExplicitMass(text);
+    if (quantityRequest) {
+      const result=advanceGuidedIntake(plan,text,options.getMemory());
+      if(result.issue || !options.updateMemory(result.delta)) return view('Уточним условия.',result.issue ?? 'Предыдущие условия сохранились. Напиши уточнение короче.');
+      commitIntent(result);
+      if(plan.stage==='review' && plan.scope===contextKey() && plan.drafts?.length && plan.drafts.every(draft=>draft.rows.some(row=>row.group.key===quantityRequest.key))) {
+        const activeIndex=plan.drafts.findIndex(draft=>draft.rows===plan.rows);
+        for(const draft of plan.drafts) draft.rows=draft.rows.map(row=>row.group.key===quantityRequest.key?makeRow(row.group,row.cards,row.card):row);
+        const active=plan.drafts[activeIndex];
+        if(active){plan.rows=active.rows; return table('Количество изменено в черновике для обоих вариантов. Корзина изменится после подтверждения.');}
+      }
+      plan.rows=[];plan.drafts=[];plan.alternatives=[];plan.stage='outline';
+      return presentIntake();
+    }
     const retailerFollowup = /^(?:а\s+)?(?:в\s+)?(?:магните?|перекрест(?:ок|ке)|о['’]?кей|пятерочке?)$/u.test(value)
       ? weeklyRetailerRequest(value)[0] : null;
     if (retailerFollowup && plan.stage === 'review') {
@@ -310,7 +343,8 @@ export function createGuidedShoppingFlow(options) {
           ?{dimension:unit.dimension,amount:unit.amount*quantity}:null;
         const edit = {quantity,cardId:row.card?.id,intent};
         quantityEdits.set(row.group.key,edit);
-        if(intent) row.quantityIntent=intent; else delete row.quantityIntent;
+        if(intent) { row.quantityIntent=intent; plan.quantityIntents[row.group.key]=intent; }
+        else { delete row.quantityIntent; delete plan.quantityIntents[row.group.key]; }
         for (const draft of plan.drafts??[]) for (const other of draft.rows) {
           if (other===row || other.group.key!==row.group.key || !other.card) continue;
           if(intent) other.quantityIntent=intent; else delete other.quantityIntent;

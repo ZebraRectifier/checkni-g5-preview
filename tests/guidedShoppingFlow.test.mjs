@@ -317,3 +317,34 @@ test('later exclusion clears the stored mass intent instead of repeating the rej
  assert.doesNotMatch(flow.getState().presentation.message,/Фарш: 2 кг/u);
  assert.deepEqual(basket.getSnapshot(),[]);
 });
+
+
+test('one positive product quantity accepts supported dimensions and rejects mismatches', async()=>{
+ const {guidedExplicitMass}=await import('../src/intelligence/guidedShoppingPlan.mjs');
+ for(const [text,key,dimension,amount] of [['хочу 2 кг картофеля','potatoes','g',2000],['хочу яблоки 2 кг','apples','g',2000],['хочу 2 л молока','milk','ml',2000],['хочу 20 яиц','eggs','piece',20]])
+  assert.deepEqual(guidedExplicitMass(text),{key,intent:{dimension,amount}},text);
+ for(const text of ['хочу 2 кг молока','хочу 2 л яблок','хочу яблоки 2 кг и фарш 3 кг','не хочу фарш 2 кг'])
+  assert.deepEqual(guidedExplicitMass(text),{issue:true},text);
+});
+
+test('changing milk volume and egg count in a ready draft carries each dimension into packages',async()=>{
+ const {flow,basket}=setup();
+ await flow.run('Нужна еда на 3 дня для троих'); await flow.run('Ну собери');await flow.run('Без лимита');await flow.run('Ограничений нет');await flow.run('Подобрать товары и цены');
+ await flow.run('хочу 2 л молока');
+ let lines=flow.getState().presentation.guidedShopping.quote.lines;
+ assert.deepEqual(lines.find(row=>row.group.key==='milk').quantityIntent,{dimension:'ml',amount:2000});
+ assert.equal(lines.find(row=>row.group.key==='milk').quantity,2);
+ await flow.run('хочу 20 яиц');lines=flow.getState().presentation.guidedShopping.quote.lines;
+ assert.deepEqual(lines.find(row=>row.group.key==='eggs').quantityIntent,{dimension:'piece',amount:20});
+ assert.equal(lines.find(row=>row.group.key==='eggs').quantity,2);assert.deepEqual(basket.getSnapshot(),[]);
+});
+
+test('excluding a product after review clears its stale intent and retains the existing basket',async()=>{
+ const {flow,basket}=setup();
+ await flow.run('Нужна еда на 3 дня для троих');await flow.run('Ну собери');await flow.run('не знаю, но хочу фарш 2 кг');await flow.run('Ограничений нет');await flow.run('Подобрать товары и цены');
+ await flow.run('Не хочу фарш');assert.doesNotMatch(flow.getState().presentation.message,/Фарш: 2 кг/u);
+ await flow.run('Подобрать товары и цены');
+ assert.doesNotMatch(flow.getState().presentation.message,/Фарш: 2 кг/u);
+ assert.equal(flow.getState().presentation.guidedShopping,undefined);
+ assert.deepEqual(basket.getSnapshot(),[]);
+});

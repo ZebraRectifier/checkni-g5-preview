@@ -53,7 +53,7 @@ test('Core compares the same manually requested amount with different real pack 
   assert.equal(result.differenceMinor, 2000);
   assert.equal(result.sameProducts, false);
   assert.equal(result.includesFees, false);
-  assert.equal(compareCatalogDraftAlternatives(drafts(row('800 г', 9), row('1 кг', 8)), { nowMs }).kind, 'fresh');
+  assert.equal(compareCatalogDraftAlternatives(drafts(row('800 г', 9), row('1 кг', 8)), { nowMs }).kind, 'different_quantity');
 });
 
 test('reset quantities, mismatched intent, unknown packs and pending review cannot create savings', () => {
@@ -70,4 +70,14 @@ test('quantity conversion never makes old observations fresh or mutates draft pr
   const before = structuredClone(input);
   assert.equal(compareCatalogDraftAlternatives(input, { nowMs: nowMs + 3600001 }).kind, 'needs_refresh');
   assert.deepEqual(input, before);
+});
+
+
+test('different whole-pack excess cannot produce a cheaper-store winner',()=>{
+ const need={dimension:'g',amount:3000};
+ const a={...row('400 г',8),quantityIntent:need};const b={...row('900 г',4),quantityIntent:need};
+ const result=compareCatalogDraftAlternatives(drafts(a,b),{nowMs});
+ assert.deepEqual(result,{kind:'different_quantity'});
+ assert.equal(a.card.unit,'400 г');assert.equal(a.quantity,8);assert.equal(b.card.unit,'900 г');assert.equal(b.quantity,4);
+ assert.equal(a.card.priceMinor*a.quantity,80000);assert.equal(b.card.priceMinor*b.quantity,40000);
 });

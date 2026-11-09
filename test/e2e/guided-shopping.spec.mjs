@@ -269,5 +269,7 @@ test('spoken mass is visible in the reviewed table without changing the basket',
  const table=page.locator('#hori-shopping-results').getByRole('table');await expect(table).toBeVisible();
  const row=table.getByRole('row').filter({hasText:'Фарш'}).first();
  await expect(row).toContainText('Запрос: 2 кг');await expect(row).toContainText('4 × 500 г');
+ await submit(page,'хочу фарш 3 кг');
+ await expect(row).toContainText('Запрос: 3 кг');await expect(row).toContainText('6 × 500 г');
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')??'[]'))).toEqual([]);
 });

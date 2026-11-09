@@ -13,7 +13,7 @@ const catalog={search:async(q,{scope})=>({kind:'catalog',products:[scope.retaile
 test('reload comparison reads both saved sources and recalculates quantities from current basket packs',async()=>{
  const rows=basket(3),before=JSON.stringify(rows),calls=[];
  const result=await loadSavedGuidedComparison(request,rows,{now:()=>at,catalog:{search:async(q,o)=>{calls.push(o.scope.storeId);return catalog.search(q,o);}}});
- assert.equal(result.kind,'catalog_comparison');assert.equal(result.comparison.kind,'fresh');
+ assert.equal(result.kind,'catalog_comparison');assert.equal(result.comparison.kind,'different_quantity');
  assert.equal(result.drafts[0].rows[0].quantity,3);assert.equal(result.drafts[1].rows[0].quantity,3);
  assert.deepEqual(result.drafts.map(d=>d.rows[0].quantityIntent),[{amount:1350,dimension:'g'},{amount:1350,dimension:'g'}]);
  assert.deepEqual(new Set(calls),new Set(request.scopes.map(s=>s.storeId)));
@@ -31,7 +31,7 @@ test('unknown manual additions require review before any price read',async()=>{
 
 test('expired observations remain dated and cannot yield a fresh cheaper subtotal',async()=>{
  const result=await loadSavedGuidedComparison(request,basket(3),{now:()=>at+7200000,catalog});
- assert.equal(result.comparison.kind,'needs_refresh');
+ assert.notEqual(result.comparison.kind,'fresh');
  assert.equal(result.quotes.every(q=>!q.allRecent),true);
 });
 

@@ -67,6 +67,7 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
     ?'суммы товаров в этих вариантах совпали.'
     :'сумма товаров в '+(lowerScope?savedComparisonStoreLabel(lowerScope):comparison.lowerStoreName)+' ниже на '+formatRubMinor(comparison.differenceMinor)+'.'));
   else {
+    if (comparison.kind === 'different_quantity') messages.push('Из-за разных упаковок итоговое количество отличается. Суммы напрямую не сравниваем.');
     if (comparison.kind === 'incompatible') {
       messages.push('Не удалось сопоставить выбранные позиции. Проверь товары и количество.');
     }

@@ -133,3 +133,20 @@ test('spoken mass is carried into both store drafts, with unknown packs blocked'
   assert.equal(model.draftComparison.kind,'delivery_unconfirmed');
  }
 });
+
+
+test('changing spoken mass after review recalculates both drafts without touching basket',async()=>{
+ const products=counterparts.map(card=>card.name.toLowerCase().includes('фарш')?{...card,unit:'900 г'}:card);
+ const {flow,basket}=setup({products});
+ flow.start('Собери недорогую корзину на неделю для троих Магнит и Перекрёсток',[]);
+ await flow.handle('хочу фарш 2 кг'); await flow.handle('Ограничений нет');
+ await flow.handle('хочу фарш 3 кг');
+ let row=flow.getState().presentation.guidedShopping.quote.lines.find(r=>r.group.key==='mince');
+ assert.equal(row.quantity,8);assert.equal(row.quantityIntent.amount,3000);assert.deepEqual(basket.getSnapshot(),[]);
+ await flow.handle('Показать вариант perekrestok');
+ row=flow.getState().presentation.guidedShopping.quote.lines.find(r=>r.group.key==='mince');
+ assert.equal(row.quantity,4);assert.equal(row.quantityIntent.amount,3000);assert.deepEqual(basket.getSnapshot(),[]);
+ assert.equal(flow.getState().presentation.guidedShopping.quantityMismatch,true);
+ assert.deepEqual(flow.getState().presentation.guidedShopping.quantityDifferences.find(row=>row.label==='Фарш').totals.map(row=>row.amount),[3200,3600]);
+ assert.equal(flow.getState().presentation.guidedShopping.draftComparison.kind,'delivery_unconfirmed');
+});
