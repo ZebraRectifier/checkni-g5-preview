@@ -255,3 +255,19 @@ test('welcome → inexpensive weekly groceries for three near Zavety Ilyicha →
   await page.goForward(); await expect(page.locator('#basket-content')).toContainText('Глобус Королёв');
   await expect(page.locator('#basket-content')).not.toContainText('Изменить адрес Магнит');
 });
+
+test('spoken mass is visible in the reviewed table without changing the basket',async({page,context})=>{
+ await context.route('**/*',route=>['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
+ await page.route('**/rest/v1/retail_catalog_categories**',route=>route.fulfill({json:[]}));
+ await page.route('**/rest/v1/retail_catalog_items**',route=>route.fulfill({json:products.map(row=>({...row,observed_at:new Date().toISOString()}))}));
+ await page.goto('/?comparison=observed&catalog=retail#shop');await selectStore(page);
+ const status=page.locator('#basket-proposal-status');
+ await submit(page,'Собери корзину для двоих на 3 дня');await expect(status).toContainText('общий бюджет');
+ await submit(page,'не знаю, но хочу фарш 2 кг');await expect(status).toContainText('Фарш: 2 кг');
+ await submit(page,'Ограничений нет');
+ await status.getByRole('button',{name:'Подобрать товары и цены',exact:true}).click();
+ const table=page.locator('#hori-shopping-results').getByRole('table');await expect(table).toBeVisible();
+ const row=table.getByRole('row').filter({hasText:'Фарш'}).first();
+ await expect(row).toContainText('Запрос: 2 кг');await expect(row).toContainText('4 × 500 г');
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')??'[]'))).toEqual([]);
+});

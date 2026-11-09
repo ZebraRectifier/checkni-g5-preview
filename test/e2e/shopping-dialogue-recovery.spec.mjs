@@ -378,3 +378,20 @@ test('503 commercial-claim fallback retains context, accepts budget deferral and
  expect(calls).toHaveLength(2);expect(await savedBasket(page)).toBe(before);
  await expect(page.locator('#shopping-dialogue-history')).toContainText('Бюджет пока не решил');
 });
+
+test('503 then guided draft retains explicit mass without changing saved basket',async({page})=>{
+ let calls=0;
+ await page.route('**/functions/v1/ai-basket-proposal',r=>{calls++;return r.fulfill({status:503,json:{kind:'unavailable',code:'provider_advice_commercial_claim'}})});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ const before=await savedBasket(page);
+ await submit(page,'Посоветуй рыбу на ужин, чтобы быстро приготовить.');
+ await expect(status(page)).toContainText('Ответ сервиса не прошёл проверку');expect(calls).toBe(1);
+ await submit(page,'Собери продукты на неделю для четверых');
+ await expect(status(page)).toContainText('общий бюджет');
+ await submit(page,'не знаю, но хочу фарш 2 кг');
+ await expect(status(page)).toContainText('Фарш: 2 кг');
+ await expect(status(page)).toContainText('до перезагрузки страницы');
+ await submit(page,'без рыбы');
+ await expect(status(page)).toContainText('Фарш: 2 кг');
+ expect(await savedBasket(page)).toBe(before);expect(calls).toBe(1);
+});

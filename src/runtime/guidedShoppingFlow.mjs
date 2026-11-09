@@ -23,6 +23,10 @@ export function createGuidedShoppingFlow(options) {
   const commitIntent = result => { if (result.quantityIntent && applyGuidedQuantityIntent(plan, result.quantityIntent)) quantityEdits.delete(result.quantityIntent.key); };
   const quantityNote = () => plan.quantityIntents?.mince ? ` Фарш: ${plan.quantityIntents.mince.amount >= 1000 ? `${plan.quantityIntents.mince.amount / 1000} кг` : `${plan.quantityIntents.mince.amount} г`}. Помню до перезагрузки страницы.` : '';
   const presentIntake = () => {
+    for (const key of Object.keys(plan.quantityIntents ?? {})) {
+      const group = plan.groups.find(row => row.key === key);
+      if (!group || !guidedGroupAllowed(group, options.getMemory())) { delete plan.quantityIntents[key]; quantityEdits.delete(key); }
+    }
     const presentation = guidedIntakeView(plan, options.getMemory());
     if (!plan.question) plan.stage = 'outline';
     state = view(presentation.headline, presentation.message + quantityNote(), { locationRequested:plan.question==='location',conversationChoices: choices(presentation.conversationChoices) });

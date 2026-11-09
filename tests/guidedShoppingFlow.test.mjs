@@ -308,3 +308,12 @@ test('mass intent converts grams and requires review for an unknown package', as
   if(review){await flow.run('Добавить найденное');assert.deepEqual(basket.getSnapshot(),[]);}
  }
 });
+
+
+test('later exclusion clears the stored mass intent instead of repeating the rejected product', async () => {
+ const {flow,basket}=setup();
+ await flow.run('Нужна еда на 3 дня для троих');await flow.run('Ну собери');
+ await flow.run('не знаю, но хочу фарш 2 кг');await flow.run('Без мяса');
+ assert.doesNotMatch(flow.getState().presentation.message,/Фарш: 2 кг/u);
+ assert.deepEqual(basket.getSnapshot(),[]);
+});

@@ -21,7 +21,7 @@ const magnit=fixture.rows.map(row=>weeklyMagnitCard(normalizeRetailRow(row,{reta
 const counterparts=magnit.map((p,i)=>({...p,id:`retail:perekrestok:${delivery.storeId}:test-${i}`,
   retailerId:'perekrestok',sourceProductId:`test-${i}`,sourceUrl:delivery.sourceUrl,productUrl:delivery.sourceUrl,
   priceCondition:'yandex-eda-regular',priceConditionLabel:'Цена доставки Яндекс Еды',storeName:delivery.storeName}));
-function setup({products=counterparts,currentRetailer='magnit'}={}){
+function setup({products=counterparts,magnitProducts=magnit,currentRetailer='magnit'}={}){
   let memory=createShoppingConversation(),now=initialNow;
   const basket=createBasketStore({storage:null,eventTarget:null});
   const scope={retailerId:'magnit',storeId:'magnit-773505',storeName:'Магнит · '+store.address};
@@ -30,7 +30,7 @@ function setup({products=counterparts,currentRetailer='magnit'}={}){
   const flow=createGuidedShoppingFlow({basket,now:()=>now,getMemory:()=>memory,
     updateMemory:delta=>{memory=updateShoppingConversation(memory,delta).state;return true;},
     getContext:()=>currentRetailer==='magnit'?scope:delivery,getRetailContexts:()=>[scope],
-    searchCatalog:async q=>search(magnit,q),deliveryCatalog:{search:async(q,options)=>{calls.push(options.scope);return search(products,q);}}});
+    searchCatalog:async q=>search(magnitProducts,q),deliveryCatalog:{search:async(q,options)=>{calls.push(options.scope);return search(products,q);}}});
   return {flow,basket,calls,setNow:value=>{now=value;}};
 }
 test('explicit two-network request preserves address and delivery source, and requires confirmation',async()=>{
@@ -110,4 +110,26 @@ test('delivery family requests share two bounded ID reads, including an outage',
   assert.ok(results.every(r=>r.kind==='unavailable'));assert.equal(calls,2);
   await port.search('рис',{scope:delivery});assert.equal(calls,2);
   now+=30001;await port.search('рис',{scope:delivery});assert.equal(calls,4);
+});
+
+// Synthetic pack sizes exercise draft conversion only; they are not price evidence.
+test('spoken mass is carried into both store drafts, with unknown packs blocked',async()=>{
+ for (const [deliveryUnit, deliveryBasis, expectedQuantity, review] of [['900 г','piece',3,false],['упаковка','piece',null,true],['100 г','weighed-portion',null,true]]) {
+  const deliveryProducts=counterparts.map(card=>card.name.toLowerCase().includes('фарш')?{...card,name:'Фарш Домашний',unit:deliveryUnit,catalogPurchaseBasis:deliveryBasis}:card);
+  const magnitProducts=magnit.map(card=>card.name.toLowerCase().includes('фарш')?{...card,unit:'400 г',catalogPurchaseBasis:'piece'}:card);
+  const {flow,basket}=setup({products:deliveryProducts,magnitProducts});
+  flow.start('Собери недорогую корзину на неделю для троих Магнит и Перекрёсток',[]);
+  await flow.handle('хочу фарш 2 кг');
+  await flow.handle('Ограничений нет');
+  let model=flow.getState().presentation.guidedShopping;
+  let row=model.quote.lines.find(r=>r.group.key==='mince');
+  assert.ok(row?.card);assert.deepEqual(row.quantityIntent,{dimension:'g',amount:2000});assert.equal(row.quantity,5);
+  assert.deepEqual(basket.getSnapshot(),[]);
+  await flow.handle('Показать вариант perekrestok');model=flow.getState().presentation.guidedShopping;
+  row=model.quote.lines.find(r=>r.group.key==='mince');assert.ok(row);
+  assert.deepEqual(row.quantityIntent,{dimension:'g',amount:2000});assert.equal(row.quantity,expectedQuantity);
+  if (row.card) assert.equal(row.quantityReview,review); else assert.equal(row.addable,false);
+  if(review){await flow.handle('Добавить найденное');assert.ok(basket.getSnapshot().every(item=>!item.name.toLowerCase().includes('фарш')));}
+  assert.equal(model.draftComparison.kind,'delivery_unconfirmed');
+ }
 });
