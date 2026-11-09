@@ -257,8 +257,9 @@ export function updateShoppingConversation(current, delta) {
   if (next.facts.cookingEffort?.origin === "inferred") delete next.facts.cookingEffort;
   let conditions = next.facts.unresolvedConstraints?.value ?? [];
   if (delta.clearUnresolved) conditions = conditions.filter(isAllergyCondition);
-  const allergyCount = conditions.filter(isAllergyCondition).length;
-  if (delta.clearAllAllergies || (delta.clearAllergy && allergyCount === 1))
+  // A single sentence can name several allergens, so a generic cancellation
+  // never clears the condition. Only a clearly explicit all-clear may do so.
+  if (delta.clearAllAllergies)
     conditions = conditions.filter(value => !isAllergyCondition(value));
   conditions = [...new Set([...conditions, ...delta.unresolved])];
   if (conditions.length) next.facts.unresolvedConstraints = fact(conditions, turn,

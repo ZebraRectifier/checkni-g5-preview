@@ -607,8 +607,8 @@ export function createShoppingConversationFlow(options) {
     if (control.clearAllergy || control.clearAllAllergies) {
       const conditions = memory.facts.unresolvedConstraints?.value ?? [];
       const allergies = conditions.filter(value => /(?:аллерги|непереносимост)/iu.test(value));
-      if (control.clearAllergy && allergies.length > 1) {
-        state = messageState("Уточни отмену.", "Сохранено несколько ограничений аллергии или непереносимости. Чтобы отменить их все, напиши: «Отменяю все ограничения аллергии и непереносимости». До этого ограничения сохраняются.");
+      if (control.clearAllergy && allergies.length > 0) {
+        state = messageState("Уточни отмену.", "Сохранены ограничения аллергии или непереносимости. Чтобы отменить их все, напиши: «Отменяю все ограничения аллергии и непереносимости». До этого ограничения сохраняются.");
         return state;
       }
       const updated = updateShoppingConversation(memory, control);

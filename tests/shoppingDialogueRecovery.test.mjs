@@ -501,6 +501,8 @@ test('explicit allergy cancellation reaches the real shopping-needs wrapper',asy
  await s.send('Новая корзина');await s.send('без ограничений');
  assert.ok(s.flow.getConversation().facts.unresolvedConstraints);
  await s.send('отменяю ограничение аллергии');
+ assert.ok(s.flow.getConversation().facts.unresolvedConstraints);
+ await s.send('отменяю все ограничения аллергии и непереносимости');
  assert.equal(s.flow.getConversation().facts.unresolvedConstraints,undefined);
  assert.deepEqual(s.basket.getSnapshot(),[]);assert.deepEqual(s.proposals,[]);
 });

@@ -177,7 +177,8 @@ test('allergy signal persists through a new goal, ordinary reset and no-restrict
  for(const text of ['Новая корзина','без ограничений','забудь все предпочтения','отменяю непонятное условие']) {
   turn(text);assert.ok(memory.facts.unresolvedConstraints?.value.some(x=>/аллерг/u.test(x)),text);
  }
- turn('отменяю ограничение аллергии');assert.equal(memory.facts.unresolvedConstraints,undefined);
+ turn('отменяю ограничение аллергии');assert.ok(memory.facts.unresolvedConstraints);
+ turn('отменяю все ограничения аллергии и непереносимости');assert.equal(memory.facts.unresolvedConstraints,undefined);
 });
 
 test('explicit allergy cancellation preserves other unresolved restrictions',async()=>{
@@ -185,7 +186,7 @@ test('explicit allergy cancellation preserves other unresolved restrictions',asy
  let m=createShoppingConversation();
  m=updateShoppingConversation(m,extractShoppingDelta('Аллергия на рис')).state;
  m=updateShoppingConversation(m,extractShoppingDelta('без глютена')).state;
- m=updateShoppingConversation(m,extractShoppingDelta('отменяю ограничение аллергии')).state;
+ m=updateShoppingConversation(m,extractShoppingDelta('отменяю все ограничения аллергии и непереносимости')).state;
  assert.ok(m.facts.unresolvedConstraints?.value.some(x=>/глютен/u.test(x)));
  assert.ok(!m.facts.unresolvedConstraints.value.some(x=>/аллерг/u.test(x)));
 });
@@ -208,4 +209,12 @@ test('negative allergy statements are not interpreted as cancellation',async()=>
   m=updateShoppingConversation(m,extractShoppingDelta(text)).state;
   assert.ok(m.facts.unresolvedConstraints?.value.some(x=>/аллерг/u.test(x)),text);
  }
+});
+
+
+test('generic cancellation cannot erase two allergens named in one sentence',async()=>{
+ const {createShoppingConversation,updateShoppingConversation}=await import('../src/intelligence/shoppingConversation.mjs');
+ let m=updateShoppingConversation(createShoppingConversation(),extractShoppingDelta('Аллергия на рис и молоко')).state;
+ m=updateShoppingConversation(m,extractShoppingDelta('отменяю ограничение аллергии')).state;
+ assert.ok(m.facts.unresolvedConstraints?.value.some(x=>/рис и молоко/u.test(x)));
 });
