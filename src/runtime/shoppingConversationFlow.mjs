@@ -551,7 +551,7 @@ export function createShoppingConversationFlow(options) {
       state.presentation.conversationChoices = [{ label: 'Повторить вопрос', text }];
       // When advice is down, let a shopping goal continue locally without
       // a second provider request. The existing guided flow retains memory.
-      if (typeof options.searchGuidedCatalog === 'function' && (planning
+      if (typeof options.searchGuidedCatalog === 'function' && (newGoal
           || adviceHistory.some(row => row.role === 'user' && isShoppingPlanningRequest(row.text))))
         state.presentation.conversationChoices.push({ label: 'Собрать корзину', text: 'Собрать' });
     }
