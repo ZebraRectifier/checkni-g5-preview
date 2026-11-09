@@ -12,6 +12,7 @@ if(!/^[a-f0-9]{40}$/.test(sha??'')||!path.isAbsolute(root??'')||!list.length||
    list.some(id=>!/^[a-f0-9]{64}$/.test(id))||new Set(list).size!==list.length) throw Error('invalid_input');
 try { await fs.lstat(root); throw Error('target_exists'); } catch(e) { if(e.code!=='ENOENT')throw e; }
 const paths=['.nojekyll','index.html','prices.html','deployment.json','src','release','artifacts',...list.map(id=>'releases/'+id)];
+execFileSync('git',['cat-file','-e',sha+'^{commit}']); // exact reviewed commit must be present
 const rows=execFileSync('git',['ls-tree','-r','-z',sha,'--',...paths],{maxBuffer:16*1024*1024}).toString('utf8').split('\0').filter(Boolean);
 if(!rows.length||rows.some(row=>!/^100644 blob [a-f0-9]{40}\t/.test(row))) throw Error('unsafe_archive_entries');
 const names=rows.map(row=>row.slice(row.indexOf('\t')+1));
