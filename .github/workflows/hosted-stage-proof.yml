@@ -4,6 +4,7 @@ on:
     paths:
       - 'tools/browser-release/hosted-release-generator.mjs'
       - 'tools/browser-release/hosted-partial-browser-fixture.txt'
+      - 'tools/browser-release/hosted-guided-browser-fixture.txt'
       - '.github/workflows/hosted-stage-proof.yml'
 permissions:
   contents: read
@@ -45,6 +46,7 @@ jobs:
         run: |
           set -euo pipefail
           cat ../site/tools/browser-release/hosted-partial-browser-fixture.txt >> test/e2e/comparison-presentation.spec.mjs
+          cat ../site/tools/browser-release/hosted-guided-browser-fixture.txt >> test/e2e/guided-shopping.spec.mjs
           npx playwright test --config playwright.weekly.config.mjs --workers=1 test/e2e/guided-shopping.spec.mjs test/e2e/comparison-presentation.spec.mjs
       - name: Build isolated immutable release
         working-directory: site
