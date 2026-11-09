@@ -5,6 +5,10 @@ const inv=JSON.parse(await fs.readFile('tools/browser-release/one-shot-inventory
 const pattern=/^[a-f0-9]{64}$/;
 if(inv.schemaVersion!==1||!Array.isArray(inv.releases)||!inv.releases.every(x=>pattern.test(x))||
    new Set(inv.releases).size!==inv.releases.length||![inv.live,inv.previous].every(x=>inv.releases.includes(x)))throw Error('invalid_inventory');
+if(process.env.GITHUB_REF==='refs/heads/main'){
+ const parent=execFileSync('git',['rev-parse','HEAD^'],{encoding:'utf8'}).trim();
+ if(parent!==inv.priorMain)throw Error('main_parent_changed');
+}
 const active=await activationState('.');if(!active||!inv.releases.includes(active))throw Error('active_not_retained');
 for(const id of inv.releases)await verifyLocal('.',id);
 // A reviewed snapshot of all open PR heads is a one-shot lease. Never ignore
