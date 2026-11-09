@@ -20,7 +20,7 @@ if(names.some(name=>name.startsWith('/')||name.split('/').some(s=>!s||s==='.'||s
 for(const p of paths)if(!names.some(n=>n===p||n.startsWith(p+'/')))throw Error('missing_archive_path:'+p);
 await fs.mkdir(root,{recursive:true});
 const source=spawn('git',['archive','--format=tar',sha,'--',...paths],{stdio:['ignore','pipe','inherit']});
-const dest=spawn('tar',['-xf','-','-C',root],{stdio:['pipe','inherit','inherit']});
+const dest=spawn('tar',['--ignore-zeros','-xf','-','-C',root],{stdio:['pipe','inherit','inherit']});
 const done=child=>new Promise((resolve,reject)=>{child.once('error',reject);child.once('close',code=>code===0?resolve():reject(Error('process_failed:'+code)));});
 await Promise.all([pipeline(source.stdout,dest.stdin),done(source),done(dest)]);
 for(const id of list)await verifyLocal(root,id);
