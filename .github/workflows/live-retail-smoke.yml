@@ -262,6 +262,13 @@ jobs:
               const check = await nearby.newPage();
               check.setDefaultTimeout(15000);
               let geocoderCalls = 0, directorySuccesses = 0;
+              const startupErrors = [];
+              check.on("pageerror", error => startupErrors.push({type:"pageerror", message:error.message.slice(0,500)}));
+              check.on("requestfailed", request => {
+                const target = new URL(request.url());
+                if (["zebrarectifier.github.io","cxpneczhczashanbetgj.supabase.co"].includes(target.hostname))
+                  startupErrors.push({type:"requestfailed", origin:target.origin, path:target.pathname, failure:request.failure()?.errorText});
+              });
               // Observe from navigation onward: automatic location can cache the directory.
               check.on("response", response => {
                 if (new URL(response.url()).pathname.endsWith("/data/nearbyGroceryStores.json")
@@ -277,6 +284,8 @@ jobs:
               try {
                 await check.goto(url,{waitUntil:"domcontentloaded",timeout:30000});
                 await assertPublishedRuntime(check);
+                // App initialization may follow DOMContentLoaded; still fail after a bounded wait.
+                await check.locator('[data-pixel-action="stores"]').waitFor({state:"visible",timeout:30000});
                 await chooseStore(check,"#retail-store-card");
                 await details(check,true);
                 await check.locator("#nearby-shopping").getByRole("button",{name:"📍 Найти магазины рядом",exact:true}).click();
@@ -311,6 +320,19 @@ jobs:
                   console.log("LIVE_GLOBUS_COMPACT_ADDRESS_OK",JSON.stringify({width,store:"5011"}));
                 }
 
+              } catch (error) {
+                // The context uses synthetic coordinates and no account data.
+                // Preserve useful startup evidence, but never mask the original failure.
+                const snapshot = await check.evaluate(() => ({
+                  readyState:document.readyState,
+                  title:document.title,
+                  bodyText:(document.body?.innerText || '').slice(0,4000),
+                  storesButtons:document.querySelectorAll('[data-pixel-action="stores"]').length,
+                  geoProbe:window.__checkniGeoProbe || null
+                })).catch(() => null);
+                console.error("LIVE_NEARBY_DIAGNOSTIC", JSON.stringify({width, snapshot, startupErrors}));
+                await check.screenshot({path:`live-nearby-failure-${width}.png`,fullPage:true,timeout:5000}).catch(() => {});
+                throw error;
               } finally { await nearby.close(); }
             }
             const racePage = await browser.newPage({
@@ -1052,6 +1074,7 @@ jobs:
           path: |
             live-retail-smoke.png
             globus-exact-address-smoke.png
+            live-nearby-failure-*.png
           if-no-files-found: ignore
           retention-days: 3
 
