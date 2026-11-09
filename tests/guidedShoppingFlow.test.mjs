@@ -393,7 +393,8 @@ test('leaving guided edit for product selection clears edit mode',async()=>{
 
 
 test('guided amount plus no restrictions preserves previous household and does not modify basket', async () => {
- const {flow,basket}=setup();
+ let agreed=false;
+ const {flow,basket}=setup({hasGuidedAgreedStore:()=>agreed});
  await flow.run('Нужны продукты на 14 дней для 3 человек');
  await flow.run('Москва');
  const before=basket.getSnapshot();
@@ -403,6 +404,7 @@ test('guided amount plus no restrictions preserves previous household and does n
  const memory=flow.getConversation();
  assert.equal(memory.facts.peopleCount.value,3);
  assert.equal(memory.facts.shoppingDays.value,14);
+ agreed=true; // User selected the concrete store after the approximate city.
  await flow.run('Без лимита');
  await flow.run('Подобрать товары и цены');
  assert.ok(flow.getState().presentation.guidedShopping, JSON.stringify(flow.getState().presentation));
