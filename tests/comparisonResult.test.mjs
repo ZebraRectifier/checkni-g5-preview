@@ -467,3 +467,25 @@ test("insufficient observed comparison ignores an accidental candidate winner", 
   assert.equal(model.totalLabel, undefined);
   assert.equal(model.savingsLabel, undefined);
 });
+
+
+test("incomplete results expose only exact basket names for each Core gap without changing the result", () => {
+  const basket = [{product:{id:"a",name:"Молоко"},quantity:1},{product:{id:"b",name:"Хлеб"},quantity:1}];
+  const result = {basket,candidates:[
+    observedCandidate({storeName:"Первый",lines:[{productId:"a",status:"unknown-price"},{productId:"a",status:"unknown-price"},{productId:"b",status:"priced-observation",unitPriceMinor:5000},{productId:"not-in-basket",status:"unknown-price"}]}),
+    observedCandidate({storeName:"Второй",lines:[{productId:"b",status:"conflict-observation"},{productId:"a",status:"priced-observation",unitPriceMinor:6000},{productId:"a"}]})
+  ],conclusion:{kind:"insufficient-coverage",reason:"no_complete_candidate"}};
+  const before=structuredClone(result), model=buildObservedResultModel(result);
+  assert.deepEqual(model.confirmedCandidates.map(c=>c.unconfirmedItems),[["Молоко"],["Хлеб"]]);
+  assert.equal(model.totalLabel,undefined); assert.equal(model.savingsLabel,undefined);
+  assert.deepEqual(result,before);
+});
+
+test("a shop with only gaps is included; unknown identities and full coverage do not invent details", () => {
+  const basket=[{product:{id:"a",name:"Яйца"},quantity:1}];
+  const build=lines=>buildObservedResultModel({basket,candidates:[observedCandidate({lines})],
+    conclusion:{kind:"insufficient-coverage",reason:"no_complete_candidate"}});
+  assert.deepEqual(build([{productId:"a",status:"unknown-price"}]).confirmedCandidates[0].unconfirmedItems,["Яйца"]);
+  assert.deepEqual(build([{productId:"unknown",status:"unknown-price"}]).confirmedCandidates,[]);
+  assert.equal(build([{productId:"a",status:"priced-observation",unitPriceMinor:100}]).confirmedCandidates[0].unconfirmedItems,undefined);
+});
