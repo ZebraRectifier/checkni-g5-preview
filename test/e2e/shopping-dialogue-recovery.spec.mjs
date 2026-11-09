@@ -502,7 +502,7 @@ test('provider 503 offers local basket without another AI request', async ({page
  await page.goto('/?comparison=observed&catalog=retail#shop');
  await openHory(page);
  const before=await savedBasket(page);
- await submit(page,'Составь меню на две недели для троих: рис и хлеб, без свинины');
+ await submit(page,'Составь меню на две недели для троих без свинины. Рис и хлеб');
  await expect(status(page)).toContainText('бюджет');
  console.log('offline-status',JSON.stringify(await status(page).innerText()),'requests',requests);
  await expect(status(page).getByRole('button',{name:'Собрать корзину',exact:true})).toBeVisible({timeout:5000});
