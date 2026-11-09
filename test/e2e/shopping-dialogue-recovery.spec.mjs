@@ -504,6 +504,8 @@ test('provider 503 offers local basket without another AI request', async ({page
  const before=await savedBasket(page);
  await submit(page,'Слушай, нужна еда на две недели для троих без свинины. Что посоветуешь?');
  await expect(status(page)).toContainText('бюджет');
+ console.log('offline-status',JSON.stringify(await status(page).innerText()),'requests',requests);
+ await expect(status(page).getByRole('button',{name:'Собрать корзину',exact:true})).toBeVisible({timeout:5000});
  await status(page).getByRole('button',{name:'Собрать корзину',exact:true}).click();
  await expect(status(page)).not.toContainText('Сервис советов сейчас не ответил');
  await expect(status(page)).toContainText(/бюджет|магазин|продукт/u);
