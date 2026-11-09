@@ -88,9 +88,9 @@ test('official Magnit coordinates: map retains full paginated list and opens an 
   await page.route('https://tiles.openfreemap.org/**',route=>new URL(route.request().url()).pathname==='/styles/liberty'
     ?route.fulfill({json:{version:8,sources:{},layers:[{id:'background',type:'background',paint:{'background-color':'#e5e8de'}}]}}):route.abort());
   const point=registeredCoordinates.stores.find(row=>row.shopCode==='548279');
-  await context.grantPermissions(['geolocation']);await context.setGeolocation({latitude:point.lat,longitude:point.lon,accuracy:10});
   await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
-  await selectStore(page);await openStoreDetails(page);await page.locator('#stores-section').scrollIntoViewIfNeeded();
+  await selectStore(page);await openStoreDetails(page);
+  await page.locator('#stores-section').scrollIntoViewIfNeeded();
   await expect(page.locator('.stores-location-directory > summary')).toHaveText('Магазины списком');
   await page.locator('.stores-location-directory').evaluate(node=>{node.open=true;});
   // Before choosing a position there is no nearby context: this exercises the
@@ -103,6 +103,7 @@ test('official Magnit coordinates: map retains full paginated list and opens an 
   await direct.getByRole('button',{name:'Открыть товары',exact:true}).click();
   await expect(page.locator('#magnit-store-address')).toHaveValue(directId.slice(-6));
   await selectStore(page);await openStoreDetails(page);await page.locator('#stores-section').scrollIntoViewIfNeeded();
+  await context.grantPermissions(['geolocation']);await context.setGeolocation({latitude:point.lat,longitude:point.lon,accuracy:10});
   await page.locator('#stores-locate').click();await page.locator('#stores-map-network').selectOption('magnit');
   await expect(page.locator('#stores-known-locations li')).toHaveCount(5);
   const row=page.locator('#stores-known-locations li[data-store-location-id="official:magnit:548279"]');
@@ -210,10 +211,11 @@ test('selected map card keeps its catalogue action reachable above the mobile na
     return route.abort();
   });
   await page.route('**/rest/v1/**',route=>route.fulfill({json:[]}));
-  await context.grantPermissions(['geolocation']);await context.setGeolocation({latitude:55.928776,longitude:38.003613,accuracy:10});
   await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
   await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready',{timeout:20000});
   await selectStore(page);await openStoreDetails(page);
+  await context.grantPermissions(['geolocation']);await context.setGeolocation({latitude:55.928776,longitude:38.003613,accuracy:10});
+
   await page.locator('#stores-section').scrollIntoViewIfNeeded();
   await page.locator('#stores-locate').click();
   const marker=page.locator('.stores-pin').filter({hasText:'Глобус Щелково'});
@@ -491,10 +493,11 @@ test('nearby cards page past fifteen and stop at the honest end',async({page,con
     lat:center.lat+i*0.0002,lon:center.lon,catalogBinding:null}))};
   await page.route('**/nearbyGroceryStores.json',route=>route.fulfill({json:packet}));
   await page.route('**/magnitRegisteredCoordinates.json',route=>route.fulfill({status:404}));
-  await context.grantPermissions(['geolocation']);
-  await context.setGeolocation({latitude:center.lat,longitude:center.lon,accuracy:10});
   await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
   await selectStore(page);await openStoreDetails(page);
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({latitude:center.lat,longitude:center.lon,accuracy:10});
+
   await page.locator('#nearby-shopping').getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
   await page.locator('#nearby-locate').click();
   await page.locator('#nearby-radius').selectOption('1');

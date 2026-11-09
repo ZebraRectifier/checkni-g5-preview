@@ -75,11 +75,12 @@ test('map centre and radius survive opening a catalogue and returning to stores'
     return route.abort();
   });
   await page.route('**/rest/v1/**',route=>route.fulfill({json:[]}));
-  await context.grantPermissions(['geolocation']);
-  await context.setGeolocation({latitude:55.802136,longitude:37.299144,accuracy:10});
   await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
   await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready',{timeout:20000});
   await selectStore(page,'globus');await openStoreDetails(page);
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({latitude:55.802136,longitude:37.299144,accuracy:10});
+
   await page.locator('#nearby-locate').click();await page.locator('#nearby-radius').selectOption('10');
   await page.locator('#nearby-shopping .nearby-location-actions button').filter({hasText:'На карте'}).click();
   const map=page.locator('.stores-map');await expect(map).toBeFocused();
