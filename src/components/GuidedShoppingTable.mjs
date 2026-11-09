@@ -62,7 +62,8 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
       const note=document.createElement('p');note.className='guided-shopping-warning';note.setAttribute('role','status');
       const format=(amount,dimension)=>dimension==='g'?(amount>=1000?`${amount/1000} кг`:`${amount} г`):dimension==='ml'?(amount>=1000?`${amount/1000} л`:`${amount} мл`):`${amount} шт.`;
       const differences=(model.quantityDifferences??[]).map(item=>`${item.label}: ${item.totals.map(total=>`${total.storeName} — ${format(total.amount,item.dimension)}`).join('; ')}`).join('. ');
-      note.textContent=`Из-за разных упаковок итоговое количество отличается${differences?`: ${differences}`:''}. Суммы напрямую не сравниваем.`;coverage.append(note);
+      note.textContent='Из-за разных упаковок итоговое количество отличается. Суммы напрямую не сравниваем.';coverage.append(note);
+      if(differences)addInformation(`Разница по продуктам: ${differences}.`);
     }
     if(model.alternatives.some(store=>store.priceScope==='delivery-catalog')){
       summary.textContent += ' Доставка Перекрёстка по выбранному адресу не подтверждена. Сравнение недоступно. Доставка и сборы не включены.';
@@ -147,6 +148,7 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
     body.append(tr);
   }
   table.append(body); scroll.append(table); root.append(scroll);
+  if (information.childElementCount > 1) root.append(information);
   if(missing.length){
     const details=document.createElement('details'),summary=document.createElement('summary'),names=document.createElement('p');
     summary.textContent=`Ещё нужно подобрать: ${missing.length} поз.`;names.textContent=missing.join(', ')+'. Цены неизвестны; это не отсутствие товара в магазине.';

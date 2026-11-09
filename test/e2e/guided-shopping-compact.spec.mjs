@@ -41,6 +41,8 @@ test('guided variants show products early and retain scope, warnings and keyboar
   await expect(guided.locator('.guided-shopping-conditions')).toContainText('Марки и фасовки различаются');
   await expect(guided.locator('.guided-shopping-conditions')).toContainText('Наличие не подтверждено');
   await expect(guided.locator('.guided-shopping-conditions')).toContainText('Доставка и сборы не включены');
+  await expect(guided.locator('.guided-shopping-warning').filter({hasText:'итоговое количество отличается'})).toBeVisible();
+  await expect(guided.locator('.guided-shopping-warning').filter({hasText:'Суммы напрямую не сравниваем'})).toBeVisible();
   for (const card of await cards.all()) {
     const address = await card.locator('.guided-store-address').innerText();
     expect((await card.innerText()).split(address)).toHaveLength(2);
@@ -72,6 +74,7 @@ test('guided variants show products early and retain scope, warnings and keyboar
   await expect(disclosure).toHaveAttribute('open', '');
   await expect(disclosure).toContainText('Варианты показаны для просмотра');
   await expect(disclosure).toContainText('Цены в физическом магазине могут отличаться');
+  await expect(disclosure).toContainText('Разница по продуктам:');
   await page.keyboard.press('Enter');
   await expect(disclosure).not.toHaveAttribute('open', '');
   const delivery = variants.getByRole('button', { name: 'Показать Перекрёсток', exact: true });
