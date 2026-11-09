@@ -317,6 +317,25 @@ test('guided shopping respects deferred budget and preserves the household witho
  expect(calls).toBe(0);expect(await savedBasket(page)).toBeNull();
 });
 
+test('compound deferred budget keeps wanted foods and fish exclusion',async({page})=>{
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ await submit(page,'Собери продукты на неделю для четверых');await expect(status(page)).toContainText('общий бюджет');
+ await submit(page,'не знаю, но хочу фарш и яблоки');await expect(status(page)).toContainText('Какие продукты исключить');
+ await submit(page,'без рыбы');
+ await status(page).getByRole('button',{name:'Изменить список',exact:true}).click();
+ await expect(status(page)).toContainText('Фарш');await expect(status(page)).toContainText('Яблоки');
+ await expect(status(page)).not.toContainText('Какой общий бюджет');
+ expect(await savedBasket(page)).toBeNull();
+});
+
+test('compound deferred budget with fish exclusion proceeds without inventing a budget',async({page})=>{
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ await submit(page,'Собери продукты на неделю для четверых');await expect(status(page)).toContainText('общий бюджет');
+ await submit(page,'не знаю, без рыбы');await expect(status(page)).not.toContainText('Какой общий бюджет');
+ await expect(status(page)).not.toContainText('Не получилось разобрать');
+ expect(await savedBasket(page)).toBeNull();
+});
+
 test('503 commercial-claim fallback retains context, accepts budget deferral and protects the basket',async({page})=>{
  const calls=[];await page.route('**/functions/v1/ai-basket-proposal',r=>{calls.push(r.request().postDataJSON());return r.fulfill({status:503,json:{kind:'unavailable',code:'provider_advice_commercial_claim'}})});
  await page.goto('/?comparison=demo#shop');const before=await savedBasket(page);

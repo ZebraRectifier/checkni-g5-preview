@@ -136,7 +136,7 @@ export function extractShoppingDelta(text) {
   delta.dissatisfaction = /не знаю.{0,20}(?:не нравится|не так)|все не то|случайн\S* набор/u.test(value);
   if (/без готовк|холодн\S* набор/u.test(value)) delta.directions = "cold";
   if (/разогре[вт]|готов\S* блюд/u.test(value)) delta.directions = "heat";
-  if (/быстр\S* готовк|один горячий|фарш/u.test(value)) delta.directions = "quick";
+  if (/быстр\S* готовк|один горячий/u.test(value)) delta.directions = "quick";
 
   const addTargets = (phrase, kind) => {
     const targets = shoppingPreferenceTargets(phrase);

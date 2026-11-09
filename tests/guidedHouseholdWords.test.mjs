@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {advanceGuidedIntake} from '../src/intelligence/guidedShoppingPlan.mjs';
 import {suggestedCatalogQuantity, economicalCatalogCards} from '../src/core/catalogDraft.mjs';
+import {extractShoppingDelta} from '../src/intelligence/shoppingConversation.mjs';
 
 test('short household answers support larger families without assuming three people',()=>{
   for(const [text,count] of [['пятеро',5],['шестеро',6],['семеро',7],['восьмеро',8],['девятеро',9],['десятеро',10],['одиннадцать',11],['двенадцать',12]]){
@@ -79,7 +80,7 @@ test('thousands do not become a budget out of context or overwrite a budget on i
 });
 
 test('only a pending budget question interprets a deferred amount as unknown',()=>{
-  for(const text of ['Бюджет пока не решил','пока не знаю','сумму не определила','не решил пока']){
+  for(const text of ['Бюджет пока не решил','пока не знаю','сумму не определила','не решил пока','пока не определился','не знаю, но хочу фарш и яблоки','не знаю, без рыбы']){
     const plan={question:'budget',groups:[],people:4,days:10,budgetMinor:undefined};
     const result=advanceGuidedIntake(plan,text,{facts:{},rejected:[],wishes:[],exceptions:[]});
     assert.equal(plan.budgetMinor,null,text);assert.ok(result.delta.unset.includes('budgetMinor'),text);
@@ -88,4 +89,16 @@ test('only a pending budget question interprets a deferred amount as unknown',()
   const plan={question:'constraints',groups:[],people:4,days:10,budgetMinor:500000};
   const result=advanceGuidedIntake(plan,'пока не знаю',{facts:{},rejected:[],wishes:[],exceptions:[]});
   assert.equal(plan.budgetMinor,500000);assert.ok(!result.delta.unset.includes('budgetMinor'));
+  const mixed={question:'budget',groups:[],people:4,days:10,budgetMinor:undefined};
+  const wish=advanceGuidedIntake(mixed,'не знаю, но хочу фарш и яблоки',{facts:{},rejected:[],wishes:[],exceptions:[]});
+  assert.deepEqual(mixed.groups.map(g=>g.key),['mince','apples']);assert.equal(wish.delta.directions,null);
+  const blocked=advanceGuidedIntake({question:'budget',groups:[],people:4,days:10},'не знаю, без рыбы',{facts:{},rejected:[],wishes:[],exceptions:[]});
+  assert.ok(blocked.delta.reject.includes('fish'));
+  for(const text of ['не знаю, но бюджет 5000 рублей','не знаю, но бюджет пять тысяч рублей']){
+    const pending={question:'budget',groups:[],people:4,days:10,budgetMinor:100000};
+    const delta=advanceGuidedIntake(pending,text,{facts:{},rejected:[],wishes:[],exceptions:[]}).delta;
+    assert.ok(!delta.unset.includes('budgetMinor'),text);assert.notEqual(pending.budgetMinor,null,text);
+  }
+  assert.equal(extractShoppingDelta('хочу фарш').directions,null);
+  assert.equal(extractShoppingDelta('нужна быстрая готовка').directions,'quick');
 });

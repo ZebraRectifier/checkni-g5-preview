@@ -89,10 +89,18 @@ export function advanceGuidedIntake(plan, text, memory) {
   if (location) { plan.location = location; plan.rows = []; plan.alternatives = []; }
   if (value === 'текущий магазин') { plan.useCurrentStore = true; plan.location = null;plan.retailers=[]; }
   if (/есть морозилка|морозилка есть/u.test(value)) plan.freezer = true;
-  const deferBudget = plan.question === 'budget' && /^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а)?(?:сь)?)(?:\s+пока)?[.!]?$/u.test(value);
+  const deferBudget = plan.question === 'budget' && !Object.hasOwn(delta.facts,'budgetMinor')
+    && !/\d|тысяч|рубл|руб\.|₽/u.test(value)
+    && /^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а|ся|ась)?)(?:\s+пока)?(?:$|[,.!])/u.test(value);
   if (/без точного бюджета|подбери подешевле|без лимита/u.test(value) || deferBudget) {
     plan.budgetMinor = null; delta.unset.push('budgetMinor');
     delta.unresolved = delta.unresolved.filter(row => !/бюджет|лимит/u.test(row));
+  }
+  if (deferBudget) {
+    const wish = /(?:^|[,;])\s*(?:но\s+)?хочу\s+([^.!;]+)/u.exec(value)?.[1]?.split(/\s+(?:но\s+)?без\s+/u)[0];
+    if (wish) for (const group of GROUPS.filter(group => group.pattern.test(wish)))
+      if (!plan.groups.some(existing => existing.key === group.key)) plan.groups.push({...group});
+    plan.groups = plan.groups.slice(0,16);
   }
   if (value === 'подбери подешевле') { plan.mode = 'economy'; if (!plan.location) plan.useCurrentStore = true; }
   // The general food-refusal parser also records unknown "без ..." phrases.
