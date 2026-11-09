@@ -27,7 +27,8 @@ test('weekly alternatives keep delivery separate, require confirmation, persist,
   await expect(page.locator('#basket-proposal-status')).toContainText('Какие продукты исключить');await say('Ограничений нет');
   const variants=page.locator('.guided-shopping-stores');await expect(variants).toContainText('15/15 позиций');
   await expect(variants).toContainText('Доставка и сборы не включены');
-  await expect(variants).toContainText('разница');
+  await expect(variants).toContainText('Доставка Перекрёстка по выбранному адресу не подтверждена. Сравнение недоступно.');
+  await expect(variants).not.toContainText('разница');
   expect(deliveryReads).toBe(2);
   await variants.getByRole('button',{name:'Показать Магнит',exact:true}).click();
   const buckwheat=page.locator('.guided-shopping-table tbody tr').filter({hasText:/греч/iu});
@@ -39,7 +40,8 @@ test('weekly alternatives keep delivery separate, require confirmation, persist,
   // Same requested 7.2 kg, not the original two packs or nine smaller packs.
   await expect(buckwheat).toContainText('18 × 400');
   await say('сравни с другим магазином');
-  await expect(variants).toContainText('разница');
+  await expect(variants).toContainText('Доставка Перекрёстка по выбранному адресу не подтверждена. Сравнение недоступно.');
+  await expect(variants).not.toContainText('разница');
   await say('а в Магните?');
   await expect(buckwheat).toContainText('9 × 800');
   await say('а в Перекрёстке?');

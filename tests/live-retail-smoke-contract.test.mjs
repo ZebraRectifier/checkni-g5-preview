@@ -1,11 +1,49 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { expectedLentaRoots, pinnedRuntimePrefix, pinnedLiveRuntimeProof } from '../tools/live-retail-smoke-contract.mjs';
+import { expectedLentaRoots, pinnedRuntimePrefix, pinnedLiveRuntimeProof, settleExactStoreSelection } from '../tools/live-retail-smoke-contract.mjs';
 
 const row = (id, count = 2) => ({ retailer_id: 'lenta', store_id: 'lenta-public-web',
   category_id: id, root_id: id, parent_id: null, depth: 0, name: `Category ${id}`,
   product_count: count, source_url: `https://lenta.com/catalog/category-${id}/` });
+
+function selectionFixture(stages, { clickError = false, pressed = 'true' } = {}) {
+  let clicks = 0, choices = 0;
+  const page = {
+    waitForFunction: async () => {
+      const stage = stages.shift();
+      if (!stage) throw Error('No valid next screen');
+      return { jsonValue: async () => stage };
+    },
+    getByRole: () => ({ click: async () => { clicks++; if (clickError) throw Error('Hidden while scrolling'); } }),
+    locator: selector => selector === '#globus-store-address' ? {
+      getAttribute: async () => null,
+      locator: () => ({ evaluateAll: async () => '5011' })
+    } : selector === '#retail-store-card' ? { getAttribute: async () => pressed }
+      : { waitFor: async () => {} }
+  };
+  return { page, choice: async () => { choices++; }, clicks: () => clicks, choices: () => choices };
+}
+
+test('location selection accepts manual chooser, direct storefront and a button hidden during scroll', async () => {
+  for (const [stages, options, clicks, choices] of [
+    [['manual', 'chooser'], {}, 1, 1],
+    [['storefront'], {}, 0, 0],
+    [['manual', 'storefront'], { clickError:true }, 1, 0],
+    [['chooser'], {}, 0, 1]
+  ]) {
+    const f = selectionFixture([...stages], options);
+    await settleExactStoreSelection(f.page, '#retail-store-card', 'globus', f.choice);
+    assert.equal(f.clicks(), clicks); assert.equal(f.choices(), choices);
+  }
+});
+
+test('location selection does not hide an error without a valid next screen or accept wrong retailer', async () => {
+  const hidden = selectionFixture(['manual'], { clickError:true });
+  await assert.rejects(() => settleExactStoreSelection(hidden.page, '#retail-store-card', 'globus', hidden.choice), /Hidden while scrolling/);
+  const wrong = selectionFixture(['chooser'], { pressed:'false' });
+  await assert.rejects(() => settleExactStoreSelection(wrong.page, '#retail-store-card', 'globus', wrong.choice));
+});
 
 test('live root contract follows IDs/counts from the response, excluding seeded zero rows', () => {
   assert.deepEqual(expectedLentaRoots([row(7), row(8, 0), row(90, 12)]), [

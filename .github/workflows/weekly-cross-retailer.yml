@@ -24,3 +24,6 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --config playwright.cross-retailer.config.mjs
+      # Positive control: two verified exact-store fixtures must still produce
+      # a Core comparison; blocking an unrelated delivery address is narrower.
+      - run: npx playwright test --config playwright.weekly.config.mjs test/e2e/weekly-route.spec.mjs --grep 'explicit address and peer'

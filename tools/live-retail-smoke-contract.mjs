@@ -1,6 +1,47 @@
 import assert from 'node:assert/strict';
 import { readFile as readLocalFile } from 'node:fs/promises';
 
+// Store selection can advance asynchronously as a previously allowed browser
+// location resolves. Accept either the manual chooser or the already selected
+// storefront, but never accept an unrelated storefront or hide a click error.
+export async function settleExactStoreSelection(page, selector, retailer, chooseAddressCard) {
+  const chooser = page.locator('#pixel-address-chooser');
+  const manual = page.getByRole('button', { name: 'Выбрать магазин вручную' });
+  const screen = async allowManual => {
+    const handle = await page.waitForFunction(({ selector, allowManual }) => {
+      const visible = el => Boolean(el && !el.hidden && el.getClientRects().length
+        && getComputedStyle(el).visibility !== 'hidden' && getComputedStyle(el).display !== 'none');
+      if (visible(document.querySelector('#pixel-storefront'))
+          && document.querySelector(selector)?.getAttribute('aria-pressed') === 'true') return 'storefront';
+      if (visible(document.querySelector('#pixel-address-chooser'))) return 'chooser';
+      if (allowManual && [...document.querySelectorAll('button')].some(el =>
+        el.textContent.trim() === 'Выбрать магазин вручную' && visible(el))) return 'manual';
+      return false;
+    }, { selector, allowManual }, { timeout: 15000 });
+    return await handle.jsonValue();
+  };
+  let current = await screen(true);
+  if (current === 'manual') {
+    try { await manual.click({ timeout: 1500 }); }
+    catch (error) {
+      // The button may disappear while Playwright scrolls because location
+      // auto-selects. Only tolerate that if a valid next screen is present.
+      try { current = await screen(false); } catch { throw error; }
+    }
+    if (current === 'manual') current = await screen(false);
+  }
+  if (current === 'storefront') return;
+  const select = page.locator(`#${retailer}-store-address`);
+  const previous = await select.getAttribute('data-pixel-original-address');
+  const option = await select.locator('option').evaluateAll((options, preferred) =>
+    options.find(item => item.value === preferred && !item.disabled)?.value
+    ?? options.find(item => item.value && !item.disabled)?.value, previous);
+  assert(option, `No selectable address for ${retailer}`);
+  await chooseAddressCard(page, retailer, option);
+  await page.locator('#pixel-storefront').waitFor({state:'visible'});
+  assert.equal(await page.locator(selector).getAttribute('aria-pressed'), 'true');
+}
+
 export async function pinnedLiveRuntimeProof({ baseUrl, files, readFile = readLocalFile, fetchImpl = globalThis.fetch }) {
   const entry = await readFile('index.html');
   const prefix = pinnedRuntimePrefix(entry.toString('utf8'));

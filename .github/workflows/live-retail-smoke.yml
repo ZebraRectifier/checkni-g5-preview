@@ -182,17 +182,8 @@ jobs:
               "#retail-store-card-metro": "metro"
             }[selector];
             if (exactRetailer) {
-              const manualAddress = page.getByRole("button",{name:"Выбрать магазин вручную"});
-              if (await manualAddress.isVisible()) await manualAddress.click();
-              const chooser = page.locator("#pixel-address-chooser");
-              await chooser.waitFor({state:"visible"});
-              const select = page.locator(`#${exactRetailer}-store-address`);
-              const previous = await select.getAttribute("data-pixel-original-address");
-              const option = await select.locator("option").evaluateAll((options, preferred) =>
-                options.find(item => item.value === preferred && !item.disabled)?.value
-                ?? options.find(item => item.value && !item.disabled)?.value, previous);
-              assert(option, `No selectable address for ${exactRetailer}`);
-              await chooseAddressCard(page, exactRetailer, option);
+              const { settleExactStoreSelection } = await import("./tools/live-retail-smoke-contract.mjs");
+              await settleExactStoreSelection(page, selector, exactRetailer, chooseAddressCard);
             }
             await page.locator("#pixel-storefront").waitFor({state:"visible"});
             await allCategories(page);
