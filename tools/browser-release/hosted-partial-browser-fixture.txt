@@ -1,0 +1,20 @@
+
+// Additional hosted fixture: synthetic observations, no external service calls.
+test('partial comparison exposes missing product in a compact disclosure',async({page})=>{
+ await page.route('**/*',route=>['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready');
+ await page.evaluate(async()=>{
+  const {createObservedComparisonResult}=await import('/src/components/ComparisonResult.mjs');
+  const candidate={candidateId:'store:a',candidateName:'Магазин',sourceId:'a',sourceName:'Тест',sources:[{sourceId:'a',sourceName:'Тест'}],storeId:'a',storeName:'Магазин',locationTruthLevel:'store',countryCode:'RU',regionId:'r',regionName:'Тест',localityId:'l',localityName:'Тест',availability:'unknown',priceCoverage:{coveredItems:0,totalItems:1,ratio:0},lines:[{productId:'a',status:'unknown-price'}]};
+  const node=createObservedComparisonResult({basket:[{product:{id:'a',name:'Молоко'}}],candidates:[candidate],conclusion:{kind:'insufficient-coverage',reason:'no_complete_candidate'}});
+  const root=document.createElement('div');root.id='hosted-partial-proof';root.append(node);document.body.prepend(root);
+ });
+ const details=page.locator('#hosted-partial-proof details');
+ await expect(details).toHaveCount(1);
+ await expect(details).not.toHaveAttribute('open','');
+ await details.locator('summary').click();
+ await expect(details).toHaveAttribute('open','');
+ await expect(details).toContainText('Молоко');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
