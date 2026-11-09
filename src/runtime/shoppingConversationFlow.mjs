@@ -547,7 +547,14 @@ export function createShoppingConversationFlow(options) {
     state.result.providerAccepted = Boolean(reply);
     rememberAdvice(text, message);
     lastAdviceFailure = reply ? null : { text, message, history: retryHistory };
-    if (!reply) state.presentation.conversationChoices = [{ label: 'Повторить вопрос', text }];
+    if (!reply) {
+      state.presentation.conversationChoices = [{ label: 'Повторить вопрос', text }];
+      // When advice is down, let a shopping goal continue locally without
+      // a second provider request. The existing guided flow retains memory.
+      if (typeof options.searchGuidedCatalog === 'function' && (newGoal
+          || adviceHistory.some(row => row.role === 'user' && isShoppingPlanningRequest(row.text))))
+        state.presentation.conversationChoices.push({ label: 'Собрать корзину', text: 'Собрать' });
+    }
     else if (typeof options.searchGuidedCatalog === "function" && (isShoppingPlanningRequest(text)
         || adviceHistory.some(row => row.role === "user" && isShoppingPlanningRequest(row.text)))) {
       state.presentation.headline = "Давай подберём продукты.";
@@ -629,8 +636,11 @@ export function createShoppingConversationFlow(options) {
           searchCatalog: options.searchGuidedCatalog,
           onGuidedBasketConfirmed: options.onGuidedBasketConfirmed,
           compareBasket: options.compareGuidedBasket });
-        state = guidedShopping.start(directGuidedBuild ? text : adviceHistory.find(row => row.role === "user")?.text ?? text,
-          directGuidedBuild ? [] : adviceHistory);
+        // A failure notice is not a food recommendation. Rebuild an offline
+        // draft from user turns; accepted assistant suggestions are not facts.
+        const guidedHistory = lastAdviceFailure ? adviceHistory.filter(row => row.role === 'user') : adviceHistory;
+        state = guidedShopping.start(directGuidedBuild ? text : guidedHistory.find(row => row.role === "user")?.text ?? text,
+          directGuidedBuild ? [] : guidedHistory);
       } else state = guidedShopping.getState();
       pending = null; suspendedDraft = null; hybrid.invalidate();
       return state;

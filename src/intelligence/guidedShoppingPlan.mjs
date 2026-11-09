@@ -69,6 +69,8 @@ export function createGuidedShoppingPlan(goal, history, memory) {
   if(retailers.length)for(const key of retailers.includes('perekrestok')?['rice','cheese']:['rice','pork','cheese'])if(!groups.some(g=>g.key===key))groups.push(GROUPS.find(g=>g.key===key));
   if (memory.facts.cookingEffort?.origin === 'explicit' && memory.facts.cookingEffort.value === 'minimal')
     groups.sort((a,b)=>Number(guidedGroupAllowed(b,memory))-Number(guidedGroupAllowed(a,memory)));
+  // Never expose a previously rejected group in the editable draft.
+  groups = groups.filter(group => guidedGroupAllowed(group, memory));
   return { goal: String(goal).slice(0, 300), groups: groups.slice(0, 16).map(row => ({ ...row,
     ...(economy&&row.key==='chicken'&&!/филе/u.test(clean(user))?{label:'Курица',query:'цыпл',allowPoultryCuts:true}:{}) })), retailers, stage: 'intake', mode: economy ? 'economy' : 'balanced',
     location: shoppingLocationRequest(goal), freezer: /морозилк/u.test(clean(goal)) ? true : null,
