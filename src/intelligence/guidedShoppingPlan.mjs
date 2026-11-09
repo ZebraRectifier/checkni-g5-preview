@@ -89,7 +89,8 @@ export function advanceGuidedIntake(plan, text, memory) {
   if (location) { plan.location = location; plan.rows = []; plan.alternatives = []; }
   if (value === 'текущий магазин') { plan.useCurrentStore = true; plan.location = null;plan.retailers=[]; }
   if (/есть морозилка|морозилка есть/u.test(value)) plan.freezer = true;
-  if (/без точного бюджета|подбери подешевле|без лимита/u.test(value)) {
+  const deferBudget = plan.question === 'budget' && /^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а)?(?:сь)?)(?:\s+пока)?[.!]?$/u.test(value);
+  if (/без точного бюджета|подбери подешевле|без лимита/u.test(value) || deferBudget) {
     plan.budgetMinor = null; delta.unset.push('budgetMinor');
     delta.unresolved = delta.unresolved.filter(row => !/бюджет|лимит/u.test(row));
   }

@@ -303,3 +303,30 @@ test('advice rejection lets a buyer defer budget without losing the goal', async
   expect(requests[1].history[1].text).toContain('Какой общий бюджет');
   expect(await savedBasket(page)).toBe(before);
 });
+
+test('guided shopping respects deferred budget and preserves the household without a provider call',async({page})=>{
+ let calls=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{calls++;return r.fulfill({status:503,json:{kind:'unavailable',code:'provider_advice_commercial_claim'}})});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ await submit(page,'Слушай, нужна еда на две недели, побольше фарша и фруктов. Что посоветуешь?');
+ await expect(status(page)).toContainText('На сколько человек');
+ await submit(page,'На троих, морозилка есть');await expect(status(page)).toContainText('общий бюджет');
+ await submit(page,'Бюджет пока не решил');
+ await expect(status(page)).toContainText('Какие продукты исключить');
+ await expect(status(page)).toContainText('для 3 человек');await expect(status(page)).toContainText('на 14 дн.');
+ await expect(status(page)).toContainText('морозилка есть');await expect(status(page)).not.toContainText('Какой общий бюджет');
+ expect(calls).toBe(0);expect(await savedBasket(page)).toBeNull();
+});
+
+test('503 commercial-claim fallback retains context, accepts budget deferral and protects the basket',async({page})=>{
+ const calls=[];await page.route('**/functions/v1/ai-basket-proposal',r=>{calls.push(r.request().postDataJSON());return r.fulfill({status:503,json:{kind:'unavailable',code:'provider_advice_commercial_claim'}})});
+ await page.goto('/?comparison=demo#shop');const before=await savedBasket(page);
+ await submit(page,'Нужна еда на две недели для троих');
+ await expect(status(page)).toContainText('Ответ сервиса не прошёл проверку');await expect(status(page)).toContainText('бюджет');
+ await submit(page,'Бюджет пока не решил');await expect(status(page)).toContainText('Какие продукты особенно хочется');
+ await expect(status(page)).not.toContainText('Какой общий бюджет');
+ expect(calls).toHaveLength(2);expect(calls[1].context.peopleCount).toBe(3);expect(calls[1].context.shoppingDays).toBe(14);
+ expect(calls[1].context.budgetMinor).toBeNull();expect(calls[1].history[0].text).toContain('две недели для троих');
+ await submit(page,'не люблю рыбу');await expect(status(page)).toContainText('Рыбу как товарную группу исключила');
+ expect(calls).toHaveLength(2);expect(await savedBasket(page)).toBe(before);
+ await expect(page.locator('#shopping-dialogue-history')).toContainText('Бюджет пока не решил');
+});

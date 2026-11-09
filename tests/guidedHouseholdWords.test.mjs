@@ -77,3 +77,15 @@ test('thousands do not become a budget out of context or overwrite a budget on i
     assert.equal(result.delta.facts.budgetMinor,undefined,text);
   }
 });
+
+test('only a pending budget question interprets a deferred amount as unknown',()=>{
+  for(const text of ['Бюджет пока не решил','пока не знаю','сумму не определила','не решил пока']){
+    const plan={question:'budget',groups:[],people:4,days:10,budgetMinor:undefined};
+    const result=advanceGuidedIntake(plan,text,{facts:{},rejected:[],wishes:[],exceptions:[]});
+    assert.equal(plan.budgetMinor,null,text);assert.ok(result.delta.unset.includes('budgetMinor'),text);
+    assert.equal(plan.people,4,text);assert.equal(plan.days,10,text);
+  }
+  const plan={question:'constraints',groups:[],people:4,days:10,budgetMinor:500000};
+  const result=advanceGuidedIntake(plan,'пока не знаю',{facts:{},rejected:[],wishes:[],exceptions:[]});
+  assert.equal(plan.budgetMinor,500000);assert.ok(!result.delta.unset.includes('budgetMinor'));
+});
