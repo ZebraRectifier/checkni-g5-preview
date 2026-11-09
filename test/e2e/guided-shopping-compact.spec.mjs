@@ -36,7 +36,8 @@ test('guided variants show products early and retain scope, warnings and keyboar
   const cards = variants.locator('.guided-store-option');
   await expect(cards).toHaveCount(2);
   await expect(variants).toContainText('15/15 позиций');
-  await expect(guided.locator('.guided-shopping-difference')).toContainText('разница');
+  await expect(guided.locator('.guided-shopping-difference')).toHaveCount(0);
+  await expect(guided.locator('.guided-shopping-warning').filter({hasText:'Доставка Перекрёстка по выбранному адресу не подтверждена'})).toBeVisible();
   await expect(guided.locator('.guided-shopping-conditions')).toContainText('Марки и фасовки различаются');
   await expect(guided.locator('.guided-shopping-conditions')).toContainText('Наличие не подтверждено');
   await expect(guided.locator('.guided-shopping-conditions')).toContainText('Доставка и сборы не включены');
@@ -69,7 +70,7 @@ test('guided variants show products early and retain scope, warnings and keyboar
   await expect(summary).toHaveCSS('outline-style', 'solid');
   await page.keyboard.press('Enter');
   await expect(disclosure).toHaveAttribute('open', '');
-  await expect(disclosure).toContainText('не сравнение одинаковых SKU');
+  await expect(disclosure).toContainText('Варианты показаны для просмотра');
   await expect(disclosure).toContainText('Цены в физическом магазине могут отличаться');
   await page.keyboard.press('Enter');
   await expect(disclosure).not.toHaveAttribute('open', '');
@@ -98,7 +99,7 @@ test('guided variants show products early and retain scope, warnings and keyboar
   // A fresh-looking compact card must not conceal the expiry result.
   await page.clock.setFixedTime(new Date(Date.parse(at) + 3600001));
   await say('Сравнить варианты');
-  await expect(guided.locator('.guided-shopping-warning')).toContainText('Сравнение свежих сумм пока недоступно');
+  await expect(guided.locator('.guided-shopping-warning').filter({hasText:'Сравнение свежих сумм пока недоступно'})).toBeVisible();
   await expect(guided.locator('.guided-shopping-difference')).toHaveCount(0);
   await expect(cards.first().locator('.guided-store-condition')).toContainText('старые или неизвестные цены');
   await expect(guided.locator('.guided-shopping-information')).not.toHaveAttribute('open', '');

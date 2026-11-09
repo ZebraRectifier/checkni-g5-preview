@@ -59,9 +59,8 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
     summary.textContent = 'Марки и фасовки различаются. ' + (model.quote.hasEstimates ? 'Количества примерные. ' : '') + 'Наличие не подтверждено.';
     coverage.append(summary);
     if(model.alternatives.some(store=>store.priceScope==='delivery-catalog')){
-      summary.textContent += ' Доставка не подтверждена. Доставка и сборы не включены.';
-      const unconfirmed=document.createElement('p');unconfirmed.className='guided-shopping-warning';unconfirmed.setAttribute('role','status');
-      unconfirmed.textContent='Доставка Перекрёстка по выбранному адресу не подтверждена. Сравнение недоступно, список можно сохранить.';coverage.append(unconfirmed);
+      summary.textContent += ' Доставка Перекрёстка по выбранному адресу не подтверждена. Сравнение недоступно. Доставка и сборы не включены.';
+      summary.classList.add('guided-shopping-warning'); summary.setAttribute('role','status');
       addInformation('Перекрёсток: подключённый каталог доставки в Москве. Доставка по твоему адресу не подтверждена. Цены в физическом магазине могут отличаться.');
       if(!model.alternatives.every(store=>store.complete&&store.allRecent)){
         const missing=document.createElement('p');missing.className='guided-shopping-warning';missing.setAttribute('role','status');missing.textContent='Сравнение свежих сумм пока недоступно: есть пропуски или цены старше часа.';coverage.append(missing);
