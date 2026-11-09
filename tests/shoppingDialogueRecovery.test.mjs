@@ -497,12 +497,13 @@ test('provider failure does not repeat budget after the buyer defers it', async 
 test('failed shopping advice offers local guided continuation without a second provider call', async () => {
  for (const code of ['provider_timeout','provider_upstream_unavailable','provider_advice_commercial_claim']) {
   const s=session(async()=>({kind:'unavailable',code}),{searchGuidedCatalog:async()=>({kind:'catalog',products:[]})});
-  const first=await s.send('Слушай, нужна еда на две недели для троих без свинины. Что посоветуешь?');
+  await s.send('Слушай, нужна еда на две недели, побольше фарша и фруктов. Что посоветуешь?');
+  const first=await s.send('На троих, без свинины');
   const choice=first.presentation.conversationChoices.find(x=>x.text==='Собрать');
-  assert.ok(choice,JSON.stringify({code,first}));assert.equal(s.advice.length,1);
+  assert.ok(choice,JSON.stringify({code,first}));assert.equal(s.advice.length,2);
   const before=s.basket.getSnapshot();
   const next=await s.send(choice.text);
-  assert.equal(s.advice.length,1);assert.deepEqual(s.proposals,[]);assert.deepEqual(s.basket.getSnapshot(),before);
+  assert.equal(s.advice.length,2);assert.deepEqual(s.proposals,[]);assert.deepEqual(s.basket.getSnapshot(),before);
   assert.equal(s.flow.getConversation().facts.peopleCount.value,3);
   assert.equal(s.flow.getConversation().facts.shoppingDays.value,14);
   assert.ok(s.flow.getConversation().rejected.pork);
