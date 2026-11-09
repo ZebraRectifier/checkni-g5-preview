@@ -179,6 +179,20 @@ function confirmedObservedPrices(candidate, basket) {
     .filter((line) => line.priceLabel !== null));
 }
 
+function unconfirmedObservedItems(candidate, basket) {
+  if (!Array.isArray(candidate?.lines) || !Array.isArray(basket)) return Object.freeze([]);
+  const names = new Map(basket.filter(item => typeof item?.product?.id === "string"
+    && typeof item.product.name === "string" && item.product.name.trim())
+    .map(item => [item.product.id, item.product.name.trim()]));
+  const seen = new Set();
+  return Object.freeze(candidate.lines.flatMap(line => {
+    if (!line || line.status === "priced-observation" || typeof line.productId !== "string"
+        || !names.has(line.productId) || seen.has(line.productId)) return [];
+    seen.add(line.productId);
+    return [names.get(line.productId)];
+  }));
+}
+
 export function buildWinnerResultModel(result) {
   const winner = result?.winner;
   if (!winner) return null;
@@ -236,9 +250,11 @@ export function buildObservedResultModel(result, { nowMs = Date.now() } = {}) {
       ? result.candidates
           .map((candidate) => Object.freeze({
             title: observedCandidateName(candidate),
-            prices: confirmedObservedPrices(candidate, result.basket)
+            prices: confirmedObservedPrices(candidate, result.basket),
+            ...(unconfirmedObservedItems(candidate, result.basket).length
+              ? { unconfirmedItems: unconfirmedObservedItems(candidate, result.basket) } : {})
           }))
-          .filter((candidate) => candidate.prices.length > 0)
+          .filter((candidate) => candidate.prices.length > 0 || candidate.unconfirmedItems?.length > 0)
       : [];
 
     return Object.freeze({
@@ -471,11 +487,26 @@ export function createObservedComparisonResult(result) {
         ))
         .join(" · ");
 
-      if (!prices) continue;
-      const confirmed = document.createElement("p");
-      confirmed.className = "comparison-provenance";
-      confirmed.textContent = `Подтверждённые цены · ${candidate.title}: ${prices}`;
-      section.append(confirmed);
+      if (prices) {
+        const confirmed = document.createElement("p");
+        confirmed.className = "comparison-provenance";
+        confirmed.textContent = `Подтверждённые цены · ${candidate.title}: ${prices}`;
+        section.append(confirmed);
+      }
+      if (candidate.unconfirmedItems?.length) {
+        const details = document.createElement("details");
+        details.className = "comparison-provenance";
+        const summary = document.createElement("summary");
+        summary.textContent = `Нет подтверждённой цены · ${candidate.title} · ${candidate.unconfirmedItems.length}`;
+        const list = document.createElement("ul");
+        for (const name of candidate.unconfirmedItems) {
+          const item = document.createElement("li");
+          item.textContent = name;
+          list.append(item);
+        }
+        details.append(summary, list);
+        section.append(details);
+      }
     }
 
     return section;
