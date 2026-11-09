@@ -95,6 +95,14 @@ export function advanceGuidedIntake(plan, text, memory) {
   if (possibleMixedAmount && !Object.hasOwn(delta.facts,'budgetMinor'))
     return {issue:'Уточни общий бюджет в рублях или скажи, что пока не определился.',delta};
   const deferBudget = budgetDeferralPrefix && !possibleMixedAmount && !Object.hasOwn(delta.facts,'budgetMinor');
+  const deferredRest = deferBudget ? clean(need.text).replace(/^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а|ся|ась)?)(?:\s+пока)?[,.!]?\s*/u,'') : '';
+  const deferredClauses = deferredRest.replace(/\s+и\s+(?=не\s|без\s|хочу\s)/gu,', ')
+    .replace(/\s+но\s+(?=не\s|без\s|хочу\s)/gu,', ')
+    .split(/[,;]/u).map(part=>part.trim().replace(/^но\s+/u,'')).filter(Boolean);
+  const ambiguousFood = deferBudget && (/(?:^|\s)(?:кроме|не только)(?=$|[\s,])/u.test(deferredRest)
+    || deferredClauses.some(clause=>GROUPS.some(group=>group.pattern.test(clause))
+      && !/^(?:хочу|не|без|а)\s/u.test(clause)));
+  if (ambiguousFood) return {issue:'Уточни отдельно, какие продукты добавить, а какие исключить. Прежние условия и список сохранены.',delta:extractShoppingDelta('')};
   if (/без точного бюджета|подбери подешевле|без лимита/u.test(value) || deferBudget) {
     plan.budgetMinor = null; delta.unset.push('budgetMinor');
     delta.unresolved = delta.unresolved.filter(row => !/бюджет|лимит/u.test(row));
@@ -103,13 +111,9 @@ export function advanceGuidedIntake(plan, text, memory) {
     // Parse individual positive/negative clauses: a refusal must not absorb
     // an adjacent wish. Household fragments are removed by the existing
     // context parser before inspecting food constraints.
-    const rest=clean(need.text).replace(/^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а|ся|ась)?)(?:\s+пока)?[,.!]?\s*/u,'');
-    const clauses=rest.replace(/\s+и\s+(?=не\s|без\s|хочу\s)/gu,', ')
-      .replace(/\s+но\s+(?=не\s|без\s|хочу\s)/gu,', ')
-      .split(/[,;]/u).map(part=>part.trim().replace(/^но\s+/u,'')).filter(Boolean);
     delta.reject=[];delta.rejectScopes={};delta.want=[];delta.unresolved=[];
     const wantedGroups=[];
-    for(let clause of clauses){
+    for(let clause of deferredClauses){
       clause=clause.replace(/^хочу\s+не\s+/u,'не хочу ').replace(/^хочу\s+без\s+/u,'без ')
         .replace(/^а\s+/u,'хочу ').replace(/^не\s+(?!хочу\s)/u,'не хочу ');
       const part=extractShoppingDelta(clause);

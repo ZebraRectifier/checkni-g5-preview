@@ -352,6 +352,18 @@ for(const [answer,included,excluded] of [
  await expect(status(page)).toContainText(included);await expect(status(page)).not.toContainText(excluded);
 });
 
+for(const answer of ['не знаю, хочу все кроме молока','не знаю, не только яблоки, но и молоко','не знаю, хочу яблоки, молоко и бананы'])
+ test(`ambiguous budget reply preserves list and asks for clarification: ${answer}`,async({page})=>{
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  await page.evaluate(()=>localStorage.setItem('checkni.surface.basket.v1',JSON.stringify([{id:'milk-25-900',name:'Молоко 2,5%',unit:'900 мл',quantity:1}])));
+  await page.reload();await openHory(page);const before=await savedBasket(page);
+  await submit(page,'Собери продукты на неделю для четверых');await expect(status(page)).toContainText('общий бюджет');
+  await submit(page,answer);await expect(status(page)).toContainText('Уточни отдельно');
+  expect(await savedBasket(page)).toBe(before);
+  await submit(page,'не знаю, без рыбы');await expect(status(page)).not.toContainText('Какой общий бюджет');
+  await expect(status(page)).toContainText('для 4 человек');
+ });
+
 test('503 commercial-claim fallback retains context, accepts budget deferral and protects the basket',async({page})=>{
  const calls=[];await page.route('**/functions/v1/ai-basket-proposal',r=>{calls.push(r.request().postDataJSON());return r.fulfill({status:503,json:{kind:'unavailable',code:'provider_advice_commercial_claim'}})});
  await page.goto('/?comparison=demo#shop');const before=await savedBasket(page);
