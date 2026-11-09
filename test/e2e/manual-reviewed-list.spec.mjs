@@ -54,13 +54,20 @@ test('an incomplete single-store Hory draft keeps missing needs through explicit
  await closeHory(page);await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(1);
  const request=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.guided-comparison-request.v1')));
  const pending=await request();expect(pending.version).toBe(3);expect(pending.scopes).toHaveLength(1);expect(pending.unresolvedGroupKeys.length).toBeGreaterThan(0);
- await page.reload();await expect(page.locator('.basket-row')).toHaveCount(1);
- await expect(page.locator('#compare-basket')).toBeDisabled();
- await expect(page.locator('#basket-content')).toContainText('Доставка Перекрёстка по выбранному адресу пока не подтверждена');
- expect((await request()).unresolvedGroupKeys).toEqual(pending.unresolvedGroupKeys);
- await page.locator('.basket-row').getByRole('button',{name:/Увеличить количество/}).click();
- const changedQuantity=await page.locator('.basket-row output').innerText();await page.reload();
- await expect(page.locator('.basket-row output')).toHaveText(changedQuantity);
+ await page.reload();
+ const checkPending=async()=>{
+  await expect(page.locator('#basket-content')).toContainText('Доставка Перекрёстка по выбранному адресу пока не подтверждена');
+  await expect(page.locator('#basket-content')).toContainText('В исходном подборе ещё '+pending.unresolvedGroupKeys.length+' поз.');
+  await expect(page.locator('#compare-basket')).toBeDisabled();
+  await expect(page.locator('.saved-catalog-variant')).toHaveCount(0);
+  await expect(page.locator('.basket-row')).toHaveCount(1);
+  expect((await request()).unresolvedGroupKeys).toEqual(pending.unresolvedGroupKeys);
+ };
+ await checkPending();
+ await page.locator('.basket-row').getByRole('button',{name:/Увеличить количество/}).click();await page.reload();
+ await checkPending();
+ await page.locator('#basket-content').getByRole('button',{name:'Оставить только найденное'}).click();
+ expect(await request()).toBeNull();await expect(page.locator('.basket-row')).toHaveCount(1);
  await expect(page.locator('#compare-basket')).toBeDisabled();
  expect(ai).toBe(0);expect(errors).toEqual([]);
 });

@@ -324,7 +324,7 @@ export function renderBasketView(container, items, actions) {
       :manual.reason==='different_magnit_addresses'
       ?'В списке разные адреса Магнита. Пока не объединяем их в один магазин и не определяем выгоду.'
       :'Для части позиций пока нет проверенных соответствий. Ничего не исключаем из сравнения молча: проверь товары в списке.';
-    if(manual.pending)help.textContent+=' Сравним найденную часть; в исходном подборе ещё '+manual.pending+' поз. без подтверждённых товаров.';
+    if(manual.pending)help.textContent+=' В исходном подборе ещё '+manual.pending+' поз. без подтверждённых товаров.';
     compareStep.append(eyebrow,heading,help);
     if(manual.names){const stores=document.createElement('p');stores.textContent=manual.names.join(' / ');compareStep.append(stores);}
     if(manual.issues?.length){const pending=document.createElement('p');pending.textContent='Проверить: '+manual.issues.slice(0,4).map(row=>row?.name??'Неизвестная позиция').join('; ');compareStep.append(pending);}

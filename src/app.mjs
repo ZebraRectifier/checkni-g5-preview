@@ -293,7 +293,7 @@ function currentManualCatalogComparison() {
     magnitStoreId:retailSurfaceStage==='store'&&retailBrowserState.retailerId==='magnit'
       ?'magnit-'+selectedMagnitStore.shopCode:null
   });
-  if(candidate?.kind==='ready')return {kind:'needs_review',reason:'delivery_unconfirmed',names:candidate.names?.slice(0,1)};
+  if(candidate?.kind==='ready')return {kind:'needs_review',reason:'delivery_unconfirmed',names:candidate.names?.slice(0,1),pending:candidate.pending};
   return candidate;
 }
 function openExactStoreChooser(retailerId,sourceButton) {
