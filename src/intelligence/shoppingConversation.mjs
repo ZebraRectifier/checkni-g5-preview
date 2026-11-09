@@ -264,8 +264,10 @@ export function updateShoppingConversation(current, delta) {
   if (delta.clearUnresolved) conditions = conditions.filter(isAllergyCondition);
   // A single sentence can name several allergens, so a generic cancellation
   // never clears the condition. Only a clearly explicit all-clear may do so.
-  if (delta.clearAllAllergies)
+  if (delta.clearAllAllergies) {
     conditions = conditions.filter(value => !isAllergyCondition(value));
+    delete next.facts.allergySafety;
+  }
   conditions = [...new Set([...conditions, ...delta.unresolved])];
   if (next.facts.allergySafety?.value === true && !conditions.some(isAllergyCondition))
     conditions.push('Неуточнённая аллергия или непереносимость');
