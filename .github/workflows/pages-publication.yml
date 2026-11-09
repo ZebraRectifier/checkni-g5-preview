@@ -57,7 +57,7 @@ jobs:
           node-version: '22'
           package-manager-cache: false
       - name: Verify publication guard regressions
-        run: node --test tests/dataPublication.test.mjs
+        run: node --test tests/dataPublication.test.mjs tools/browser-release/one-shot-snapshot.test.mjs
       - name: Verify the exact checkout and data-only boundary
         id: scope
         shell: bash
