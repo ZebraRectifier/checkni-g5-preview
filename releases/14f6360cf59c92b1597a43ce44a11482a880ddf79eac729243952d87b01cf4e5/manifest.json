@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "1135fb9cd0d61a2ba9562cf930fbfb3ca89b2577",
+  "sourceCommit": "cb5e0c6bf2f36b09a12f494792533ed15c9dfc2d",
   "entries": [
     {
       "file": "index.html",
@@ -28,8 +28,8 @@
     },
     {
       "file": "src/app.mjs",
-      "sha256": "f07ca91a16e84816d611bd321d7ba898efc373cfee8cfc38e18c7cf8701e7c7c",
-      "bytes": 157416,
+      "sha256": "9926ed8224d31235c7524d67e5bb4f88e2a0b3aaee0a9d1d669bccd95e8c3755",
+      "bytes": 157970,
       "mime": "text/javascript"
     },
     {
@@ -382,8 +382,8 @@
     },
     {
       "file": "src/components/shopping-v17.css",
-      "sha256": "b9447e3690e31a865baab65391bc8d7a419100f1501792a526cf9afee3f2dc87",
-      "bytes": 23348,
+      "sha256": "d3364b76cf0c1ef31d618085a5999b21f9b2b66689dfcc537b90d35ed276b51d",
+      "bytes": 24290,
       "mime": "text/css"
     },
     {
@@ -1701,5 +1701,5 @@
       "mime": "text/javascript"
     }
   ],
-  "releaseId": "b9379ddc7a313193e36f5c6161c12c54d4b54cfe109ea33a00a94b33bfea41be"
+  "releaseId": "14f6360cf59c92b1597a43ce44a11482a880ddf79eac729243952d87b01cf4e5"
 }

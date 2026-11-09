@@ -1009,6 +1009,7 @@ function renderRetailBrowser() {
   weeklyRoute?.update({visible:retailSurfaceStage==='store'&&retailBrowserState.retailerId==='globus',
     store:selectedGlobusStore,peer:comparedGlobusStore});
   elements.retailCategoryGrid.replaceChildren();
+  elements.retailCategoryGrid.classList.remove('is-expanded');
 
   const current = retailBrowserState.path.at(-1) ?? null;
   elements.retailCategoryTitle.textContent = current?.name ?? "Категории";
@@ -1118,6 +1119,8 @@ function renderRetailBrowser() {
   }
 
   const orderedCategories = sortPixelCategories(retailBrowserState.categories);
+  const showFullCategoryGrid = publicRetailCatalogMode && retailBrowserState.path.length === 0 && pixelAllCategories;
+  elements.retailCategoryGrid.classList.toggle('is-expanded', showFullCategoryGrid);
   const visibleCategories = publicRetailCatalogMode && retailBrowserState.path.length === 0 && !pixelAllCategories
     ? orderedCategories.slice(0, 7) : orderedCategories;
   for (const category of visibleCategories) {
@@ -1177,7 +1180,14 @@ function renderRetailBrowser() {
     const label = document.createElement('strong');
     label.textContent = 'Все категории';
     all.append(icon, label);
-    all.addEventListener('click', () => { pixelAllCategories = true; renderRetailBrowser(); });
+    all.addEventListener('click', () => {
+      pixelAllCategories = true;
+      renderRetailBrowser();
+      elements.retailCategoryGrid.scrollLeft = 0;
+      const firstCategory = elements.retailCategoryGrid.querySelector('button[data-category-id]');
+      firstCategory?.focus({ preventScroll: true });
+      elements.retailCategoryGrid.scrollIntoView({ block: 'start' });
+    });
     elements.retailCategoryGrid.append(all);
   }
 
