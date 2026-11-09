@@ -5,6 +5,7 @@ const record = value => value !== null && typeof value === "object" && !Array.is
 const exact = (value, keys) => record(value) && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key));
 const scope = value => ["goal", "conversation"].includes(value);
 const allowedFact = (key, value) => ({
+  allergySafety: value === true,
   budgetMinor: Number.isSafeInteger(value) && value >= 1000 && value <= 99999900,
   peopleCount: Number.isSafeInteger(value) && value >= 1 && value <= 12,
   shoppingDays: Number.isSafeInteger(value) && value >= 1 && value <= 31,
@@ -37,6 +38,8 @@ function restore(payload) {
       ...entry, origin: "explicit", confidence: "high", evidenceTurn: 1
     }]));
   }
+  if (memory.facts.allergySafety?.value === true && !memory.facts.unresolvedConstraints)
+    memory.facts.unresolvedConstraints = { value: ['Неуточнённая аллергия или непереносимость'], scope: 'conversation', origin: 'explicit', confidence: 'high', evidenceTurn: 1 };
   return size(JSON.stringify(memory)) <= CONVERSATION_LIMITS.bytes ? freeze(memory) : null;
 }
 

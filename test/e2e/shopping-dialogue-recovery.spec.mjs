@@ -604,3 +604,27 @@ test('retail undo cannot erase later allergy',async({page})=>{
  const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
  expect(stored).toMatch(/аллерг/iu);expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
 });
+
+
+test('long allergy and mixed ambiguous quantity survive new goal and reload',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);const before=await savedBasket(page);
+ await submit(page,'Собери продукты на неделю для троих, хочу фарш 2 кг и яблоки, аллергия на рис');
+ await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
+ let stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(stored).toMatch(/allergySafety/);expect(stored).toMatch(/аллерг/iu);
+ await submit(page,'Новая корзина');await page.reload();await openHory(page);
+ await submit(page,'Собери недорогую корзину');await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
+ stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(stored).toMatch(/allergySafety/);expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});
+
+test('allergy after 80 characters remains safety-blocking after reload',async({page})=>{
+ await page.route('**/functions/v1/ai-basket-proposal',r=>r.abort());
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);const before=await savedBasket(page);
+ await submit(page,'Пожалуйста '+'очень '.repeat(16)+'аллергия на рис');
+ await submit(page,'Новая корзина');await page.reload();await openHory(page);
+ await submit(page,'Собери недорогую корзину');await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
+ const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(stored).toMatch(/allergySafety/);expect(await savedBasket(page)).toBe(before);
+});

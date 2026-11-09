@@ -150,7 +150,9 @@ export function extractShoppingDelta(text) {
   // Allergy and intolerance claims require ingredient-level evidence that the
   // catalog cannot prove. Keep them unresolved until explicitly clarified.
   for (const clause of clauses) if (!delta.clearAllergy && !delta.clearAllAllergies && isAllergyCondition(clause)) {
-    const condition = clause.trim().slice(0, 80);
+    const shortened = clause.trim().slice(0, 80);
+    const condition = isAllergyCondition(shortened) ? shortened : 'Неуточнённая аллергия или непереносимость';
+    delta.facts.allergySafety = { value: true, scope: 'conversation' };
     if (condition && !delta.unresolved.includes(condition)) delta.unresolved.push(condition);
   }
   const hasExplicitRefusal = clauses.some(clause => REFUSAL.test(clause) && shoppingPreferenceTargets(clause).length > 0);
@@ -243,9 +245,12 @@ export function extractShoppingDelta(text) {
 export function updateShoppingConversation(current, delta) {
   const turn = current.revision + 1;
   if (delta.reset) {
+    const allergy = current.facts.allergySafety?.value === true;
     const kept = (current.facts.unresolvedConstraints?.value ?? []).filter(isAllergyCondition);
+    if (allergy && !kept.length) kept.push('Неуточнённая аллергия или непереносимость');
     return { state: deepFreeze({ ...createShoppingConversation(), revision: turn, goal: current.goal + 1,
-      facts: kept.length ? { unresolvedConstraints: fact(kept, turn, 'conversation') } : {} }), overflow: false };
+      facts: { ...(kept.length ? { unresolvedConstraints: fact(kept, turn, 'conversation') } : {}),
+        ...(allergy ? { allergySafety: fact(true, turn, 'conversation') } : {}) } }), overflow: false };
   }
   const next = {
     revision: turn, goal: current.goal + Number(delta.newGoal),
@@ -262,6 +267,8 @@ export function updateShoppingConversation(current, delta) {
   if (delta.clearAllAllergies)
     conditions = conditions.filter(value => !isAllergyCondition(value));
   conditions = [...new Set([...conditions, ...delta.unresolved])];
+  if (next.facts.allergySafety?.value === true && !conditions.some(isAllergyCondition))
+    conditions.push('Неуточнённая аллергия или непереносимость');
   if (conditions.length) next.facts.unresolvedConstraints = fact(conditions, turn,
     conditions.some(isAllergyCondition) ? 'conversation' : 'goal');
   else delete next.facts.unresolvedConstraints;

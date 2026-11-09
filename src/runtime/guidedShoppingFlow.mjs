@@ -80,10 +80,18 @@ export function createGuidedShoppingFlow(options) {
     if (plan.stage === 'confirmed') state.status = 'success';
     return state;
   };
+  function saveSafety(text) {
+    const safety = extractShoppingDelta(text);
+    if (!safety.facts.allergySafety) return true;
+    return options.updateMemory({ ...extractShoppingDelta(''),
+      facts: { allergySafety: safety.facts.allergySafety },
+      unresolved: safety.unresolved.filter(value => /(?:аллерги|непереносимост)/iu.test(value)) });
+  }
   function start(goal, history) {
     version++;
     editingGroups = false;
     quantityEdits = new Map();
+    if (!saveSafety(goal)) return state = view('Уточним ограничение.', 'Не удалось сохранить условие об аллергии. Подбор остановлен; корзина сохранена.');
     plan = createGuidedShoppingPlan(goal, history, options.getMemory());
     if(options.hasAgreedStore?.()===true&&!plan.location&&!plan.retailers.length)plan.useCurrentStore=true;
     const intake = advanceGuidedIntake(plan, goal, options.getMemory());
@@ -256,6 +264,7 @@ export function createGuidedShoppingFlow(options) {
     if (!plan) return null;
     version++;
     const value = clean(text), delta = extractShoppingDelta(text);
+    if (!saveSafety(text)) return view('Уточним ограничение.', 'Не удалось сохранить условие об аллергии. Подбор остановлен; корзина сохранена.');
     if (delta.reset || delta.newGoal || delta.undo || /^(?:отмена|отмени подбор|забудь список)$/u.test(value)) { editingGroups = false; plan = null; return null; }
     if (plan.stage === 'intake') {
       const result = advanceGuidedIntake(plan, text, options.getMemory());

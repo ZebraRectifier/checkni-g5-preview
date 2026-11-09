@@ -218,3 +218,15 @@ test('generic cancellation cannot erase two allergens named in one sentence',asy
  m=updateShoppingConversation(m,extractShoppingDelta('отменяю ограничение аллергии')).state;
  assert.ok(m.facts.unresolvedConstraints?.value.some(x=>/рис и молоко/u.test(x)));
 });
+
+
+test('long allergy clause creates structured persistent safety marker before truncation',async()=>{
+ const {createShoppingConversation,updateShoppingConversation}=await import('../src/intelligence/shoppingConversation.mjs');
+ const text='очень '.repeat(16)+'аллергия на рис';
+ let m=updateShoppingConversation(createShoppingConversation(),extractShoppingDelta(text)).state;
+ assert.equal(m.facts.allergySafety?.value,true);
+ assert.ok(m.facts.unresolvedConstraints?.value.some(x=>/аллерг/iu.test(x)));
+ m=updateShoppingConversation(m,extractShoppingDelta('новая корзина')).state;
+ assert.equal(m.facts.allergySafety?.value,true);
+ assert.ok(m.facts.unresolvedConstraints);
+});
