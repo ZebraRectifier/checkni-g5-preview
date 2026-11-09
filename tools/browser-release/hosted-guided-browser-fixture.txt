@@ -9,10 +9,12 @@ test('exact spoken request keeps household and 2 kg quantity',async({page,contex
  await submit(page,'не знаю');
  await submit(page,'Хочу 2 кг фарша, ограничений нет');
  await expect(status).toContainText('Фарш: 2 кг');
- await expect(status).toContainText('3 человек');
- await expect(status).toContainText('14 дн');
  await status.getByRole('button',{name:'Подобрать товары и цены',exact:true}).click();
  const row=page.locator('#hori-shopping-results').getByRole('table').getByRole('row').filter({hasText:'Фарш'}).first();
  await expect(row).toContainText('Запрос: 2 кг');
  await expect(row).toContainText('4 × 500 г');
+ await status.getByRole('button',{name:/Добавить (найденное|показанное)/u}).click();
+ const basket=await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')??'[]'));
+ // 3 people × 14 days × 200 ml => nine one-litre packages.
+ expect(basket.find(item=>item.id.endsWith(':milk')).quantity).toBe(9);
 });
