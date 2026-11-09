@@ -513,3 +513,22 @@ test('nearby cards page past fifteen and stop at the honest end',async({page,con
   await expect(more).toHaveCount(0);
   await expect(page.locator('#nearby-results')).not.toContainText('первые 15');
 });
+
+
+test('duplicate house suggestions appear once while distinct houses remain selectable', async ({page}) => {
+  await isolateRegional(page);
+  const house = { lat: 55.76004, lon: 37.85269, label: 'Московская область, Реутов, Лесная улица, 7', precision: 'house' };
+  const landmark = { ...house, label: 'Московская область, Реутов, Лесная улица, 8' };
+  await page.route('**/functions/v1/nearby-address', route => route.fulfill({ json: {
+    version: 1, candidates: [house, { ...house, lat: 55.76005 }, landmark]
+  }}));
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  await page.locator('#nearby-address').fill('Реутов, Лесная 7');
+  await page.locator('#nearby-address').press('Enter');
+  const buttons = page.locator('#nearby-address-candidates button');
+  await expect(buttons).toHaveCount(2);
+  await expect(buttons.first()).toHaveText(house.label);
+  await expect(buttons.last()).toHaveText(landmark.label);
+  await buttons.first().click();
+  await expect(page.locator('#nearby-results article').first()).toBeVisible();
+});

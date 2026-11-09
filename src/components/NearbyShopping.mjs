@@ -4,6 +4,25 @@ import{createNearbyShoppingPort}from'../ports/nearbyShoppingPort.mjs';
 import { nearbyCityQuery, nearbyRegionForPosition, nearbyAddressQueryInRegion } from '../intelligence/nearbyRegions.mjs';
 import { yandexStoreRouteUrl } from '../navigation/storeRoute.mjs';
 
+// Merge only identical house labels with nearly identical coordinates. Two
+// distinct shop landmarks or similarly named addresses stay individually selectable.
+export function uniqueHouseCandidates(candidates) {
+  const accepted = [];
+  for (const point of candidates) {
+    if (!Number.isFinite(point?.lat) || !Number.isFinite(point?.lon)
+        || typeof point.label !== 'string' || point.label.length > 500) continue;
+    const label = point.label.normalize('NFKC').toLocaleLowerCase('ru-RU').replace(/\s+/gu, ' ').trim();
+    const duplicate = point.precision === 'house' && label && accepted.some(other => {
+      if (other.precision !== 'house' || other.label.normalize('NFKC').toLocaleLowerCase('ru-RU').replace(/\s+/gu, ' ').trim() !== label) return false;
+      const north = (point.lat - other.lat) * 111320;
+      const east = (point.lon - other.lon) * 111320 * Math.cos(point.lat * Math.PI / 180);
+      return Math.hypot(north, east) <= 50;
+    });
+    if (!duplicate) accepted.push(point);
+  }
+  return accepted;
+}
+
 export function createNearbyShopping({document=globalThis.document,port=createNearbyShoppingPort(),onChoose,onBuild,onManualMap,
   onInvalidate=()=>{},geolocationOptions={},locationController}={}){
   const el=(tag,text)=>{const e=document.createElement(tag);if(text)e.textContent=text;return e;};
@@ -204,7 +223,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     if(response.kind==='unavailable'){status.textContent='Сервис поиска адресов временно недоступен. Попробуй ещё раз или выбери точку на карте.';return;}
     if(!['results','directory'].includes(response.kind)||!response.candidates.length){status.textContent=response.kind==='limited'?'Слишком частые запросы. Подожди немного или выбери место на карте.':'Адрес не удалось найти. Добавь город и номер дома или укажи место на карте.';return;}
     status.textContent=response.kind==='directory'?'Точный адрес не найден. Можно выбрать магазин из справочника как ориентир.':'Это нужное место? Выбери один из адресов.';
-    for(const p of response.candidates){if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon)||typeof p.label!=='string'||p.label.length>500)continue;
+    for(const p of uniqueHouseCandidates(response.candidates)){
       candidates.append(button(p.label+(p.precision==='store'?' · магазин-ориентир':p.precision==='house'?'':' · приблизительный ориентир'),()=>{approximatePlace=p.precision!=='house';pendingPlaceLabel=p.label;geo.setManual({lat:p.lat,lon:p.lon});candidates.replaceChildren();}));}
     candidates.scrollIntoView({block:'center'});
   }
