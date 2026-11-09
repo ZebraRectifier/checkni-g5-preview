@@ -36,7 +36,8 @@ for (const store of exactStores) {
 }
 
 test('backing out of an unconfirmed address returns to the networks without selecting one', async ({ page }) => {
-  await page.locator('.retail-store-card[data-retailer-id="magnit"]').click({ noWaitAfter: true });
+  const source = page.locator('.retail-store-card[data-retailer-id="magnit"]');
+  await source.click({ noWaitAfter: true });
   await page.getByRole('button', { name: 'Выбрать магазин вручную' }).click();
   await expect(page.locator('#pixel-address-chooser')).toBeVisible();
   await expect(page.locator('#pixel-store-details')).toBeHidden();
@@ -44,6 +45,38 @@ test('backing out of an unconfirmed address returns to the networks without sele
   await expect(page.locator('#pixel-address-chooser')).toBeHidden();
   await expect(page.locator('.retail-store-card[data-retailer-id="magnit"]')).toBeVisible();
   await expect(page.locator('#pixel-storefront')).toBeHidden();
+  await expect(source).toBeFocused();
+});
+
+test('exact-address chooser starts with five cards, expands, and still searches every address', async ({ page }) => {
+  const source = page.locator('.retail-store-card[data-retailer-id="magnit"]');
+  const select = page.locator('#magnit-store-address');
+  const distant = await select.locator('option').evaluateAll(options => {
+    const enabled = options.filter(option => option.value && !option.disabled);
+    const option = enabled.at(-1);
+    return option ? { id: option.value, label: option.textContent } : null;
+  });
+  expect(distant).not.toBeNull();
+
+  await source.click({ noWaitAfter: true });
+  await page.getByRole('button', { name: 'Выбрать магазин вручную' }).click();
+  const chooser = page.locator('#pixel-address-chooser');
+  const choices = chooser.locator('.pixel-store-address-choice');
+  await expect(choices).toHaveCount(5);
+  await expect(choices.locator('small')).toHaveCount(0);
+
+  const showMore = chooser.locator('.pixel-store-address-toggle');
+  await expect(showMore).toHaveText('Показать ещё 5');
+  await showMore.click();
+  await expect(choices).toHaveCount(10);
+  await expect(choices.nth(5)).toBeFocused();
+
+  const search = page.locator('#magnit-store-picker input[type="search"]');
+  await search.fill(distant.label);
+  await expect(choices).toHaveCount(1);
+  await expect(chooser.locator(`[data-store-id="${distant.id}"]`)).toBeVisible();
+  await expect(chooser.locator('.pixel-store-address-toggle')).toHaveCount(0);
+  await expect(search).toBeFocused();
 });
 
 test('mobile retry action stays readable when a selected exact catalogue is unavailable', async ({ page, isMobile }) => {
