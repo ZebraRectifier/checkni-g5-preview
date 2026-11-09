@@ -336,6 +336,19 @@ test('compound deferred budget with fish exclusion proceeds without inventing a 
  expect(await savedBasket(page)).toBeNull();
 });
 
+for(const [answer,included,excluded] of [
+ ['не знаю, но хочу не яблоки, а молоко','Молоко','Яблоки'],
+ ['не знаю, но хочу без молока','Яблоки','Молоко']
+]) test(`budget deferral preserves explicit food exclusion: ${answer}`,async({page})=>{
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ await submit(page,'Собери продукты на неделю для четверых');await expect(status(page)).toContainText('общий бюджет');
+ await submit(page,answer);await expect(status(page)).toContainText('Какие продукты исключить');
+ await submit(page,'без рыбы');
+ if(await status(page).getByRole('button',{name:'Изменить список',exact:true}).count())
+  await status(page).getByRole('button',{name:'Изменить список',exact:true}).click();
+ await expect(status(page)).toContainText(included);await expect(status(page)).not.toContainText(excluded);
+});
+
 test('503 commercial-claim fallback retains context, accepts budget deferral and protects the basket',async({page})=>{
  const calls=[];await page.route('**/functions/v1/ai-basket-proposal',r=>{calls.push(r.request().postDataJSON());return r.fulfill({status:503,json:{kind:'unavailable',code:'provider_advice_commercial_claim'}})});
  await page.goto('/?comparison=demo#shop');const before=await savedBasket(page);

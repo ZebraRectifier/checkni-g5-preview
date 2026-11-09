@@ -89,17 +89,33 @@ export function advanceGuidedIntake(plan, text, memory) {
   if (location) { plan.location = location; plan.rows = []; plan.alternatives = []; }
   if (value === 'текущий магазин') { plan.useCurrentStore = true; plan.location = null;plan.retailers=[]; }
   if (/есть морозилка|морозилка есть/u.test(value)) plan.freezer = true;
-  const deferBudget = plan.question === 'budget' && !Object.hasOwn(delta.facts,'budgetMinor')
-    && !/\d|тысяч|рубл|руб\.|₽/u.test(value)
+  const budgetDeferralPrefix = plan.question === 'budget'
     && /^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а|ся|ась)?)(?:\s+пока)?(?:$|[,.!])/u.test(value);
+  const possibleMixedAmount = budgetDeferralPrefix && /тысяч|рубл|руб\.|₽|[,;]\s*(?:но\s+)?(?:примерно\s+|около\s+|до\s+)?\d/u.test(value);
+  if (possibleMixedAmount && !Object.hasOwn(delta.facts,'budgetMinor'))
+    return {issue:'Уточни общий бюджет в рублях или скажи, что пока не определился.',delta};
+  const deferBudget = budgetDeferralPrefix && !possibleMixedAmount && !Object.hasOwn(delta.facts,'budgetMinor');
   if (/без точного бюджета|подбери подешевле|без лимита/u.test(value) || deferBudget) {
     plan.budgetMinor = null; delta.unset.push('budgetMinor');
     delta.unresolved = delta.unresolved.filter(row => !/бюджет|лимит/u.test(row));
   }
   if (deferBudget) {
-    const wish = /(?:^|[,;])\s*(?:но\s+)?хочу\s+([^.!;]+)/u.exec(value)?.[1]?.split(/\s+(?:но\s+)?без\s+/u)[0];
+    // Remove household fragments before extracting exclusions, so «без рыбы,
+    // нас 3» does not turn the household into an unknown food constraint.
+    delta.unresolved = extractShoppingDelta(need.text).unresolved;
+    let wish = /(?:^|[,;])\s*(?:но\s+)?хочу\s+([^.!;]+)/u.exec(value)?.[1];
+    const contrast = wish && /^не\s+(.+?),\s*а\s+(.+)$/u.exec(wish);
+    if (contrast) {
+      const refusal=extractShoppingDelta('не хочу '+contrast[1]);
+      for(const key of refusal.reject) if(!delta.reject.includes(key)){delta.reject.push(key);delta.rejectScopes[key]='goal';}
+      wish=contrast[2];
+    }
+    if (wish && /^(?:без|не)\s/u.test(wish)) wish='';
+    if (wish) wish=wish.split(/\s+(?:но\s+)?без\s+/u)[0];
+    delta.want=delta.want.filter(key=>!delta.reject.includes(key));
+    plan.groups=plan.groups.filter(group=>!delta.reject.includes(group.key));
     if (wish) for (const group of GROUPS.filter(group => group.pattern.test(wish)))
-      if (!plan.groups.some(existing => existing.key === group.key)) plan.groups.push({...group});
+      if (!delta.reject.includes(group.key) && !plan.groups.some(existing => existing.key === group.key)) plan.groups.push({...group});
     plan.groups = plan.groups.slice(0,16);
   }
   if (value === 'подбери подешевле') { plan.mode = 'economy'; if (!plan.location) plan.useCurrentStore = true; }

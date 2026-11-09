@@ -102,3 +102,33 @@ test('only a pending budget question interprets a deferred amount as unknown',()
   assert.equal(extractShoppingDelta('хочу фарш').directions,null);
   assert.equal(extractShoppingDelta('нужна быстрая готовка').directions,'quick');
 });
+
+test('mixed budget deferral keeps quantity and household numbers separate and respects negation',()=>{
+ const memory={facts:{},rejected:[],wishes:[],exceptions:[]};
+ for(const text of ['не знаю, без рыбы, нас 3','не знаю, но хочу фарш 2 кг']){
+  const plan={question:'budget',groups:[],people:4,days:10,budgetMinor:undefined};
+  const result=advanceGuidedIntake(plan,text,memory);assert.equal(plan.budgetMinor,null,text);
+  assert.ok(result.delta.unset.includes('budgetMinor'),text);assert.deepEqual(result.delta.unresolved,[],text);
+  if(text.includes('рыбы')) {assert.ok(result.delta.reject.includes('fish'));assert.equal(plan.people,3);}
+  else assert.ok(plan.groups.some(g=>g.key==='mince'));
+ }
+ for(const [text,removed] of [['не знаю, но хочу не яблоки, а молоко','apples'],['не знаю, но хочу без молока','milk']]){
+  const plan={question:'budget',groups:[{key:removed}],people:4,days:10,budgetMinor:undefined};
+  const result=advanceGuidedIntake(plan,text,memory);
+  assert.ok(result.delta.reject.includes(removed),text);assert.ok(!result.delta.want.includes(removed),text);
+  assert.ok(!plan.groups.some(g=>g.key===removed),text);
+  if(removed==='apples')assert.ok(plan.groups.some(g=>g.key==='milk'));
+ }
+});
+
+test('mixed explicit or ambiguous budget amount is kept or explicitly clarified, never silently discarded',()=>{
+ const memory={facts:{budgetMinor:{value:100000}},rejected:[],wishes:[],exceptions:[]};
+ for(const text of ['не знаю, но бюджет пять тысяч рублей','не знаю, но примерно 5 тысяч','не знаю, 5000']){
+  const plan={question:'budget',groups:[],people:4,days:10,budgetMinor:100000};
+  const result=advanceGuidedIntake(plan,text,memory);
+  assert.match(result.issue,/Уточни общий бюджет/u,text);assert.equal(plan.budgetMinor,100000,text);
+ }
+ const plan={question:'budget',groups:[],people:4,days:10,budgetMinor:100000};
+ const result=advanceGuidedIntake(plan,'не знаю, но бюджет 5000 рублей',memory);
+ assert.equal(result.issue,undefined);assert.equal(plan.budgetMinor,500000);
+});
