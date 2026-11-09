@@ -144,6 +144,12 @@ export function extractShoppingDelta(text) {
     else delta.unresolved.push(phrase.trim().slice(0, 80));
   };
   const clauses = shoppingClauses(value);
+  // Allergy and intolerance claims require ingredient-level evidence that the
+  // catalog cannot prove. Keep them unresolved until explicitly clarified.
+  for (const clause of clauses) if (/(?:аллерги|непереносимост)/u.test(clause)) {
+    const condition = clause.trim().slice(0, 80);
+    if (condition && !delta.unresolved.includes(condition)) delta.unresolved.push(condition);
+  }
   const hasExplicitRefusal = clauses.some(clause => REFUSAL.test(clause) && shoppingPreferenceTargets(clause).length > 0);
   for (let clause of clauses) {
     const askedAsQuestion = value.replace(/\s+\?/gu, "?").includes(`${clause.trim()}?`);
