@@ -228,9 +228,9 @@ export function advanceGuidedIntake(plan, text, memory) {
   plan.people = delta.facts.peopleCount?.value ?? memory.facts.peopleCount?.value ?? plan.people;
   plan.days = delta.facts.shoppingDays?.value ?? memory.facts.shoppingDays?.value ?? plan.days;
   plan.budgetMinor = delta.unset.includes('budgetMinor') ? null : delta.facts.budgetMinor?.value ?? memory.facts.budgetMinor?.value ?? plan.budgetMinor;
-  if (plan.question === 'constraints' && (/^(?:ограничений нет|без ограничений|все можно|нет|ничего|ничего не исключать)$/u.test(value)
-      || (mass && /[,;]\s*(?:ограничений нет|без ограничений)$/u.test(value))
-      || delta.reject.length || delta.allow.length || delta.unresolved.length)) plan.constraintsReviewed = true;
+  if ((mass && /[,;]\s*(?:ограничений нет|без ограничений)$/u.test(value))
+      || (plan.question === 'constraints' && (/^(?:ограничений нет|без ограничений|все можно|нет|ничего|ничего не исключать)$/u.test(value)
+      || delta.reject.length || delta.allow.length || delta.unresolved.length))) plan.constraintsReviewed = true;
   return { delta,...(mass?{quantityIntent:mass}:{}) };
 }
 
