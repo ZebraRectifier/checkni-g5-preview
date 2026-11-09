@@ -399,6 +399,7 @@ test('guided amount plus no restrictions preserves previous household and does n
  const before=basket.getSnapshot();
  await flow.run('Хочу 2 кг фарша, ограничений нет');
  assert.doesNotMatch(flow.getState().presentation.message,/Пока не умею учитывать количество этого продукта/u);
+ assert.match(flow.getState().presentation.message,/Фарш: 2 кг/u);
  const memory=flow.getConversation();
  assert.equal(memory.facts.peopleCount.value,3);
  assert.equal(memory.facts.shoppingDays.value,14);
@@ -410,5 +411,25 @@ test('quantity parser accepts only explicit standalone no-restrictions suffix', 
  for(const text of ['Хочу 2 кг фарша, ограничений нет','Хочу 2 кг фарша; без ограничений'])
   assert.deepEqual(guidedExplicitMass(text),{key:'mince',intent:{dimension:'g',amount:2000}});
  for(const text of ['Хочу 2 кг фарша, ограничений нет, без молока','Хочу 2 кг фарша, ограничений нет и яблоки','Хочу 2 кг сока, ограничений нет'])
+  assert.ok(guidedExplicitMass(text)?.issue,text);
+});
+
+
+test('guided mass suffix keeps exclusion and cannot silently swallow mixed constraints', async () => {
+ const {flow,basket}=setup();
+ await flow.run('Нужны продукты на 14 дней для 3 человек без свинины');
+ await flow.run('Москва');
+ const before=basket.getSnapshot();
+ await flow.run('Хочу 2 кг фарша, ограничений нет');
+ assert.ok(flow.getConversation().rejected.pork);
+ assert.match(flow.getState().presentation.message,/Фарш: 2 кг/u);
+ assert.deepEqual(basket.getSnapshot(),before);
+});
+
+test('guided supported product quantities do not hide additional clauses', async () => {
+ const {guidedExplicitMass}=await import('../src/intelligence/guidedShoppingPlan.mjs');
+ for(const [text,key,dimension,amount] of [['Хочу 2 кг картошки, ограничений нет','potatoes','g',2000],['Хочу 2 л молока, без ограничений','milk','ml',2000],['Хочу 20 яиц, ограничений нет','eggs','piece',20]])
+  assert.deepEqual(guidedExplicitMass(text),{key,intent:{dimension,amount}},text);
+ for(const text of ['Хочу 2 кг фарша, без свинины','Хочу 2 кг фарша и 3 кг картошки, ограничений нет','Хочу 2 кг фарша, без свинины, ограничений нет','Не хочу 2 кг фарша, ограничений нет'])
   assert.ok(guidedExplicitMass(text)?.issue,text);
 });
