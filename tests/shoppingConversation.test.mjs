@@ -51,7 +51,7 @@ test('fish safety negation is not permission, explicit permission is reversible,
   assert.ok(safety.rejected.fish);
   assert.equal(safety.exceptions.fish, undefined);
   assert.equal(safety.wishes.fish, undefined);
-  assert.equal(safety.facts.unresolvedConstraints, undefined);
+  assert.ok(safety.facts.unresolvedConstraints, 'ambiguous allergy negation must be clarified');
 
   const switched = update(safety, 'Теперь магазин Магнит');
   assert.ok(switched.rejected.fish);
@@ -64,13 +64,16 @@ test('fish safety negation is not permission, explicit permission is reversible,
 
   const negatedAllergyWithRefusal = extractShoppingDelta('Аллергии на рыбу нет, но рыбу исключи');
   assert.deepEqual(negatedAllergyWithRefusal.reject, ['fish']);
-  assert.deepEqual(negatedAllergyWithRefusal.unresolved, []);
+  assert.ok(negatedAllergyWithRefusal.unresolved.length, 'allergy wording remains conservative');
 });
 const product = id => catalog.find(row => row.id === id);
 function session(extra = {}) {
   const basket = createBasketStore({ storage: null });
+  const saved = new Map();
+  const preferenceStorage = {getItem: key => saved.get(key) ?? null,
+    setItem: (key, value) => saved.set(key, String(value)), removeItem: key => saved.delete(key)};
   let loads = 0;
-  const flow = createShoppingConversationFlow({ basket, localCatalog: catalog, priceHints: buildSnapshotPriceHints(), loader: { load: async () => { loads++; return interpreter; } }, ...extra });
+  const flow = createShoppingConversationFlow({ basket, preferenceStorage, localCatalog: catalog, priceHints: buildSnapshotPriceHints(), loader: { load: async () => { loads++; return interpreter; } }, ...extra });
   return { basket, flow, loads: () => loads };
 }
 const ids = flow => flow.getState().presentation.items.map(row => row.productId);

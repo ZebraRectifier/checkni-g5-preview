@@ -31,6 +31,12 @@ export function createGuidedShoppingFlow(options) {
     return notes.length?` ${notes.join('; ')}. Помню до перезагрузки страницы.`:'';
   };
   const presentIntake = () => {
+    // Unresolved safety evidence must be visible before any new intake
+    // question, including when previously saved preferences were corrupted.
+    if (options.getMemory().facts.allergySafety?.value === true) {
+      state = view('Сначала уточним ограничение.', 'В сохранённых условиях есть неуточнённая аллергия, непереносимость или повреждённые данные. Автоматический подбор остановлен; состав и возможные следы нужно проверять на упаковке.');
+      return state;
+    }
     for (const key of Object.keys(plan.quantityIntents ?? {})) {
       const group = plan.groups.find(row => row.key === key);
       if (!group || !guidedGroupAllowed(group, options.getMemory())) { delete plan.quantityIntents[key]; quantityEdits.delete(key); }

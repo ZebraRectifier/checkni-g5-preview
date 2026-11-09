@@ -44,8 +44,14 @@ function restore(payload) {
 }
 
 function blockedMemory() {
-  return restore({ version: 1, facts: { unresolvedConstraints: { scope: "goal",
-    value: ["Сохранённые условия повреждены: сбрось предпочтения или уточни их заново"] } }, rejected: {}, exceptions: {}, wishes: {} });
+  // Corrupt data may have contained safety-critical constraints. Preserve a
+  // conservative unknown state across new goals and reloads until the user
+  // explicitly resolves it; do not claim that a particular allergy exists.
+  return restore({ version: 1, facts: {
+    allergySafety: { scope: "conversation", value: true },
+    unresolvedConstraints: { scope: "conversation",
+      value: ["Сохранённые условия повреждены; аллергия или непереносимость неизвестны"] }
+  }, rejected: {}, exceptions: {}, wishes: {} });
 }
 
 export function createShoppingPreferenceStore({ storage } = {}) {

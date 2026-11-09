@@ -664,3 +664,16 @@ test('retail unsupported order preserves allergy marker before early return',asy
  await submit(page,'Собери недорогую корзину');await expect(status(page)).toContainText(/уточн|ограничен|аллерги/iu);
  expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
 });
+
+test('corrupted saved conditions remain blocked across new goal and reload',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=observed&catalog=retail#shop');
+ await page.evaluate(()=>localStorage.setItem('checkni.shopping.preferences.v1','{corrupted'));
+ await page.reload();await openHory(page);const before=await savedBasket(page);
+ await submit(page,'Новая корзина');await submit(page,'Сбрось предпочтения');
+ await submit(page,'Собери недорогую корзину');
+ await expect(status(page)).toContainText(/повреждены|ограничен|аллерги/iu);
+ await page.reload();await openHory(page);await submit(page,'Собери недорогую корзину');
+ await expect(status(page)).toContainText(/повреждены|ограничен|аллерги/iu);
+ expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});
