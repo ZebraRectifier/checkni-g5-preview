@@ -85,7 +85,10 @@ export function guidedExplicitMass(text) {
   const hasQuantity=/(?:\d|полкило|поллитра|один|одна|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|двадцать)\s*(?:кг|килограмм(?:а|ов)?|грамм(?:а|ов)?|гр?\.?|литр(?:а|ов)?|л|мл|штук|шт\.?)?(?=$|[\s,.!])/u.test(quantityText);
   const explicitUnit=/(?:\d+(?:[.,]\d+)?|один|одна|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|двадцать|полкило|поллитра)\s*(?:кг|килограмм(?:а|ов)?|грамм(?:а|ов)?|гр?\.?|литр(?:а|ов)?|л|мл|штук|шт\.?)(?=$|[^\p{L}])/u.test(quantityText);
   if (!hasQuantity || !(mentioned.length || /куриц/u.test(input) || explicitUnit)) return null;
-  const clause=input.replace(/^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а|ся|ась)?)(?:\s+пока)?[,;.]\s*(?:но\s+)?/u,'');
+  // A single explicit no-restrictions clause is not part of the product name.
+  // Keep all other mixed statements on the existing fail-closed path.
+  const quantityClause=input.replace(/[,;]\s*(?:ограничений нет|без ограничений)$/u,'');
+  const clause=quantityClause.replace(/^(?:(?:бюджет|сумму)\s+)?(?:пока\s+)?(?:не решил(?:а)?|не знаю|не определил(?:а|ся|ась)?)(?:\s+пока)?[,;.]\s*(?:но\s+)?/u,'');
   if(!/^(?:хочу|нужно|надо|добавь)\s/u.test(clause)) {
     if(/^(?:не|без)\s/u.test(clause)) return {issue:true};
     if(!explicitUnit)return null;
@@ -226,6 +229,7 @@ export function advanceGuidedIntake(plan, text, memory) {
   plan.days = delta.facts.shoppingDays?.value ?? memory.facts.shoppingDays?.value ?? plan.days;
   plan.budgetMinor = delta.unset.includes('budgetMinor') ? null : delta.facts.budgetMinor?.value ?? memory.facts.budgetMinor?.value ?? plan.budgetMinor;
   if (plan.question === 'constraints' && (/^(?:ограничений нет|без ограничений|все можно|нет|ничего|ничего не исключать)$/u.test(value)
+      || (mass && /[,;]\s*(?:ограничений нет|без ограничений)$/u.test(value))
       || delta.reject.length || delta.allow.length || delta.unresolved.length)) plan.constraintsReviewed = true;
   return { delta,...(mass?{quantityIntent:mass}:{}) };
 }

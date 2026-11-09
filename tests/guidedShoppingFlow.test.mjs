@@ -390,3 +390,25 @@ test('leaving guided edit for product selection clears edit mode',async()=>{
  await flow.handle('Изменить список');assert.equal(flow.isEditing(),true);
  await flow.handle('Подобрать товары и цены');assert.equal(flow.isEditing(),false);assert.deepEqual(basket.getSnapshot(),[]);
 });
+
+
+test('guided amount plus no restrictions preserves previous household and does not modify basket', async () => {
+ const {flow,basket}=setup();
+ await flow.run('Нужны продукты на 14 дней для 3 человек');
+ await flow.run('Москва');
+ const before=basket.getSnapshot();
+ await flow.run('Хочу 2 кг фарша, ограничений нет');
+ assert.doesNotMatch(flow.getState().presentation.message,/Пока не умею учитывать количество этого продукта/u);
+ const memory=flow.getConversation();
+ assert.equal(memory.facts.peopleCount.value,3);
+ assert.equal(memory.facts.shoppingDays.value,14);
+ assert.deepEqual(basket.getSnapshot(),before);
+});
+
+test('quantity parser accepts only explicit standalone no-restrictions suffix', async () => {
+ const {guidedExplicitMass}=await import('../src/intelligence/guidedShoppingPlan.mjs');
+ for(const text of ['Хочу 2 кг фарша, ограничений нет','Хочу 2 кг фарша; без ограничений'])
+  assert.deepEqual(guidedExplicitMass(text),{key:'mince',intent:{dimension:'g',amount:2000}});
+ for(const text of ['Хочу 2 кг фарша, ограничений нет, без молока','Хочу 2 кг фарша, ограничений нет и яблоки','Хочу 2 кг сока, ограничений нет'])
+  assert.ok(guidedExplicitMass(text)?.issue,text);
+});
