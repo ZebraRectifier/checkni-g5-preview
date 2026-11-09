@@ -1,0 +1,21 @@
+name: Partial comparison details verification
+on:
+  pull_request:
+    paths: ['src/components/ComparisonResult.mjs', 'tests/comparisonResult.test.mjs', '.github/workflows/partial-comparison-details-verification.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Verify exact source and offline result tests
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          node --test tests/comparisonResult.test.mjs
