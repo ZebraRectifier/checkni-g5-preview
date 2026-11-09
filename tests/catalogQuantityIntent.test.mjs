@@ -20,6 +20,12 @@ test('manual amount is converted across exact pack sizes, including whole-pack e
   assert.deepEqual(suggestedCatalogQuantityForIntent(card('10 шт.'), { dimension: 'piece', amount: 30 }), { quantity: 3, quantityReview: false });
 });
 
+test('twenty eggs require one twenty-pack or two ten-packs', () => {
+  const eggs = { dimension: 'piece', amount: 20 };
+  assert.deepEqual(suggestedCatalogQuantityForIntent(card('20 шт'), eggs), { quantity: 1, quantityReview: false });
+  assert.deepEqual(suggestedCatalogQuantityForIntent(card('10 шт'), eggs), { quantity: 2, quantityReview: false });
+});
+
 test('unknown, approximate, wrong-dimension and unbounded quantities require review', () => {
   for (const [product, need] of [
     [card('упаковка'), intent], [card('800 г'), { dimension: 'ml', amount: 7200 }],
