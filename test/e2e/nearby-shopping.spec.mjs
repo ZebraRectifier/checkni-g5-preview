@@ -62,9 +62,18 @@ test('reviewed METRO points open the exact store catalogue from nearby cards and
   }
 
   point=reviewedMetroPoints[0];
-  await context.grantPermissions(['geolocation']);await context.setGeolocation({latitude:point.lat,longitude:point.lon,accuracy:10});
-  await selectStore(page);await openStoreDetails(page);await page.locator('#stores-section').scrollIntoViewIfNeeded();
-  await page.locator('#stores-locate').click();await page.locator('#stores-map-network').selectOption('metro');
+  await page.goto('/?comparison=observed&catalog=retail#shop',{waitUntil:'domcontentloaded'});
+  await selectStore(page);await openStoreDetails(page);
+  const nearby=page.locator('#nearby-shopping');
+  await nearby.getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
+  await page.locator('#nearby-address').fill(point.address);
+  await page.locator('#nearby-address-search').click();
+  await page.locator('#nearby-address-candidates button').click();
+  await page.locator('#nearby-radius').selectOption('1');
+  await expect(page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})})).toBeVisible();
+  await nearby.getByRole('button',{name:'Выбрать точку на карте',exact:true}).click();
+  await expect(page.locator('.stores-location-directory')).toBeVisible();
+  await page.locator('#stores-map-network').selectOption('metro');
   const mapRow=page.locator(`#stores-known-locations li[data-store-location-id="${point.id}"]`);
   await expect(mapRow).toContainText(point.address);await mapRow.getByRole('button',{name:'Metro',exact:true}).click();
   const card=page.locator('.stores-pin-card');await expect(card).toContainText(point.address);

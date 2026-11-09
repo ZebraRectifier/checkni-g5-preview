@@ -51,7 +51,7 @@ test('compact map mode offers a keyboard-only store route without duplicating th
   await page.setViewportSize({width:320,height:800});
   await page.goto('/test/support/store-map-harness.html?lazy');
   await page.waitForFunction(()=>window.harnessReady);
-  await page.evaluate(()=>{window.mapHarness.stores.hidden=false;window.mapHarness.stores.openNearbyMap();});
+  await page.evaluate(()=>{window.mapHarness.stores.hidden=false;window.mapHarness.stores.openNearbyMap();window.mapHarness.geo.setManual({lat:55.928776,lon:38.003613});});
   await expect(page.locator('.maplibregl-canvas')).toBeVisible({timeout:15000});
   const directory=page.locator('.stores-location-directory');
   await expect(directory).toBeHidden();
