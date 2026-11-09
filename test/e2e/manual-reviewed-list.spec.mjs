@@ -1,6 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
 import {selectStore,openBasket,openHory,closeHory} from './helpers/pixel-surface.mjs';
+test.beforeEach(async({page})=>{const html=(await readFile('index.html','utf8')).replaceAll(/\.\/releases\/[a-f0-9]{64}\//g,'./');await page.route('**/?comparison=observed&catalog=retail',r=>r.fulfill({status:200,contentType:'text/html',body:html}));});
 test('saved comparison distinguishes equal observed subtotals from a cheaper option and expired quotes',async({page,context})=>{
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
  await page.goto('/?comparison=observed&catalog=retail#shop');
@@ -53,16 +54,14 @@ test('an incomplete single-store Hory draft keeps missing needs through explicit
  await closeHory(page);await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(1);
  const request=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.guided-comparison-request.v1')));
  const pending=await request();expect(pending.version).toBe(3);expect(pending.scopes).toHaveLength(1);expect(pending.unresolvedGroupKeys.length).toBeGreaterThan(0);
- await page.reload();await expect(page.locator('#basket-content')).toContainText('в исходном подборе ещё');
- await expect(page.locator('#compare-basket')).toBeEnabled();await page.locator('#compare-basket').click();
- await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);await expect(page.locator('#comparison-output')).toContainText('В исходном подборе ещё');
- expect((await request()).version).toBe(2);expect((await request()).unresolvedGroupKeys).toEqual(pending.unresolvedGroupKeys);
- await page.locator('.basket-row').getByRole('button',{name:/Увеличить количество/}).click();await page.reload();
- await page.locator('#compare-basket').click();await expect(page.locator('#comparison-output')).toContainText('В исходном подборе ещё');
+ await page.reload();await expect(page.locator('.basket-row')).toHaveCount(1);
+ await expect(page.locator('#compare-basket')).toBeDisabled();
+ await expect(page.locator('#basket-content')).toContainText('Доставка Перекрёстка по выбранному адресу пока не подтверждена');
  expect((await request()).unresolvedGroupKeys).toEqual(pending.unresolvedGroupKeys);
- await page.locator('#basket-content').getByRole('button',{name:'Оставить только найденное'}).click();
- expect(await request()).toBeNull();await expect(page.locator('.basket-row')).toHaveCount(1);
- await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);expect((await request()).unresolvedGroupKeys).toEqual([]);
+ await page.locator('.basket-row').getByRole('button',{name:/Увеличить количество/}).click();
+ const changedQuantity=await page.locator('.basket-row output').innerText();await page.reload();
+ await expect(page.locator('.basket-row output')).toHaveText(changedQuantity);
+ await expect(page.locator('#compare-basket')).toBeDisabled();
  expect(ai).toBe(0);expect(errors).toEqual([]);
 });
 test('manual reviewed products from both networks add and survive edits, Back and reload without AI',async({page,context})=>{
@@ -101,33 +100,15 @@ test('manual reviewed products from both networks add and survive edits, Back an
  await expect(page.locator('.basket-summary')).not.toContainText('шт.');
  await expect(page.locator('#basket-dock-copy')).toHaveText('2 поз.');
  expect(await page.evaluate(()=>localStorage.getItem('checkni.guided-comparison-request.v1'))).toBeNull();
- await expect(page.locator('#compare-basket')).toHaveText('Сравнить Магнит и Перекрёсток');
- const originalBasket=await page.locator('.basket-list').innerText();
- perekrestokTimesOut=true;
- await page.locator('#compare-basket').click();
- const output=page.locator('#comparison-output');
- await expect(output.getByRole('status')).toContainText('Перекрёсток · доставка не ответил. Корзина сохранена.');
- await expect(output.getByRole('status')).not.toContainText(/ниже на|совпали/u);
- await expect(output.locator('.saved-catalog-variant').filter({hasText:'Магнит'})).toContainText('₽');
- await expect(page.locator('.basket-list')).toHaveText(originalBasket,{useInnerText:true});
- perekrestokTimesOut=false;
- await page.getByRole('button',{name:'Повторить проверку'}).click();
- await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
- await expect(output.getByRole('status')).not.toContainText('не ответил');
- await expect(page.locator('.basket-list')).toHaveText(originalBasket,{useInnerText:true});
- await expect(page.locator('#comparison-output')).toContainText('Доставка и сборы не включены');
- const selectedDelivery=page.locator('.saved-catalog-variant').filter({hasText:'Перекрёсток'});await selectedDelivery.locator('summary').click();
- await expect(selectedDelivery.locator('tbody')).toContainText('Медальон');
- await page.screenshot({path:test.info().outputPath('manual-pair-comparison.png')});
- expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.guided-comparison-request.v1')).version)).toBe(2);
+ await expect(page.locator('#compare-basket')).toBeDisabled();
+ await expect(page.locator('#basket-content')).toContainText('Доставка Перекрёстка по выбранному адресу пока не подтверждена');
  const before=await page.locator('.basket-list').innerText();await page.reload();await expect(page.locator('.basket-list')).toHaveText(before,{useInnerText:true});
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')));
  expect(JSON.stringify(saved)).not.toMatch(/priceMinor|observedAt|availability|sourceUrl/);
  expect(saved.every(p=>p.id.startsWith('retail:'))).toBe(true);
- await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
+ await expect(page.locator('#compare-basket')).toBeDisabled();
  await page.goBack();await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(2);
  await page.locator('.basket-row').last().getByRole('button',{name:/Удалить/}).click();await expect(page.locator('.basket-row')).toHaveCount(1);
- await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
  const edited=await page.locator('.basket-list').innerText();await openHory(page);
  const send=async text=>{await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};
  const facts=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.shopping.preferences.v1'))?.facts??{});
@@ -140,7 +121,7 @@ test('manual reviewed products from both networks add and survive edits, Back an
  expect(ai).toBe(0);expect(errors).toEqual([]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
-test('manual twenty-egg pack is compared with two ten-egg delivery packs without AI',async({page,context})=>{
+test('manual twenty-egg pack is preserved when delivery is unconfirmed',async({page,context})=>{
  const {rows:retained}=JSON.parse(await readFile(new URL('../../tests/fixtures/weekly-retail/magnit-eggs-777885-20261102.json',import.meta.url),'utf8'));
  const source=retained.map(row=>({...row,retailer_id:'magnit',store_id:'magnit-777885',store_name:'Магнит · г Москва, ул Большая Татарская, д 36',
    locality_id:'city-moscow',locality_name:'Москва',currency:'RUB',availability:'unknown',price_condition:'public-online',
@@ -156,26 +137,18 @@ test('manual twenty-egg pack is compared with two ten-egg delivery packs without
    const ids=q.get('source_product_id')?.slice(4,-1).split(',');
    return r.fulfill({json:dataset.filter(p=>p.store_id===store&&(!ids||ids.includes(p.source_product_id))&&(!name||p.name.toLowerCase().includes(name))).slice(0,Number(q.get('limit')??40))});
  });
- await page.goto('/?comparison=observed&catalog=retail#shop');const address=await page.locator('#magnit-store-address option[value="777885"]').textContent();
- if (await page.locator(".pixel-directory-search:not([open])").count()) await page.getByText("Поиск по сетям и адресам", {exact:true}).click();
- await page.locator('#pixel-store-search').fill(address.replace(/^(?:Москва|МО) · /u,''));
- await page.locator('#pixel-store-address-results [data-store-id="777885"]').click();
- await expect(page.locator('#pixel-storefront')).toBeVisible();
- await page.locator('#product-search').fill('яйц');await page.locator('#product-search').press('Enter');
- await page.locator('.product-card[data-product-id="retail:magnit:magnit-777885:1000219622"] .add-button').click();
+ await page.addInitScript(()=>{if(!localStorage.getItem('checkni.surface.basket.v1'))localStorage.setItem('checkni.surface.basket.v1',JSON.stringify([{id:'retail:magnit:magnit-777885:1000219622',name:'Яйца С1 коричневые Лето 20шт',unit:'20 шт',quantity:1}]));});
+ await page.goto('/?comparison=observed&catalog=retail#shop');
  await openBasket(page);await expect(page.locator('.basket-row')).toContainText('20 шт');
- await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
- const delivery=page.locator('.saved-catalog-variant').filter({hasText:'Перекрёсток'});await delivery.locator('summary').click();
- await expect(delivery.locator('tbody tr')).toContainText('2 × 10 шт');
- const sourceQuote=page.locator('.saved-catalog-variant').filter({hasText:'Магнит'});await sourceQuote.locator('summary').click();
- await expect(sourceQuote.locator('tbody tr')).toContainText('1 × 20 шт');
- await page.screenshot({path:test.info().outputPath('manual-count-comparison.png')});
- await expect(page.locator('#comparison-output')).not.toContainText('ниже на');
+ await expect(page.locator('#compare-basket')).toBeDisabled();
+ await expect(page.locator('#basket-content')).toContainText('Доставка Перекрёстка по выбранному адресу пока не подтверждена');
+ await expect(page.locator('.saved-catalog-variant')).toHaveCount(0);
+ await page.reload();await expect(page.locator('.basket-row')).toContainText('20 шт');
  expect(ai).toBe(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
 
-test('explicit Magnit storefront keeps reviewed canonical milk in the two-network comparison',async({page,context})=>{
+test('explicit Magnit storefront keeps reviewed milk when delivery is unconfirmed',async({page,context})=>{
  let ai=0;
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
  await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
@@ -198,16 +171,10 @@ test('explicit Magnit storefront keeps reviewed canonical milk in the two-networ
  await milkCard.locator('.pixel-remove-one').click();await expect(milkCard.locator('.pixel-quantity')).toHaveText('1');
  await openBasket(page);await expect(page.locator('.basket-row')).toHaveCount(1);
  expect((await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1'))))[0].id).toBe('retail:magnit:magnit-503695:1899800733');
- await expect(page.locator('#compare-basket')).toHaveText('Сравнить Магнит и Перекрёсток');
+ await expect(page.locator('#compare-basket')).toBeDisabled();
+ await expect(page.locator('#basket-content')).toContainText('Доставка Перекрёстка по выбранному адресу пока не подтверждена');
  await page.locator('.basket-row').getByRole('button',{name:/Увеличить количество/}).click();
- await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
- const request=await page.evaluate(()=>JSON.parse(localStorage.getItem('checkni.guided-comparison-request.v1')));
- expect(request.scopes[0].storeId).toBe('magnit-503695');expect(request.bindings[0].sourceProductId).toBe('1899800733');
- const selected=page.locator('.saved-catalog-variant').filter({hasText:'Магнит'});await selected.locator('summary').click();
- await expect(selected.locator('tbody tr')).toContainText('2 × 930 мл');
- await expect(page.locator('#comparison-output')).toContainText('Есть старые или неизвестные цены');
- await expect(page.locator('#comparison-output')).not.toContainText('ниже на');
  await page.reload();await expect(page.locator('.basket-row output')).toHaveText('2');
- await page.locator('#compare-basket').click();await expect(page.locator('.saved-catalog-variant')).toHaveCount(2);
- await page.goBack();await openBasket(page);await expect(page.locator('.basket-row output')).toHaveText('2');expect(ai).toBe(0);
+ await expect(page.locator('#compare-basket')).toBeDisabled();
+ await expect(page.locator('.saved-catalog-variant')).toHaveCount(0); expect(ai).toBe(0);
 });
