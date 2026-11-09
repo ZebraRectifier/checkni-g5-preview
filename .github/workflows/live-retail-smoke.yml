@@ -263,7 +263,7 @@ jobs:
               check.setDefaultTimeout(15000);
               let geocoderCalls = 0, directorySuccesses = 0;
               const startupErrors = [];
-              check.on("pageerror", error => startupErrors.push({type:"pageerror", message:error.message.slice(0,500)}));
+              check.on("pageerror", error => startupErrors.push({type:"pageerror", name:error.name}));
               check.on("requestfailed", request => {
                 const target = new URL(request.url());
                 if (["zebrarectifier.github.io","cxpneczhczashanbetgj.supabase.co"].includes(target.hostname))
@@ -326,7 +326,7 @@ jobs:
                 const snapshot = await check.evaluate(() => ({
                   readyState:document.readyState,
                   title:document.title,
-                  bodyText:(document.body?.innerText || '').slice(0,4000),
+                  hasBody:!!document.body,
                   storesButtons:document.querySelectorAll('[data-pixel-action="stores"]').length,
                   geoProbe:window.__checkniGeoProbe || null
                 })).catch(() => null);
