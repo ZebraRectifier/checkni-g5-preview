@@ -532,3 +532,18 @@ test('allergy persists after reload and explicit cancellation reaches UI',async(
  expect(stored??'').not.toMatch(/аллерг/i);
  expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
 });
+
+
+test('multiple allergy conditions require explicit all-clear confirmation',async({page})=>{
+ let ai=0;await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort()});
+ await page.goto('/?comparison=observed&catalog=retail#shop');await openHory(page);
+ const before=await savedBasket(page);
+ for(const text of ['Аллергия на рис','Непереносимость молока','отменяю ограничение аллергии'])await submit(page,text);
+ await expect(status(page)).toContainText('несколько ограничений');
+ const stored=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(stored).toMatch(/аллерг/iu);expect(stored).toMatch(/непереносим/iu);
+ await submit(page,'отменяю все ограничения аллергии и непереносимости');
+ const cleared=await page.evaluate(()=>localStorage.getItem('checkni.shopping.preferences.v1'));
+ expect(cleared??'').not.toMatch(/аллерг|непереносим/iu);
+ expect(ai).toBe(0);expect(await savedBasket(page)).toBe(before);
+});
