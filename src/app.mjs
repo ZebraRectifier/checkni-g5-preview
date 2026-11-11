@@ -287,12 +287,14 @@ function currentManualCatalogComparison() {
   if(!publicRetailCatalogMode)return null;
   const saved=savedGuidedComparisonStore.read();
   if(saved&&![2,3].includes(saved.version))return null;
-  return prepareManualCatalogComparison(basket.getSnapshot(),{
+  const candidate=prepareManualCatalogComparison(basket.getSnapshot(),{
     pinnedMagnitStoreId:saved?.scopes.find(scope=>scope.retailerId==='magnit')?.storeId,
     unresolvedGroupKeys:saved?.unresolvedGroupKeys??[],
     magnitStoreId:retailSurfaceStage==='store'&&retailBrowserState.retailerId==='magnit'
       ?'magnit-'+selectedMagnitStore.shopCode:null
   });
+  if(candidate?.kind==='ready')return {kind:'needs_review',reason:'delivery_unconfirmed',names:candidate.names?.slice(0,1)};
+  return candidate;
 }
 function chooseManualMagnitCatalogue() {
   // Follow the same explicit network/address entry as the store cards. Direct
@@ -313,6 +315,10 @@ function startManualCatalogComparison() {
 async function compareSavedGuidedBasket() {
   const items=basket.getSnapshot();let request=savedGuidedComparisonStore.read();
   if(!request)return;
+  if(request.scopes.some(scope=>scope.retailerId==='perekrestok')) {
+    showToast('Доставка Перекрёстка по выбранному адресу пока не подтверждена. Список сохранён.');
+    return;
+  }
   if(request.version===2){const candidate=currentManualCatalogComparison();
     if(candidate?.kind!=='ready'){renderBasket();return;}
     const written=savedGuidedComparisonStore.write(candidate.request);if(!written.ok)return;request=candidate.request;
@@ -2780,6 +2786,15 @@ function renderComparisonState({ focusResult = false } = {}) {
   if (!compareButton || !output) return;
 
   const manual=currentManualCatalogComparison();
+  const retainedRequest=publicRetailCatalogMode?savedGuidedComparisonStore.read():null;
+  if(retainedRequest?.scopes.some(scope=>scope.retailerId==='perekrestok')) {
+    output.classList.add('saved-catalog-comparison');
+    output.textContent='Доставка Перекрёстка по выбранному адресу пока не подтверждена. Список сохранён.';
+    compareButton.disabled=true;
+    compareButton.setAttribute('aria-busy','false');
+    compareButton.textContent='Сравнение недоступно';
+    return;
+  }
   if(manual&&(!savedGuidedComparisonStore.read()||manual.kind!=='ready')) {
     output.classList.add('saved-catalog-comparison');output.replaceChildren();
     const blocked=(basketProposalFlow.getUnresolvedNeeds?.().length??0)>0;
