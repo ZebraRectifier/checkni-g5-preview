@@ -1,0 +1,73 @@
+name: Research retention policy
+on:
+  pull_request:
+    paths:
+      - 'tools/browser-release/retention-*'
+      - 'tools/browser-release/recovery-proof.mjs'
+      - 'tools/browser-release/compact-proof.mjs'
+      - '.github/workflows/retention-research.yml'
+permissions:
+  contents: read
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Run planner unit tests
+        run: node --test tools/browser-release/retention-plan.test.mjs
+      - name: Inventory literal release URLs outside release trees
+        shell: bash
+        run: |
+          set -euo pipefail
+          { git grep -I -o -h -E 'releases/[a-f0-9]{64}' HEAD -- . ':!releases/**' || true; } | sort -u
+          echo 'Literal scan only; dynamic and external URLs are not covered.'
+      - name: Recover an old version in runner scratch and validate hashes
+        shell: bash
+        env:
+          RECOVERY_RELEASE_ID: f620add99e38219906f83f503b4ac6fb802a9bc5fd81c592e65579aff3845602
+          RECOVERY_ROOT: ${{ runner.temp }}/checkni-recovery-proof
+        run: |
+          set -euo pipefail
+          node tools/browser-release/recovery-proof.mjs
+          if node tools/browser-release/recovery-proof.mjs; then
+            echo 'Recovery overwrote an existing target' >&2
+            exit 1
+          fi
+          git diff --exit-code
+          git diff --cached --exit-code
+      - name: Upload isolated recovery proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: recovered-f620-proof
+          path: ${{ runner.temp }}/checkni-recovery-proof/
+          if-no-files-found: error
+          retention-days: 2
+      - name: Build and scan compact artifact in separate scratch
+        shell: bash
+        env:
+          PROOF_SOURCE_SHA: d68e6482a7ebfce01e4f54287f5e40cb259ab99b
+          PROOF_OUTPUT_ROOT: ${{ runner.temp }}/checkni-compact-proof
+          PROOF_RELEASE_IDS: a66ab7aa146097ef9320ac363489eb23ef02eb8f4f11a587b7811ef48e6d2a1c,717cf6f5050bd7ffb9a2daf67e1eddf0c1f28630e063a61e01cdbab8e959906b,f620add99e38219906f83f503b4ac6fb802a9bc5fd81c592e65579aff3845602,462f19c4f123ae04b28d59753776fc7b739bd777c353e7ed0ea24eb298001c84,e254f5d3f3e61e0924dad1b4627a9aaaf26445226e63e6717feeb6c25d6ddf1d,a9a95cd7ef0839e1416c3cfc7bc8015e269b448646c5e1a2f2a9164017427bd5,6c286a5daf51ebef2380a7fa7d7c5587379a222dc63041a54b22030097c31fc1
+        run: |
+          set -euo pipefail
+          node tools/browser-release/compact-proof.mjs
+          node tools/security/scan-public-secrets.mjs "$PROOF_OUTPUT_ROOT"
+          git diff --exit-code
+          git diff --cached --exit-code
+      - name: Upload research compact artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: compact-pages-research-proof
+          path: ${{ runner.temp }}/checkni-compact-proof/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 2
