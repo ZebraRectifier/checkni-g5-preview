@@ -1,0 +1,25 @@
+
+test('same-origin basket survives immutable release activation and isolated profiles stay separate',async({page,context,browser})=>{
+ await context.route('**/*',route=>['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
+ const old='/releases/a66ab7aa146097ef9320ac363489eb23ef02eb8f4f11a587b7811ef48e6d2a1c/index.html?comparison=observed&catalog=retail#shop';
+ const current='/?comparison=observed&catalog=retail#shop';
+ const fixture=[{id:'test:milk',name:'Тестовое молоко',unit:'1 л',quantity:1},{id:'test:bread',name:'Тестовый хлеб',unit:'1 шт',quantity:1},{id:'test:apple',name:'Тестовое яблоко',unit:'1 кг',quantity:1}];
+ await page.goto(old);
+ await page.evaluate(rows=>localStorage.setItem('checkni.surface.basket.v1',JSON.stringify(rows)),fixture);
+ await page.reload();await expect(page.locator('html')).toHaveAttribute('data-checkni-boot','ready');
+ await page.locator('[data-pixel-action="basket"]').first().click();
+ await expect(page.locator('#basket-content')).toContainText('Тестовое молоко');
+ const next=await context.newPage();await next.goto(current);
+ await expect(next.locator('html')).toHaveAttribute('data-checkni-boot','ready');
+ expect(await next.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')))).toEqual(fixture);
+ await next.locator('[data-pixel-action="basket"]').first().click();
+ for(const item of fixture)await expect(next.locator('#basket-content')).toContainText(item.name);
+ await next.reload();await expect(next.locator('html')).toHaveAttribute('data-checkni-boot','ready');
+ expect(await next.evaluate(()=>JSON.parse(localStorage.getItem('checkni.surface.basket.v1')))).toEqual(fixture);
+ const fresh=await browser.newContext();try{
+  await fresh.route('**/*',route=>['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
+  const isolated=await fresh.newPage();await isolated.goto(current);
+  await expect(isolated.locator('html')).toHaveAttribute('data-checkni-boot','ready');
+  expect(await isolated.evaluate(()=>localStorage.getItem('checkni.surface.basket.v1'))).toBeNull();
+ }finally{await fresh.close();}
+});

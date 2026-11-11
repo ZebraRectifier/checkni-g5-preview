@@ -1,0 +1,83 @@
+name: Hosted immutable stage proof
+on:
+  pull_request:
+    paths:
+      - 'tools/browser-release/hosted-release-generator.mjs'
+      - 'tools/browser-release/hosted-partial-browser-fixture.txt'
+      - 'tools/browser-release/hosted-guided-browser-fixture.txt'
+      - '.github/workflows/hosted-stage-proof.yml'
+permissions:
+  contents: read
+jobs:
+  build-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          path: site
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: ZebraRectifier/checkni-g5-preview
+          ref: debca018d759212e2008b6f24d4a204ece7eedd3
+          persist-credentials: false
+          path: source
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Check generator bytes
+        working-directory: site
+        run: |
+          echo '6ce5ea877d5d809f4ff8b309f337ccb9248116b4f6fdc5c0245dab03ea3ef42e  tools/browser-release/hosted-release-generator.mjs' | sha256sum -c -
+          echo 'fd1c43bd6bb8d5a3a664c16bfa089c7bddcc4893fcb5dfbccedccff5a08b669c  tools/security/scan-public-secrets.mjs' | sha256sum -c -
+      - name: Run exact integration unit tests
+        working-directory: source
+        run: node --test tests/guidedShoppingFlow.test.mjs tests/comparisonResult.test.mjs tests/shoppingDialogueRecovery.test.mjs tests/guidedHouseholdWords.test.mjs tests/retailCatalogPort.test.mjs
+      - name: Install pinned browser tooling
+        working-directory: source
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Verify guided and partial comparison on two viewports
+        working-directory: source
+        run: |
+          set -euo pipefail
+          cat ../site/tools/browser-release/hosted-partial-browser-fixture.txt >> test/e2e/comparison-presentation.spec.mjs
+          cat ../site/tools/browser-release/hosted-guided-browser-fixture.txt >> test/e2e/guided-shopping.spec.mjs
+          npx playwright test --config playwright.weekly.config.mjs --workers=1 test/e2e/guided-shopping.spec.mjs test/e2e/comparison-presentation.spec.mjs
+          npx playwright test --config playwright.weekly.config.mjs --workers=1 test/e2e/shopping-dialogue-recovery.spec.mjs --grep 'provider 503 offers local basket|allergy|undo'
+      - name: Build isolated immutable release
+        working-directory: site
+        env:
+          OUT: ${{ runner.temp }}/checkni-stage-proof
+        run: |
+          set -euo pipefail
+          test "$(git -C ../source rev-parse HEAD)" = 'debca018d759212e2008b6f24d4a204ece7eedd3'
+          node tools/browser-release/hosted-release-generator.mjs stage ../source debca018d759212e2008b6f24d4a204ece7eedd3 "$OUT"
+          node tools/security/scan-public-secrets.mjs "$OUT"
+      - name: Verify staged tree and retained runtime paths
+        working-directory: site
+        env:
+          OUT: ${{ runner.temp }}/checkni-stage-proof
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs/promises';
+          import {verifyLocal} from './tools/browser-release/verify.mjs';
+          const ids=await fs.readdir(process.env.OUT+'/releases');
+          if(ids.length!==1)throw Error('unexpected_release_count');
+          const m=await verifyLocal(process.env.OUT,ids[0]);
+          if(m.sourceCommit!=='debca018d759212e2008b6f24d4a204ece7eedd3')throw Error('source_mismatch');
+          const previous=JSON.parse(await fs.readFile('releases/a66ab7aa146097ef9320ac363489eb23ef02eb8f4f11a587b7811ef48e6d2a1c/manifest.json','utf8'));
+          const paths=x=>x.entries.map(e=>e.file).sort();
+          if(JSON.stringify(paths(m))!==JSON.stringify(paths(previous)))throw Error('runtime_file_set_changed');
+          console.log(JSON.stringify({sourceCommit:m.sourceCommit,releaseId:m.releaseId,files:m.entries.length,immutableVerified:true}));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hosted-stage-proof
+          path: ${{ runner.temp }}/checkni-stage-proof/
+          if-no-files-found: error
+          retention-days: 2
