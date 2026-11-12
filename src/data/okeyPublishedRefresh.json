@@ -1,7 +1,7 @@
 {
-  "status": "collected",
-  "lastAttemptAt": "2026-11-11T06:55:28.950Z",
+  "status": "unavailable",
+  "lastAttemptAt": "2026-11-12T07:30:28.122Z",
   "sourceUrl": "https://mos.proshoper.ru/actions/okej/moskva/",
   "scope": "third-party-moscow-city-promotion-not-exact-store",
-  "uniqueProducts": 67
+  "reason": "no_verified_published_prices"
 }
