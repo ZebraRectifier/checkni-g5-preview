@@ -16,7 +16,7 @@ const TERMS = Object.freeze({
   fruit: /фрукт\S*/u, tomatoes: /томат\S*|помидор\S*/u, bread: /хлеб\S*/u,
   cheese: /сыр(?:а|у|ом|ы|ов|ам|ами|ах)?(?=$|[^а-я])/u, apples: /яблок\S*/u,
   bananas: /банан\S*/u, pelmeni: /пельмен\S*/u, beef_mince: /говяж\S*\s+фарш|фарш\s+говяж\S*/u,
-  pork: /свинин\S*/u
+  pork: /свин\S*/u
 });
 const VEGETABLES = new Set(["potatoes", "onions", "carrots", "cabbage", "tomatoes"]);
 const FRUITS = new Set(["apples", "bananas"]);
@@ -245,7 +245,7 @@ export function isShoppingProductRejected(product, state) {
   // Wanting cheese/rice never authorises a meat filling. An explicit meat
   // member exception (for example chicken) can narrow the broad refusal.
   const name = normalizeShoppingText(product?.name);
-  const unexceptedMeat = /свинин|баранин|ягнен|теляти|индейк|утк[ауи]|гусь|гуся|кролик|крольчат|перепел/u.test(name)
+  const unexceptedMeat = /свин|баранин|ягнен|теляти|индейк|утк[ауи]|гусь|гуся|кролик|крольчат|перепел/u.test(name)
     || targets.includes("beef_mince") && !state.exceptions.beef_mince
     || /говядин|говяж/u.test(name) && !targets.includes("beef_mince");
   const meatException = !unexceptedMeat && targets.some(key => MEAT_TARGETS.has(key) && state.exceptions[key]);
