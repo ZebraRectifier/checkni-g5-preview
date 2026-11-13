@@ -71,7 +71,11 @@ export function createGuidedShoppingPlan(goal, history, memory) {
     ...(economy&&row.key==='chicken'&&!/филе/u.test(clean(user))?{label:'Курица',query:'цыпл',allowPoultryCuts:true}:{}) })), retailers, stage: 'intake', mode: economy ? 'economy' : 'balanced',
     location: shoppingLocationRequest(goal), freezer: /морозилк/u.test(clean(goal)) ? true : null,
     question: null, people: memory.facts.peopleCount?.value ?? null, days: memory.facts.shoppingDays?.value ?? null,
-    budgetMinor: memory.facts.budgetMinor?.value ?? (economy ? null : undefined), constraintsReviewed: false, rows: [], base: null, scope: null };
+    budgetMinor: memory.facts.budgetMinor?.value ?? (economy ? null : undefined),
+    // A resumed Hory journey must not ask the same exclusion question after
+    // the visitor already gave an explicit, saved preference.
+    constraintsReviewed: Boolean(Object.keys(memory.rejected ?? {}).length || Object.keys(memory.exceptions ?? {}).length || Object.keys(memory.wishes ?? {}).length),
+    rows: [], base: null, scope: null };
 }
 
 export function advanceGuidedIntake(plan, text, memory) {
