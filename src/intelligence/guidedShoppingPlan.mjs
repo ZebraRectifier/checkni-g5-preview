@@ -74,7 +74,7 @@ export function createGuidedShoppingPlan(goal, history, memory) {
     budgetMinor: memory.facts.budgetMinor?.value ?? (economy ? null : undefined),
     // A resumed Hory journey must not ask the same exclusion question after
     // the visitor already gave an explicit, saved preference.
-    constraintsReviewed: Boolean(Object.keys(memory.rejected ?? {}).length || Object.keys(memory.exceptions ?? {}).length || Object.keys(memory.wishes ?? {}).length),
+    constraintsReviewed: Boolean(memory.facts.constraintsReviewed?.value || Object.keys(memory.rejected ?? {}).length || Object.keys(memory.exceptions ?? {}).length || Object.keys(memory.wishes ?? {}).length),
     rows: [], base: null, scope: null };
 }
 
@@ -150,7 +150,12 @@ export function advanceGuidedIntake(plan, text, memory) {
   plan.days = delta.facts.shoppingDays?.value ?? memory.facts.shoppingDays?.value ?? plan.days;
   plan.budgetMinor = delta.unset.includes('budgetMinor') ? null : delta.facts.budgetMinor?.value ?? memory.facts.budgetMinor?.value ?? plan.budgetMinor;
   if (plan.question === 'constraints' && (/^(?:ограничений нет|без ограничений|все можно|нет|ничего|ничего не исключать)$/u.test(value)
-      || delta.reject.length || delta.allow.length || delta.unresolved.length)) plan.constraintsReviewed = true;
+      || delta.reject.length || delta.allow.length || delta.unresolved.length)) {
+    plan.constraintsReviewed = true;
+    // Keep an explicit “no restrictions” answer across an address change so
+    // Hory never asks the visitor to answer the same intake question again.
+    delta.facts.constraintsReviewed = { value: true, scope: 'goal' };
+  }
   return { delta };
 }
 
