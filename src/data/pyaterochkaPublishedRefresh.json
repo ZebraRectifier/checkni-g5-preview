@@ -1,10 +1,9 @@
 {
-  "status": "collected",
-  "lastAttemptAt": "2026-11-12T08:30:06.029Z",
+  "status": "reserved",
+  "lastAttemptAt": "2026-11-13T08:09:19.597Z",
   "sourceUrl": "https://mos.proshoper.ru/actions/pyaterochka/moskva/",
   "scope": "third-party-moscow-city-promotion-not-exact-store",
   "collectionMode": "automated",
-  "sourceRequests": 1,
-  "uniqueProducts": 143,
-  "observedAt": "2026-11-12T08:30:07.997Z"
+  "reservationOwner": "43390121006-1",
+  "sourceRequests": 0
 }
