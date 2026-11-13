@@ -57,8 +57,12 @@ export function verifyTestCommitRuntime(root, commit, manifest) {
     const header = buffer.subarray(offset, end).toString('utf8');
     const match = /^[a-f0-9]{40} blob (\d+)$/u.exec(header);
     if (end < offset || !match) throw Error('test_commit_missing_runtime:' + entry.file);
-    const size = Number(match[1]), bytes = buffer.subarray(end + 1, end + 1 + size);
-    if (bytes.length !== entry.bytes || digest(bytes) !== entry.sha256) throw Error('test_commit_runtime_mismatch:' + entry.file);
+    const size = Number(match[1]), raw = buffer.subarray(end + 1, end + 1 + size);
+    // The public entrypoints are activated by replacing ./src with an
+    // immutable release path.  Manifests intentionally hold their portable
+    // ./src form, just like verifySourceCommitRuntime below.
+    const bytes = sourceEntry(entry.file, raw);
+    if (raw.length !== size || bytes.length !== entry.bytes || digest(bytes) !== entry.sha256) throw Error('test_commit_runtime_mismatch:' + entry.file);
     offset = end + size + 2;
   }
   if (offset !== buffer.length) throw Error('invalid_git_blob_batch');
