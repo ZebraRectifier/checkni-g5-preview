@@ -67,7 +67,9 @@ jobs:
         run: npx playwright test --config=playwright.weekly.config.mjs hori-v13.spec.mjs --grep 'approved PixelCharacter'
       - name: Replay desktop and mobile grocery journeys without external services
         working-directory: ${{ steps.prepare.outputs.workspace }}
-        run: npx playwright test --config=playwright.weekly.config.mjs --timeout=45000 --global-timeout=900000
+        # Playwright's internal timer cannot terminate a process stuck before
+        # the runner takes control. GNU timeout keeps the release gate finite.
+        run: timeout --foreground 16m npx playwright test --config=playwright.weekly.config.mjs --timeout=45000 --global-timeout=900000
       - name: Preserve failure diagnostics
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
