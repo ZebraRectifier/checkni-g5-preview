@@ -19,7 +19,10 @@ const SUPPORT_PATHS = ['test', 'tests', 'tools', 'package.json', 'package-lock.j
   'artifacts/nearby-shopping/catalog-geography-joins-20261024.json',
   'evidence/magnit-nearby-20261107',
   'evidence/magnit-kazan-pilot-20261108/address-evidence.json',
-  'evidence/magnit-kazan-pilot-20261108/validate.mjs'];
+  'evidence/magnit-kazan-pilot-20261108/validate.mjs',
+  // This fixture is already tracked and exercised by the weekly contract.
+  // Include the whole evidence bundle so its validator cannot lose imports.
+  'evidence/maria-ra-novosibirsk-20261107'];
 export const MUTABLE_PUBLIC_DATA_FILES = Object.freeze([
   'nearbyGroceryStores.json',
   ...['saint-petersburg', 'kazan', 'yekaterinburg', 'novosibirsk', 'nizhny-novgorod'].map(city => `nearby-regions/${city}.json`),
