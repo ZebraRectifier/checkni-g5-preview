@@ -1,6 +1,6 @@
 /* Approved v17 base: calm light lavender, with pixel accents only where they
    aid navigation. Product photography and commercial facts stay untouched. */
-:root {
+body.hori-workspace.pixel-workspace {
   --bg: #f4efff;
   --surface: #fff;
   --surface-soft: #f8f4ff;
