@@ -9,7 +9,13 @@ const reviewed = {
   price_condition: "public-online", availability: "unknown", main_category_id: 63963,
   product_url: "https://magnit.ru/product/1899800689-kefir_prostokvashino_2_5_930g?shopCode=777312&shopType=1",
   source_url: "https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1",
-  image_url: null, observed_at: "2026-10-10T06:30:00Z"
+  location_label: "г Москва, аллея Берёзовая, д 17 к 2",
+  scope_binding: "public-store-product-page",
+  binding_id: "magnit-shopcode-777312",
+  scope_evidence_url: "https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1",
+  // The fixture verifies selection/provenance, so it must be fresh.  A dated
+  // historical observation is intentionally excluded by the retail surface.
+  image_url: null, observed_at: new Date().toISOString()
 };
 const unreviewed = { ...reviewed, source_product_id: "other", name: "Кефир Другая марка 2.5% 900г", weight_text: "900 г", price_minor: 5999,
   product_url: "https://magnit.ru/product/other?shopCode=777312&shopType=1" };
@@ -37,7 +43,7 @@ test("kefir need → actual source choices → two bottles → reviewed exact pa
   const cards = page.locator(".shopping-selection-card");
   await expect(cards).toHaveCount(2);
   await expect(cards.nth(0)).toContainText("Кефир Простоквашино 2.5% 930г");
-  await expect(cards.nth(0)).toContainText("10.10.2026");
+  await expect(cards.nth(0)).toContainText(new Date(reviewed.observed_at).toLocaleDateString('ru-RU', { timeZone: 'UTC' }));
   await expect(cards.nth(0).getByRole("link", { name: "Источник" })).toHaveAttribute("href", reviewed.source_url);
   await expect(page.locator("#basket-dock-copy")).toContainText("Пока пусто");
   await submit(page, "две бутылки");

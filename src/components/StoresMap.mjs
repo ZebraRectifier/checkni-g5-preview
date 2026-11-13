@@ -134,11 +134,12 @@ export function createStoresSection({
     map.classList.remove("stores-map-picking"); geo.clear();
   });
   clearButton.id = "stores-clear-location";
+  const locationControls = [geoButton, manualButton, clearButton];
   if (onBackToNearby) controls.append(button("К списку магазинов", () => {
     setNearbyMode(false);
     onBackToNearby();
   }));
-  controls.append(geoButton, manualButton, clearButton);
+  controls.append(...locationControls);
   const geoStatus = textEl("p", "stores-status", "");
   geoStatus.id = "stores-location-status"; geoStatus.setAttribute("role", "status");
   const privacy = textEl("p", "stores-copy",
@@ -169,10 +170,11 @@ export function createStoresSection({
     button("↓", () => redrawCenter(shiftMapCenter(center, 0, 180, zoom))),
     button("→", () => redrawCenter(shiftMapCenter(center, 180, 0, zoom)))
   ];
-  mapControls.append(networkLabel, networkFilter, zoomIn, zoomOut,
-    ...panButtons, ownCenter,
-    button("Искать здесь", () => geo.setManual(center)),
-    button("Показать магазины", () => { center = { ...DEFAULT_CENTER }; zoom = DEFAULT_ZOOM; renderMap(); }));
+  const searchHere = button("Искать здесь", () => geo.setManual(center));
+  searchHere.className = "stores-map-search-here";
+  const resetMap = button("Показать магазины", () => { center = { ...DEFAULT_CENTER }; zoom = DEFAULT_ZOOM; renderMap(); });
+  const advancedMapControls = [networkLabel, networkFilter, zoomIn, zoomOut, ...panButtons, ownCenter, resetMap];
+  mapControls.append(...advancedMapControls, searchHere);
   ["Запад", "Север", "Юг", "Восток"].forEach((label, i) =>
     panButtons[i].setAttribute("aria-label", "Карта: " + label));
   const map = textEl("div", "stores-map", "");
@@ -188,6 +190,24 @@ export function createStoresSection({
     const point = shiftMapCenter(center, (event.clientX - rect.left - rect.width / 2) * 512 / rect.width,
       (event.clientY - rect.top - rect.height / 2) * 512 / rect.height, zoom);
     if (point) geo.setManual(point);
+  });
+  // In the compact nearby mode the user moves the map directly, then confirms
+  // the visible area with the single “Искать здесь” action.  The legacy arrow
+  // controls remain available only in the detailed map view.
+  let dragStart = null;
+  map.addEventListener("pointerdown", event => {
+    if (!nearbyMode || event.button !== 0 || event.target.closest(".stores-pin,button,a")) return;
+    dragStart = { x: event.clientX, y: event.clientY, center: { ...center } };
+    map.setPointerCapture?.(event.pointerId);
+  });
+  map.addEventListener("pointerup", event => {
+    if (!dragStart) return;
+    const rect = map.getBoundingClientRect();
+    const start = dragStart; dragStart = null;
+    if (!rect.width || !rect.height) return;
+    const dx = event.clientX - start.x, dy = event.clientY - start.y;
+    if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+    redrawCenter(shiftMapCenter(start.center, -dx * 512 / rect.width, -dy * 512 / rect.height, zoom));
   });
   map.addEventListener("keydown", event => {
     if (event.target !== map) return;
@@ -363,6 +383,13 @@ export function createStoresSection({
   function setNearbyMode(enabled) {
     nearbyMode = enabled;
     for (const element of [directory, magnitDirectory, selected]) element.hidden = enabled;
+    for (const element of locationControls) element.hidden = enabled;
+    for (const element of advancedMapControls) element.hidden = enabled;
+    privacy.hidden = enabled;
+    geoStatus.hidden = enabled;
+    map.setAttribute("aria-label", enabled
+      ? "Карта ближайших магазинов. Перетащите карту, затем нажмите «Искать здесь»"
+      : "Карта магазинов. Место можно указать после кнопки «Указать место на карте»");
     pinCard.hidden = true;
     renderMap();
   }

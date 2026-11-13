@@ -47,7 +47,7 @@ test('exact newly connected Moscow and regional addresses select their own Magni
     point=joinedDirectory.stores.find(p=>p.catalogBinding?.shopCode===shopCode);
     expect(point).toBeTruthy();
     await page.goto('/?comparison=observed&catalog=retail#shop'); await selectStore(page); await openStoreDetails(page);
-    await page.locator('#nearby-shopping').getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
+    await page.locator('#nearby-shopping').getByRole('button',{name:'Найти магазины рядом',exact:true}).click();
     await page.locator('#nearby-address').fill(point.address); await page.locator('#nearby-address-search').click();
     await page.locator('#nearby-address-candidates').getByRole('button').click();
     await page.locator('#nearby-radius').selectOption('1');
@@ -55,7 +55,9 @@ test('exact newly connected Moscow and regional addresses select their own Magni
     await expect(row).toContainText('Каталог этого адреса подключён');
     await row.getByRole('button',{name:'Открыть товары',exact:true}).click();
     await expect(page.locator('#magnit-store-address')).toHaveValue(shopCode);
-    await expect(page.locator('#nearby-selected-store')).toContainText(point.address);
+    // Selecting a card opens its catalogue directly.  The old confirmation
+    // panel must stay gone, otherwise the address-first path becomes two-step.
+    await expect(page.locator('#nearby-selected-store')).toBeHidden();
     await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
     const stored=await page.evaluate(()=>JSON.stringify({...localStorage}));
     expect(stored).not.toContain(point.address);
@@ -79,7 +81,7 @@ test('an explicitly chosen nearby address is remembered while its catalogue is s
   });
   try{
     await page.goto('/?comparison=observed&catalog=retail#shop');await selectStore(page);await openStoreDetails(page);
-    await page.locator('#nearby-shopping').getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
+    await page.locator('#nearby-shopping').getByRole('button',{name:'Найти магазины рядом',exact:true}).click();
     await page.locator('#nearby-address').fill(point.address);await page.locator('#nearby-address-search').click();
     await page.locator('#nearby-address-candidates').getByRole('button').click();
     await page.locator('#nearby-radius').selectOption('1');
@@ -133,21 +135,21 @@ test('address consent → candidate → radius → agreed store → household in
   await page.route('**/functions/v1/nearby-address',r=>{addressCalls++;expect(r.request().postDataJSON()).toEqual({query:'Пушкино, Красноармейское шоссе, 105',consent:true});
     return r.fulfill({json:{version:1,candidates:[{lat:56.01942,lon:37.885139,label:'Московская область, Пушкино, Красноармейское шоссе, 105',precision:'house'}]}});});
   await page.goto('/?comparison=observed&catalog=retail#shop');await selectStore(page);await openStoreDetails(page);
-  const nearby=page.locator('#nearby-shopping');await nearby.getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
+  const nearby=page.locator('#nearby-shopping');await nearby.getByRole('button',{name:'Найти магазины рядом',exact:true}).click();
   await page.locator('#nearby-address').fill('Пушкино, Красноармейское шоссе, 105');expect(addressCalls).toBe(0);
   await page.locator('#nearby-address-search').click();
   await page.locator('#nearby-address-candidates').getByRole('button').click();
-  await expect(page.locator('#nearby-status')).toContainText('до 5 км');
+  await expect(page.locator('#nearby-status')).toContainText(/Рядом с|Магазинов с каталогом рядом не нашлось/u);
   await expect(page.locator('#nearby-connected-only')).toBeChecked();
   await page.locator('#nearby-connected-only').uncheck();
-  await expect(page.locator('#nearby-results')).toContainText('Каталог этого адреса пока не подключён');
+  await expect(page.locator('#nearby-results')).toContainText('Каталог пока недоступен');
   await page.locator('#nearby-connected-only').check();
   await expect(page.locator('#nearby-results')).toContainText('Глобус Пушкино');
   await page.locator('#nearby-results article').filter({hasText:'Глобус Пушкино'}).getByRole('button',{name:'Открыть товары',exact:true}).click();
-  await expect(page.locator('#nearby-selected-store')).toContainText('Глобус Пушкино');
+  await expect(page.locator('#nearby-selected-store')).toBeHidden();
   await expect(page.locator('#globus-store-address')).toHaveValue('5014');
-  await page.getByRole('button',{name:'Собрать корзину здесь',exact:true}).click();
   await openHory(page);
+  await page.locator('#pixel-hory-dialog').getByRole('button',{name:'Собрать корзину',exact:true}).click();
   const output=page.locator('#basket-proposal-status');await expect(output).toContainText('На сколько человек');
   await say(page,'На троих');await say(page,'На неделю');await expect(output).toContainText('Какие продукты исключить');
   await say(page,'Ограничений нет');await expect(output).toContainText('Ещё нужно подобрать');
@@ -156,7 +158,7 @@ test('address consent → candidate → radius → agreed store → household in
   const stored=await page.evaluate(()=>({storage:JSON.stringify({...localStorage}),history:JSON.stringify(history.state)}));
   expect(stored.storage).not.toContain('56.01942');expect(stored.storage).not.toContain('Красноармейское шоссе, 105');
   expect(stored.history).not.toContain('56.01942');expect(ai).toBe(0);expect(addressCalls).toBe(1);
-  await page.reload();await openStoreDetails(page);await nearby.getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
+  await page.reload();await openStoreDetails(page);await nearby.getByRole('button',{name:'Найти магазины рядом',exact:true}).click();
   await expect(page.locator('#nearby-results')).toBeEmpty();await expect(page.locator('#nearby-address')).toHaveValue('');
 });
 test('denied geolocation and an unavailable address service leave manual recovery and the existing basket usable',async({page})=>{
@@ -177,11 +179,30 @@ test('denied geolocation and an unavailable address service leave manual recover
   await expect(page.locator('#basket-dock-copy')).toContainText('Пока пусто');
 });
 
+test('nearby map keeps only the essential controls and searches the moved area', async ({page}) => {
+  await isolate(page);
+  await page.goto('/?comparison=observed&catalog=retail#shop');
+  await selectStore(page); await openStoreDetails(page);
+  await page.locator('#nearby-shopping').getByRole('button', { name: 'Найти магазины рядом', exact: true }).click();
+  await page.locator('#nearby-shopping').getByRole('button', { name: 'Выбрать точку на карте', exact: true }).click();
+  const map = page.locator('.stores-map');
+  await expect(map).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Искать здесь', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'К списку магазинов', exact: true })).toBeVisible();
+  await expect(page.locator('#stores-locate')).toBeHidden();
+  await expect(page.locator('#stores-manual-location')).toBeHidden();
+  await expect(page.locator('.stores-map-network-filter')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Показать магазины', exact: true })).toBeHidden();
+  await map.press('ArrowRight');
+  await page.getByRole('button', { name: 'Искать здесь', exact: true }).click();
+  await expect(page.locator('#nearby-status')).toContainText(/Рядом с|Магазинов с каталогом рядом не нашлось/u);
+});
+
 test('clearing the nearby place cancels a pending map device callback in both views',async({page})=>{
   await isolate(page);await page.addInitScript(()=>Object.defineProperty(navigator,'geolocation',{configurable:true,value:{getCurrentPosition(ok){window.__nearbyLateDevice=ok;}}}));
   await page.goto('/?comparison=observed&catalog=retail#shop');await selectStore(page);await openStoreDetails(page);
   await page.locator('#stores-locate').click();
-  await page.locator('#nearby-shopping').getByRole('button',{name:'📍 Найти магазины рядом',exact:true}).click();
+  await page.locator('#nearby-shopping').getByRole('button',{name:'Найти магазины рядом',exact:true}).click();
   await page.locator('#nearby-shopping').getByRole('button',{name:'Убрать моё место',exact:true}).click();
   await page.evaluate(()=>window.__nearbyLateDevice({coords:{latitude:55.75,longitude:37.61,accuracy:15},timestamp:Date.now()}));
   await expect(page.locator('#nearby-results')).toBeEmpty();await expect(page.locator('.stores-user-pin')).toHaveCount(0);
@@ -199,8 +220,8 @@ test('a full spoken goal keeps people and period while the precise address stays
   await page.locator('#stores-manual-location').click();await page.locator('.stores-map').press('Enter');
   await page.locator('#nearby-radius').selectOption('20');await page.locator('#nearby-connected-only').check();
   const choose=page.locator('#nearby-results article').first().getByRole('button',{name:'Открыть товары',exact:true});
-  await choose.click();await page.getByRole('button',{name:'Собрать корзину здесь',exact:true}).click();
-  await openHory(page);
+  await choose.click();await openHory(page);
+  await page.locator('#pixel-hory-dialog').getByRole('button',{name:'Собрать корзину',exact:true}).click();
   await expect(page.locator('#basket-proposal-status')).toContainText('для 3 человек, на 7 дн.');
   await expect(page.locator('#basket-proposal-status')).toContainText('Какие продукты исключить');expect(ai).toBe(0);
 });

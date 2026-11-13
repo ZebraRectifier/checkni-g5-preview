@@ -60,11 +60,19 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   const createQuickAction = (label, prompt) => {
     const action = document.createElement('button'); action.type = 'button'; action.textContent = label;
     action.addEventListener('click', () => {
-      input.value = prompt; input.dispatchEvent(new view.Event('input', { bubbles: true })); input.focus();
+      input.value = prompt;
+      input.dispatchEvent(new view.Event('input', { bubbles: true }));
+      form.requestSubmit();
     });
     return action;
   };
-  quickActions.append(createQuickAction('Собрать корзину', 'Собрать корзину'), createQuickAction('Сравнить цены', 'Сравнить цены моей корзины'));
+  // Use a complete intent phrase for the existing guided flow; a bare
+  // imperative is otherwise treated as an ambiguous chat message.
+  quickActions.append(createQuickAction('Собрать корзину', 'Собери недорогую корзину'), createQuickAction('Сравнить цены', 'Сравнить цены моей корзины'));
+  // ShoppingDialogue has a pre-workspace welcome row.  The dialog owns the
+  // retail entry, so replace it instead of rendering the same two actions
+  // twice on the first screen.
+  welcome.querySelector('.shopping-conversation-choices')?.remove();
   welcome.prepend(greeting, quickActions);
   const composer = form.querySelector('.proposal-box');
   if (composer) { composer.classList.replace('proposal-box', 'hori-composer'); form.append(composer); }

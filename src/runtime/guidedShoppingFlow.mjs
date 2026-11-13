@@ -60,7 +60,12 @@ export function createGuidedShoppingFlow(options) {
     version++;
     quantityEdits = new Map();
     plan = createGuidedShoppingPlan(goal, history, options.getMemory());
-    if(options.hasAgreedStore?.()===true&&!plan.location&&!plan.retailers.length)plan.useCurrentStore=true;
+    // The assistant is opened from a concrete catalogue only after a visitor
+    // selects its address.  Reuse that visible catalogue as context even if a
+    // legacy consent marker was not populated by an older entry point.
+    const currentStore = options.getContext?.();
+    if ((options.hasAgreedStore?.() === true || currentStore?.storeId)
+      && !plan.location && !plan.retailers.length) plan.useCurrentStore = true;
     const intake = advanceGuidedIntake(plan, goal, options.getMemory());
     if (!intake.issue) options.updateMemory(intake.delta);
     else return state = view('Уточню условия.', intake.issue);

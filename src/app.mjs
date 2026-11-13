@@ -358,8 +358,11 @@ const basketProposalFlow = createShoppingConversationFlow({
   requestAiProposal: requestBasketProposal,
   requestShoppingAdvice,
   ...(publicRetailCatalogMode ? {
-    getGuidedRetailContextKey:()=>selectedMagnitStore.shopCode,
-    hasGuidedAgreedStore:()=>retailSurfaceStage==='store'&&agreedNearbyStoreKey===JSON.stringify([retailBrowserState.retailerId,currentRetailClient()?.definition.storeId]),
+    // A catalogue is only reachable after the visitor has explicitly chosen a
+    // store card or address.  Hory must reuse that choice instead of asking
+    // for a place again (the previous Magnit-only key also lost Globus/METRO).
+    getGuidedRetailContextKey:()=>currentRetailClient()?.definition.storeId??null,
+    hasGuidedAgreedStore:()=>retailSurfaceStage==='store'&&Boolean(currentRetailClient()?.definition.storeId),
     getGuidedRetailContexts: ids=>[
       ...(ids.includes('magnit')?[{...retailClientFor('magnit').definition,store:selectedMagnitStore,priceScope:'address-public-price'}]:[]),
       ...(ids.includes('okey')?[OKEY_WEEKLY_SCOPE]:[]),
