@@ -2368,7 +2368,11 @@ if(publicRetailCatalogMode){
   nearbyShopping=createNearbyShopping({
     port: nearbyShoppingPort,
     locationController:shoppingLocationController,
-    onInvalidate:()=>{agreedNearbyStoreKey=null;basketProposalFlow.invalidate();renderBasketProposalState();},
+    // Choosing a nearby address is part of Hory's guided journey.  Preserve
+    // its collected household/preferences so the explicit "Подобрать товары"
+    // action can use the newly selected catalogue instead of falling back to
+    // the generic assistant.
+    onInvalidate:()=>{agreedNearbyStoreKey=null;if(!basketProposalFlow.hasActiveGuidedShopping?.())basketProposalFlow.invalidate();renderBasketProposalState();},
     onManualMap:()=>storesSection?.openNearbyMap(),
     onChoose:async(catalog,point,isCurrent)=>{
       if(catalog.retailerId==='globus'){
