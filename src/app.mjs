@@ -194,6 +194,10 @@ const publicRetailCatalogMode = (
   )
 );
 const DEFAULT_RETAILER_ID = "globus";
+// Hash-only History URLs have been observed to drop the public retail query
+// after a reload in embedded/static hosts. Keep the active query explicitly so
+// a selected catalogue never falls back to the demo surface.
+const urlForView = view => `${location.pathname}${location.search}${hashForView(view)}`;
 // This is presentation navigation, never a new commercial/store identity.
 // Preserve an older explicit retailer/category history entry on upgrade.
 let retailSurfaceStage = history.state?.checkniRetailSurface === 'store'
@@ -1358,9 +1362,9 @@ function updateRetailHistory(path, {
   };
 
   if (replace) {
-    history.replaceState(nextState, "", hashForView(VIEW.SHOP));
+    history.replaceState(nextState, "", urlForView(VIEW.SHOP));
   } else {
-    history.pushState(nextState, "", hashForView(VIEW.SHOP));
+    history.pushState(nextState, "", urlForView(VIEW.SHOP));
   }
 }
 
@@ -3108,7 +3112,7 @@ function navigate(view, {
   document.dispatchEvent(new CustomEvent('checkni:view-navigation', { detail: { view } }));
   const previousView = currentView;
   currentView = view;
-  const hash = hashForView(view);
+  const hash = urlForView(view);
 
   if (replace) {
     history.replaceState(createAppRouteState(view), "", hash);
@@ -3329,7 +3333,7 @@ document.addEventListener('checkni:shop-action', event => {
     catalogRequestVersion += 1; retailBrowserRequestVersion += 1; retailCollectionsVersion += 1;
     pendingCatalogSearch = null;
     currentView = VIEW.SHOP;
-    history.pushState(createAppRouteState(VIEW.SHOP, previousView, 0, []), '', hashForView(VIEW.SHOP));
+    history.pushState(createAppRouteState(VIEW.SHOP, previousView, 0, []), '', urlForView(VIEW.SHOP));
     renderRetailBrowser(); renderRetailCollections(); publishPixelShopState();
     renderView({ focusMode: FOCUS_MODE.HEADING });
     return;
@@ -3544,7 +3548,7 @@ history.replaceState(
     restoredRetailerId
   ),
   "",
-  hashForView(currentView)
+  urlForView(currentView)
 );
 
 setupManualSearchControls();
