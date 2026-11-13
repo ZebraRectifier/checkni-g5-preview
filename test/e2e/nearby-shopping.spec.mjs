@@ -52,7 +52,7 @@ test('exact newly connected Moscow and regional addresses select their own Magni
     await page.locator('#nearby-address-candidates').getByRole('button').click();
     await page.locator('#nearby-radius').selectOption('1');
     const row=page.locator('#nearby-results article').filter({has:page.getByText(point.address,{exact:true})});
-    await expect(row).toContainText('Каталог этого адреса подключён');
+    await expect(row).toContainText('Каталог доступен');
     await row.getByRole('button',{name:'Открыть товары',exact:true}).click();
     await expect(page.locator('#magnit-store-address')).toHaveValue(shopCode);
     // Selecting a card opens its catalogue directly.  The old confirmation
