@@ -24,7 +24,7 @@ export function createPixelProductCard(product, options = {}) {
     const dialog = document.createElement('dialog');
     dialog.id = 'shopping-product-dialog';
     dialog.className = 'shopping-product-dialog';
-    dialog.setAttribute('aria-labelledby', 'shopping-product-dialog-title');
+    dialog.setAttribute('aria-label', 'Информация о товаре');
 
     const title = document.createElement('h2');
     title.id = 'shopping-product-dialog-title';
