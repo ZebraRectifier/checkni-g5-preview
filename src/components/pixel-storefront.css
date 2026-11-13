@@ -817,6 +817,38 @@ body.pixel-workspace #pixel-store-home .retail-store-logo {
   aspect-ratio: auto;
 }
 
+/* Landing: one purpose, one address field, then readable networks. */
+body.pixel-workspace .pixel-home-hero {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 156px;
+  align-items: center;
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 0 20px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+}
+body.pixel-workspace .pixel-home-hero-copy h2 { margin: 0 0 8px; font-size: clamp(24px,3vw,34px); line-height: 1.12; }
+body.pixel-workspace .pixel-home-hero-copy p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
+body.pixel-workspace .pixel-home-hero-mascot { display: block; width: 100%; max-height: 132px; object-fit: contain; image-rendering: pixelated; }
+body.pixel-workspace .nearby-home .nearby-address-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; width: 100%; }
+body.pixel-workspace .nearby-home #nearby-address { display: block; width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px; border: 2px solid var(--accent); background: var(--surface); color: var(--ink); font-size: 16px; box-sizing: border-box; }
+body.pixel-workspace .nearby-home #nearby-address-search { min-width: 126px; min-height: 48px; padding-inline: 14px; }
+
+@media (max-width: 620px) {
+  body.pixel-workspace .pixel-home-hero { grid-template-columns: minmax(0,1fr) 94px; gap: 10px; margin-bottom: 16px; padding: 14px; }
+  body.pixel-workspace .pixel-home-hero-copy h2 { font-size: 24px; }
+  body.pixel-workspace .pixel-home-hero-mascot { max-height: 100px; }
+  body.pixel-workspace .nearby-home .nearby-address-row { grid-template-columns: minmax(0,1fr) auto; }
+  body.pixel-workspace .nearby-home #nearby-address-search { min-width: 112px; padding-inline: 10px; }
+  body.pixel-workspace .retail-store-grid { grid-template-columns: 1fr; gap: 10px; }
+  body.pixel-workspace #pixel-store-home .retail-store-card { flex-direction: row; align-items: center; min-height: 76px; padding: 6px; }
+  body.pixel-workspace #pixel-store-home .retail-store-logo { flex: 0 0 76px; width: 76px; height: 62px; min-height: 62px; padding: 8px; }
+  body.pixel-workspace #pixel-store-home .retail-store-copy { padding: 6px 8px; }
+  body.pixel-workspace #pixel-store-home .retail-store-copy strong { font-size: 16px; }
+}
+
 body.pixel-workspace .nearby-home :is(#nearby-address-candidates, #nearby-results):empty {
   display: none;
 }
