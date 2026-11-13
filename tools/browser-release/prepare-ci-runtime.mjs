@@ -29,6 +29,9 @@ export const MUTABLE_PUBLIC_DATA_FILES = Object.freeze([
 const inside = (parent, child) => child !== parent && child.startsWith(parent + path.sep);
 const safeRelative = value => typeof value === 'string' && !value.includes('\\') && !value.includes(':')
   && !value.includes('\0') && value.split('/').every(part => part && part !== '.' && part !== '..');
+const portableEntrypoint = (file, bytes) => ['index.html', 'prices.html'].includes(file)
+  ? Buffer.from(bytes.toString('utf8').replace(/(\b(?:src|href)\s*=\s*["'])\.\/releases\/[a-f0-9]{64}\/src\//gu, '$1./src/'))
+  : bytes;
 const git = (root, args, input) => execFileSync('git', args, {cwd: root, input,
   maxBuffer: MAX_BYTES, stdio: ['pipe', 'pipe', 'pipe'], env: {...process.env, GIT_TERMINAL_PROMPT: '0'}});
 
@@ -61,7 +64,7 @@ export function verifyTestCommitRuntime(root, commit, manifest) {
     // The public entrypoints are activated by replacing ./src with an
     // immutable release path.  Manifests intentionally hold their portable
     // ./src form, just like verifySourceCommitRuntime below.
-    const bytes = sourceEntry(entry.file, raw);
+    const bytes = portableEntrypoint(entry.file, raw);
     if (raw.length !== size || bytes.length !== entry.bytes || digest(bytes) !== entry.sha256) throw Error('test_commit_runtime_mismatch:' + entry.file);
     offset = end + size + 2;
   }
