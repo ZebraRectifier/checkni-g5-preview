@@ -15,7 +15,8 @@ const TERMS = Object.freeze({
   milk: /молок\S*/u, kefir: /кефир\S*/u, vegetables: /овощ\S*/u,
   fruit: /фрукт\S*/u, tomatoes: /томат\S*|помидор\S*/u, bread: /хлеб\S*/u,
   cheese: /сыр(?:а|у|ом|ы|ов|ам|ами|ах)?(?=$|[^а-я])/u, apples: /яблок\S*/u,
-  bananas: /банан\S*/u, pelmeni: /пельмен\S*/u, beef_mince: /говяж\S*\s+фарш|фарш\s+говяж\S*/u
+  bananas: /банан\S*/u, pelmeni: /пельмен\S*/u, beef_mince: /говяж\S*\s+фарш|фарш\s+говяж\S*/u,
+  pork: /свинин\S*/u
 });
 const VEGETABLES = new Set(["potatoes", "onions", "carrots", "cabbage", "tomatoes"]);
 const FRUITS = new Set(["apples", "bananas"]);
@@ -165,7 +166,8 @@ export function extractShoppingDelta(text) {
           // A closed conversational aside is not another excluded food. Do not
           // clear existing unresolved constraints or ignore unknown list members.
           const noOtherRestrictions = /^(?:других|иных|остальных) ограничений нет$/u.test(part);
-          if (!shoppingTargets(part).length && !noOtherRestrictions && !/^(?:готовк[аиу]|пожалуйста|пж|плиз|спасибо)$/u.test(part)) {
+          const recommendationAside = /^(?:что|чем|какой|как)(?:\s|$).*?(?:посовет|вместо)/u.test(part);
+          if (!shoppingTargets(part).length && !noOtherRestrictions && !recommendationAside && !/^(?:готовк[аиу]|пожалуйста|пж|плиз|спасибо)$/u.test(part)) {
             delta.unresolved.push(`без ${part.replace(/^без\s+/u, "")}`.slice(0, 80));
           }
         }
