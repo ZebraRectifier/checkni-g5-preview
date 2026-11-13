@@ -19,7 +19,9 @@ jobs:
     # Standard hosted runners are free for this public artifact repository.
     # Never attach this public/fork workflow to the private Cloud.ru runner.
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The suite covers the published journey at both desktop and mobile widths.
+    # Give the outer job enough room for its finite Playwright gate below.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
@@ -69,7 +71,7 @@ jobs:
         working-directory: ${{ steps.prepare.outputs.workspace }}
         # Playwright's internal timer cannot terminate a process stuck before
         # the runner takes control. GNU timeout keeps the release gate finite.
-        run: timeout --foreground 16m npx playwright test --config=playwright.weekly.config.mjs --timeout=45000 --global-timeout=900000
+        run: timeout --foreground 30m npx playwright test --config=playwright.weekly.config.mjs --timeout=45000 --global-timeout=1620000
       - name: Preserve failure diagnostics
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
