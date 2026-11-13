@@ -596,6 +596,16 @@ export function createShoppingConversationFlow(options) {
     const planning = isShoppingPlanningRequest(text);
     const control = extractShoppingDelta(text);
     if (control.reset || control.newGoal || control.undo) guidedShopping = null;
+    // An explicit guided action is emitted by Hory itself.  Handle it before
+    // generic planning detection, which otherwise tears down the draft and
+    // turns “Подобрать товары и цены” into an unrelated text request.
+    if (guidedShopping?.active() && isGuidedBuildRequest(text)) {
+      const request = guidedShopping.handle(text, () => token === epoch);
+      state = guidedShopping.getState() ?? state;
+      const handled = await request;
+      if (token === epoch && handled) state = handled;
+      return state;
+    }
     if (/^сравни мой список[.!?]*$/iu.test(text)) {
       guidedShopping?.hideReview();
       state = messageState('Давай сравним покупки.', basket.getSnapshot().length
