@@ -49,7 +49,7 @@ export function isGuidedEntryRequest(text) {
 }
 
 export function isGuidedBuildRequest(text) {
-  return /^(?:(?:ну|да|давай|пожалуйста)[,\s]+)*(?:собери|собрать|собирай|подбери товары|подобрать товары)(?:\s+(?:мне|нам))?(?:\s+(?:корзину|список|это|по списку|продукты|товары))?$/u.test(clean(text));
+  return /^(?:(?:ну|да|давай|пожалуйста)[,\s]+)*(?:собери|собрать|собирай|подбери товары|подобрать товары)(?:\s+(?:мне|нам))?(?:\s+(?:корзину|список|это|по списку|продукты|товары))?(?:\s+и\s+цены)?$/u.test(clean(text));
 }
 
 export function createGuidedShoppingPlan(goal, history, memory) {
