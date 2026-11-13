@@ -48,19 +48,24 @@ test('landmark resolves only supported identity, radius and exact registered nea
   assert.deepEqual(nearbyShoppingStores({ landmark: { ...SHOPPING_LANDMARKS[0] }, radiusKm: 20 }), []);
 });
 
-test('greeting → cheap mode → three people → week → station → exclusions automatically loads sources, then confirms', async () => {
+test('a city-only answer advances intake without pretending to know a precise place', () => {
+  const city = shoppingLocationRequest('Москва');
+  assert.deepEqual(city, { city: 'Москва', kind: 'city' });
+  assert.deepEqual(nearbyShoppingStores(city), []);
+});
+
+test('greeting → cheap mode → three people → week → exclusions uses the already selected store, then confirms', async () => {
   const { flow, basket, requests, paid } = setup();
   await flow.run('hi'); assert.equal(flow.getState().presentation.conversationChoices.length, 3);
   await flow.run('Собери недорогую корзину'); assert.match(flow.getState().presentation.message, /На сколько человек/u);
   await flow.run('на 3 да есть морозилка'); assert.match(flow.getState().presentation.message, /На сколько дней/u);
-  await flow.run('На неделю'); assert.match(flow.getState().presentation.message, /Где закупаемся/u);
-  await flow.run('Заветы Ильича · до 20 км'); assert.match(flow.getState().presentation.message, /Какие продукты исключить/u);
+  await flow.run('На неделю'); assert.match(flow.getState().presentation.message, /Какие продукты исключить/u);
   assert.match(flow.getState().presentation.message, /морозилка есть/u);
   await flow.run('Ограничений нет');
   const result = flow.getState().presentation.guidedShopping;
   assert.equal(result.people, 3); assert.equal(result.days, 7); assert.equal(result.quote.complete, true);
-  assert.equal(result.quote.lines.length, 13); assert.equal(result.alternatives.length, 3);
-  assert.equal(requests.length, 39); assert.equal(paid(), 0); assert.deepEqual(basket.getSnapshot(), []);
+  assert.equal(result.quote.lines.length, 13); assert.equal(result.alternatives.length, 0);
+  assert.equal(requests.length, 13); assert.equal(paid(), 0); assert.deepEqual(basket.getSnapshot(), []);
   assert.equal(flow.getConversation().facts.budgetMinor, undefined);
   assert.equal(result.quote.winner, null); assert.equal(result.quote.allRecent, false);
   await flow.run('Добавить показанное'); assert.equal(flow.getState().status, 'success');

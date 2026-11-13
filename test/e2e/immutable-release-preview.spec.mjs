@@ -42,7 +42,7 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
       source_url:'https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1',
       scope_evidence_url:'https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1',
       scope_binding:'public-store-product-page',binding_id:'magnit-shopcode-777312',
-      location_label:'г Москва, аллея Берёзовая, д 17 к 2',image_url:null,observed_at:'2026-10-10T06:30:00Z'}]};
+      location_label:'г Москва, аллея Берёзовая, д 17 к 2',image_url:null,observed_at:new Date().toISOString()}]};
     const headers={'access-control-allow-origin':'*','access-control-allow-headers':'apikey,content-type','access-control-allow-methods':'GET,OPTIONS'};
     await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({headers,json:[]}));
     await page.route('**/rest/v1/retail_catalog_items**',r=>{

@@ -19,6 +19,20 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
 
   const home = node('section', 'pixel-store-home');
   home.id = 'pixel-store-home'; home.setAttribute('aria-labelledby', 'pixel-store-home-title');
+  // The landing view must explain the job before asking for an address.  This
+  // stays separate from the optional Hory dialog: Hory is still opened only
+  // from its explicit button in the navigation.
+  const homeHero = node('section', 'pixel-home-hero');
+  const heroCopy = node('div', 'pixel-home-hero-copy');
+  heroCopy.append(
+    node('h2', '', 'Сравнивай цены на продукты рядом'),
+    node('p', '', 'Выбери адрес, найди магазин и собери корзину без лишних шагов.')
+  );
+  const heroImage = document.createElement('img');
+  heroImage.className = 'pixel-home-hero-mascot';
+  heroImage.src = new URL('../img/ferret-hero.png', import.meta.url).href;
+  heroImage.alt = 'Хоря, помощник CHECKNI'; heroImage.width = 512; heroImage.height = 384;
+  homeHero.append(heroCopy, heroImage);
   const homeTitle = node('h1', '', 'Где ищем продукты?');
   homeTitle.id = 'pixel-store-home-title'; homeTitle.tabIndex = -1;
   const storeSearch = node('form', 'pixel-store-search');
@@ -58,7 +72,7 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   const directorySearch = node('details', 'pixel-directory-search');
   const directorySummary = node('summary', '', 'Поиск по сетям и адресам');
   directorySearch.append(directorySummary, storeSearch, storeStatus, addressResults);
-  home.append(homeTitle, directorySearch, addressChooser);
+  home.append(homeHero, homeTitle, directorySearch, addressChooser);
   if (stores) home.append(stores);
 
 

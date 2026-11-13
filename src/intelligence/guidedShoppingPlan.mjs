@@ -49,7 +49,7 @@ export function isGuidedEntryRequest(text) {
 }
 
 export function isGuidedBuildRequest(text) {
-  return /^(?:(?:ну|да|давай|пожалуйста)[,\s]+)*(?:собери|собрать|собирай|подбери товары|подобрать товары)(?:\s+(?:мне|нам))?(?:\s+(?:корзину|список|это|по списку|продукты|товары))?$/u.test(clean(text));
+  return /^(?:(?:ну|да|давай|пожалуйста)[,\s]+)*(?:собери|собрать|собирай|подбери товары|подобрать товары)(?:\s+(?:мне|нам))?(?:\s+(?:корзину|список|это|по списку|продукты|товары))?(?:\s+и\s+цены)?$/u.test(clean(text));
 }
 
 export function createGuidedShoppingPlan(goal, history, memory) {
@@ -71,7 +71,11 @@ export function createGuidedShoppingPlan(goal, history, memory) {
     ...(economy&&row.key==='chicken'&&!/филе/u.test(clean(user))?{label:'Курица',query:'цыпл',allowPoultryCuts:true}:{}) })), retailers, stage: 'intake', mode: economy ? 'economy' : 'balanced',
     location: shoppingLocationRequest(goal), freezer: /морозилк/u.test(clean(goal)) ? true : null,
     question: null, people: memory.facts.peopleCount?.value ?? null, days: memory.facts.shoppingDays?.value ?? null,
-    budgetMinor: memory.facts.budgetMinor?.value ?? (economy ? null : undefined), constraintsReviewed: false, rows: [], base: null, scope: null };
+    budgetMinor: memory.facts.budgetMinor?.value ?? (economy ? null : undefined),
+    // A resumed Hory journey must not ask the same exclusion question after
+    // the visitor already gave an explicit, saved preference.
+    constraintsReviewed: Boolean(memory.facts.constraintsReviewed?.value || Object.keys(memory.rejected ?? {}).length || Object.keys(memory.exceptions ?? {}).length || Object.keys(memory.wishes ?? {}).length),
+    rows: [], base: null, scope: null };
 }
 
 export function advanceGuidedIntake(plan, text, memory) {
@@ -146,7 +150,12 @@ export function advanceGuidedIntake(plan, text, memory) {
   plan.days = delta.facts.shoppingDays?.value ?? memory.facts.shoppingDays?.value ?? plan.days;
   plan.budgetMinor = delta.unset.includes('budgetMinor') ? null : delta.facts.budgetMinor?.value ?? memory.facts.budgetMinor?.value ?? plan.budgetMinor;
   if (plan.question === 'constraints' && (/^(?:ограничений нет|без ограничений|все можно|нет|ничего|ничего не исключать)$/u.test(value)
-      || delta.reject.length || delta.allow.length || delta.unresolved.length)) plan.constraintsReviewed = true;
+      || delta.reject.length || delta.allow.length || delta.unresolved.length)) {
+    plan.constraintsReviewed = true;
+    // Keep an explicit “no restrictions” answer across an address change so
+    // Hory never asks the visitor to answer the same intake question again.
+    delta.facts.constraintsReviewed = { value: true, scope: 'goal' };
+  }
   return { delta };
 }
 

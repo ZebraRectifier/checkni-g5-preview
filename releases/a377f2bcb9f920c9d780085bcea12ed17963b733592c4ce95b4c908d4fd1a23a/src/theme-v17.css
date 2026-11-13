@@ -1,0 +1,39 @@
+/* Approved v17 base: calm light lavender, with pixel accents only where they
+   aid navigation. Product photography and commercial facts stay untouched. */
+body.hori-workspace.pixel-workspace {
+  --bg: #f4efff;
+  --surface: #fff;
+  --surface-soft: #f8f4ff;
+  --ink: #28163b;
+  --muted: #6c5b7d;
+  --line: #ded2ef;
+  --accent: #7137c9;
+  --accent-strong: #7137c9;
+  --accent-soft: #ede2ff;
+  --shadow: 0 12px 30px rgba(62, 31, 105, .12);
+  color-scheme: light;
+}
+
+html, body { background: var(--bg); color: var(--ink); }
+body { background: linear-gradient(180deg, #fbf9ff 0, #f3edff 34rem, #f7f3ff 100%) fixed; }
+body::before { opacity: .16; background-image: linear-gradient(rgba(113,55,201,.11) 1px,transparent 1px),linear-gradient(90deg,rgba(113,55,201,.11) 1px,transparent 1px); }
+
+body.pixel-workspace .app-header { background: rgba(255,255,255,.86); border-bottom: 1px solid var(--line); box-shadow: 0 1px 0 rgba(62,31,105,.04); }
+body.pixel-workspace .brand-word, body.pixel-workspace h1, body.pixel-workspace h2, body.pixel-workspace h3 { color: var(--ink); text-shadow: none; }
+body.pixel-workspace .brand-word { font-family: ui-monospace, "Cascadia Mono", monospace; letter-spacing: -.07em; }
+body.pixel-workspace :is(button,input,select) { color: var(--ink); }
+body.pixel-workspace :is(.retail-store-card,.nearby-store,.product-card,.basket-row,.basket-summary,.comparison-result,.catalog-section,.pixel-collection,.shopping-product-dialog) { background: var(--surface); border-color: var(--line); box-shadow: 0 4px 14px rgba(62,31,105,.06); }
+body.pixel-workspace :is(.product-card,.retail-store-card,.nearby-store) { color: var(--ink); }
+body.pixel-workspace .hero-copy, body.pixel-workspace :is(.product-unit,.product-meta,.nearby-store small,.nearby-store p,.field-help) { color: var(--muted); }
+body.pixel-workspace .retail-category-button { background: var(--surface); border-color: var(--line); color: var(--ink); }
+body.pixel-workspace .retail-category-button:is(:hover,[aria-current=true]) { background: var(--accent-soft); border-color: var(--accent); }
+body.pixel-workspace :is(.nearby-open-catalog,#nearby-address-search,.shopping-product-dialog > button:first-of-type,.pixel-product-actions .add-button) { background: var(--accent-strong); color: #fff; border-color: var(--accent-strong); }
+body.pixel-workspace .shopping-product-dialog > button:last-child { background: var(--surface); color: var(--accent); }
+body.pixel-workspace #pixel-store-home .retail-store-card { background: var(--surface); }
+body.pixel-workspace #pixel-store-home .retail-store-card .retail-store-logo { box-shadow: none; }
+body.pixel-workspace .pixel-topbar, body.pixel-workspace .pixel-storefront { background: transparent; }
+
+@media (max-width: 620px) {
+  body.pixel-workspace .app-header { background: rgba(255,255,255,.94); }
+  body.pixel-workspace .nearby-home #nearby-shopping-panel { padding: 14px; }
+}

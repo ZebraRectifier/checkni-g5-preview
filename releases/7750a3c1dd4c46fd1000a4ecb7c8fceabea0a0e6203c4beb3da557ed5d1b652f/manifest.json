@@ -1,0 +1,1555 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "6a6a37b7ca48194350aa075a7ced860b88f5e875",
+  "entries": [
+    {
+      "file": "index.html",
+      "bytes": 11077,
+      "sha256": "e1f9eb8720cb16d3db5c012ac820f11cdadffbc6265fe28716bb8427304b2c2b",
+      "mime": "text/html"
+    },
+    {
+      "file": "prices.html",
+      "bytes": 8447,
+      "sha256": "b900d27678e8b05c21473bdd7a63539fbe02ee8b10009825aa9a3f81cc9be140",
+      "mime": "text/html"
+    },
+    {
+      "file": "src/adapters/coreComparisonAdapter.mjs",
+      "bytes": 750,
+      "sha256": "a63fee0b48f5befede9b65d88872d0dfe902cb56b5300d437a1ce4aeccdceeed",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/adapters/publicPageObservationAdapter.mjs",
+      "bytes": 9942,
+      "sha256": "507c61247b6d53c4942b95f57665ba73d941241bd438f8e950009e2f89349fcc",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/app.mjs",
+      "bytes": 147127,
+      "sha256": "2f726f76301485d8fee90fc22811e5799de42dd1f8ea57353c846ba86fef898e",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/catalog/perekrestokReviewedList.mjs",
+      "bytes": 4361,
+      "sha256": "7574676e779fffb77cf1b25279e5678481a0aefbb14634831319f3f257fb2587",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/catalog/productDiscovery.mjs",
+      "bytes": 11973,
+      "sha256": "5ff0e1755fb1a3b138e13315fef58b986970901e53db55e0f0b091b641b6b990",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/catalog/providers/openFoodFactsCatalogProvider.mjs",
+      "bytes": 7303,
+      "sha256": "d8520348f95b09fe366526b8dc41f623261d0e18b3296d3467a57e525cd4db60",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/catalog/reviewedMagnitCatalogCard.mjs",
+      "bytes": 2007,
+      "sha256": "f0859652d62877b4cd37f39e99e08ee5c249d1fcb96b8539fddaf627fe1d71f9",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/catalog/reviewedRetailBasket.mjs",
+      "bytes": 9400,
+      "sha256": "61d2aaf915b776936c436d72b5ca9a2df6014fe9cbc71737c127f9245e1ef1a6",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/catalog/sourceScopedRetailList.mjs",
+      "bytes": 3982,
+      "sha256": "8faa3d8434f6f41b6c447bae381e118c0b0adf633ca84b8c416e9e9421ff5161",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/catalog/weeklyBasketRecipe.mjs",
+      "bytes": 825,
+      "sha256": "84f4e3dd9c33d91e54d237d7773c3fb35d969ee569daca11e0db74f55781381e",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/catalog/weeklyMagnitDiscoverySeeds.mjs",
+      "bytes": 8605,
+      "sha256": "7d941bd2016a11404681bf72d4fd3d266438267b3c762ee50c337f4717b304dc",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/catalog/weeklyMagnitIdentities.mjs",
+      "bytes": 15898,
+      "sha256": "9fba0d36280f09529c2e19bec6c495e8ec7212c6de8067f9c18759572be069e5",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/catalog/weeklyPerekrestokIdentities.mjs",
+      "bytes": 14163,
+      "sha256": "3217cf451d1fce92f7909dddd9ef43962354938cd0e9f1e355bc48ff90f8fe39",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/catalog/weeklyRouteProducts.mjs",
+      "bytes": 6715,
+      "sha256": "9dc117e4d978a7beeb438d187b1e0457f1240ede22d8bbc1263df84183a8b23e",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/AddressPriceHistory.mjs",
+      "bytes": 4153,
+      "sha256": "aaa2ec572cbc3ece3839af020b8ccc92f3e7a540d775ca9922a2e93d034b423b",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/AggregatorChecks.mjs",
+      "bytes": 1998,
+      "sha256": "786a5b2da031d82633e3c5ec590958a7473e433445e94ce8e15df9adc8357bc0",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/BasketView.mjs",
+      "bytes": 13834,
+      "sha256": "c5e8180702828375eef7b513d608531b4e9a32ac44a2997c263acf26a718fd46",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/ComparisonResult.mjs",
+      "bytes": 19454,
+      "sha256": "30fed10b184f596acf1b1cad57a890a7e2e970112e510ee1414d8d74642d737d",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/GlobusStorePicker.mjs",
+      "bytes": 10762,
+      "sha256": "0c28d837664cb469bca9bb4825d62280e43bad29da510a640074588433c50b0e",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/GuidedShoppingTable.mjs",
+      "bytes": 14366,
+      "sha256": "5e6c4434e6ce33928c26abec6c7042330a31971fa8f1b7cac1fea84e0813e501",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/HoriCommerce.mjs",
+      "bytes": 30901,
+      "sha256": "504362be3cfbd09caad1145365871f04230f832f7ce2dd2c4c225ef33dd09e5f",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/HoriCubes.mjs",
+      "bytes": 9847,
+      "sha256": "6e65f6fd884210d5adfe55cfa739b9cd53175ccbe486f8ebf63abdb2616898c6",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/HoriWorkspace.mjs",
+      "bytes": 11190,
+      "sha256": "77315321e0ed4d34cf096bc9acb771e9331b60202d45ca32161003f3fedf7a20",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/MagnitStoreDirectory.mjs",
+      "bytes": 11253,
+      "sha256": "b15e431d1fc7b7114427014d25eeb24d549c93af1b8300be923ed32fcdd9cc8c",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/MagnitStorePicker.mjs",
+      "bytes": 3465,
+      "sha256": "7455129e84ff51ba5733809938162d87fcdc978efe4cf7e20e7335f933955dad",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/MetroStorePicker.mjs",
+      "bytes": 4743,
+      "sha256": "246c32b16f421ebebe88f54c74a0dad57f3b00a118a8c3b2fb5cd7fc4663bce1",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/NearbyShopping.mjs",
+      "bytes": 15627,
+      "sha256": "d61cff60a647b83879ab2b407f103acc5caae48d004e50a2ff0da3d2521b7c9a",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/OkeyDeliveryCatalog.mjs",
+      "bytes": 7178,
+      "sha256": "7c26967d39e91f613611544e1751278243f7931032f342dcfc1ae6a9afa68556",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/OkeyOfficialCatalog.mjs",
+      "bytes": 6656,
+      "sha256": "e58f4213c0f7634a885d3cf63a63a4c163c57ebe7e974d8fcd8601163a90b848",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/OkeyStoreDirectory.mjs",
+      "bytes": 2150,
+      "sha256": "089c673e27f5f3e5d8c42219ea0949aa607511e59fef09a2f42d3ae512160183",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/PixelProductCard.mjs",
+      "bytes": 5040,
+      "sha256": "0ab4c1ba0d5823a80b55c4f56691ddd358c5476cc50af9473a7ded83073da36f",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/ProductCard.mjs",
+      "bytes": 8496,
+      "sha256": "5b389c3a3bc5d1d8b0da6dd7043c20ca72c5ced4f709c5c587ca0bd1d928da37",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/PyaterochkaPublishedCatalog.mjs",
+      "bytes": 5242,
+      "sha256": "e9ca58903c8bfd3491c2013ed6b6f1b14c4534247488d55e8b8000fd117cd89b",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/SavedGuidedComparison.mjs",
+      "bytes": 7218,
+      "sha256": "4b95379d794a4fef466d5f3d8cc5da215b350de40b892c556e9de79d0f042f67",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/SelectedComparisonStores.mjs",
+      "bytes": 1478,
+      "sha256": "26b456c6c25db32a474d40fe7989c7c2e7bda3530258121f9a67aabb1a17662b",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/ShoppingDialogue.mjs",
+      "bytes": 13039,
+      "sha256": "1eba115690e99a0cc1cfe988bca541351842abba788be7faaf331df424aca1ed",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/ShoppingNeedsView.mjs",
+      "bytes": 4265,
+      "sha256": "a42866bf9d9f4aca26d15d2cba5b66c90f0b86b3ea44ec3f1e6a29b117b70e29",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/StoresMap.mjs",
+      "bytes": 25479,
+      "sha256": "f44372427ad39fd35f61a6ef775012ac67acfec8c26c521fd39ee56f86005206",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/WebSnapshotResult.mjs",
+      "bytes": 7158,
+      "sha256": "ac3e7c46e9528235a8b652aaa14e9aeb05817ec5cb71f9410f0251c4ed701dd2",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/WeeklyRoute.mjs",
+      "bytes": 15919,
+      "sha256": "b23a60f0fc19f603335285f4e13c2de2c4dd42e6c29886da0d80955fb04170b0",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/catalogMoreOnScroll.mjs",
+      "bytes": 973,
+      "sha256": "84890f2064f65820c774ccdd8948b9a54366840c458a80adb3ad3cb970d1a030",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/hori-cubes.css",
+      "bytes": 2554,
+      "sha256": "fa77fb72a1fa7a5b5b7afbfc70dce78aae5d43405c634f8e6bd0a5a52af95cbc",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/components/hori-reference-v13.css",
+      "bytes": 32315,
+      "sha256": "43a4586f6f4fbb680015a406ccb1afdbf31283a12c8109030f79a9b12dcdb2a8",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/components/hori-workspace.css",
+      "bytes": 24012,
+      "sha256": "8a5664d4ef5b3b6a095a3852548ff1a41b27968ed8dd706b1d05bc8d3086965c",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/components/horiCubePhysics.mjs",
+      "bytes": 5353,
+      "sha256": "8e91d1a28068f0264192a36239a13eb244a49286ed8b15ab7553904e3f71d858",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/nearby-shopping.css",
+      "bytes": 2887,
+      "sha256": "01188de1fab1b5cbbe0ea86427773adc9b92f164e930834bb095767430c144dd",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/components/pixel-basket-hory.css",
+      "bytes": 1969,
+      "sha256": "7a4d51960423dcdd40cc8de66ca4595c9f41274d5e31c65d60aff0702d4a23b6",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/components/pixel-storefront.css",
+      "bytes": 60555,
+      "sha256": "22df64666867bfaa861cc925457986a091a1f79e05d4c98f6396ced494f7b641",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/components/pixelCategoryPresentation.mjs",
+      "bytes": 4866,
+      "sha256": "4c1fbf760d2da0a41ed0c4e3a0cae74afc17183017fc22bba53fed083dbf06ff",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/pixelIcons.mjs",
+      "bytes": 30680,
+      "sha256": "573bfe68086b036e6ab1bb7e84ccc746a5d353c3b8093033bd71bf4eb8a5faf0",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/pyaterochka-published.css",
+      "bytes": 646,
+      "sha256": "7179885a5468d18f74dc6f1b189a4c44bf51e734f997e011e830cce24330dcd9",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/components/shareResult.mjs",
+      "bytes": 4362,
+      "sha256": "25926fe19309394629714014591d03c2627d7e3a5ac889b44a3942af1abd97e6",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/shopping-dialogue.css",
+      "bytes": 5226,
+      "sha256": "8e79117ce6d2a7404805945699febd9eae63604b9a52df3c1ec46cdf17045f23",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/components/storeSearchIndex.mjs",
+      "bytes": 953,
+      "sha256": "dbed0dab22dd01580ef7a6e31141b9564970c0ef99f48ff8a654e59294d01ce9",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/components/storefront-v15.css",
+      "bytes": 3703,
+      "sha256": "ab42c0d68c6d5cbb29dcaf6772b590b4888fd8a724df22560625fde172ca1a7a",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/core/ai-basket-proposal.mjs",
+      "bytes": 6987,
+      "sha256": "6be0a0721438eb06a189381122ad671891f42bd7604cef7ea6e9c51fce57664f",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/core/basket-core.mjs",
+      "bytes": 12886,
+      "sha256": "790c0eed114fcfa54716633bcc8b672ebfa53054d4a5291425c8fb8e53877365",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/core/catalogDraft.mjs",
+      "bytes": 9763,
+      "sha256": "0b8a0b0ac6b29c407a9015b0bf4fde5b0dc0db1116278d16b7ef8feaa70d6b2f",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/core/mock-scenario.mjs",
+      "bytes": 1310,
+      "sha256": "d652eea841d106ddd658c4f012aadb1b099c9f785e744ab3ba541770afa96e24",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/core/observation-trust.mjs",
+      "bytes": 26451,
+      "sha256": "6c788f4a1e00ce6ec110bff13ec9d360f57972bb1b9a43a9e740aa79864af305",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/core/observed-price-core.mjs",
+      "bytes": 36624,
+      "sha256": "b11336490faed0faa00f2db91245111c8a06369240bd2f65789faded7383f75d",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/core/web-snapshot-comparison.mjs",
+      "bytes": 5422,
+      "sha256": "fa880acf16092f57669c60be45c09bc35d49457883a01cc7d0b489d1ee43b4cc",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/core/weeklyRoute.mjs",
+      "bytes": 3371,
+      "sha256": "5585e479576173424e4d5e82554208a1a9ead72100d0fc380dc9fc41033d6d31",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/betaRealBasket.mjs",
+      "bytes": 4807,
+      "sha256": "c1f5bd07ec0f0ab866e82500f0bdd39275f836afbf2f85700f4dcab0e1869cbb",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/canonicalProductRegistry.mjs",
+      "bytes": 685,
+      "sha256": "003e0a9ce9ad1d1035976f559aa2f5f806c2d466de6d9b6050a324eefbcd943c",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/commerceSources.mjs",
+      "bytes": 2210,
+      "sha256": "e5f26330be9144bb46158007c059e8116376cd75273a8e812fa3acc04ac971cc",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/extendedCatalog.mjs",
+      "bytes": 6600,
+      "sha256": "f99540f1c897cf925f04d62bc5aa0bc9720fce4fc78d59c3f249c3e0bcd939f3",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/globusMoscowRegionStores.mjs",
+      "bytes": 8318,
+      "sha256": "2f103cdd6e05358eb62ca39b88efd5f3a3914da87815065d2cea4f657b7f7a7a",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/magnitLegacyAddressAliases.mjs",
+      "bytes": 3218,
+      "sha256": "f82e080629c93fbe89b4635899233eef823c93fccae3bfdf6b193da0f0224b0f",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/magnitMoscowOblastBindings.mjs",
+      "bytes": 228509,
+      "sha256": "0b9861e5a3f60fbe9d76738a6ab8df8e8bd930a618ebd051b3faf595b296dcdd",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/magnitMoscowOblastStores.mjs",
+      "bytes": 285993,
+      "sha256": "b1e19d20e829de025f62383fa7a030044f57c060aca7a9950b7c352c2746b94f",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/magnitMoscowStores.mjs",
+      "bytes": 118024,
+      "sha256": "8b498c38c1580a06e371b7b0bfc254a6689b9cd6d653103929505989e18bdf97",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/magnitRemainingAddressBindings.mjs",
+      "bytes": 48246,
+      "sha256": "c6f29eb6e308aa13f788fc019a5799c683b64d0a045209a7367525e1dde1f1b0",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/metroMoscowRegionStores.mjs",
+      "bytes": 9266,
+      "sha256": "517d0ac5b0609adfd1f1581e42b22b0d4f051ce66e1df2f96640611c1ee26904",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/mockCatalog.mjs",
+      "bytes": 1681,
+      "sha256": "02daf19e85b30de31f3e620fd8518aab6df18dc5f8119e4db5a50cd00a42b52b",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/nearby-regions/kazan.json",
+      "bytes": 360982,
+      "sha256": "7e39096d45ceb0119632e4ec70a8658c2943308ef365acd23025d270b93d34d8",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/nearby-regions/nizhny-novgorod.json",
+      "bytes": 267977,
+      "sha256": "25678b18afc853837315da60c30e11dd3114bf6a1aabcd79b2076ea550b90243",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/nearby-regions/novosibirsk.json",
+      "bytes": 342235,
+      "sha256": "25ba8fe23d0f7b575939109dcfa7b51593f843c51ec81f5acf5f3db8fcd503bf",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/nearby-regions/saint-petersburg.json",
+      "bytes": 947856,
+      "sha256": "d35a783064341253e9e92971cb6b00fb3011485d5c4a8cb02a76aa2f5e9f352e",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/nearby-regions/yekaterinburg.json",
+      "bytes": 303000,
+      "sha256": "5024b6e8ef79d2ad386ffee90bdc65261f5abd249463d11ec2a6f162e4cf5aca",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/nearbyGroceryStores.json",
+      "bytes": 2914662,
+      "sha256": "32b5d8ce83e02d61b887b8806bc0a368bb94e7b08203e999a963c65e61aa6cdf",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/okeyDeliveryHistory.json",
+      "bytes": 3190368,
+      "sha256": "ec1960af3f793fa26485710bda6371e932bf866ed3262598d803c066dec35f42",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/okeyDeliveryRefresh.json",
+      "bytes": 185,
+      "sha256": "dee21f0aef541de12fdd3ae992f28d3724bffb802c40ca180c3825873b86f712",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/okeyOfficialPromotions.json",
+      "bytes": 28,
+      "sha256": "eb133637ed9475c3dc3980f624f09f3ccc90d3f9cfe101aa47cb92340c72d43b",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/okeyOfficialRefresh.json",
+      "bytes": 209,
+      "sha256": "28db435da62cd1f1c92baa41c7fcd95fec59e38afbd56d5665922f8852d7c174",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/okeyPublishedPromotions.json",
+      "bytes": 38624,
+      "sha256": "553945ff94ff74f28393db283e1a9cfa31d435e682cd4ac045f348b41b38fd45",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/okeyPublishedRefresh.json",
+      "bytes": 227,
+      "sha256": "4f052367a8316edb84dc5166df40c5de557bb3feef8c75c21861fab41fea6305",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/okeyStoreDirectory.mjs",
+      "bytes": 3470,
+      "sha256": "08bb829ef3bbaac965458f06eca0f0bef3a110d3252fb07f933e979806d5016f",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/pyaterochkaPublishedPromotions.json",
+      "bytes": 84671,
+      "sha256": "9f8329e1de3f64524ee3a941d93d25e2c33cb959279b587f460bf1ae7d5c6005",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/pyaterochkaPublishedRefresh.json",
+      "bytes": 335,
+      "sha256": "05ebad874f585bd225abf41a5c6b60e5673692b783af87ee55712a1082c07c2f",
+      "mime": "application/json"
+    },
+    {
+      "file": "src/data/registeredMagnitStores.mjs",
+      "bytes": 1121,
+      "sha256": "f46676e0688a3f255fc04b81ef4fdcb5de717b1dd49ce3ca7ebf25895463d4f6",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/retailerRegistry.mjs",
+      "bytes": 665,
+      "sha256": "a72279e7dceaceb57becd74fc6f5fa7849e33ac04f73f8ffc382654d4c2536ae",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/retailers/base.mjs",
+      "bytes": 3799,
+      "sha256": "ead919fb1c20a8adb516568b26180ff96073069d7925135bd6b090574e5e7eaf",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/retailers/identityContract.mjs",
+      "bytes": 3556,
+      "sha256": "3e424f37f573b079623b0d1ed0b5b583a1a7475f67d33011d51f45f3b2b5d0eb",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/retailers/index.mjs",
+      "bytes": 383,
+      "sha256": "c8cd9a0fb3a289690a9dc7c51211eb05fc923dee32a2a977457f03fc5191030e",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/retailers/regional.mjs",
+      "bytes": 1877,
+      "sha256": "fcbd8025146cbabe29cc4df6a906e55da47d7a700177e61945972045836dab8f",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/retailers/regionalWave3.mjs",
+      "bytes": 1266,
+      "sha256": "b1aceb0f9383cf9e86483f1968b3d0a5041a1f5db82e5ca8f69a23afe29a843c",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/shopCatalog.mjs",
+      "bytes": 1956,
+      "sha256": "a659291c59473aa72d56341f4f6c8f76e933769d0bf2ea3458a31c1b988157e9",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/shoppingLocations.mjs",
+      "bytes": 2442,
+      "sha256": "44b5a236c0137e1bfcc8b28058b017859f0f43789076f0f049abade753e70bff",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/storeMapLocations.mjs",
+      "bytes": 7619,
+      "sha256": "6c0176a4b43025d3896ea8c1bbecf93eb82e0e1159e431de581b18b12cb8f158",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/webPriceSnapshot.mjs",
+      "bytes": 6793,
+      "sha256": "092471e7d8feecd614d506ac5e3231e908c3d8c37fe448f733060707fc620d38",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/data/webPriceSnapshotCollected.mjs",
+      "bytes": 38856,
+      "sha256": "584ab7a4eed2d62eda473dd0e1379ba38b3957a144cc92467d08fc6618ec3950",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/features.css",
+      "bytes": 1123,
+      "sha256": "17d1e7041f8f18fdbeebc1f2aded8fba8dbb17447c0873782add4c79cd91710e",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/fonts/Inter-OFL.txt",
+      "bytes": 4376,
+      "sha256": "5dd548d31a85f756e01d63e00d7faf1e324103ed3e9102fcbbabf2cc2db6dd39",
+      "mime": "text/plain"
+    },
+    {
+      "file": "src/fonts/InterVariable.woff2",
+      "bytes": 352240,
+      "sha256": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3",
+      "mime": "font/woff2"
+    },
+    {
+      "file": "src/fonts/PressStart2P-OFL.txt",
+      "bytes": 4412,
+      "sha256": "98e451fe911e5ee4a1a45359535dc30ea7df28b8d9a9cd1f741778efab1387ee",
+      "mime": "text/plain"
+    },
+    {
+      "file": "src/fonts/press-start-2p-cyrillic-400-normal.woff2",
+      "bytes": 6864,
+      "sha256": "c2a20dcb95ec8f4d1e8db6bd01dfedb669913f5e691e7baa3981b2d88a3b9ae3",
+      "mime": "font/woff2"
+    },
+    {
+      "file": "src/fonts/press-start-2p-latin-400-normal.woff2",
+      "bytes": 12512,
+      "sha256": "afec86997fdaf54af1f59358fa2c1e2a0f1d04146edad18e5cd141d0384a7548",
+      "mime": "font/woff2"
+    },
+    {
+      "file": "src/img/basket-card.png",
+      "bytes": 53366,
+      "sha256": "ff76cfb142ac107d4ab4c609ea85cd46970b7cf0a65bc0d158664e60c9772513",
+      "mime": "image/png"
+    },
+    {
+      "file": "src/img/cat-brands.svg",
+      "bytes": 465,
+      "sha256": "1ac5715588942b299c7ff3d871699aa88f5e280c051452d6825cb2b25a81c1f7",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/img/cat-bread.png",
+      "bytes": 10721,
+      "sha256": "02f4264cacb580dcddfe9cbb0b6aabfd8130bd78e5a828187b1968201d5748cf",
+      "mime": "image/png"
+    },
+    {
+      "file": "src/img/cat-care.svg",
+      "bytes": 247,
+      "sha256": "1e7a56ea5f3cb5879f68bdd6c4a527f81a1f63fc4e3d445d28840d6601434ef0",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/img/cat-cereal.svg",
+      "bytes": 278,
+      "sha256": "a92498a7123dcb775af6ddd52e725cbd00369dc617251d76f498020b01ec6399",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/img/cat-conserves.svg",
+      "bytes": 301,
+      "sha256": "859d20025ec1d1459a57cd25c2a6d1891798386b53a9a2f4423247f707d6686c",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/img/cat-dairy.png",
+      "bytes": 12457,
+      "sha256": "163d2b69053be83069d59434a4a3e86dee79d2ae4b077721d086171403fd2e4f",
+      "mime": "image/png"
+    },
+    {
+      "file": "src/img/cat-drinks.png",
+      "bytes": 7798,
+      "sha256": "ff88aef9f0c8cb133d4212d04f6653c6bbf0eac33a84ee8772f4a9852f10693d",
+      "mime": "image/png"
+    },
+    {
+      "file": "src/img/cat-frozen.svg",
+      "bytes": 318,
+      "sha256": "1f5941980b7e0db52413e1f46767e71d06694af5493b31267ebfbce2ba5ecc43",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/img/cat-grocery.png",
+      "bytes": 9529,
+      "sha256": "2955b00b45d66d80119623e668a739fe52325e34282c44ca7c4645b3a89b0b26",
+      "mime": "image/png"
+    },
+    {
+      "file": "src/img/cat-household.svg",
+      "bytes": 279,
+      "sha256": "1b76a7547953e96ed609f28ccd09d2e834fbb698c8b34371944023ce43c6773e",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/img/cat-kids.svg",
+      "bytes": 317,
+      "sha256": "72ca3865a3295f09e03db9cee57b76c9d67d0b6da696105dcbcc8b82dccec799",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/img/cat-meat.png",
+      "bytes": 12375,
+      "sha256": "9d630ff739ead50052912162b0833eb792032c2e09837c27c3d87ef2892640f9",
+      "mime": "image/png"
+    },
+    {
+      "file": "src/img/cat-pets.svg",
+      "bytes": 350,
+      "sha256": "2ef7d2934c97e65f8b355dbb9806949115ddd186e742e8f1c34a1688e6d39f1c",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/img/cat-ready-food.svg",
+      "bytes": 477,
+      "sha256": "a61561a9b8eae895d4de0c96f2be825238f5fe3a8313397b76388144e388af90",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/img/cat-snacks.svg",
+      "bytes": 290,
+      "sha256": "67041b419a196dc52fb1604f35dd5569df0425b68b0fec64cbc96561bb7bc75d",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/img/cat-sweets.svg",
+      "bytes": 306,
+      "sha256": "5901061e4247e39c0988b2082bb06ef717aa287994de3d7837f2d8d9caccbba5",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/img/cat-veg.png",
+      "bytes": 14187,
+      "sha256": "dfe53e2acad10028819220b68635fc6ad4efdd6240e7255fec584d8f54e090da",
+      "mime": "image/png"
+    },
+    {
+      "file": "src/img/ferret-hero.png",
+      "bytes": 206870,
+      "sha256": "4da4056e9bed523a8eba87fa4681ef4a48e358e2b684fb542f2c14b659e47522",
+      "mime": "image/png"
+    },
+    {
+      "file": "src/img/ferret-thumbs.png",
+      "bytes": 88841,
+      "sha256": "da21affad0de5c2f30d9676b5161cd307bcbd3bde981010677ac186e809c2ffe",
+      "mime": "image/png"
+    },
+    {
+      "file": "src/img/hori-character-v4.webp",
+      "bytes": 1199218,
+      "sha256": "e6ebca16029917025ab7e81446d36e9a06df9df3a596496739b849358ad1880c",
+      "mime": "image/webp"
+    },
+    {
+      "file": "src/img/hori-room-v1.webp",
+      "bytes": 167056,
+      "sha256": "67029c40d3b929265de9efc575375f24ac4de7541e35ce594265880c6df2ce43",
+      "mime": "image/webp"
+    },
+    {
+      "file": "src/img/hori-room-v13.png",
+      "bytes": 1040476,
+      "sha256": "884f8b189f55c547dde02d4bd93921bfe5a21e1c0f847bbafd304f2ccf548589",
+      "mime": "image/png"
+    },
+    {
+      "file": "src/img/hory-avatar-v5.webp",
+      "bytes": 16250,
+      "sha256": "d95708bb260c1234bf85bd7ea7315af3c220fa3a907f2258b7eae8050dd055cc",
+      "mime": "image/webp"
+    },
+    {
+      "file": "src/img/logo-magnit.png",
+      "bytes": 10750,
+      "sha256": "45831f6add7f299570ecda35c3de50d4d56e6ec91913812ea9cf1445d9a27a73",
+      "mime": "image/png"
+    },
+    {
+      "file": "src/img/logo-perekrestok.svg",
+      "bytes": 3539,
+      "sha256": "88f5ac9ace27651196bed17800e0a2752866399e2d92b7ca30f9773de7f31ae2",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/img/logo-pyaterochka.png",
+      "bytes": 15419,
+      "sha256": "d3ef4ff55c0837a82bb799de897f25be592a9fdc0bd268b72cbe53e6d51238ab",
+      "mime": "image/png"
+    },
+    {
+      "file": "src/img/logo-vkusvill.svg",
+      "bytes": 8318,
+      "sha256": "67224771af20cc809927aea1ebaf731b25d4521949993623fe8f7f9c9043e625",
+      "mime": "image/svg+xml"
+    },
+    {
+      "file": "src/intelligence/budgetBasketPlanner.mjs",
+      "bytes": 7562,
+      "sha256": "904c69527b78fcac1cf209b0ad7abe45003d6cb81e3d98b17d36ea0ecd27ae53",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/catalogAliasBundle.mjs",
+      "bytes": 4845,
+      "sha256": "91b62e6ebfd3ce3f7b40184069a53fa922d63e237b8505b73dbf4d519124dc40",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/comparisonContext.mjs",
+      "bytes": 8060,
+      "sha256": "3bd8c6b67e94ab0f1e553800098665aed9ffed6e208b5337d52a3d341030f54f",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/comparisonProposal.mjs",
+      "bytes": 3965,
+      "sha256": "91084fecd672018dd075b3e1ddd721d2f5e8087b7be2745254ba024e7aa936af",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/conversationBasket.mjs",
+      "bytes": 11491,
+      "sha256": "cd816f343fa45681935c99526403e0135e65d760a00d04ce16828a3cd1dbf7fc",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/currentComparisonExplanation.mjs",
+      "bytes": 4322,
+      "sha256": "4ee26044a89d0e6912e696714f34a1300edba02b16e9d57409ef18b2f9cb72bb",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/guidedShoppingPlan.mjs",
+      "bytes": 20970,
+      "sha256": "32e24d5baf29969aa31dd0b360ccdb777b12e57605b0b64f7609729088cc962e",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/hybridBasketConfirmation.mjs",
+      "bytes": 4257,
+      "sha256": "c0548ccd7b87b1259fc7236d831dbf2e39d00517a40b0d6d28fad348ec4c27d2",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/hybridBasketMetrics.mjs",
+      "bytes": 3773,
+      "sha256": "73da957cf7860d8b54a32c428e309348b74d56748b576fd7a7c6d3508d561274",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/hybridBasketPresentation.mjs",
+      "bytes": 21650,
+      "sha256": "2824dcfa3e0bb8f9b7f39d0ba0e07700265bbcc12c5af58f668f90c45f3594d9",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/hybridBasketResolver.mjs",
+      "bytes": 14994,
+      "sha256": "e17f24bd8370ea7f88c73cefb947dac7945a274df03429df40bd86fbd7fa7b97",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/localAssistantDialogue.mjs",
+      "bytes": 10960,
+      "sha256": "079587eec213232235c350cceb1118c6c80983dcbe2340e3d92337d25c169979",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/localBasketParser.mjs",
+      "bytes": 28041,
+      "sha256": "cf9f1c726d6e33267f2469857007734bf6fccc3c0fbe65997573883cfaa3f521",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/localBasketPreflight.mjs",
+      "bytes": 3885,
+      "sha256": "dc00d397104d7db171aa10cee0655286bab10abbea8b8729ef52eaba69de2fa8",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/localIntentPlanner.mjs",
+      "bytes": 11696,
+      "sha256": "17447e7f9be962e9fd7607e2c41eb5da3e6e24f8d5644d6a6dca8d458f589b35",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/magnitAddressJoin.mjs",
+      "bytes": 2512,
+      "sha256": "0a00e383ea76de8a06218d55341e7aac5b7c771facad51462f95722222303f7b",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/martenMind.mjs",
+      "bytes": 5666,
+      "sha256": "4abba160b48e6cff2c618cd407f52497ba58e5a167ad8574ba56756e7a0744c3",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/nearbyAddressContract.mjs",
+      "bytes": 800,
+      "sha256": "f35d8ee2f33561fa08820db2ace77086ae4d8af3a1151e202e58dd26b282d4fc",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/nearbyShopping.mjs",
+      "bytes": 8515,
+      "sha256": "a65bf3987a99f45e66ad8a83006d98b4fd55103d9c76c76ecd1e419e9e75f738",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/retailProductSelection.mjs",
+      "bytes": 8344,
+      "sha256": "bb257c946eaec7dc4de36ea81cd3ff9277027d00b2adabda389d93ad54bf2bd7",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/retailShoppingIntent.mjs",
+      "bytes": 13289,
+      "sha256": "d430efcf71bfbc8834ac878ae4bd7a52e5383593ea94afb72038bfad6e7e8c1e",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingAdvice.mjs",
+      "bytes": 16402,
+      "sha256": "455e0a7d81274b11f7f61c48470b16a689686cb871cf0c94ebe112eddf980da0",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingAdviceContract.mjs",
+      "bytes": 9593,
+      "sha256": "e95ddb69a9b52f9056226aa0267c138c9496f225348221396dfcb7a5abc5f24e",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingAssistantOrchestrator.mjs",
+      "bytes": 19390,
+      "sha256": "14b5b6710b72accc5931ab943ad7ec9701ef9667b3fe9c993046dd83c10ac4d1",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingConversation.mjs",
+      "bytes": 21799,
+      "sha256": "058210e3b00e460d74d258269caafa5f3bc1c87588afc56b10d9a7090aa28f89",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingDialogueRecovery.mjs",
+      "bytes": 5779,
+      "sha256": "5ae94b9ab3f51b4762d2439f9c59ddfb09d21bbab2f8e9b6fcf206018e2f4acc",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingDialogueReference.mjs",
+      "bytes": 9236,
+      "sha256": "f030f3285c3e8aca89245d5ed3e8a87c26fd9a6cbebabc02a464bb5a670255ec",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingMealNeed.mjs",
+      "bytes": 15489,
+      "sha256": "f095b65360a2b9966af3cd2e99dac33d1bcfaa88ccc87abd7b90d83463e7f179",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingNeedContext.mjs",
+      "bytes": 5218,
+      "sha256": "66987d2e017bb6a72f4de334bad84de1da8e2c0d581d7633fdbd68dbf74a3307",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingNeeds.mjs",
+      "bytes": 12697,
+      "sha256": "6ec3eb8e89a505915d75d730397713af43dc301b40ae23b13dd6c3d7cd8938fd",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingProductFacts.mjs",
+      "bytes": 3595,
+      "sha256": "6700a47575f919e2b9d9bdbb5b96298f8f5d7c56862c3717cd1c0896326cb648",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingProductReference.mjs",
+      "bytes": 17301,
+      "sha256": "1e90aa4c0f312e0f0a0124782c9ba46580623eeec6e8d9f055a65683e3daa2c1",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingRequestText.mjs",
+      "bytes": 783,
+      "sha256": "2343bc8f3e5823f8c7e65c6c70252a02d02fb1f57d0d25bf322edd7b1537960e",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/intelligence/shoppingTurnContext.mjs",
+      "bytes": 20524,
+      "sha256": "cd0bcdea8287b6e9789dab6cbd8548ba6f0f99dcc676ab1ada9ca993a88d580a",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/matching/productMatch.mjs",
+      "bytes": 5423,
+      "sha256": "052f626c8ace39b031d8f5667e5bbf2a3f8d3f349528e9db7a01a619972b2f91",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/monitoring/refreshPlanner.mjs",
+      "bytes": 1254,
+      "sha256": "4350991fa78796de71b2ed9916881c304bd645482ed21bf86541aaa24dc424d8",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/navigation/retailerNavigation.mjs",
+      "bytes": 4081,
+      "sha256": "b2257c09804367b3454053c32cde2bb299aca63bdabc7e318b96a89ec110ef0a",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/observations/addressPriceHistory.mjs",
+      "bytes": 4999,
+      "sha256": "dfd9cb7ace945f0e71246098453659fe016240e5f80e0b2ddc90d182559a608a",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/observations/index.mjs",
+      "bytes": 1000,
+      "sha256": "01ea73ebf367f186b08a13958406fb6d9bed95b73fa6a74ee33f46b693de67ad",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/observations/localUserEvidenceStore.mjs",
+      "bytes": 6722,
+      "sha256": "42dc2b7eb6dfa2837b6dc53fefb2684600777c2ff140eaf42a08d8e90287f2de",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/observations/localYandexPriceCacheStore.mjs",
+      "bytes": 6328,
+      "sha256": "88398d4dbe20a40c510ab826633308401125bb6bc643c1ec71238aa8b501ad21",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/observations/localYandexProductMappingStore.mjs",
+      "bytes": 8531,
+      "sha256": "b1a3caab69db013cc371b61dc3a5462d1e5a3a19d5cefa8ecb77256a13c4b762",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/observations/observedOffer.mjs",
+      "bytes": 2446,
+      "sha256": "952898966d81495794341c1d7d0a2776c5e2b2e0943ad3a3caf6f6a337c3db7b",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/observations/okeyOfficialPromotions.mjs",
+      "bytes": 5412,
+      "sha256": "7c1f11922d3c0d7b132d41f0796e70eb4a31536d68df3e0271549113aea77f22",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/observations/okeyPublishedPromotions.mjs",
+      "bytes": 6096,
+      "sha256": "da229c0f9be2594b7c3116865dd27dffcdacbe8028a0f6cf6a7c36f54b124dd0",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/observations/pyaterochkaPublishedPromotions.mjs",
+      "bytes": 7639,
+      "sha256": "3fd525c49b17f8d583c16de3008324b09dd4a1666fd2842ef4c9556ee53c00ee",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/observations/retailCatalogFreshnessPolicy.mjs",
+      "bytes": 3383,
+      "sha256": "9658a2de12da08489f5be50e9114e912c67321efed6e4b04395b563b882ddce8",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/observations/selectedStoreScope.mjs",
+      "bytes": 5471,
+      "sha256": "63771b9e8bf3fb90ceacaf4897bead6a8771dd5fe4550e9ddb406b163fed1f1a",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/observations/userEvidence.mjs",
+      "bytes": 9605,
+      "sha256": "2bca205aa65a90f4dcdff1033c7a92f31724ac9b587cdc26293e61fa04292393",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/okey-delivery.css",
+      "bytes": 1065,
+      "sha256": "f7105f458cb8572175c2491e9ebc636e5b4109634c3ee94aaa3d2972716b6ea5",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/ports/addressRecovery.mjs",
+      "bytes": 2701,
+      "sha256": "fca64504594b1761776a6bac6e8f5698c9dbc4cae49b89744136caeec9ff6727",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/basketProposalPort.mjs",
+      "bytes": 6423,
+      "sha256": "1e8d3940b3181918d876a891d3be9b21b03594678fd8cd05663e81c5092b1d9d",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/betaRetailPricesPort.mjs",
+      "bytes": 10891,
+      "sha256": "d70ae4d4dbcdd5c3f2f889269a2788776606fd50dc33360ff04bbbc2957607e9",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/catalogGatewayPort.mjs",
+      "bytes": 8566,
+      "sha256": "4c87ec6f8d4e7bc85dcbf5062befba13124f2b607c602887fd917263829372b5",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/catalogPhotosPort.mjs",
+      "bytes": 2738,
+      "sha256": "f2e37dc17ad3f2ff218ce7d83c937e13df626ce6fa8ab8ba6f8316c18cb5a9d5",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/catalogSearchPort.mjs",
+      "bytes": 11244,
+      "sha256": "0251e021ef6b0a198525ea7a757628d9006057e2f36cff1fab16e494eb2da022",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/comparisonPort.mjs",
+      "bytes": 5939,
+      "sha256": "3d2a3a6835533ce5ccc2b435a0888b887909e14c29b39c7518828fc42abfeca7",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/globusStoreLatestObservationPort.mjs",
+      "bytes": 2794,
+      "sha256": "08e97f079c769a60e6b2cd38bcd1502d413ca3a9b157ab83a0357ad2d1250da5",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/nearbyShoppingPort.mjs",
+      "bytes": 3636,
+      "sha256": "c934c3b55bec22a6d8c2373668e963b7b3f1c7cd8f78bfcdd9f7d1b86d096309",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/observedOffersPort.mjs",
+      "bytes": 20087,
+      "sha256": "927d43c0d61bf6b037001ccdd4ab1b6b873982aa07662fd4bd6e9b0867de17a1",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/publicDataUrl.mjs",
+      "bytes": 1341,
+      "sha256": "574292dcf2536672539313a8da5950597e5837aad75d6a2ea2847bd6ac6374af",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/retailCatalogConnectionHint.mjs",
+      "bytes": 850,
+      "sha256": "3677be20e434d12a481be71c051747707a1b079622b336e06b526b196dc9dc82",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/retailCatalogPort.mjs",
+      "bytes": 42660,
+      "sha256": "cb6cc1d9416082dfd31301cca57b0168b3c37e73c89c4439284e07a2ed4cab7d",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/selectedGlobusCatalogOffersPort.mjs",
+      "bytes": 7142,
+      "sha256": "41159271f32329c7ce1ebeb19f01081b3ce3e02af67fe79de0f5412a5328e8a5",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/selectedRetailCatalogOffersPort.mjs",
+      "bytes": 4284,
+      "sha256": "300278110f875c744750dd4462c3bf90601667ae351a9374c1809bbf013d834f",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/shoppingAdvicePort.mjs",
+      "bytes": 3324,
+      "sha256": "af067a80b5a075b0328a199f9ae0e43e5814fdbf62712f96f1caf05bc9424c4c",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/weeklyRetailCatalogPort.mjs",
+      "bytes": 9804,
+      "sha256": "04a5f0ffabcdc32c261351c790b0c9322fd7e0c692a5aca0114ae43a2bf8c0c6",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/ports/yandexPublicPricesPort.mjs",
+      "bytes": 8280,
+      "sha256": "0deb09b398774b56a1e884e18dac36a39e2448a3f4ed92b5cad8cb86d7677ea0",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/priceCapture.css",
+      "bytes": 6677,
+      "sha256": "0abaad11242915d1d45e709ef1210ee1cf72bb69bc924a11332a185cef2341a9",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/priceCapture.mjs",
+      "bytes": 28580,
+      "sha256": "cd35ce047b271c1b327c0a881f259c6e6fc02f727b646683a6855fae51fcd6fa",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/revenue/revenueHandoff.mjs",
+      "bytes": 4084,
+      "sha256": "80aaefbd3c057f480082181070331306ee293cc4149e252b9423bf5c5040f27b",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/basketProposalFlow.mjs",
+      "bytes": 5989,
+      "sha256": "41a9a2398ac9857af75be866b06cb0865845c9eb4c896194b1ca14b9762865b8",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/catalogPagination.mjs",
+      "bytes": 1263,
+      "sha256": "d586d29894d99991dec3cca992fb08551d4d35a62300eca580c7c7d81250bff4",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/catalogQueries.mjs",
+      "bytes": 1819,
+      "sha256": "818e06d7dca1c7c424d02534a9c85550af6aef41efe8980759bbcc50dc7e1de8",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/comparisonFeedback.mjs",
+      "bytes": 995,
+      "sha256": "118679b73361f82a40619fac7f972498ddd6cf8461430608e848e0861e00e3cb",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/comparisonFlow.mjs",
+      "bytes": 5709,
+      "sha256": "4133001450c61cd2aec59f5f312287983c01c9886b4f412294ed2b6c3dd8b0a1",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/comparisonIntelligenceFlow.mjs",
+      "bytes": 3003,
+      "sha256": "ac2eb7631dd55ff3b5a2af658828c68d4a3b1308d3517572957e92ab678c0f61",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/focusRecovery.mjs",
+      "bytes": 621,
+      "sha256": "e23bf51d5a9376bab5537dafd7562e76aafc07b333a9444fe0aa2655b717dc70",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/guidedShoppingFlow.mjs",
+      "bytes": 33289,
+      "sha256": "57a37d7accf509d4f1be701612a9dffaa1f238bb9d26a822fdf992436390adf0",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/hybridBasketBetaMetrics.mjs",
+      "bytes": 4506,
+      "sha256": "0c1ab4c03906e71856d92aa753b692d35aad2665ff18cc1e5ce8698a70777daf",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/hybridBasketFlow.mjs",
+      "bytes": 11041,
+      "sha256": "f97e08ada7c49ca56f2d96c134160a8a06b54eebec39d32e3b147bd90ab0a4e7",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/hybridBasketInterpreter.mjs",
+      "bytes": 5861,
+      "sha256": "a2d702ba69711a5c087159af8c105e6a5539f6cbd2e5da08008882e8c77740e3",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/hybridBasketLoader.mjs",
+      "bytes": 1260,
+      "sha256": "02526d457d611c5923ac0d418d54fba45785346369e56b8c42bcf760e5b1342e",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/hybridBasketRequestGate.mjs",
+      "bytes": 2268,
+      "sha256": "d9e6aeb01edaa03b023b3273d4a88fa4c94f73cdc949200a560113c5dd9471c1",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/listInspection.mjs",
+      "bytes": 840,
+      "sha256": "2371f8ca2bc0ad6d57e948403a7995c77663d9ee399338e3b1bd343254ffcdd6",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/liveCatalog.mjs",
+      "bytes": 2622,
+      "sha256": "2e4fe527139185dc053c7ce3f1136ad22dfc1fc669f922d1aabd2bb461d5bc42",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/manualCatalogComparison.mjs",
+      "bytes": 4743,
+      "sha256": "4353eb6aff5bfc53369381e29b8091ad0926f1b501fd74f9db4200096ab71117",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/navigation.mjs",
+      "bytes": 1272,
+      "sha256": "908cb00f2ce09d4fa79a197119578792c09a10c5cb8b0515e9804e24ff5e6aa1",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/observedCatalogSort.mjs",
+      "bytes": 759,
+      "sha256": "5631ea2b9c08ad8189311cefd350b5e99191eca01dbf746ed15c5a042266bb4f",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/observedComparisonExpiry.mjs",
+      "bytes": 1723,
+      "sha256": "c2e6a93cb485e50e3dad5ed8204ac99f1621a44972cc2837cc69881d6a53ac89",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/priceHints.mjs",
+      "bytes": 4122,
+      "sha256": "b70978bd6844aafafdf354c14eda8717583e7fea74588ef7a08d1fa7be79e138",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/productPhotos.mjs",
+      "bytes": 5327,
+      "sha256": "6494ec8b14323c4a3571e66cb2db3e329b677fce11d34a21e6be86950e054c40",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/savedGuidedComparison.mjs",
+      "bytes": 9056,
+      "sha256": "ff7b37a7c139b5db6ddb8c424c7f9250a74ab85f524eb6198bda8f877848bf92",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/shoppingConversationFlow.mjs",
+      "bytes": 81042,
+      "sha256": "40967a34e7cdc8acc0d73bdb2890ef1d0c4bc46b2326d81af9cf5dff69a7eabe",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/shoppingNeedsFlow.mjs",
+      "bytes": 27688,
+      "sha256": "cf575b63832a4910d6499ccd9d6aebac1b89a00538e04d22191e687e5bf44e88",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/shoppingPreferenceStorage.mjs",
+      "bytes": 5158,
+      "sha256": "9585408f0efa4baa6329797fe62ce23ddb877ca7dec1794621207cdf7a134928",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/storeGeolocation.mjs",
+      "bytes": 5964,
+      "sha256": "88bd07346cce543c9a558882110a6feb5581e0d549323e3b4fc3642f01cf8863",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/weeklyBasketFlow.mjs",
+      "bytes": 750,
+      "sha256": "07e04baeeb619df284313997a8ea87fc43705246d6d6ae3008879d250d3aecdc",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/runtime/zeroCostMonitoringPolicy.mjs",
+      "bytes": 2363,
+      "sha256": "50b86029310bca17635fbb165d0046749422a3e23dd898833dc7b1e86a1e5079",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/adapters/openPricesAdapter.mjs",
+      "bytes": 7545,
+      "sha256": "7aa3c6f48feab61ea30fc8467e4d6cdf78a602e5163a2e1eb5d853e5bc82db15",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sourceDescriptor.mjs",
+      "bytes": 2546,
+      "sha256": "26947600b66a93a7c144b0195dcf250edd821e228f69b81ec2e956dae14e5821",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sourceRegistry.mjs",
+      "bytes": 1514,
+      "sha256": "fbe91daa27d509c4a50bbd0453aa9dfc7177bd85f121d8f716923639bce7b103",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sources/delivery.mjs",
+      "bytes": 524,
+      "sha256": "0951fc64e03db7d51dc7295327ac649448f8e1d75211e8b29796fae308b840fe",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sources/edadeal.mjs",
+      "bytes": 485,
+      "sha256": "11eaf333306e41a6be2d6cffa075b406bb28ce6a3b5a4e9f50d3b526927e1246",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sources/kuper.mjs",
+      "bytes": 492,
+      "sha256": "1d1019955ab39ff926072c82a94a845fd40af7ad7e95b70f96fcbd6d02b3674c",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sources/megamarket.mjs",
+      "bytes": 500,
+      "sha256": "51350a65963645766781bd308bf7f678b70feee2eae0d6b1fa16c722bc74595a",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sources/openFoodFacts.mjs",
+      "bytes": 939,
+      "sha256": "e0907c2081fcba8567bdd6d0effba6d9a06720cbd5bae77ec1e51102c10fc5c4",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sources/openPrices.mjs",
+      "bytes": 917,
+      "sha256": "cfa8c54b99ed62f63b2264a517c45c4bf0bcb7eff84e4b799035f5c3615e27e5",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sources/ozonFresh.mjs",
+      "bytes": 374,
+      "sha256": "99cc6a8ace571bc60e27fab52207ca18d62346d12264f147ec33e9f60f533d99",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sources/samokat.mjs",
+      "bytes": 372,
+      "sha256": "2bf771b8ec0d4838bb9639213833618add26420935f7405144b25744e5376347",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sources/vprok.mjs",
+      "bytes": 439,
+      "sha256": "cef9b3ada763eca24a36fb0a3345357bd9264dce4f412889eaed7fe3727831ab",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sources/yandexEda.mjs",
+      "bytes": 491,
+      "sha256": "93ba66210f5958e1406f5840c1dc41aa0740f339da9196df9e00911259f7783b",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/sensors/sources/yandexMapsEdadealExactStore.mjs",
+      "bytes": 842,
+      "sha256": "bb9ce688631a9324de595db6b6cf9e8dd045c553fbc05ec7c7df5f4adc27bb1c",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/state/basketStore.mjs",
+      "bytes": 11333,
+      "sha256": "24aca4fda00759089278c9e16ae09e54d3c773ea524fa7951e073b2932bfcc73",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/state/guidedBasketComparison.mjs",
+      "bytes": 6222,
+      "sha256": "13678683b3eab137aad1f570944b0c876033127c188b44e43393641be02cbacf",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/state/shoppingNeedsStore.mjs",
+      "bytes": 4413,
+      "sha256": "a26d0617e8147a78b7fa1651877c39516283310762efd09135ba59ad74c916af",
+      "mime": "text/javascript"
+    },
+    {
+      "file": "src/styles.css",
+      "bytes": 32531,
+      "sha256": "40cb9cb4d10fa8c2b81a4e30e74a504954254b75c9faca3f383b52d68544aa2d",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/theme-sky.css",
+      "bytes": 20634,
+      "sha256": "4a80fc41dfdef3838c7369fbefb01e1c9c1e9e2369d3db89711850b1b1ed3e20",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/theme-v17.css",
+      "bytes": 2911,
+      "sha256": "98b62d1fb1af28dffc970a2d339e74b8dc386186d3375beb96fbbd63bc03d316",
+      "mime": "text/css"
+    },
+    {
+      "file": "src/theme-violet.css",
+      "bytes": 14430,
+      "sha256": "52261f34ac4b12103f6e513624b65873cf9b21f944f52c23211c6a23fd63fb23",
+      "mime": "text/css"
+    }
+  ],
+  "releaseId": "7750a3c1dd4c46fd1000a4ecb7c8fceabea0a0e6203c4beb3da557ed5d1b652f"
+}

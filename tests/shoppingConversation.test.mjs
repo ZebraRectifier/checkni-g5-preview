@@ -48,6 +48,15 @@ test("postposed food refusal is a preference, not a product wish or paid fallbac
   assert.equal(flow.getConversation().rejected.carrots, undefined);
 });
 
+test("a natural pork refusal is retained without an artificial clarification", () => {
+  const delta = extractShoppingDelta("Без свинины, что посоветуешь вместо неё?");
+  assert.deepEqual(delta.reject, ["pork"]);
+  assert.deepEqual(delta.unresolved, []);
+  const state = update(createShoppingConversation(), "Без свинины, что посоветуешь вместо неё?");
+  assert.equal(isShoppingProductRejected({ name: "Свинина охлаждённая", category: "Мясо" }, state), true);
+  assert.equal(isShoppingProductRejected({ name: "Фарш Говяжий", category: "Мясо" }, state), false);
+});
+
 test("address-picker food refusal is saved without a draft, retailer lookup or paid AI", async () => {
   const saved = new Map();
   const preferenceStorage = {

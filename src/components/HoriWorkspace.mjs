@@ -24,6 +24,11 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   shoppingSheet.rel = 'stylesheet';
   shoppingSheet.href = new URL('./pixel-basket-hory.css', import.meta.url).href;
   document.head.append(shoppingSheet);
+  // This must be appended after legacy presentation layers: those modules set
+  // pixel defaults on the body itself and otherwise silently restore dark v13.
+  const approvedThemeSheet = document.createElement('link'); approvedThemeSheet.rel = 'stylesheet';
+  approvedThemeSheet.href = new URL('../theme-v17.css', import.meta.url).href;
+  document.head.append(approvedThemeSheet);
   document.body.classList.add('hori-workspace', 'pixel-workspace');
   header.classList.replace('app-header', 'hori-header'); header.classList.add('pixel-header');
   const badge = document.getElementById('comparison-mode-badge'); if (badge) badge.hidden = true;
@@ -50,7 +55,25 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   const title = section.querySelector('#phrase-entry-title'); if (title) title.textContent = 'Хоря';
   form.classList.replace('proposal-form', 'hori-form'); form.classList.add('pixel-hory-form');
   const greeting = document.createElement('p'); greeting.className = 'hori-greeting';
-  greeting.textContent = 'Привет! Я Хоря. Что покупаем?'; welcome.prepend(greeting);
+  greeting.textContent = 'Привет! Я Хоря. Помогу собрать покупки или честно сравнить цены.';
+  const quickActions = document.createElement('div'); quickActions.className = 'hori-quick-actions';
+  const createQuickAction = (label, prompt) => {
+    const action = document.createElement('button'); action.type = 'button'; action.textContent = label;
+    action.addEventListener('click', () => {
+      input.value = prompt;
+      input.dispatchEvent(new view.Event('input', { bubbles: true }));
+      form.requestSubmit();
+    });
+    return action;
+  };
+  // Use a complete intent phrase for the existing guided flow; a bare
+  // imperative is otherwise treated as an ambiguous chat message.
+  quickActions.append(createQuickAction('Собрать корзину', 'Собери недорогую корзину'), createQuickAction('Сравнить цены', 'Сравнить цены моей корзины'));
+  // ShoppingDialogue has a pre-workspace welcome row.  The dialog owns the
+  // retail entry, so replace it instead of rendering the same two actions
+  // twice on the first screen.
+  welcome.querySelector('.shopping-conversation-choices')?.remove();
+  welcome.prepend(greeting, quickActions);
   const composer = form.querySelector('.proposal-box');
   if (composer) { composer.classList.replace('proposal-box', 'hori-composer'); form.append(composer); }
   input.placeholder = 'Что нужно купить?';

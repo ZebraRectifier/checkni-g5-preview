@@ -194,6 +194,10 @@ const publicRetailCatalogMode = (
   )
 );
 const DEFAULT_RETAILER_ID = "globus";
+// Hash-only History URLs have been observed to drop the public retail query
+// after a reload in embedded/static hosts. Keep the active query explicitly so
+// a selected catalogue never falls back to the demo surface.
+const urlForView = view => `${location.pathname}${location.search}${hashForView(view)}`;
 // This is presentation navigation, never a new commercial/store identity.
 // Preserve an older explicit retailer/category history entry on upgrade.
 let retailSurfaceStage = history.state?.checkniRetailSurface === 'store'
@@ -354,8 +358,11 @@ const basketProposalFlow = createShoppingConversationFlow({
   requestAiProposal: requestBasketProposal,
   requestShoppingAdvice,
   ...(publicRetailCatalogMode ? {
-    getGuidedRetailContextKey:()=>selectedMagnitStore.shopCode,
-    hasGuidedAgreedStore:()=>retailSurfaceStage==='store'&&agreedNearbyStoreKey===JSON.stringify([retailBrowserState.retailerId,currentRetailClient()?.definition.storeId]),
+    // A catalogue is only reachable after the visitor has explicitly chosen a
+    // store card or address.  Hory must reuse that choice instead of asking
+    // for a place again (the previous Magnit-only key also lost Globus/METRO).
+    getGuidedRetailContextKey:()=>currentRetailClient()?.definition.storeId??null,
+    hasGuidedAgreedStore:()=>retailSurfaceStage==='store'&&Boolean(currentRetailClient()?.definition.storeId),
     getGuidedRetailContexts: ids=>[
       ...(ids.includes('magnit')?[{...retailClientFor('magnit').definition,store:selectedMagnitStore,priceScope:'address-public-price'}]:[]),
       ...(ids.includes('okey')?[OKEY_WEEKLY_SCOPE]:[]),
@@ -1358,9 +1365,9 @@ function updateRetailHistory(path, {
   };
 
   if (replace) {
-    history.replaceState(nextState, "", hashForView(VIEW.SHOP));
+    history.replaceState(nextState, "", urlForView(VIEW.SHOP));
   } else {
-    history.pushState(nextState, "", hashForView(VIEW.SHOP));
+    history.pushState(nextState, "", urlForView(VIEW.SHOP));
   }
 }
 
@@ -2361,7 +2368,11 @@ if(publicRetailCatalogMode){
   nearbyShopping=createNearbyShopping({
     port: nearbyShoppingPort,
     locationController:shoppingLocationController,
-    onInvalidate:()=>{agreedNearbyStoreKey=null;basketProposalFlow.invalidate();renderBasketProposalState();},
+    // Choosing a nearby address is part of Hory's guided journey.  Preserve
+    // its collected household/preferences so the explicit "Подобрать товары"
+    // action can use the newly selected catalogue instead of falling back to
+    // the generic assistant.
+    onInvalidate:()=>{agreedNearbyStoreKey=null;if(!basketProposalFlow.hasActiveGuidedShopping?.())basketProposalFlow.invalidate();renderBasketProposalState();},
     onManualMap:()=>storesSection?.openNearbyMap(),
     onChoose:async(catalog,point,isCurrent)=>{
       if(catalog.retailerId==='globus'){
@@ -3108,7 +3119,7 @@ function navigate(view, {
   document.dispatchEvent(new CustomEvent('checkni:view-navigation', { detail: { view } }));
   const previousView = currentView;
   currentView = view;
-  const hash = hashForView(view);
+  const hash = urlForView(view);
 
   if (replace) {
     history.replaceState(createAppRouteState(view), "", hash);
@@ -3329,7 +3340,7 @@ document.addEventListener('checkni:shop-action', event => {
     catalogRequestVersion += 1; retailBrowserRequestVersion += 1; retailCollectionsVersion += 1;
     pendingCatalogSearch = null;
     currentView = VIEW.SHOP;
-    history.pushState(createAppRouteState(VIEW.SHOP, previousView, 0, []), '', hashForView(VIEW.SHOP));
+    history.pushState(createAppRouteState(VIEW.SHOP, previousView, 0, []), '', urlForView(VIEW.SHOP));
     renderRetailBrowser(); renderRetailCollections(); publishPixelShopState();
     renderView({ focusMode: FOCUS_MODE.HEADING });
     return;
@@ -3544,7 +3555,7 @@ history.replaceState(
     restoredRetailerId
   ),
   "",
-  hashForView(currentView)
+  urlForView(currentView)
 );
 
 setupManualSearchControls();
@@ -3607,3 +3618,8 @@ renderDock();
 renderBetaLiveSection();
 renderBasketProposalState();
 renderView({ scrollY: scrollYFromState(history.state) });
+// Keep the tiny loading label only until the interactive surface is mounted.
+// Without this explicit handoff it stays visible above the header and makes a
+// finished page look like an old shell is flashing during every navigation.
+document.documentElement.dataset.checkniBoot = 'ready';
+document.getElementById('checkni-boot')?.setAttribute('hidden', '');

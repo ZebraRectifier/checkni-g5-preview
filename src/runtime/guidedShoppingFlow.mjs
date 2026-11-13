@@ -60,7 +60,12 @@ export function createGuidedShoppingFlow(options) {
     version++;
     quantityEdits = new Map();
     plan = createGuidedShoppingPlan(goal, history, options.getMemory());
-    if(options.hasAgreedStore?.()===true&&!plan.location&&!plan.retailers.length)plan.useCurrentStore=true;
+    // The assistant is opened from a concrete catalogue only after a visitor
+    // selects its address.  Reuse that visible catalogue as context even if a
+    // legacy consent marker was not populated by an older entry point.
+    const currentStore = options.getContext?.();
+    if ((options.hasAgreedStore?.() === true || currentStore?.storeId)
+      && !plan.location && !plan.retailers.length) plan.useCurrentStore = true;
     const intake = advanceGuidedIntake(plan, goal, options.getMemory());
     if (!intake.issue) options.updateMemory(intake.delta);
     else return state = view('Уточню условия.', intake.issue);
@@ -81,7 +86,7 @@ export function createGuidedShoppingFlow(options) {
       return state=view('Сначала выберем адрес Магнита.', 'Открой нужный Магнит и повтори подбор. Перекрёсток подключён как каталог доставки Яндекс Еды с Большого Овчинниковского переулка, 16; доступность доставки нужно проверить отдельно.',
         {conversationChoices:choices(['Подобрать товары и цены'])});
     if (!key || (!retailScopes.length && (!scope?.retailerId || !scope?.storeId)) || typeof options.searchCatalog !== 'function') {
-      state = view('Список готов, выберем магазин.', 'Открой каталог нужного магазина, затем нажми «Подобрать товары и цены». Условия и список сохраняю.',
+      state = view('Список готов, выберем магазин.', 'Москва — приблизительный ориентир, не точный адрес. Открой каталог нужного магазина, затем нажми «Подобрать товары и цены». Условия и список сохраняю.',
         { conversationChoices: choices(['Подобрать товары и цены', 'Изменить список']) }); return state;
     }
     if(plan.retailers?.length&&plan.location) return state=view('Уточним охват магазинов.',
@@ -249,6 +254,10 @@ export function createGuidedShoppingFlow(options) {
       if (!options.updateMemory(result.delta)) return view('Уточним условия.', 'Напиши условия короче.');
       plan.rows = []; plan.stage = 'intake'; return presentIntake();
     }
+    // This is an explicit continuation action shown by the assistant.  It
+    // must win over the broad shopping-need parser below, otherwise the
+    // button loops back into intake instead of loading the selected store.
+    if (/^(?:подобрать товары и цены|подбери товары и цены|обновить подбор)$/u.test(value)) return load(isCurrent);
     if (extractShoppingNeedContext(text).recognized || Object.hasOwn(delta.facts, 'budgetMinor') || delta.unset.includes('budgetMinor')
       || Object.hasOwn(delta.facts, 'cookingEffort') || delta.unset.includes('cookingEffort')) {
       const result = advanceGuidedIntake(plan, text, options.getMemory());
@@ -265,7 +274,6 @@ export function createGuidedShoppingFlow(options) {
       if (options.getMemory().facts.unresolvedConstraints) return view('Уточню ограничение.', 'Не все условия удалось разобрать. Уточни их перед подбором; прежний состав не добавляю.');
       return presentIntake();
     }
-    if (/^(?:подобрать товары и цены|подбери товары и цены|обновить подбор)$/u.test(value)) return load(isCurrent);
     const storeChoice=value.match(/^показать вариант (magnit|okey|pyaterochka|perekrestok)$/u);
     if(storeChoice&&plan.stage==='review'){
       return showRetailer(storeChoice[1]);

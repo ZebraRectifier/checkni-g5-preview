@@ -11,9 +11,10 @@ test('comparison presentation separates complete and partial quotes without inve
  document.querySelector('#shop-view').hidden=true;const basket=document.querySelector('#basket-view');basket.hidden=false;
  const output=document.createElement('div');output.id='comparison-output';basket.replaceChildren(output);renderSavedGuidedComparison(output,result,{nowMs:Date.parse(at)});output.scrollIntoView();
  });
- const groups=page.locator('.saved-comparison-group');await expect(groups).toHaveCount(2);
- await expect(groups.first()).toContainText('Полные по составу');await expect(groups.first().locator('summary')).toContainText('Старые / неизвестные цены');
- await expect(groups.last().locator('summary')).toContainText('1/2');await expect(groups.last().locator('summary')).toContainText('Найденная часть');
+ const groups=page.locator('.saved-catalog-variant');await expect(groups).toHaveCount(2);
+ await expect(groups.first().locator('summary')).toContainText('Магнит · 2/2');
+ await expect(groups.last().locator('summary')).toContainText('1/2');await expect(groups.last().locator('summary')).toContainText('найденная часть');
+ await expect(page.locator('#comparison-output')).toContainText('Список неполный. Выгоду пока не определяем.');
  await expect(page.locator('#comparison-output')).not.toContainText('ниже на');
  await groups.last().locator('summary').click();await expect(groups.last().locator('tbody')).toContainText('Не удалось подтвердить товар');
  await groups.last().locator('summary').click();

@@ -35,7 +35,8 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - name: Verify switching and real address-bound cards on desktop and mobile
-        run: npx playwright test --config=playwright.magnit.config.mjs
+        # A hung browser must fail with a report instead of occupying the release queue.
+        run: npx playwright test --config=playwright.magnit.config.mjs --timeout=45000 --global-timeout=900000
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: failure()
         with:

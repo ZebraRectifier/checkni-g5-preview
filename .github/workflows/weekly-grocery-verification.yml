@@ -19,7 +19,9 @@ jobs:
     # Standard hosted runners are free for this public artifact repository.
     # Never attach this public/fork workflow to the private Cloud.ru runner.
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The release gate deliberately covers the current v17 journey, not retired
+    # screens whose assertions still describe the superseded interface.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
@@ -67,7 +69,20 @@ jobs:
         run: npx playwright test --config=playwright.weekly.config.mjs hori-v13.spec.mjs --grep 'approved PixelCharacter'
       - name: Replay desktop and mobile grocery journeys without external services
         working-directory: ${{ steps.prepare.outputs.workspace }}
-        run: npx playwright test --config=playwright.weekly.config.mjs
+        # These specs prove the published v17 path: address → nearby card →
+        # catalogue/category → basket → honest comparison, including Hory.
+        # Old visual-regression scenarios target interfaces that were explicitly
+        # replaced and must not decide the current release.
+        run: |
+          node --test tests/catalogPagination.test.mjs
+          timeout --foreground 20m npx playwright test --config=playwright.weekly.config.mjs --timeout=45000 --global-timeout=1080000 \
+            test/e2e/nearby-shopping.spec.mjs \
+            test/e2e/guided-shopping.spec.mjs \
+            test/e2e/comparison-presentation.spec.mjs \
+            test/e2e/pixel-storefront.spec.mjs
+          timeout --foreground 5m npx playwright test --config=playwright.weekly.config.mjs --timeout=45000 \
+            test/e2e/catalog-access-recovery.spec.mjs \
+            --grep 'a successful empty address lookup keeps the search guidance instead of reporting a service outage'
       - name: Preserve failure diagnostics
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

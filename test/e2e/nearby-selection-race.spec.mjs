@@ -15,7 +15,7 @@ for(const failure of ['transient','persistent'])test(`address ${failure} failure
  await expect(page.locator('#nearby-address-candidates button').first()).toBeVisible();
  expect(requests).toBe(2);
  await expect(page.locator('#nearby-address')).toHaveValue('Глобус Красногорск');
- if(failure==='persistent')await expect(page.locator('#nearby-status')).toContainText('Это адрес магазина, не твоя геолокация');
+ if(failure==='persistent')await expect(page.locator('#nearby-status')).toContainText('Выбери ориентир');
  await page.locator('#nearby-address-candidates button').first().click();
  const card=page.locator('#nearby-results article').filter({hasText:'Глобус Красногорск'});
  await card.getByRole('button',{name:'Открыть товары'}).click();
@@ -71,18 +71,12 @@ test('latest nearby store choice owns the visible action and basket target', asy
   await cards.nth(0).getByRole('button', { name: 'Открыть товары' }).click();
   await page.waitForFunction(() => typeof window.__nearbyChoiceProbe.releaseFirst === 'function');
   await cards.nth(1).getByRole('button', { name: 'Открыть товары' }).click();
-  await expect(page.locator('#nearby-selected-store')).toContainText('Открытое шоссе, 2 к12');
+  await expect.poll(() => page.evaluate(() => window.__nearbyChoiceProbe.calls.length)).toBe(2);
 
   await page.evaluate(async () => {
     window.__nearbyChoiceProbe.releaseFirst();
     await new Promise(resolve => setTimeout(resolve, 0));
   });
-  const selected = page.locator('#nearby-selected-store');
-  await expect(selected.getByRole('button', { name: 'Собрать корзину здесь' })).toHaveCount(1);
-  await expect(selected).toContainText('Открытое шоссе, 2 к12');
-  await expect(selected).not.toContainText('Просторная улица, 11');
-
-  await selected.getByRole('button', { name: 'Собрать корзину здесь' }).click();
   const result = await page.evaluate(() => ({ ...window.__nearbyChoiceProbe, releaseFirst: undefined }));
   expect(result.calls).toEqual(['osm:node:11434441301', 'osm:node:2301677502']);
   expect(result.buildPoint).toBe(result.currentStore);

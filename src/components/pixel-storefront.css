@@ -448,6 +448,14 @@ body.pixel-workspace :is(.pixel-product-details,.pixel-store-details,.hori-price
 body.pixel-workspace :is(.pixel-product-details,.pixel-store-details,.hori-price-note)[open] > summary::after { content: '⌃'; }
 body.pixel-workspace .pixel-product-details :is(p,a,span) { max-width: 100%; color: var(--muted); font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
 body.pixel-workspace .pixel-product-details a { display: block; min-height: 44px; padding: 8px 0; color: var(--accent); }
+body.pixel-workspace .shopping-detail-trigger { align-self: flex-start; min-height: 36px; margin-top: 4px; padding: 4px 0; border: 0; background: transparent; color: var(--accent); font: inherit; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+body.pixel-workspace .shopping-product-dialog { width: min(420px,calc(100vw - 32px)); padding: 20px; border: 2px solid var(--accent); border-radius: 12px; background: var(--surface); color: var(--ink); box-shadow: 0 18px 56px rgba(42,22,74,.28); }
+body.pixel-workspace .shopping-product-dialog::backdrop { background: rgba(28,19,50,.36); }
+body.pixel-workspace .shopping-product-dialog h2 { margin: 0 0 6px; font-size: 21px; line-height: 1.25; }
+body.pixel-workspace .shopping-product-dialog p { margin: 6px 0; color: var(--muted); }
+body.pixel-workspace .shopping-product-dialog .product-price { color: var(--ink); }
+body.pixel-workspace .shopping-product-dialog > button { min-height: 44px; margin: 14px 8px 0 0; padding: 8px 12px; border: 1px solid var(--accent); border-radius: 4px; background: var(--accent-strong); color: #fff; font: inherit; font-weight: 650; }
+body.pixel-workspace .shopping-product-dialog > button:last-child { background: var(--surface); color: var(--accent); }
 
 /* Collection rails: about three cards in view, with an explicit scroll affordance. */
 body.pixel-workspace .pixel-collections { display: grid; gap: 28px; min-width: 0; margin: 24px 0; }
@@ -534,6 +542,9 @@ body.pixel-workspace .pixel-hory-section { position: static; display: block; wid
 body.pixel-workspace .pixel-hory-section :is(.hori-scene,.hero-identity,.phrase-entry-heading,.proposal-help) { display: none; }
 body.pixel-workspace .pixel-hory-form { display: flex; flex-direction: column; gap: 16px; min-height: 0; width: 100%; padding: 0; margin: 0; }
 body.pixel-workspace .hori-greeting { margin: 0 0 18px; color: var(--ink); font-size: 18px; line-height: 1.5; }
+body.pixel-workspace .hori-quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+body.pixel-workspace .hori-quick-actions button { min-height: 44px; padding: 10px 14px; border: 1px solid var(--accent); border-radius: 2px; background: var(--surface-soft); color: var(--accent); font-weight: 700; }
+body.pixel-workspace .hori-quick-actions button:first-child { background: var(--accent); color: #fff; }
 body.pixel-workspace .shopping-welcome { min-height: 0; padding: 0; margin: 0; border: 0; background: transparent; }
 body.pixel-workspace .shopping-conversation-choices { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
 body.pixel-workspace .shopping-conversation-choices button { min-height: 44px; padding: 10px 14px; border: 1px solid var(--accent); border-radius: 2px; background: var(--surface-soft); color: var(--accent); font-size: 14px; box-shadow: none; }
@@ -804,6 +815,38 @@ body.pixel-workspace #pixel-store-home .retail-store-logo {
   min-height: 0;
   height: clamp(76px, 9vw, 112px);
   aspect-ratio: auto;
+}
+
+/* Landing: one purpose, one address field, then readable networks. */
+body.pixel-workspace .pixel-home-hero {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 156px;
+  align-items: center;
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 0 20px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+}
+body.pixel-workspace .pixel-home-hero-copy h2 { margin: 0 0 8px; font-size: clamp(24px,3vw,34px); line-height: 1.12; }
+body.pixel-workspace .pixel-home-hero-copy p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
+body.pixel-workspace .pixel-home-hero-mascot { display: block; width: 100%; max-height: 132px; object-fit: contain; image-rendering: pixelated; }
+body.pixel-workspace .nearby-home .nearby-address-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; width: 100%; }
+body.pixel-workspace .nearby-home #nearby-address { display: block; width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px; border: 2px solid var(--accent); background: var(--surface); color: var(--ink); font-size: 16px; box-sizing: border-box; }
+body.pixel-workspace .nearby-home #nearby-address-search { min-width: 126px; min-height: 48px; padding-inline: 14px; }
+
+@media (max-width: 620px) {
+  body.pixel-workspace .pixel-home-hero { grid-template-columns: minmax(0,1fr) 94px; gap: 10px; margin-bottom: 16px; padding: 14px; }
+  body.pixel-workspace .pixel-home-hero-copy h2 { font-size: 24px; }
+  body.pixel-workspace .pixel-home-hero-mascot { max-height: 100px; }
+  body.pixel-workspace .nearby-home .nearby-address-row { grid-template-columns: minmax(0,1fr) auto; }
+  body.pixel-workspace .nearby-home #nearby-address-search { min-width: 112px; padding-inline: 10px; }
+  body.pixel-workspace .retail-store-grid { grid-template-columns: 1fr; gap: 10px; }
+  body.pixel-workspace #pixel-store-home .retail-store-card { flex-direction: row; align-items: center; min-height: 76px; padding: 6px; }
+  body.pixel-workspace #pixel-store-home .retail-store-logo { flex: 0 0 76px; width: 76px; height: 62px; min-height: 62px; padding: 8px; }
+  body.pixel-workspace #pixel-store-home .retail-store-copy { padding: 6px 8px; }
+  body.pixel-workspace #pixel-store-home .retail-store-copy strong { font-size: 16px; }
 }
 
 body.pixel-workspace .nearby-home :is(#nearby-address-candidates, #nearby-results):empty {

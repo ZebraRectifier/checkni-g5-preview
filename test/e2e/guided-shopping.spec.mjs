@@ -188,7 +188,7 @@ test('welcome → inexpensive weekly groceries for three near Zavety Ilyicha →
   await openStoreDetails(page);
   await openHory(page);
   const welcome = page.getByRole('region', { name: 'С чего начнём покупки' });
-  await expect(welcome).toContainText('Привет! Я Хоря. Что покупаем?');
+  await expect(welcome).toContainText('Привет! Я Хоря. Помогу собрать покупки или честно сравнить цены.');
   await welcome.getByRole('button', { name: 'Собрать корзину', exact: true }).click();
   const output = page.locator('#basket-proposal-status');
   await expect(output).toContainText('На сколько человек');

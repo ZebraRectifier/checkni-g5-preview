@@ -36,6 +36,7 @@ test('approved PixelCharacter has stable stores-first and storefront visual base
  await page.setViewportSize(mobile?{width:390,height:844}:{width:1280,height:720});
  await setup(page,{open:false});
  await page.evaluate(()=>document.fonts.ready);
+ await expect.poll(()=>page.locator('.pixel-home-hero-mascot').evaluate(image=>image.complete&&image.naturalWidth>0)).toBe(true);
  await expect(page.locator('#pixel-hory-dialog')).toBeHidden();
  await expectNoOverflow(page);
  // A missing first baseline still fails this test, while allowing CI to

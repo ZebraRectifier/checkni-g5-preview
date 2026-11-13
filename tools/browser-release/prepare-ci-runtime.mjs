@@ -19,7 +19,10 @@ const SUPPORT_PATHS = ['test', 'tests', 'tools', 'package.json', 'package-lock.j
   'artifacts/nearby-shopping/catalog-geography-joins-20261024.json',
   'evidence/magnit-nearby-20261107',
   'evidence/magnit-kazan-pilot-20261108/address-evidence.json',
-  'evidence/magnit-kazan-pilot-20261108/validate.mjs'];
+  'evidence/magnit-kazan-pilot-20261108/validate.mjs',
+  // This fixture is already tracked and exercised by the weekly contract.
+  // Include the whole evidence bundle so its validator cannot lose imports.
+  'evidence/maria-ra-novosibirsk-20261107'];
 export const MUTABLE_PUBLIC_DATA_FILES = Object.freeze([
   'nearbyGroceryStores.json',
   ...['saint-petersburg', 'kazan', 'yekaterinburg', 'novosibirsk', 'nizhny-novgorod'].map(city => `nearby-regions/${city}.json`),
@@ -29,6 +32,9 @@ export const MUTABLE_PUBLIC_DATA_FILES = Object.freeze([
 const inside = (parent, child) => child !== parent && child.startsWith(parent + path.sep);
 const safeRelative = value => typeof value === 'string' && !value.includes('\\') && !value.includes(':')
   && !value.includes('\0') && value.split('/').every(part => part && part !== '.' && part !== '..');
+const portableEntrypoint = (file, bytes) => ['index.html', 'prices.html'].includes(file)
+  ? Buffer.from(bytes.toString('utf8').replace(/(\b(?:src|href)\s*=\s*["'])\.\/releases\/[a-f0-9]{64}\/src\//gu, '$1./src/'))
+  : bytes;
 const git = (root, args, input) => execFileSync('git', args, {cwd: root, input,
   maxBuffer: MAX_BYTES, stdio: ['pipe', 'pipe', 'pipe'], env: {...process.env, GIT_TERMINAL_PROMPT: '0'}});
 
@@ -57,8 +63,12 @@ export function verifyTestCommitRuntime(root, commit, manifest) {
     const header = buffer.subarray(offset, end).toString('utf8');
     const match = /^[a-f0-9]{40} blob (\d+)$/u.exec(header);
     if (end < offset || !match) throw Error('test_commit_missing_runtime:' + entry.file);
-    const size = Number(match[1]), bytes = buffer.subarray(end + 1, end + 1 + size);
-    if (bytes.length !== entry.bytes || digest(bytes) !== entry.sha256) throw Error('test_commit_runtime_mismatch:' + entry.file);
+    const size = Number(match[1]), raw = buffer.subarray(end + 1, end + 1 + size);
+    // The public entrypoints are activated by replacing ./src with an
+    // immutable release path.  Manifests intentionally hold their portable
+    // ./src form, just like verifySourceCommitRuntime below.
+    const bytes = portableEntrypoint(entry.file, raw);
+    if (raw.length !== size || bytes.length !== entry.bytes || digest(bytes) !== entry.sha256) throw Error('test_commit_runtime_mismatch:' + entry.file);
     offset = end + size + 2;
   }
   if (offset !== buffer.length) throw Error('invalid_git_blob_batch');
