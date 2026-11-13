@@ -614,8 +614,14 @@ export function createShoppingConversationFlow(options) {
       return state;
     }
     const directGuidedBuild = isGuidedEntryRequest(text);
-    if (typeof options.searchGuidedCatalog === "function" && (directGuidedBuild || isGuidedBuildRequest(text)
-        && (adviceFocus?.topic === "dialogue" || adviceHistory.length))) {
+    const explicitGuidedBuild = isGuidedBuildRequest(text);
+    // The catalogue continuation is a safe recovery point as well: a chosen
+    // address may have remounted the surrounding UI, while preferences remain
+    // in the conversation store.  Do not send Hory's own action to generic
+    // text parsing just because that transient draft was lost.
+    if (typeof options.searchGuidedCatalog === "function" && (directGuidedBuild || explicitGuidedBuild
+        && (guidedShopping?.active() || Boolean(options.resolveRetailSelectionScope?.())
+          || adviceFocus?.topic === "dialogue" || adviceHistory.length))) {
       if (directGuidedBuild) guidedShopping = null;
       if (!guidedShopping?.active()) {
         guidedShopping = createGuidedShoppingFlow({ basket,
@@ -630,8 +636,17 @@ export function createShoppingConversationFlow(options) {
           searchCatalog: options.searchGuidedCatalog,
           onGuidedBasketConfirmed: options.onGuidedBasketConfirmed,
           compareBasket: options.compareGuidedBasket });
-        state = guidedShopping.start(directGuidedBuild ? text : adviceHistory.find(row => row.role === "user")?.text ?? text,
+        state = guidedShopping.start(directGuidedBuild ? text : adviceHistory.find(row => row.role === "user")?.text ?? 'Нужны продукты',
           directGuidedBuild ? [] : adviceHistory);
+        // If the recovery itself was Hory's catalogue action, start and load
+        // in one turn. Requiring the visitor to press the same button twice
+        // would make a remount look like a failed action.
+        if (explicitGuidedBuild && !directGuidedBuild) {
+          const request = guidedShopping.handle(text, () => token === epoch);
+          state = guidedShopping.getState() ?? state;
+          const handled = await request;
+          if (token === epoch && handled) state = handled;
+        }
       } else state = guidedShopping.getState();
       pending = null; suspendedDraft = null; hybrid.invalidate();
       return state;
