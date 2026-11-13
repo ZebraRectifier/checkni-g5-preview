@@ -3607,3 +3607,8 @@ renderDock();
 renderBetaLiveSection();
 renderBasketProposalState();
 renderView({ scrollY: scrollYFromState(history.state) });
+// Keep the tiny loading label only until the interactive surface is mounted.
+// Without this explicit handoff it stays visible above the header and makes a
+// finished page look like an old shell is flashing during every navigation.
+document.documentElement.dataset.checkniBoot = 'ready';
+document.getElementById('checkni-boot')?.setAttribute('hidden', '');
