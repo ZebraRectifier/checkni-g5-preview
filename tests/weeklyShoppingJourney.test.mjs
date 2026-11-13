@@ -48,6 +48,12 @@ test('landmark resolves only supported identity, radius and exact registered nea
   assert.deepEqual(nearbyShoppingStores({ landmark: { ...SHOPPING_LANDMARKS[0] }, radiusKm: 20 }), []);
 });
 
+test('a city-only answer advances intake without pretending to know a precise place', () => {
+  const city = shoppingLocationRequest('Москва');
+  assert.deepEqual(city, { city: 'Москва', kind: 'city' });
+  assert.deepEqual(nearbyShoppingStores(city), []);
+});
+
 test('greeting → cheap mode → three people → week → exclusions uses the already selected store, then confirms', async () => {
   const { flow, basket, requests, paid } = setup();
   await flow.run('hi'); assert.equal(flow.getState().presentation.conversationChoices.length, 3);

@@ -13,6 +13,12 @@ export const SHOPPING_LANDMARKS = Object.freeze([Object.freeze({
 export function shoppingLocationRequest(text) {
   const value = String(text ?? '').toLowerCase().replaceAll('ё', 'е');
   const radius = value.match(/(?:до|радиус(?:е|ом)?|в пределах)\s*(\d{1,3})\s*км/u);
+  // A city-only answer is still useful context for the dialogue.  It must
+  // never be presented as a precise device point or used to invent nearby
+  // stores; it merely lets the assistant proceed to the selected catalogue.
+  if (/^(?:г\.?\s*)?москв(?:а|е)$/u.test(value.trim())) {
+    return { city: 'Москва', kind: 'city' };
+  }
   const landmark = SHOPPING_LANDMARKS.find(row => row.id === 'zavety-ilyicha-station'
     && /завет(?:ы|ах|ов)\s+ильича/u.test(value));
   if (/не\s+(?:станци\S*\s+)?завет/u.test(value)) return { unsupported: true };
