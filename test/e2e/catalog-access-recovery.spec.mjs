@@ -202,7 +202,7 @@ test('a successful empty address lookup keeps the search guidance instead of rep
   });
   await page.locator('.pixel-location').click();
   await page.locator('#nearby-address').fill(query); await page.locator('#nearby-address-search').click();
-  await expect(page.locator('#nearby-status')).toHaveText('Адрес не удалось найти. Добавь город и номер дома или укажи место на карте.');
+  await expect(page.locator('#nearby-status')).toHaveText('Не нашла такой адрес. Добавь город и номер дома или выбери точку на карте.');
   await expect(page.locator('#nearby-status')).not.toContainText(/сервис|недоступен|сохранён/iu);
   await expect(page.locator('#nearby-address-candidates')).toBeEmpty();
   await expect(page.locator('#nearby-address')).toHaveValue(query); await expect(page.locator('#nearby-address-search')).toBeEnabled();
