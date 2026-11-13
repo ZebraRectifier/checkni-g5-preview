@@ -126,7 +126,7 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
     // This is Hory's own continuation button.  It must pass through the
     // persistent needs adapter untouched; otherwise "и цены" is split into
     // a separate shopping need instead of opening the selected catalogue.
-    if(delegate.hasActiveGuidedShopping?.()&&isGuidedBuildRequest(text)) {
+    if(isGuidedBuildRequest(text)) {
       ownsView=false; selectionActive=true; await delegate.run(text); state=delegate.getState(); return state;
     }
     // A question is not a list of products even if it contains punctuation.
