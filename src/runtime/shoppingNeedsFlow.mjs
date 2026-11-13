@@ -124,7 +124,7 @@ export function createShoppingNeedsFlow({ delegate, needsStore: store, basket, r
     if(unsupportedAction.test(text))return display('Покупка не оформлена.','CHECKNI помогает собрать список и сравнить доступные предложения. Оформить заказ здесь нельзя. Текущий список сохранён.');
     if(attributeReply.test(text)&&(!selectionActive||ownsView))return display('Уточни полное название товара.',`«${text}» — характеристика, а не новая покупка. Напиши название вместе с нужным свойством; текущий список сохранён.`);
     const preferenceDelta = extractShoppingDelta(text);
-    if(preferenceDelta.reject.length || preferenceDelta.allow.length || preferenceDelta.unresolved.length) {
+    if(delegate.hasActiveGuidedShopping?.() && (preferenceDelta.reject.length || preferenceDelta.allow.length || preferenceDelta.unresolved.length)) {
       ownsView=false; selectionActive=true; await delegate.run(text); state=delegate.getState(); return state;
     }
     // This is Hory's own continuation button.  It must pass through the
