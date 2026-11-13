@@ -636,7 +636,7 @@ export function createShoppingConversationFlow(options) {
           searchCatalog: options.searchGuidedCatalog,
           onGuidedBasketConfirmed: options.onGuidedBasketConfirmed,
           compareBasket: options.compareGuidedBasket });
-        state = guidedShopping.start(directGuidedBuild ? text : adviceHistory.find(row => row.role === "user")?.text ?? 'Нужны продукты',
+        state = guidedShopping.start(directGuidedBuild ? text : adviceHistory.find(row => row.role === "user")?.text ?? 'Собери недорогую корзину',
           directGuidedBuild ? [] : adviceHistory);
         // If the recovery itself was Hory's catalogue action, start and load
         // in one turn. Requiring the visitor to press the same button twice
