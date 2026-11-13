@@ -18,15 +18,15 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   const button=(text,fn)=>{const b=el('button',text);b.type='button';b.addEventListener('click',fn);return b;};
   const root=el('section');root.id='nearby-shopping';root.className='nearby-shopping';root.setAttribute('aria-label','Магазины рядом и выбор места покупок');
   const css=el('link');css.rel='stylesheet';css.href=new URL('./nearby-shopping.css',import.meta.url).href;document.head.append(css);
-  const openButton=button('📍 Найти магазины рядом',()=>open());openButton.setAttribute('aria-expanded','false');
+  const openButton=button('Найти магазины рядом',()=>open());openButton.setAttribute('aria-expanded','false');
   const panel=el('div');panel.hidden=true;panel.id='nearby-shopping-panel';openButton.setAttribute('aria-controls',panel.id);
-  const title=el('h3','Где ищем продукты?');
+  const title=el('h3','Куда доставить?');
   const input=el('input');input.id='nearby-address';input.type='search';input.maxLength=160;
   input.placeholder='Город, улица или станция';
   const label=el('label','Город, улица или станция');label.htmlFor=input.id;
-  const consent=el('small','По кнопке «Найти адрес» запрос уйдёт в Photon / OpenStreetMap через сервер CHECKNI. В AI и историю адрес не передаётся.');
+  const consent=el('small','Адрес используется только для поиска магазинов рядом и не сохраняется после перезагрузки.');
   const addressButton=button('Найти адрес',()=>searchAddress());addressButton.id='nearby-address-search';
-  const locate=button('Определить моё место',()=>{version++;geo.request();});locate.id='nearby-locate';
+  const locate=button('Определить место',()=>{version++;geo.request();});locate.id='nearby-locate';
   const manual=button('На карте',()=>{document.dispatchEvent(new document.defaultView.CustomEvent('checkni:shop-action',{detail:{action:'address',target:'map'}}));onManualMap?.();});
   manual.setAttribute('aria-label','Выбрать точку на карте');
   const clear=button('Убрать моё место',()=>{version++;geo.clear();position=null;pointName='';candidates.replaceChildren();results.replaceChildren();clearSelection();
@@ -50,15 +50,15 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   }
   const filters=el('div');filters.className='nearby-actions nearby-result-filters';filters.append(radiusLabel,radius,connectedLabel);
   const directoryDate=el('p');directoryDate.hidden=true;
-  const note=el('details');const noteTitle=el('summary','Откуда магазины и что известно о ценах');
+  const note=el('details');const noteTitle=el('summary','Источники и статус цен');
   const noteCopy=el('p','Это датированный справочник карты, а не полный список работающих магазинов. Расстояния — по прямой. Совпадение адреса с каталогом не подтверждает свежесть цен, наличие или доставку. Геопозиция хранится только в памяти вкладки и исчезает после перезагрузки.');
   const attribution=el('a','© OpenStreetMap contributors · ODbL');attribution.href='https://www.openstreetmap.org/copyright';attribution.target='_blank';attribution.rel='noopener noreferrer';note.append(noteTitle,noteCopy,directoryDate,attribution);
   const mapPrivacy=el('small','При выборе места карта OpenStreetMap загружает соответствующий участок.');
   const addressRow=el('div');addressRow.className='nearby-address-row';addressRow.append(input,addressButton);
   const privacy=el('details');privacy.className='nearby-privacy';privacy.append(el('summary','Как используется адрес'),consent,mapPrivacy);
   const locationActions=el('div');locationActions.className='nearby-actions nearby-location-actions';locationActions.append(locate,manual);
-  panel.append(title,label,addressRow,locationActions,filters,networks,status,candidates,selection,results);
-  const extra=el('details');extra.className='nearby-extra';extra.append(el('summary','Другие способы и источники'),actions,privacy,note);panel.append(extra);root.append(openButton,panel);
+  panel.append(title,label,addressRow,locationActions,status,candidates,selection,results);
+  const extra=el('details');extra.className='nearby-extra';extra.append(el('summary','Настроить поиск'),filters,networks,actions,privacy,note);panel.append(extra);root.append(openButton,panel);
   let position=null,pointName='',directory=null,version=0,limit=5,chosen=null,pendingPlaceLabel=null,region=null;
   function clearSelection(){chosen=null;selection.hidden=true;selection.replaceChildren();onInvalidate();}
   function open(query='',radiusKm=null){panel.hidden=false;openButton.setAttribute('aria-expanded','true');
@@ -83,17 +83,18 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
       const rows=nearbyGroceryMatches(d.stores,position,Number(radius.value),{connectedOnly:connected.checked,regional:Boolean(region)}).filter(row=>network==='all'||row.retailerId===network);
       directoryDate.textContent='Дата справочника: '+new Date(d.observedAt).toLocaleDateString('ru-RU')+'.';
       directoryDate.hidden=false;
-      status.textContent=`${pointName||'Выбранная точка'} · до ${radius.value} км · найдено: ${rows.length}`
-        +(rows.length?'':connected.checked?' · Расширь радиус или покажи все магазины.':' · Расширь радиус или уточни адрес.');
+      status.textContent=rows.length
+        ? `Рядом с «${pointName||'выбранной точкой'}» — ${Math.min(rows.length,limit)} магазинов.`
+        : 'Магазинов с каталогом рядом не нашлось. Уточни адрес или расширь радиус в настройках поиска.';
       for(const row of rows.slice(0,limit)){
         const card=el('article');card.className='nearby-store';
         card.append(el('strong',row.name+' · '+(row.distanceMeters<1000?Math.round(row.distanceMeters)+' м':(row.distanceMeters/1000).toFixed(1)+' км')),
-          el('p',row.address??'Адрес в карте не указан'),el('small',row.catalog?'Каталог этого адреса подключён. Актуальность цен и возможность добавить товар указаны в каталоге.':'Каталог этого адреса пока не подключён. Цены неизвестны.'));
+          el('p',row.address??'Адрес в карте не указан'),el('small',row.catalog?'Каталог доступен':'Каталог пока недоступен'));
         if(row.catalog){
           const open=button('Открыть товары',()=>choose(row));open.className='nearby-open-catalog';card.append(open);
           card.addEventListener('click',event=>{if(!event.target.closest('button,a'))open.click();});
         }
-        const link=el('a','Источник адреса');link.href=row.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';card.append(link);results.append(card);
+        results.append(card);
       }
       if(rows.length>limit)results.append(button('Показать ещё',()=>{limit+=5;void renderResults();}));
     }catch{if(token===version)status.textContent='Справочник сейчас не загрузился. Место сохранилось; попробуй ещё раз или выбери магазин в каталоге.';}
@@ -103,10 +104,8 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     const accepted=await onChoose?.(row.catalog,row,()=>token===version);
     if(token!==version)return;
     if(accepted!==true){status.textContent='Этот адрес не удалось подключить. Корзина сохранилась; выбери другой магазин.';return;}
-    chosen=row;selection.hidden=false;selection.append(el('strong','Выбран: '+row.name),el('p',row.address),
-      button('Собрать корзину здесь',()=>{if(chosen===row)onBuild?.(row.catalog,row);}));
-    status.textContent='Магазин согласован. Теперь уточним продукты и покажем цены, которые удастся подтвердить.';
-    if(selection.getClientRects().length)selection.scrollIntoView({block:'center'});
+    chosen=row;
+    status.textContent='Открываю каталог магазина…';
   }
   async function searchAddress(){
     if(addressButton.disabled)return;
@@ -134,9 +133,9 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
     }catch{response={kind:'unavailable',candidates:[]};}
     if(token!==version){addressButton.disabled=false;return;}addressButton.disabled=false;
     if(input.value.trim()!==query){status.textContent='Адрес изменён. Нажми «Найти адрес», чтобы проверить новый.';return;}
-    if(response.kind==='unavailable'){status.textContent='Сервис поиска адресов временно недоступен. Попробуй ещё раз или выбери точку на карте.';return;}
-    if(!['results','directory'].includes(response.kind)||!response.candidates.length){status.textContent=response.kind==='limited'?'Слишком частые запросы. Подожди немного или выбери место на карте.':'Адрес не удалось найти. Добавь город и номер дома или укажи место на карте.';return;}
-    status.textContent=response.kind==='directory'?'Поиск адресов сейчас недоступен. Нашёл магазины в справочнике — выбери один как ориентир. Это адрес магазина, не твоя геолокация.':'Это нужное место? Выбери один из адресов.';
+    if(response.kind==='unavailable'){status.textContent='Не удалось найти адрес сейчас. Проверь написание или выбери точку на карте.';return;}
+    if(!['results','directory'].includes(response.kind)||!response.candidates.length){status.textContent=response.kind==='limited'?'Слишком много запросов. Подожди немного или выбери точку на карте.':'Не нашла такой адрес. Добавь город и номер дома или выбери точку на карте.';return;}
+    status.textContent=response.kind==='directory'?'Выбери ориентир — затем покажу магазины рядом.':'Выбери подходящий адрес.';
     for(const p of response.candidates){if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon)||typeof p.label!=='string'||p.label.length>500)continue;
       candidates.append(button(p.label+(p.precision==='store'?' · магазин-ориентир':p.precision==='house'?'':' · приблизительный ориентир'),()=>{region=p.region??null;if(region){connected.checked=false;network="all";for(const chip of networks.children)chip.setAttribute("aria-pressed",String(chip===networks.firstElementChild));}pendingPlaceLabel=p.label;geo.setManual({lat:p.lat,lon:p.lon});candidates.replaceChildren();}));}
     candidates.scrollIntoView({block:'center'});
@@ -152,7 +151,7 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
       clearSelection();position=s.position;pointName=pendingPlaceLabel??(s.position.source==='manual'?'Точка на карте':`Моё место · точность ≈${Math.round(s.position.accuracyMeters)} м`);pendingPlaceLabel=null;limit=5;
       panel.hidden=false;openButton.setAttribute('aria-expanded','true');void renderResults();}
     else if(s.status==='idle'){position=null;pointName='';results.replaceChildren();}
-    else if(s.status!=='idle'){status.textContent=s.status==='denied'?'Доступ к геолокации закрыт. Можно написать адрес или указать место на карте.':'Место не определилось. Напиши адрес или выбери точку на карте.';}
+    else if(s.status!=='idle'){status.textContent=s.status==='denied'?'Не получилось определить место. Напиши адрес или выбери точку на карте.':'Место не определилось. Напиши адрес или выбери точку на карте.';}
   };
   const geo=locationController??createStoreGeolocation({...geolocationOptions,onChange:locationChanged});
   if(locationController)geo.subscribe(locationChanged);

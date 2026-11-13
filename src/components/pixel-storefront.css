@@ -534,6 +534,9 @@ body.pixel-workspace .pixel-hory-section { position: static; display: block; wid
 body.pixel-workspace .pixel-hory-section :is(.hori-scene,.hero-identity,.phrase-entry-heading,.proposal-help) { display: none; }
 body.pixel-workspace .pixel-hory-form { display: flex; flex-direction: column; gap: 16px; min-height: 0; width: 100%; padding: 0; margin: 0; }
 body.pixel-workspace .hori-greeting { margin: 0 0 18px; color: var(--ink); font-size: 18px; line-height: 1.5; }
+body.pixel-workspace .hori-quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+body.pixel-workspace .hori-quick-actions button { min-height: 44px; padding: 10px 14px; border: 1px solid var(--accent); border-radius: 2px; background: var(--surface-soft); color: var(--accent); font-weight: 700; }
+body.pixel-workspace .hori-quick-actions button:first-child { background: var(--accent); color: #fff; }
 body.pixel-workspace .shopping-welcome { min-height: 0; padding: 0; margin: 0; border: 0; background: transparent; }
 body.pixel-workspace .shopping-conversation-choices { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
 body.pixel-workspace .shopping-conversation-choices button { min-height: 44px; padding: 10px 14px; border: 1px solid var(--accent); border-radius: 2px; background: var(--surface-soft); color: var(--accent); font-size: 14px; box-shadow: none; }

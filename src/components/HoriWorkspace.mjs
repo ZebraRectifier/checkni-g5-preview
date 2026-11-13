@@ -50,7 +50,17 @@ export function createHoriWorkspace({ form, input, output, welcome, dialogue }) 
   const title = section.querySelector('#phrase-entry-title'); if (title) title.textContent = 'Хоря';
   form.classList.replace('proposal-form', 'hori-form'); form.classList.add('pixel-hory-form');
   const greeting = document.createElement('p'); greeting.className = 'hori-greeting';
-  greeting.textContent = 'Привет! Я Хоря. Что покупаем?'; welcome.prepend(greeting);
+  greeting.textContent = 'Привет! Я Хоря. Помогу собрать покупки или честно сравнить цены.';
+  const quickActions = document.createElement('div'); quickActions.className = 'hori-quick-actions';
+  const createQuickAction = (label, prompt) => {
+    const action = document.createElement('button'); action.type = 'button'; action.textContent = label;
+    action.addEventListener('click', () => {
+      input.value = prompt; input.dispatchEvent(new view.Event('input', { bubbles: true })); input.focus();
+    });
+    return action;
+  };
+  quickActions.append(createQuickAction('Собрать корзину', 'Собрать корзину'), createQuickAction('Сравнить цены', 'Сравнить цены моей корзины'));
+  welcome.prepend(greeting, quickActions);
   const composer = form.querySelector('.proposal-box');
   if (composer) { composer.classList.replace('proposal-box', 'hori-composer'); form.append(composer); }
   input.placeholder = 'Что нужно купить?';
