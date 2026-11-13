@@ -30,15 +30,15 @@ export function renderGuidedShoppingTable(parent, model, send, onOpenBasket) {
       }
     }
     if(model.alternatives.some(store=>store.priceScope==='delivery-catalog')){
-      const delivery=document.createElement('p');delivery.textContent='Перекрёсток: подключённый каталог доставки в Москве. Доставка по твоему адресу не подтверждена. Доставка и сборы не включены; цены в физическом магазине могут отличаться.';coverage.append(delivery);
+      const delivery=document.createElement('p');delivery.textContent='Перекрёсток: подключённый каталог доставки в Москве. Доставка Перекрёстка по выбранному адресу не подтверждена. Сравнение недоступно. Доставка и сборы не включены; цены в физическом магазине могут отличаться.';coverage.append(delivery);
+      // A delivery catalogue at another address and a physical store do not
+      // form a comparable offer.  Even a complete, fresh list can only be
+      // inspected here; it must never nominate a cheaper shop.
+      const unavailable=document.createElement('p');unavailable.setAttribute('role','status');
+      unavailable.textContent='Сравнение свежих сумм пока недоступно: нужны один и тот же полный набор товаров и подтверждённые сопоставимые цены для выбранных магазинов.';
+      coverage.append(unavailable);
       if(!model.alternatives.every(store=>store.complete&&store.allRecent)){
         const missing=document.createElement('p');missing.setAttribute('role','status');missing.textContent='Сравнение свежих сумм пока недоступно: есть недостающие позиции или цены старше часа. Старую цену не считаем сегодняшней.';coverage.append(missing);
-      }
-      if(model.draftComparison?.kind==='fresh'){
-        const comparison=document.createElement('p');comparison.setAttribute('role','status');
-        comparison.textContent=model.draftComparison.differenceMinor===0?'Суммы товаров в этих вариантах совпали.':
-          `${model.draftComparison.estimated?'Ориентировочно меньше':'Меньше'} сумма товаров у ${model.draftComparison.lowerStoreName}: разница ${formatRubMinor(model.draftComparison.differenceMinor)}. Это разные марки и фасовки; доставка и сборы не учтены.`;
-        coverage.append(comparison);
       }
     }
     const note = document.createElement('p'); note.textContent = 'В магазинах могут быть разные марки и упаковки. Приоритет полному списку и свежим наблюдениям, затем меньшей сумме среди полученных карточек. Это не сравнение одинаковых SKU и не доказательство самого дешёвого магазина района.'; coverage.append(note); root.append(coverage);
