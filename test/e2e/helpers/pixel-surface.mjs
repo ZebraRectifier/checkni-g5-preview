@@ -17,7 +17,8 @@ export async function openStores(page) {
 export async function selectStore(page, retailerId = 'globus') {
   await openStores(page);
   if (['globus', 'magnit'].includes(retailerId) && await page.locator('.pixel-directory-search[hidden]').count()) {
-    const point = nearbyStores.find(store => store.retailerId === retailerId && store.catalogBinding);
+    const point = nearbyStores.find(store => store.retailerId === retailerId && store.catalogBinding
+      && (retailerId !== 'globus' || store.catalogBinding.officialStoreId === '5011'));
     const addressRoute = '**/functions/v1/nearby-address';
     const addressHandler = route => route.fulfill({ json: { version: 1, candidates: [{
       lat: point.lat, lon: point.lon, label: point.address, precision: 'house'
