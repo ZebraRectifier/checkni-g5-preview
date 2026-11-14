@@ -92,16 +92,6 @@ jobs:
             if (!condition) throw new Error(message);
           };
 
-          async function storeFacts(card) {
-            const name = await card.locator("strong").innerText();
-            const scope = (await card.locator(".retail-store-copy > span").last().textContent()).trim();
-            const tooltip = await card.getAttribute("title");
-            const label = await card.getAttribute("aria-label");
-            assert(name && tooltip === scope && label === name + ": " + scope,
-              "Store card must expose its chain and complete source scope");
-            return name + " · " + scope + "\n" + await card.locator(".retail-store-total").textContent();
-          }
-
           async function allCategories(page) {
             await page.waitForFunction(() => document.querySelectorAll(
               "#retail-category-grid .retail-category-button[data-category-id]:not(.is-loading)"
@@ -109,32 +99,16 @@ jobs:
             const all = page.locator("#retail-category-grid .pixel-all-categories");
             if (await all.isVisible()) await all.click();
           }
-          async function chooseAddressCard(page, retailer, value) {
-            const select = page.locator(`#${retailer}-store-address`);
-            const label = await select.locator("option").evaluateAll((options, id) =>
-              options.find(option => option.value === id)?.textContent, value);
-            assert(label, `No address label for ${retailer}/${value}`);
-            await page.locator(`#${retailer}-store-picker input[type=search]`).fill(
-              label.replace(/^(?:Москва|МО) · /u, "").replace(/ — [^—]+$/u, "").replaceAll(" · ", " "));
-            await page.locator(`#pixel-address-chooser [data-store-id="${value}"]`).click({noWaitAfter:true});
-          }
-          async function chooseStore(page, selector) {
-            if (!await page.locator("#pixel-store-home").isVisible())
-              await page.locator('[data-pixel-action="stores"]').click();
-            await page.locator(selector).click();
-            const manualAddress = page.getByRole("button",{name:"Выбрать магазин вручную"});
-            if (await manualAddress.isVisible()) await manualAddress.click();
-            const chooser = page.locator("#pixel-address-chooser");
-            await chooser.waitFor({state:"visible"});
-            const select = page.locator("#metro-store-address");
-            const previous = await select.getAttribute("data-pixel-original-address");
-            const option = await select.locator("option").evaluateAll((options, preferred) =>
-              options.find(item => item.value === preferred && !item.disabled)?.value
-              ?? options.find(item => item.value && !item.disabled)?.value, previous);
-            assert(option, "No selectable METRO address");
-            await chooseAddressCard(page, "metro", option);
+          async function openMetroFromAddress(page) {
+            const query = "Новые Псарьки, Парковая улица, 4";
+            const field = page.locator("#nearby-address");
+            await field.fill(query);
+            await field.press("Enter");
+            await page.locator("#nearby-address-candidates button").filter({hasText:/Псар[ь]?ки.*Парков/iu}).first().click({timeout:15000});
+            const card = page.locator("#nearby-results article").filter({hasText:/METRO/iu}).filter({hasText:/Парковая улица, 4/iu});
+            await card.getByRole("button", {name:"Открыть товары", exact:true}).click({timeout:15000});
             await page.locator("#pixel-storefront").waitFor({state:"visible"});
-            await allCategories(page);
+            assert(await page.locator("#metro-store-address").inputValue() === "1307", "Nearby card selected another METRO address");
           }
           async function details(page, open) {
             const node = page.locator("#pixel-store-details");
@@ -174,11 +148,7 @@ jobs:
                 timeout: 30000
               });
               await page.waitForTimeout(1200);
-              const text = await page.locator("#retail-store-card-metro").innerText().catch(() => "");
-              if (text.includes("METRO") && text.includes("Каталог по адресу")
-                  && /\d+ категор/u.test(text)
-                  && /\d+ товар/u.test(text)
-                  && await page.locator('#metro-store-address option[value="49"]').count()
+              if (await page.locator('#nearby-address').isVisible()
                   && await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src") === runtimePrefix + "src/app.mjs"
                   && await runtime.matchesPublished(attempt)) {
                 ready = true;
@@ -186,12 +156,11 @@ jobs:
               }
               await page.waitForTimeout(1800);
             }
-            assert(ready, "Published Pages artifact does not expose current METRO store card");
+            assert(ready, "Published Pages artifact does not expose current address search");
             assert(await page.locator('script[type="module"][src$="/src/app.mjs"]').getAttribute("src")
               === runtimePrefix + "src/app.mjs", "Browser METRO runtime differs from byte-verified release");
 
-            const store = page.locator("#retail-store-card-metro");
-            await chooseStore(page, "#retail-store-card-metro");
+            await openMetroFromAddress(page);
             await details(page, true);
             const picker = page.locator("#metro-store-picker");
             await picker.waitFor({ state: "visible", timeout: 15000 });
