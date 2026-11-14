@@ -12,6 +12,6 @@ if (progress.filtered) {
   const copy = document.createElement('p'); copy.textContent = FILTERED_CATALOG_EMPTY.copy;
   main.append(title, copy);
 }
-if (canLoadMoreCatalogPage({ progress, pageLimit: 40, nextOffset: 40 })) {
+if (canLoadMoreCatalogPage({ progress, pageLimit: 40, nextOffset: progress.raw, expectedCount: Number(params.get('total')) })) {
   const button = document.createElement('button'); button.textContent = 'Показать ещё'; main.append(button);
 }

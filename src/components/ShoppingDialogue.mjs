@@ -51,7 +51,9 @@ export function createShoppingDialogue({ form, input, output, fallback, onClear,
     });
     entry.append(button);
   }
-  welcome.append(entry);
+  const greeting = document.createElement('p');
+  greeting.textContent = 'Привет, я Хоря! Помогу с покупками.';
+  welcome.append(greeting, entry);
 
   const history = document.createElement("ol");
   history.id = "shopping-dialogue-history";

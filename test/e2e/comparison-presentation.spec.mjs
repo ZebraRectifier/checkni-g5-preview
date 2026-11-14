@@ -16,6 +16,8 @@ test('comparison presentation separates complete and partial quotes without inve
  await expect(groups.last().locator('summary')).toContainText('1/2');await expect(groups.last().locator('summary')).toContainText('найденная часть');
  await expect(page.locator('#comparison-output')).toContainText('Список неполный. Выгоду пока не определяем.');
  await expect(page.locator('#comparison-output')).not.toContainText('ниже на');
+ await expect(page.locator('.saved-comparison-gaps').first()).toContainText('Нужны свежие цены');
+ await expect(page.locator('.saved-comparison-gaps').last()).toContainText('Товар не подтверждён — Масло');
  await groups.last().locator('summary').click();await expect(groups.last().locator('tbody')).toContainText('Не удалось подтвердить товар');
  await groups.last().locator('summary').click();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);

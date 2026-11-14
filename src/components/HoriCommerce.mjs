@@ -19,20 +19,6 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
 
   const home = node('section', 'pixel-store-home');
   home.id = 'pixel-store-home'; home.setAttribute('aria-labelledby', 'pixel-store-home-title');
-  // The landing view must explain the job before asking for an address.  This
-  // stays separate from the optional Hory dialog: Hory is still opened only
-  // from its explicit button in the navigation.
-  const homeHero = node('section', 'pixel-home-hero');
-  const heroCopy = node('div', 'pixel-home-hero-copy');
-  heroCopy.append(
-    node('h2', '', 'Сравнивай цены на продукты рядом'),
-    node('p', '', 'Выбери адрес, найди магазин и собери корзину без лишних шагов.')
-  );
-  const heroImage = document.createElement('img');
-  heroImage.className = 'pixel-home-hero-mascot';
-  heroImage.src = new URL('../img/ferret-hero.png', import.meta.url).href;
-  heroImage.alt = 'Хоря, помощник CHECKNI'; heroImage.width = 512; heroImage.height = 384;
-  homeHero.append(heroCopy, heroImage);
   const homeTitle = node('h1', '', 'Где ищем продукты?');
   homeTitle.id = 'pixel-store-home-title'; homeTitle.tabIndex = -1;
   const storeSearch = node('form', 'pixel-store-search');
@@ -72,7 +58,12 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
   const directorySearch = node('details', 'pixel-directory-search');
   const directorySummary = node('summary', '', 'Поиск по сетям и адресам');
   directorySearch.append(directorySummary, storeSearch, storeStatus, addressResults);
-  home.append(homeHero, homeTitle, directorySearch, addressChooser);
+  // The nearby-address flow is the only entry on the customer home screen.
+  // Keep the legacy directory nodes in the DOM for existing state recovery,
+  // but never expose its raw store directory or a second search box.
+  directorySearch.hidden = true;
+  addressChooser.hidden = true;
+  home.append(homeTitle, directorySearch, addressChooser);
   if (stores) home.append(stores);
 
 
@@ -171,43 +162,12 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
     pickers.hidden = state.stage !== 'store';
     if (restoreFocus && sourceButton.isConnected) sourceButton.focus({ preventScroll: true });
   }
-  function openAddressChooser(retailerId, sourceButton) {
-    const pair = exactPickerIds[retailerId];
-    if (!pair) return;
-    const section = document.getElementById(pair[0]);
-    const select = document.getElementById(pair[1]);
-    const search = section?.querySelector('input[type="search"]');
-    if (!section || !select || !search) {
-      storeStatus.textContent = 'Выбор адреса временно недоступен. Попробуйте ещё раз.';
-      return;
-    }
-    closeAddressChooser();
-    pendingAddress = { retailerId, sourceButton, select, search, originalValue: select.value };
-    select.dataset.pixelOriginalAddress = select.value;
-    const name = sourceButton.querySelector('.retail-store-copy strong')?.textContent || retailerId;
-    chooserTitle.textContent = `Выберите адрес: ${name}`;
-    addressChooser.hidden = false;
-    storeSearch.hidden = true; storeStatus.hidden = true;
-    addressResults.hidden = true;
-    if (stores) stores.hidden = true;
-    chooserControls.append(pickers);
-    search.value = '';
-    search.dispatchEvent(new view.Event('input', { bubbles: true }));
-    showPendingPicker();
-    clearPendingSelection();
-    if (!watchedPickerSearches.has(search)) {
-      search.addEventListener('input', () => {
-        if (pendingAddress?.search === search) clearPendingSelection();
-      });
-      watchedPickerSearches.add(search);
-    }
-    addressChooser.scrollIntoView({ block: 'start', behavior: 'auto' });
-    search.focus({ preventScroll: true });
-  }
   chooserBack.addEventListener('click', () => closeAddressChooser({ restoreFocus: true }));
   document.addEventListener('checkni:shop-action', event => {
     if (event.detail?.action !== 'choose-address') return;
-    openAddressChooser(event.detail.retailerId, event.detail.sourceButton);
+    // A network does not identify a shop. Do not dump the entire address
+    // directory on a customer: return to the single place search instead.
+    focusAddress();
   });
 
   const location = node('button', 'hori-location pixel-location', '⌖ Москва и МО'); location.type = 'button';
@@ -299,10 +259,14 @@ export function createHoriCommerce({ document, main, shop, header, onOpenHory, o
         if (extra) extra.open = destination !== home;
       }
       nearby.classList.toggle('nearby-home', destination === home);
+      const trigger = nearby.querySelector(':scope > button');
+      trigger.hidden = destination === home;
       if (destination === home) {
         nearby.querySelector('#nearby-shopping-panel').hidden = false;
-        nearby.querySelector(':scope > button').setAttribute('aria-expanded', 'true');
+        trigger.setAttribute('aria-expanded', 'true');
       }
+      const nearbyHeading = nearby.querySelector('#nearby-shopping-panel > h3');
+      if (nearbyHeading) nearbyHeading.hidden = destination === home;
     }
     ensurePublishedEntries();
   }

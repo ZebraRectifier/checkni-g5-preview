@@ -107,10 +107,8 @@ export function createStoresSection({
   const section = document.createElement("section");
   section.className = "future-step stores-section"; section.id = "stores-section";
   section.setAttribute("aria-label", "Магазины, с которыми работает CHECKNI");
-  section.append(textEl("p", "eyebrow", "Магазины"),
-    textEl("h2", null, "Магазины и ваше место"),
-    textEl("p", "stores-copy", "Выберите адрес для корзины. Точки «Глобуса» взяты из официального справочника; "
-      + "точка на карте приблизительная у магазинов со знаком ≈. Координаты не подтверждают свежую цену или наличие."));
+  const heading = textEl("h2", null, "Магазины на карте");
+  section.append(heading);
 
   let center = { ...DEFAULT_CENTER }, zoom = DEFAULT_ZOOM, manualPicking = false, nearbyMode = false;
   let geoState = { status: "idle", position: null };
@@ -268,8 +266,29 @@ export function createStoresSection({
       }, { once: true });
       canvas.append(img);
     }
-    for (const pin of layout.pins) {
-      if (!pin.inside) continue;
+    const visiblePins = layout.pins.filter(pin => pin.inside);
+    const groups = new Map();
+    for (const pin of visiblePins) {
+      const key = nearbyMode && zoom < 16 && pin.id !== "user-location"
+        ? `${Math.floor(pin.left / 64)}:${Math.floor(pin.top / 64)}` : pin.id;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(pin);
+    }
+    for (const group of groups.values()) {
+      const [pin] = group;
+      if (group.length > 1) {
+        const cluster = button(String(group.length), () => {
+          center = { lat: pin.lat, lon: pin.lon };
+          zoom = Math.min(16, zoom + 2);
+          renderMap();
+          map.focus({ preventScroll: true });
+        }, "stores-pin stores-pin-cluster");
+        cluster.setAttribute("aria-label", `Приблизить: ${group.length} магазинов`);
+        cluster.style.left = group.reduce((sum, item) => sum + item.left, 0) / group.length / layout.widthPx * 100 + "%";
+        cluster.style.top = group.reduce((sum, item) => sum + item.top, 0) / group.length / layout.heightPx * 100 + "%";
+        canvas.append(cluster);
+        continue;
+      }
       const own = pin.id === "user-location";
       const marker = own ? textEl("span", "stores-user-pin", "")
         : nearbyMode || manualPicking || canSelect(pin) ? button("", event => {
@@ -382,6 +401,8 @@ export function createStoresSection({
   }
   function setNearbyMode(enabled) {
     nearbyMode = enabled;
+    section.classList.toggle("stores-nearby-mode", enabled);
+    networkFilter.value = "all";
     for (const element of [directory, magnitDirectory, selected]) element.hidden = enabled;
     for (const element of locationControls) element.hidden = enabled;
     for (const element of advancedMapControls) element.hidden = enabled;
@@ -398,7 +419,7 @@ export function createStoresSection({
     section.scrollIntoView({ block: "start" });
     map.focus({ preventScroll: true });
   };
-  section.append(controls, geoStatus, privacy, mapControls, map, attribution, tileStatus, pinCard, selected,
+  section.append(controls, geoStatus, privacy, mapControls, map, pinCard, attribution, tileStatus, selected,
     directory, magnitDirectory);
   renderGeoStatus(); renderMap(); renderSelected(); renderList();
   if (typeof loadBoundMagnitLocations === "function") {

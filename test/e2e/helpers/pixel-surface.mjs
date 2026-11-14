@@ -1,4 +1,7 @@
 import { expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+
+const nearbyStores = JSON.parse(readFileSync(new URL('../../../src/data/nearbyGroceryStores.json', import.meta.url), 'utf8')).stores;
 
 // Public retail uses the stores-first shell. Demo fixtures intentionally keep
 // the independent manual/assistant flow and do not need a retail selection.
@@ -13,6 +16,25 @@ export async function openStores(page) {
 
 export async function selectStore(page, retailerId = 'globus') {
   await openStores(page);
+  if (['globus', 'magnit'].includes(retailerId) && await page.locator('.pixel-directory-search[hidden]').count()) {
+    const point = nearbyStores.find(store => store.retailerId === retailerId && store.catalogBinding);
+    const addressRoute = '**/functions/v1/nearby-address';
+    const addressHandler = route => route.fulfill({ json: { version: 1, candidates: [{
+      lat: point.lat, lon: point.lon, label: point.address, precision: 'house'
+    }] } });
+    await page.route(addressRoute, addressHandler);
+    try {
+      await page.locator('#nearby-address').fill(point.address);
+      await page.locator('#nearby-address').press('Enter');
+      await page.locator('#nearby-address-candidates button').click();
+      const card = page.locator('#nearby-results article').filter({has: page.getByText(point.address, {exact: true})});
+      await card.getByRole('button', {name: 'Открыть товары'}).click();
+      await expect(page.locator('#pixel-storefront')).toBeVisible();
+    } finally {
+      await page.unroute(addressRoute, addressHandler);
+    }
+    return;
+  }
   await page.locator(retailerId === 'globus' ? '#retail-store-card' : `#retail-store-card-${retailerId}`).click({ noWaitAfter: true });
   if (['magnit', 'globus', 'metro'].includes(retailerId)) {
     const manualAddress = page.getByRole('button', { name: 'Выбрать магазин вручную' });
