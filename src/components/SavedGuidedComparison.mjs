@@ -63,7 +63,8 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
       notice.className = 'saved-comparison-gaps';
       parent.append(notice);
     }
-    const total=quote.knownSubtotalMinor==null?'сумма неизвестна':formatRubMinor(quote.knownSubtotalMinor);
+    const total=quote.knownSubtotalMinor==null?'сумма неизвестна':formatRubMinor(quote.knownSubtotalMinor)
+      +(quote.allRecent?'':' · по старым или неподтверждённым ценам');
     const summary=el('summary',storeLabel+' · '+quote.basket.length+'/'+quote.lines.length+' поз. · '
       +(quote.complete?'':'найденная часть: ')+total+(quote.hasEstimates?' · ориентировочно':''));
     details.append(summary,el('p',draft.scope.storeAddress??''));

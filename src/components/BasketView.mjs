@@ -118,7 +118,7 @@ export function renderBasketView(container, items, actions) {
   summary.className = "basket-summary";
   summary.innerHTML = `
     <span>${basketSummaryText(items)}</span>
-    <span class="mock-chip">${isObservedMode ? "OBSERVED · REAL" : "Тестовые цены · MOCK"}</span>
+    <span class="mock-chip">${isObservedMode ? "Цены по наблюдениям" : "Тестовые цены"}</span>
   `;
 
   const list = document.createElement("div");
