@@ -150,7 +150,7 @@ jobs:
             const { pinnedLiveRuntimeProof } = await import("./tools/live-retail-smoke-contract.mjs");
             const runtime = await pinnedLiveRuntimeProof({
               baseUrl: "https://zebrarectifier.github.io/checkni-g5-preview/",
-              files: ["src/app.mjs", "src/components/ProductCard.mjs", "src/ports/retailCatalogPort.mjs", "src/catalog/reviewedRetailBasket.mjs", "src/catalog/perekrestokReviewedList.mjs", "src/catalog/sourceScopedRetailList.mjs", "src/catalog/sourceCatalogListAdmission.mjs", "src/data/metroMoscowRegionStores.mjs"]
+              files: ["src/app.mjs", "src/components/ProductCard.mjs", "src/ports/retailCatalogPort.mjs", "src/catalog/reviewedRetailBasket.mjs", "src/catalog/perekrestokReviewedList.mjs", "src/catalog/sourceScopedRetailList.mjs", "src/data/metroMoscowRegionStores.mjs"]
             });
             const runtimePrefix = "./" + runtime.prefix;
             const { createRetailCatalogClient } = await import(runtimePrefix + "src/ports/retailCatalogPort.mjs");
