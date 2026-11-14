@@ -150,6 +150,7 @@ test('a bound Magnit map pin selects its exact address, while the legacy point s
   await page.locator('#stores-section').scrollIntoViewIfNeeded();
   await expect.poll(async()=>Number((await page.locator('.stores-location-directory > summary').textContent())?.match(/\d+/u)?.[0]))
     .toBeGreaterThanOrEqual(64);
+  await page.locator('#stores-clear-location').click();
   const legacy=page.locator('.stores-pin[data-store-location-id="magnit-1812"]');
   await expect(legacy).toHaveJSProperty('tagName','A');
   await page.locator('.stores-map').scrollIntoViewIfNeeded();
@@ -173,18 +174,18 @@ test('a bound Magnit map pin selects its exact address, while the legacy point s
   await expect(pin).toHaveClass(/stores-pin-selected/u);
   await expect(page.locator('#stores-selected-addresses')).toContainText('цена и наличие не подтверждены');
 });
-test('address consent → candidate → radius → agreed store → household intake preserves basket and forgets location on reload',async({page})=>{
+test('address consent → nearby store → household intake retains the address only in the same tab',async({page})=>{
   await isolate(page);let addressCalls=0,ai=0;
   await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
   await page.route('**/functions/v1/nearby-address',r=>{addressCalls++;expect(r.request().postDataJSON()).toEqual({query:'Пушкино, Красноармейское шоссе, 105',consent:true});
     return r.fulfill({json:{version:1,candidates:[{lat:56.01942,lon:37.885139,label:'Московская область, Пушкино, Красноармейское шоссе, 105',precision:'house'}]}});});
-  await page.goto('/?comparison=observed&catalog=retail#shop');await selectStore(page);await openStoreDetails(page);
-  const nearby=page.locator('#nearby-shopping');await nearby.getByRole('button',{name:'Найти магазины рядом',exact:true}).click();
+  await page.goto('/?comparison=observed&catalog=retail#shop');
   await page.locator('#nearby-address').fill('Пушкино, Красноармейское шоссе, 105');expect(addressCalls).toBe(0);
   await page.locator('#nearby-address-search').click();
   await page.locator('#nearby-address-candidates').getByRole('button').click();
   await expect(page.locator('#nearby-status')).toContainText(/Рядом с|Магазинов с каталогом рядом не нашлось/u);
   await expect(page.locator('#nearby-connected-only')).toBeChecked();
+  await page.locator('.nearby-extra > summary').click();
   await page.locator('#nearby-connected-only').uncheck();
   await expect(page.locator('#nearby-results')).toContainText('Каталог пока недоступен');
   await page.locator('#nearby-connected-only').check();
@@ -202,8 +203,10 @@ test('address consent → candidate → radius → agreed store → household in
   const stored=await page.evaluate(()=>({storage:JSON.stringify({...localStorage}),history:JSON.stringify(history.state)}));
   expect(stored.storage).not.toContain('56.01942');expect(stored.storage).not.toContain('Красноармейское шоссе, 105');
   expect(stored.history).not.toContain('56.01942');expect(ai).toBe(0);expect(addressCalls).toBe(1);
-  await page.reload();await openStoreDetails(page);await nearby.getByRole('button',{name:'Найти магазины рядом',exact:true}).click();
-  await expect(page.locator('#nearby-results')).toBeEmpty();await expect(page.locator('#nearby-address')).toHaveValue('');
+  await page.reload();
+  await expect(page.locator('#nearby-address')).toHaveValue('Пушкино, Красноармейское шоссе, 105');
+  await expect(page.locator('#nearby-results')).toContainText('Глобус Пушкино');
+  expect(addressCalls).toBe(1);
 });
 test('denied geolocation and an unavailable address service allow manual map recovery',async({page})=>{
   await isolate(page);await page.addInitScript(()=>Object.defineProperty(navigator,'geolocation',{value:{getCurrentPosition(s,f){f({code:1});}},configurable:true}));
