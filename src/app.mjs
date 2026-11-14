@@ -1151,7 +1151,11 @@ function renderRetailBrowser() {
     });
     elements.retailCategoryGrid.append(button);
   }
-  if (visibleCategories.length < orderedCategories.length) {
+  // Keep a single, predictable exit to the complete catalogue even when a
+  // particular store happens to expose fewer than the compact eight tiles.
+  // Otherwise the primary category grid silently loses the "All categories"
+  // affordance for small, yet non-empty catalogues.
+  if (visibleCategories.length > 0) {
     const all = document.createElement('button');
     all.type = 'button'; all.className = 'retail-category-button pixel-all-categories';
     const icon = document.createElement('span');

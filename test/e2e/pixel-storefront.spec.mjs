@@ -162,7 +162,9 @@ test('the internal default becomes explicitly selected on entry and retains real
  expect((await rootButtons.evaluateAll(nodes=>nodes.map(node=>node.dataset.categoryId))).sort()).toEqual(
   [...categories,...extraRootCategories].map(c=>String(c.category_id)).sort()
  );
- await expect(page.locator('#retail-category-grid .pixel-all-categories')).toHaveCount(0);
+ // "Все категории" is a stable way back to the full catalogue, including
+ // compact stores where every root category is already visible.
+ await expect(page.locator('#retail-category-grid .pixel-all-categories')).toHaveCount(1);
  // The newly revealed source category, not a synthetic "all" ID, navigates.
  await page.locator(`#retail-category-grid button[data-category-id="${groceryId}"]`).click();
  await expect(page.locator('#product-grid .product-card')).toHaveCount(1);
