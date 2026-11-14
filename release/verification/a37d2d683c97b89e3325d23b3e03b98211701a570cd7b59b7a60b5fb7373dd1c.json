@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "testCommit": "bb6fd9d82d1d0743483ea9989caf369c0ce28dcf",
   "repository": "ZebraRectifier/checkni-g5-preview",
+  "schemaVersion": 1,
+  "testCommit": "306fdea46a96c2a228d55215752e7f34d7094633",
   "releaseId": "a37d2d683c97b89e3325d23b3e03b98211701a570cd7b59b7a60b5fb7373dd1c"
 }
