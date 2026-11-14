@@ -9,7 +9,7 @@ test('confirmed METRO points open and retain their own pickup catalogue', async 
   await page.route('**/functions/v1/nearby-address', route => route.fulfill({json:{version:1,candidates:[{
     lat:point.lat,lon:point.lon,label:point.address,precision:'house'
   }]}}));
-  for (const street of ['Маршала Прошлякова', 'Ленинградское шоссе, 71Г']) {
+  for (const street of ['Маршала Прошлякова', 'Ленинградское шоссе, 71Г', 'Новые Псарьки']) {
     point=joinedDirectory.stores.find(store=>store.retailerId==='metro'&&store.address?.includes(street));
     await page.goto('/?comparison=observed&catalog=retail#shop');
     await page.locator('#nearby-address').fill(point.address);

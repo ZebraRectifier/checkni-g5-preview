@@ -4,6 +4,14 @@ import{normalizedAddressCandidate}from'../src/intelligence/nearbyAddressContract
 import{extractShoppingDelta}from'../src/intelligence/shoppingConversation.mjs';
 import{createNearbyShoppingPort}from'../src/ports/nearbyShoppingPort.mjs';
 const feature=(props={},coords=[37.854,56.04])=>({type:'Feature',geometry:{type:'Point',coordinates:coords},properties:{countrycode:'RU',state:'Московская область',city:'Пушкино',street:'Пушкинская улица',housenumber:'1',...props}});
+test('the shortened Novye Psarki METRO address resolves only to confirmed pickup 1307',async()=>{
+  const data=JSON.parse(await readFile(new URL('../src/data/nearbyGroceryStores.json',import.meta.url),'utf8'));
+  const point=data.stores.find(store=>store.id==='osm:way:316838104');
+  assert.ok(point);
+  assert.equal(nearbyCatalogBinding(point)?.store.storeId,'metro-address-7v4tds');
+  assert.equal(nearbyCatalogBinding({...point,address:'Новые Псарьки, Парковая улица, 5'}),null);
+  assert.equal(nearbyCatalogBinding({...point,id:'osm:way:0'}),null);
+});
 test('address clarification opens a local place picker without treating a household answer as an address',()=>{
   assert.equal(nearbyShoppingIntent('на троих'),null);assert.equal(nearbyShoppingIntent('Текущий магазин',true),null);
   assert.equal(nearbyShoppingIntent('Магнит и О’КЕЙ',true),null);
