@@ -53,6 +53,7 @@ test("Magnit address changes prices, persists on reload, and restores on Back wi
   await openStoreDetails(page);
   const picker = page.locator("#magnit-store-address");
   await expect(picker).toBeVisible();
+  await picker.selectOption("777312");
   await expect(card(page,"777312")).toContainText("79,99 ₽");
   await picker.selectOption("303857");
   await expect(card(page,"303857")).toContainText("149,99 ₽");
@@ -75,6 +76,7 @@ test("late response from the previous Magnit address cannot replace the selected
   await page.goto("./?comparison=observed&catalog=retail#shop");
   await selectStore(page, "magnit");
   await openStoreDetails(page);
+  await page.locator("#magnit-store-address").selectOption("777312");
   await expect.poll(control.requested).toBe(true);
   await page.locator("#magnit-store-address").selectOption("303857");
   await expect(card(page,"303857")).toContainText("149,99 ₽");

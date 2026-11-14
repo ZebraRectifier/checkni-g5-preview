@@ -16,6 +16,8 @@ export function catalogPageProgress(result, fallbackSize = 0) {
 }
 
 export function canLoadMoreCatalogPage({ progress, pageLimit, nextOffset, offset = 0, expectedCount = 0 }) {
-  return progress.admitted > 0 && progress.raw === pageLimit && nextOffset > offset && nextOffset <= 10_000
-    && (expectedCount <= 0 || nextOffset < expectedCount);
+  const hasNextPage = expectedCount > 0
+    ? progress.raw > 0 && nextOffset < expectedCount
+    : progress.admitted > 0 && progress.raw === pageLimit;
+  return nextOffset > offset && nextOffset <= 10_000 && hasNextPage;
 }

@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
-import {openHory,openBasket} from './helpers/pixel-surface.mjs';
+import {openHory,openBasket,openStoreDetails,selectStore} from './helpers/pixel-surface.mjs';
 const {rows}=JSON.parse(await readFile(new URL('../../tests/fixtures/weekly-retail/cross-retailer-20261101.json',import.meta.url),'utf8'));
 test('weekly alternatives keep delivery separate, require confirmation, persist, and expire',async({page,context})=>{
   // Controlled freshness only. Real network acceptance is recorded separately.
@@ -17,9 +17,9 @@ test('weekly alternatives keep delivery separate, require confirmation, persist,
       .slice(0,Number(q.get('limit')??40)).map(p=>({...p,observed_at:at}))});
   });
   await page.goto('/?comparison=observed&catalog=retail#shop');
-  if (await page.locator(".pixel-directory-search:not([open])").count()) await page.getByText("Поиск по сетям и адресам", {exact:true}).click();
-  await page.locator('#pixel-store-search').fill('Балашиха Свердлова 26');
-  await page.locator('#pixel-store-address-results [data-store-id="503695"]').click();
+  await selectStore(page,'magnit');
+  await openStoreDetails(page);
+  await page.locator('#magnit-store-address').selectOption('503695');
   await expect(page.locator('#pixel-storefront')).toBeVisible();
   await expect(page.locator('#magnit-store-address')).toHaveValue('503695');
   const say=async text=>{await openHory(page);await page.locator('#basket-proposal-input').fill(text);await page.locator('#basket-proposal-submit').click();};

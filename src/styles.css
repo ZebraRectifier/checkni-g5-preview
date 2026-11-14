@@ -1293,6 +1293,21 @@ h1 {
   color: #152019;
   cursor: pointer;
 }
+.stores-nearby-mode .stores-map { width: 100%; max-width: none; }
+.stores-nearby-mode button.stores-pin:not(.stores-pin-cluster) {
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.stores-section button.stores-pin-cluster {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  background: #6533b5;
+  border: 2px solid #fff;
+  font-weight: 700;
+}
 .stores-section .stores-pin-selected { outline: 3px solid #6c35d7; z-index: 2; }
 .stores-section .stores-user-pin {
   position: absolute;

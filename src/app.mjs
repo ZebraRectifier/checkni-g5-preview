@@ -35,7 +35,6 @@ import { revealWinningBasketList } from "./runtime/listInspection.mjs";
 import { createProductPhotoLoader } from "./runtime/productPhotos.mjs";
 import { requestCatalogPhotos } from "./ports/catalogPhotosPort.mjs";
 import { createStoresSection } from "./components/StoresMap.mjs";
-import { createOkeyStoreDirectory } from "./components/OkeyStoreDirectory.mjs";
 import { createMagnitStorePicker } from "./components/MagnitStorePicker.mjs";
 import { createMetroStorePicker } from "./components/MetroStorePicker.mjs";
 import { resolveRegisteredMagnitStore as resolveMagnitMoscowStore } from "./data/registeredMagnitStores.mjs";
@@ -1631,7 +1630,7 @@ async function loadRetailCategoryProducts(category, {
       ? 0
       : Number.isSafeInteger(category.productCount) && category.productCount >= 0
         ? category.productCount
-        : result.products.length;
+        : 0;
 
     catalogSearchState = {
       status: "live",
@@ -1701,7 +1700,12 @@ async function loadMoreRetailProducts() {
   renderCatalog();
 
   const options = { limit: pageLimit, offset };
-  const result = await (category ? client.browseCategory(category, options) : client.browse(options));
+  let result;
+  try {
+    result = await (category ? client.browseCategory(category, options) : client.browse(options));
+  } catch {
+    result = null;
+  }
 
   if (
     requestId !== catalogRequestVersion
@@ -1711,7 +1715,7 @@ async function loadMoreRetailProducts() {
     return;
   }
 
-  if (result.kind !== "catalog") {
+  if (result?.kind !== "catalog") {
     catalogSearchState = {
       ...catalogSearchState,
       loadingMore: false,
@@ -1924,7 +1928,6 @@ function setupRetailBrowser() {
   renderRetailBrowser();
   if (!publicRetailCatalogMode) return;
 
-  elements.retailStoreGrid?.after(createOkeyStoreDirectory());
   elements.retailStoreGrid?.after(createOkeyDeliveryCatalog());
   elements.retailCategoryBack?.addEventListener("click", () => {
     if (retailBrowserState.path.length === 0) return;
@@ -2095,7 +2098,7 @@ function renderCatalog() {
       void loadMoreRetailProducts();
     });
     elements.productGrid.after(loadMore);
-    if (!catalogSearchState.loadingMore && !catalogSearchState.loadMoreError) {
+    if (!catalogSearchState.loadingMore && !catalogSearchState.loadMoreError && !catalogSearchState.admissionFiltered) {
       stopCatalogMoreWatch = watchCatalogMore(loadMore, () => void loadMoreRetailProducts());
     }
   } else if (publicRetailCatalogMode && live && !normalizedQuery && catalogSearchState.hasPaged && results.length) {
@@ -2386,6 +2389,10 @@ if(publicRetailCatalogMode){
       }else if(catalog.retailerId==='magnit'){
         const store=resolveMagnitMoscowStore({shopCode:catalog.store.shopCode,address:catalog.store.address});
         if(!store)return false;selectedMagnitStore=store;comparedGlobusStore=null;
+      }else if(catalog.retailerId==='metro'){
+        const store=resolveMetroMoscowRegionStore({storeId:catalog.store.storeId,address:catalog.store.address});
+        if(store?.onlinePickupStatus!=='proven')return false;
+        selectedMetroStore=store;comparedGlobusStore=null;
       }else return false;
       comparisonAddressChanged();
       // The exact choice is consent even while the selected catalogue is loading.
