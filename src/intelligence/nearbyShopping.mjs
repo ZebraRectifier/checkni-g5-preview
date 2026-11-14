@@ -1,6 +1,7 @@
 import{distanceMeters}from'../runtime/storeGeolocation.mjs';
 import{resolveRegisteredMagnitStore}from'../data/registeredMagnitStores.mjs';
 import{resolveGlobusMoscowRegionStore}from'../data/globusMoscowRegionStores.mjs';
+import{resolveMetroMoscowRegionStore}from'../data/metroMoscowRegionStores.mjs';
 import{GLOBUS_MAP_LOCATIONS}from'../data/storeMapLocations.mjs';
 import{exactMagnitAddressKey}from'./magnitAddressJoin.mjs';
 import{extractShoppingDelta,normalizeShoppingText,shoppingTargets,shoppingTargetLabel}from'./shoppingConversation.mjs';
@@ -50,6 +51,10 @@ export function nearbyShoppingIntent(text,expectLocation=false){
     radiusKm:radius?Number(radius[1]):null,...(preferenceText?{preferenceText}:{})};
 }
 export function nearbyCatalogBinding(point){
+  if(point?.retailerId==='metro'&&point.address){
+    const store=resolveMetroMoscowRegionStore({address:point.address});
+    return store?.onlinePickupStatus==='proven'?{retailerId:'metro',store}:null;
+  }
   const b=point?.catalogBinding;if(!b)return null;
   if(point.retailerId==='magnit'&&b.retailerId==='magnit'&&b.kind==='exact-locality-street-house-join'){
     const store=resolveRegisteredMagnitStore({shopCode:b.shopCode});

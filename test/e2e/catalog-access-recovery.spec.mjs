@@ -67,7 +67,21 @@ const openOkey = async page => {
 };
 const basketValue = page => page.evaluate(() => localStorage.getItem('checkni.surface.basket.v1'));
 
+test('a short catalogue page can offer more when the source reports remaining products', async ({ page }) => {
+  await page.goto('/test/support/catalog-pagination-harness.html?raw=24&admitted=24&total=100');
+  await expect(page.getByRole('button', { name: 'Показать ещё' })).toBeVisible();
+  await page.goto('/test/support/catalog-pagination-harness.html?raw=24&admitted=24&total=24');
+  await expect(page.getByRole('button', { name: 'Показать ещё' })).toHaveCount(0);
+});
+
+test('a complete page can offer more even without an advertised total', async ({ page }) => {
+  await page.goto('/test/support/catalog-pagination-harness.html?raw=40&admitted=40');
+  await expect(page.getByRole('button', { name: 'Показать ещё' })).toBeVisible();
+});
+
 test('a full raw page with no admitted cards has a finite honest browser state', async ({ page }) => {
+  await page.goto('/test/support/catalog-pagination-harness.html?raw=40&admitted=0&total=100');
+  await expect(page.getByRole('button', { name: 'Показать ещё' })).toBeVisible();
   await page.goto('/test/support/catalog-pagination-harness.html?raw=40&admitted=0');
   await expect(page.getByRole('heading', { name: 'Нет актуальных товаров' })).toBeVisible();
   await expect(page.locator('#result')).toContainText(

@@ -1,5 +1,5 @@
 import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -63,6 +63,11 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (process.env.CHECKNI_TEST_SOURCE === "1" && filePath === path.join(ROOT, "index.html")) {
+      const html = await readFile(filePath, "utf8");
+      response.end(html.replace(/\.\/releases\/[a-f0-9]{64}\/src\//gu, "./src/"));
+      return;
+    }
     createReadStream(filePath).pipe(response);
   } catch {
     response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });

@@ -35,6 +35,7 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
     await page.route('**/functions/v1/ai-basket-proposal',r=>{ai++;return r.abort();});
     // Existing retail-product-selection regression identity, synthetic source row.
     // This proves wiring only, not real price, availability or freshness.
+    const addressFirst=(await fs.readFile(path.join(root,'releases',id,'src/components/HoriCommerce.mjs'),'utf8').catch(()=>'' )).includes('directorySearch.hidden = true');
     const fixture={rows:[{retailer_id:'magnit',store_id:'magnit-777312',store_name:'Магнит · Берёзовая аллея, 17к2',
       locality_id:'city-moscow',locality_name:'Москва',source_product_id:'1899800689',name:'Кефир Простоквашино 2.5% 930г',
       weight_text:'930 г',price_minor:7999,currency:'RUB',price_condition:'public-online',availability:'unknown',main_category_id:63963,
@@ -43,6 +44,12 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
       scope_evidence_url:'https://magnit.ru/catalog/63963-molochnyy_prilavok?shopCode=777312&shopType=1',
       scope_binding:'public-store-product-page',binding_id:'magnit-shopcode-777312',
       location_label:'г Москва, аллея Берёзовая, д 17 к 2',image_url:null,observed_at:new Date().toISOString()}]};
+    if(addressFirst){
+      const item=fixture.rows[0];
+      for(const key of ['store_id','binding_id','product_url','source_url','scope_evidence_url'])item[key]=item[key].replaceAll('777312','699415');
+      item.store_name='Магнит · Тайнинская улица, 9';
+      item.location_label='Москва, Тайнинская ул, 9';
+    }
     const headers={'access-control-allow-origin':'*','access-control-allow-headers':'apikey,content-type','access-control-allow-methods':'GET,OPTIONS'};
     await page.route('**/rest/v1/retail_catalog_categories**',r=>r.fulfill({headers,json:[]}));
     await page.route('**/rest/v1/retail_catalog_items**',r=>{
@@ -53,9 +60,18 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
     await page.goto(base+`releases/${id}/index.html?comparison=observed&catalog=retail#shop`);
     console.log('Opened immutable preview');
     expect(errors).toEqual([]);
-    if (await page.locator(".pixel-directory-search:not([open])").count()) await page.getByText("Поиск по сетям и адресам", {exact:true}).click();
-    await page.locator('#pixel-store-search').fill('Берёзовая 17',{timeout:10000});
-    await page.locator('#pixel-store-address-results [data-store-id="777312"]').click({timeout:10000});
+    if(addressFirst){
+      const address='Москва, Тайнинская улица, 9';
+      await page.route('**/functions/v1/nearby-address',route=>route.fulfill({json:{version:1,candidates:[{label:address,lat:55.8832264,lon:37.6831625,precision:'house'}]}}));
+      await page.locator('#nearby-address').fill(address);
+      await page.locator('#nearby-address').press('Enter');
+      await page.locator('#nearby-address-candidates button').click();
+      await page.locator('#nearby-results article').filter({hasText:address}).getByRole('button',{name:'Открыть товары'}).click();
+    }else{
+      if(await page.locator('.pixel-directory-search:not([open])').count())await page.getByText('Поиск по сетям и адресам',{exact:true}).click();
+      await page.locator('#pixel-store-search').fill('Берёзовая 17',{timeout:10000});
+      await page.locator('#pixel-store-address-results [data-store-id="777312"]').click({timeout:10000});
+    }
     console.log('Selected fixture address');
     const card=page.locator('.product-card').filter({has:page.getByRole('button',{name:/Добавить/u})}).first();
     await card.getByRole('button',{name:/Добавить/u}).click({timeout:10000});
@@ -98,7 +114,18 @@ for(const id of ids)test(`immutable preview ${id} boots and preserves manual ret
     }
     const addressCss='src/components/pixel-storefront.css';
     const sharedPlace=(await fs.readFile(path.join(root,'releases',id,'src/app.mjs'),'utf8')).includes('nearbyShopping.openNetwork');
-    if((await fs.readFile(path.join(root,'releases',id,addressCss),'utf8')).includes('grid-template-columns: minmax(0,1fr); gap: 6px;')){
+    if(addressFirst){
+      await page.locator('[data-pixel-action="stores"]').click();
+      const address='г. Пушкино, Красноармейское ш., вл. 105';
+      await page.route('**/functions/v1/nearby-address',route=>route.fulfill({json:{version:1,candidates:[{label:address,lat:56.01942,lon:37.885139,precision:'house'}]}}));
+      await page.locator('#nearby-address').fill(address);
+      await page.locator('#nearby-address').press('Enter');
+      await page.locator('#nearby-address-candidates button').click();
+      await page.locator('#nearby-results article').filter({hasText:address}).getByRole('button',{name:'Открыть товары'}).click();
+      await expect(page.locator('#pixel-address-chooser')).toBeHidden();
+      await expect(page.locator('#pixel-storefront-title')).toContainText('Глобус');
+      await expect(page.locator('#globus-store-address')).toHaveValue('5014');
+    }else if((await fs.readFile(path.join(root,'releases',id,addressCss),'utf8')).includes('grid-template-columns: minmax(0,1fr); gap: 6px;')){
       await page.locator('[data-pixel-action="stores"]').click();
       await page.locator('#retail-store-card').click();
       if(sharedPlace) await page.getByRole('button',{name:'Выбрать магазин вручную'}).click();

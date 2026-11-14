@@ -71,7 +71,7 @@ async function setup(page,{collections=false,expandedRoots=false}={}){
 }
 const savedBasket=page=>page.evaluate(()=>localStorage.getItem('checkni.surface.basket.v1'));
 
-test('cold stores home and its local chain filter make no catalogue, global-search or AI requests',async({page})=>{
+test('cold address-first home makes no catalogue, global-search or AI requests',async({page})=>{
  const calls=await setup(page);
  await expect(page.locator('#pixel-storefront')).toBeHidden();
  await expect(page.locator('#pixel-hory-dialog')).toBeHidden();
@@ -79,61 +79,40 @@ test('cold stores home and its local chain filter make no catalogue, global-sear
  await expect(page.locator('#retail-store-card-magnit')).toBeVisible();
  await expect(page.locator('#nearby-address')).toBeVisible();
  await expect(page.locator('#pixel-store-search')).toBeHidden();
- await page.getByText('Поиск по сетям и адресам', {exact:true}).click();
- await page.locator('#pixel-store-search').fill('Магнит');
- await expect(page.locator('#retail-store-card-magnit')).toBeVisible();
- await expect(page.locator('#retail-store-card')).toBeHidden();
- await page.locator('#pixel-store-search').fill('такой сети нет');
- await expect(page.locator('#retail-store-grid .retail-store-card:visible')).toHaveCount(0);
- await page.getByText('Поиск по сетям и адресам', {exact:true}).click();
- await expect(page.locator('#retail-store-card')).toBeVisible();
- // Allow an accidental debounce to surface: this filter is entirely local.
+ await expect(page.locator('#pixel-address-chooser')).toBeHidden();
+ await expect(page.locator('#nearby-results article')).toHaveCount(0);
+ // Allow any accidental catalogue prefetch to surface.
  await page.waitForTimeout(350);
  expect(calls).toEqual({categories:[],items:[],global:0,ai:0});
  await expectNoOverflow(page);
 });
 
-test('city search exposes only selectable exact addresses and opens their own catalogues',async({page})=>{
- test.setTimeout(75_000);
+test('nearby search opens the exact Magnit and Globus catalogues',async({page})=>{
  const calls=await setup(page);
- if (await page.locator(".pixel-directory-search:not([open])").count()) await page.getByText("Поиск по сетям и адресам", {exact:true}).click();
- const search=page.locator('#pixel-store-search');
- await search.fill('Пушкино');
- await expect(page.locator('#retail-store-grid .retail-store-card:visible')).toHaveCount(2);
- await expect(page.locator('#retail-store-card-magnit')).toBeVisible();
- await expect(page.locator('#retail-store-card')).toBeVisible();
- const magnitAddresses=page.locator('#pixel-store-address-results button[data-retailer-id="magnit"]');
- const globusAddress=page.locator('#pixel-store-address-results button[data-retailer-id="globus"][data-store-id="5014"]');
- const addressChoices=page.locator('#pixel-store-address-results button[data-store-id]');
- await expect(addressChoices).toHaveCount(4);
- expect(await magnitAddresses.count()).toBeGreaterThan(0);
- await expect(globusAddress).toBeVisible();
- await expect(globusAddress).toContainText('Глобус Пушкино');
- await expect(globusAddress).not.toContainText('дата цен после выбора');
- const showAll=page.locator('.pixel-store-address-toggle');
- await showAll.click();
- await expect(addressChoices).toHaveCount(11);
- await showAll.click();
- await expect(addressChoices).toHaveCount(4);
- await expect(page.locator('#pixel-store-status')).toContainText('адресов:');
- expect(calls).toEqual({categories:[],items:[],global:0,ai:0});
-
- const magnitCode=await magnitAddresses.first().getAttribute('data-store-id');
- await magnitAddresses.first().click();
- await expect(page.locator('#pixel-storefront')).toBeVisible();
- await expect(page.locator('#magnit-store-address')).toHaveValue(magnitCode);
- await expect(page.locator('.pixel-store-address')).toContainText('Пушкино');
+ const choose=async(address,lat,lon)=>{
+  const pattern='**/functions/v1/nearby-address';
+  const handler=route=>route.fulfill({json:{version:1,candidates:[{label:address,lat,lon,precision:'house'}]}});
+  await page.route(pattern,handler);
+  try {
+   const search=page.locator('#nearby-address');
+   await search.fill(address);
+   await search.press('Enter');
+   await page.locator('#nearby-address-candidates button').click();
+   const card=page.locator('#nearby-results article').filter({hasText:address});
+   await card.getByRole('button',{name:'Открыть товары'}).click();
+   await expect(page.locator('#pixel-storefront')).toBeVisible();
+  } finally { await page.unroute(pattern,handler); }
+ };
+ await choose('Москва, Тайнинская улица, 9',55.8832264,37.6831625);
+ await expect(page.locator('#magnit-store-address')).toHaveValue('699415');
  const magnitReads=[...calls.categories,...calls.items].filter(row=>row.retailer_id==='eq.magnit');
  expect(magnitReads.length).toBeGreaterThan(0);
- expect(magnitReads.every(row=>row.store_id===`eq.magnit-${magnitCode}`)).toBe(true);
+ expect(magnitReads.every(row=>row.store_id==='eq.magnit-699415')).toBe(true);
 
  await openStores(page);
- await expect(globusAddress).toBeVisible();
  const beforeGlobus=calls.categories.length;
- await globusAddress.click();
- await expect(page.locator('#pixel-storefront')).toBeVisible();
+ await choose('г. Пушкино, Красноармейское ш., вл. 105',56.01942,37.885139);
  await expect(page.locator('#globus-store-address')).toHaveValue('5014');
- await expect(page.locator('.pixel-store-address')).toContainText('Пушкино');
  const globusReads=calls.categories.slice(beforeGlobus).filter(row=>row.retailer_id==='eq.globus');
  expect(globusReads.length).toBeGreaterThan(0);
  expect(globusReads.every(row=>row.store_id==='eq.globus-store-5014')).toBe(true);
