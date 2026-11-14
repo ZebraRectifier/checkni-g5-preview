@@ -52,7 +52,9 @@ export function nearbyShoppingIntent(text,expectLocation=false){
 }
 export function nearbyCatalogBinding(point){
   if(point?.retailerId==='metro'&&point.address){
-    const store=resolveMetroMoscowRegionStore({address:point.address});
+    // The local directory omits the administrative prefix for this point.
+    const noginsk=point.id==='osm:way:316838104'&&point.address==='Новые Псарьки, Парковая улица, 4';
+    const store=noginsk?resolveMetroMoscowRegionStore('1307'):resolveMetroMoscowRegionStore({address:point.address});
     return store?.onlinePickupStatus==='proven'?{retailerId:'metro',store}:null;
   }
   const b=point?.catalogBinding;if(!b)return null;
