@@ -36,12 +36,18 @@ test('approved PixelCharacter has stable stores-first and storefront visual base
  await page.setViewportSize(mobile?{width:390,height:844}:{width:1280,height:720});
  await setup(page,{open:false});
  await page.evaluate(()=>document.fonts.ready);
- await expect.poll(()=>page.locator('.pixel-home-hero-mascot').evaluate(image=>image.complete&&image.naturalWidth>0)).toBe(true);
+ const addressFirst=await page.locator('.pixel-directory-search[hidden]').count()>0;
+ if(addressFirst){
+  await expect(page.locator('#nearby-address')).toBeVisible();
+  await expect(page.locator('#pixel-address-chooser')).toBeHidden();
+ }else{
+  await expect.poll(()=>page.locator('.pixel-home-hero-mascot').evaluate(image=>image.complete&&image.naturalWidth>0)).toBe(true);
+ }
  await expect(page.locator('#pixel-hory-dialog')).toBeHidden();
  await expectNoOverflow(page);
  // A missing first baseline still fails this test, while allowing CI to
  // capture the independent storefront image for the same human review.
- await expect.soft(page).toHaveScreenshot('pixel-address-first-home-'+(mobile?'mobile':'desktop')+'.png',{
+ await expect.soft(page).toHaveScreenshot((addressFirst?'pixel-compact-home-':'pixel-address-first-home-')+(mobile?'mobile':'desktop')+'.png',{
   scale:'css',animations:'disabled',maxDiffPixelRatio:.01,threshold:.2,timeout:20000
  });
  await selectStore(page);
