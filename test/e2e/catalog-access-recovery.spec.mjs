@@ -67,6 +67,25 @@ const openOkey = async page => {
 };
 const basketValue = page => page.evaluate(() => localStorage.getItem('checkni.surface.basket.v1'));
 
+test('O’KEY city promotions open while the source request is pending', async ({ page }) => {
+  await setup(page);
+  let release;
+  const pending = new Promise(resolve => { release = resolve; });
+  await page.route('**/src/data/okey*.json', async route => {
+    await pending;
+    await route.fulfill({ status: 503, json: {} }).catch(() => {});
+  });
+  try {
+    await page.locator('#retail-store-card-okey').click();
+    const promotions = page.locator('#okey-official-promotions');
+    await expect(promotions).toBeVisible({timeout:3000});
+    await expect(promotions).toHaveJSProperty('open', true);
+    await expect(page.locator('#pixel-storefront')).toBeHidden();
+  } finally {
+    release();
+  }
+});
+
 test('a short catalogue page can offer more when the source reports remaining products', async ({ page }) => {
   await page.goto('/test/support/catalog-pagination-harness.html?raw=24&admitted=24&total=100');
   await expect(page.getByRole('button', { name: 'Показать ещё' })).toBeVisible();

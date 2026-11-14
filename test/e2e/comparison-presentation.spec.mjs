@@ -13,6 +13,7 @@ test('comparison presentation separates complete and partial quotes without inve
  });
  const groups=page.locator('.saved-catalog-variant');await expect(groups).toHaveCount(2);
  await expect(groups.first().locator('summary')).toContainText('Магнит · 2/2');
+ await expect(groups.first().locator('summary')).toContainText('по старым или неподтверждённым ценам');
  await expect(groups.last().locator('summary')).toContainText('1/2');await expect(groups.last().locator('summary')).toContainText('найденная часть');
  await expect(page.locator('#comparison-output')).toContainText('Список неполный. Выгоду пока не определяем.');
  await expect(page.locator('#comparison-output')).not.toContainText('ниже на');
