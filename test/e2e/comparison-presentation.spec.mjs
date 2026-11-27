@@ -12,6 +12,7 @@ test('comparison presentation separates complete and partial quotes without inve
  const output=document.createElement('div');output.id='comparison-output';basket.replaceChildren(output);renderSavedGuidedComparison(output,result,{nowMs:Date.parse(at)});output.scrollIntoView();
  });
  const groups=page.locator('.saved-catalog-variant');await expect(groups).toHaveCount(2);
+ await expect(groups.first().locator('summary')).toContainText('Доставка и сборы: не рассчитаны');
  await expect(groups.first().locator('summary')).toContainText('Магнит · 2/2');
  await expect(groups.first().locator('summary')).toContainText('по старым или неподтверждённым ценам');
  await expect(groups.last().locator('summary')).toContainText('1/2');await expect(groups.last().locator('summary')).toContainText('найденная часть');

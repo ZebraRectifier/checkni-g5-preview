@@ -14,6 +14,23 @@ body.pixel-workspace #basket-view .basket-summary {
   background: var(--surface-soft);
 }
 
+body.pixel-workspace .basket-delivery-note {
+  flex-basis: 100%;
+}
+
+body.pixel-workspace .saved-comparison-delivery {
+  display: block;
+  margin-block-start: 5px;
+  font-size: .875rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+body.pixel-workspace #comparison-output .observed-result {
+  border-radius: 14px;
+  padding: clamp(16px, 3vw, 28px);
+}
+
 body.pixel-workspace #basket-view .basket-row {
   min-height: 0;
   padding: 12px 16px;

@@ -120,6 +120,12 @@ export function renderBasketView(container, items, actions) {
     <span>${basketSummaryText(items)}</span>
     <span class="mock-chip">${isObservedMode ? "Цены по наблюдениям" : "Тестовые цены"}</span>
   `;
+  if (isObservedMode) {
+    const delivery = document.createElement("small");
+    delivery.className = "basket-delivery-note";
+    delivery.textContent = "Доставка не включена";
+    summary.append(delivery);
+  }
 
   const list = document.createElement("div");
   list.className = "basket-list";

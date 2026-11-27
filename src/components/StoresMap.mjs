@@ -230,6 +230,8 @@ export function createStoresSection({
     + "адреса без координат доступны через выбор магазина. Меньшее расстояние не означает меньшую стоимость корзины.");
   const directory = document.createElement("details");
   directory.className = "stores-location-directory";
+  directory.hidden = true;
+  selected.hidden = true;
   const summary = textEl("summary", null, `Все точки с координатами: ${observedStores.length}`);
   directory.append(summary, listNote, list);
 
@@ -294,8 +296,7 @@ export function createStoresSection({
         : nearbyMode || manualPicking || canSelect(pin) ? button("", event => {
           event.stopPropagation();
           if (manualPicking) geo.setManual({ lat: pin.lat, lon: pin.lon });
-          else if (nearbyMode) showPin(pin);
-          else chooseStore(pin);
+          else showPin(pin);
         }, "stores-pin")
           : externalLink("", pointMapUrl(pin));
       if (!own) {
@@ -393,6 +394,7 @@ export function createStoresSection({
     currentScope = scope; renderSelected(); renderList(); renderMap();
   };
   const magnitDirectory = createMagnitStoreDirectory();
+  magnitDirectory.hidden = true;
   function showPin(pin) {
     pinCard.replaceChildren(textEl("strong", null, pin.name), textEl("p", null, pin.address),
       externalLink("Маршрут", "https://yandex.ru/maps/?rtext=~" + encodeURIComponent(pin.lat + "," + pin.lon) + "&rtt=auto"));
@@ -403,7 +405,6 @@ export function createStoresSection({
     nearbyMode = enabled;
     section.classList.toggle("stores-nearby-mode", enabled);
     networkFilter.value = "all";
-    for (const element of [directory, magnitDirectory, selected]) element.hidden = enabled;
     for (const element of locationControls) element.hidden = enabled;
     for (const element of advancedMapControls) element.hidden = enabled;
     privacy.hidden = enabled;

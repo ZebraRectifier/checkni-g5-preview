@@ -167,6 +167,7 @@ test('a bound Magnit map pin selects its exact address, while the legacy point s
   await expect(pin).toHaveJSProperty('tagName','BUTTON');
   await expect(pin).toHaveAttribute('aria-label',/Выбрать для корзины: Магнит,/u);
   await pin.click();
+  await page.locator('#stores-section .stores-selected:not([hidden])').getByRole('button',{name:'Открыть товары'}).click();
   await openStoreDetails(page);
   await expect(page.locator('#magnit-store-address')).toHaveValue(target.slice(-6));
   await expect(page.locator('#stores-selected-addresses'))

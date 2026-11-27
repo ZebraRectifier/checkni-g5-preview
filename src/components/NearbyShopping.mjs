@@ -20,9 +20,9 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
   const css=el('link');css.rel='stylesheet';css.href=new URL('./nearby-shopping.css',import.meta.url).href;document.head.append(css);
   const openButton=button('Найти магазины рядом',()=>open());openButton.setAttribute('aria-expanded','false');
   const panel=el('div');panel.hidden=true;panel.id='nearby-shopping-panel';openButton.setAttribute('aria-controls',panel.id);
-  const title=el('h3','Куда доставить?');
+  const title=el('h3','Где ищем продукты?');
   const input=el('input');input.id='nearby-address';input.type='search';input.maxLength=160;
-  input.placeholder='Город, улица или станция';
+  input.placeholder='Город, улица, дом или станция';
   const addressDraftKey='checkni.nearby.address-draft';
   const confirmedPlaceKey='checkni.nearby.confirmed-place';
   try { input.value=(document.defaultView.sessionStorage.getItem(addressDraftKey)??'').slice(0,160); } catch { /* Storage may be disabled. */ }
@@ -126,8 +126,10 @@ export function createNearbyShopping({document=globalThis.document,port=createNe
         card.append(el('strong',row.name+' · '+(row.distanceMeters<1000?Math.round(row.distanceMeters)+' м':(row.distanceMeters/1000).toFixed(1)+' км')),
           el('p',row.address??'Адрес в карте не указан'),el('small',row.catalog?'Каталог доступен':'Каталог пока недоступен'));
         if(row.catalog){
-          const open=button('Открыть товары',()=>choose(row));open.className='nearby-open-catalog';card.append(open);
-          card.addEventListener('click',event=>{if(!event.target.closest('button,a'))open.click();});
+          const open=button('Открыть товары',()=>choose(row));
+          open.className='nearby-open-catalog';
+          card.classList.add('nearby-store-interactive');
+          card.append(open);
         }
         results.append(card);
       }
