@@ -419,6 +419,8 @@ body.pixel-workspace .section-heading { position: static; display: flex; align-i
 body.pixel-workspace .section-heading h2 { margin: 0; }
 body.pixel-workspace .result-count { min-width: 0; height: auto; padding: 2px 0; border: 0; background: transparent; color: var(--muted); font-size: 14px; }
 body.pixel-workspace .product-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; min-width: 0; }
+body.pixel-workspace .product-grid .product-card { border-radius: 12px; }
+body.pixel-workspace .retail-category-grid .retail-category-button { border-radius: 8px; }
 body.pixel-workspace .product-card { display: flex; flex-direction: column; min-width: 0; margin: 0; padding: 8px; border: 2px solid var(--line); border-radius: 0; background: var(--surface); color: var(--ink); box-shadow: none; clip-path: var(--pixel-cut); }
 body.pixel-workspace .product-card .product-visual { position: relative; display: grid; place-items: center; flex: none; width: 100%; height: auto; min-height: 112px; aspect-ratio: 1; margin: 0; padding: 6px; overflow: hidden; border: 0; border-radius: 2px; background: #fff; color: #655573; font: 400 14px/1.4 Inter,system-ui,sans-serif; }
 body.pixel-workspace .product-card .product-visual :is(svg,.pixel-icon) { width: 54px; height: 54px; color: #6925c4; image-rendering: pixelated; }

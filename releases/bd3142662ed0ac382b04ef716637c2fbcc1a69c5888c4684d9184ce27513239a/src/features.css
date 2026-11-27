@@ -1,0 +1,58 @@
+/* Feature layer: price hints, catalogue sort, share button.
+   Kept separate from styles.css to avoid clashes with the design pass. */
+
+.product-price {
+  margin: 2px 0 0;
+  font-size: 0.95rem;
+  color: var(--ink, #241f1c);
+}
+
+.product-price strong { font-weight: 800; }
+
+.product-price-unit {
+  color: var(--muted, #6b6353);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.catalog-sort select {
+  border: 2px solid var(--ink, #241f1c);
+  border-radius: 0;
+  background: var(--surface, #fbf8ec);
+  color: var(--ink, #241f1c);
+  font: inherit;
+  font-weight: 700;
+  padding: 8px 10px;
+  min-height: 44px;
+  box-shadow: 2px 2px 0 var(--ink, #241f1c);
+}
+
+.share-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 2px;
+  min-height: 44px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.share-button:disabled { opacity: 0.6; }
+
+.catalog-sort {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.catalog-sort select {
+  max-width: 100%;
+  width: auto;
+  box-sizing: border-box;
+}
+
+.catalog-section .section-heading {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}

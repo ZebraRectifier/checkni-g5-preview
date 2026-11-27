@@ -1264,6 +1264,7 @@ h1 {
 .stores-section .stores-list li { align-items: center; overflow-wrap: anywhere; }
 .stores-section .stores-list a { color: var(--ink); text-decoration: underline; }
 .stores-section .stores-location-directory { display: grid; gap: 12px; }
+.stores-section :is(.stores-location-directory, .stores-selected, .magnit-directory)[hidden] { display: none; }
 .stores-section .stores-location-directory summary { margin-bottom: 12px; }
 .stores-section .stores-selected { display: grid; gap: 12px; }
 .stores-section .stores-selected h3 { margin: 8px 0 0; }

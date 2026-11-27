@@ -67,7 +67,12 @@ export function renderSavedGuidedComparison(parent,result,{nowMs=Date.now(),onCh
       +(quote.allRecent?'':' · по старым или неподтверждённым ценам');
     const summary=el('summary',storeLabel+' · '+quote.basket.length+'/'+quote.lines.length+' поз. · '
       +(quote.complete?'':'найденная часть: ')+total+(quote.hasEstimates?' · ориентировочно':''));
-    details.append(summary,el('p',draft.scope.storeAddress??''));
+    const delivery=el('span','Доставка и сборы: не рассчитаны');
+    delivery.className='saved-comparison-delivery';
+    const address=draft.scope.storeAddress;
+    summary.append(delivery);
+    details.append(summary);
+    if(address)details.append(el('p',address));
     const scroll=el('div');scroll.className='guided-shopping-scroll';scroll.tabIndex=0;
     const table=el('table');table.className='guided-shopping-table';table.append(el('caption','Товары и цены · '+storeLabel));
     const head=el('thead'),headRow=el('tr');
